@@ -1,0 +1,195 @@
+:host {
+    .layout-card-title {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 1rem;
+
+        span {
+            display: flex;
+            align-items: center;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--color-grey-800);
+        }
+    }
+
+    .layout-button-alert {
+        height: 42px;
+
+        >p-badge {
+            position: absolute;
+            right: 50px;
+        }
+    }
+
+    .checkboxDisable {
+        position: absolute;
+        width: 24px;
+        height: 24px;
+    }
+
+    .layout-card-step {
+        min-height: 37rem;
+
+        span {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--color-grey-700);
+        }
+    }
+
+    .layout-button-action {
+        display: flex;
+        width: 100%;
+        gap: 8px;
+    }
+
+    .layout-photo-person {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 80px;
+        height: 80px;
+        background-color: var(--color-grey-300);
+        border-radius: 100%;
+
+        .layout-photo-person-label {
+            display: flex;
+            align-items: center;
+            width: 80px;
+            height: 80px;
+        }
+
+    }
+
+    .layout-file {
+        display: flex;
+        flex-direction: column;
+        background-color: var(--color-grey-300);
+        justify-content: center;
+        align-items: center;
+        border-radius: 6px;
+
+        .layout-file-img {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 80px;
+            height: 80px;
+
+            ::ng-deep {
+                .p-image-preview {
+                    width: 80px;
+                    height: 80px;
+                    object-fit: cover;
+                    display: flex;
+                    justify-content: center;
+                }
+            }
+        }
+
+        label {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100px;
+            padding: 10px 0;
+            border-radius: 0 0 6px 6px;
+            background: var(--color-primary);
+            color: #FFF;
+            cursor: pointer;
+
+            span {
+                display: flex;
+            }
+        }
+
+        button {
+            display: flex;
+            justify-content: center;
+            gap: 6px;
+            width: 100px;
+            padding: 10px 0;
+            border-radius: 0 0 6px 6px;
+
+            span {
+                display: flex;
+                color: #FFF;
+                font-size: 14px;
+                font-weight: 400;
+            }
+        }
+    }
+
+    ::ng-deep {
+        .p-button.p-button-icon-only {
+            padding: 0.5rem 0;
+            margin-right: 15px;
+        }
+
+        .p-image-preview-container>img {
+            width: 80px;
+            height: 77px;
+        }
+    }
+
+
+
+    @media (max-width: 991px) {
+
+        .layout-card-driver {
+            height: 42rem;
+        }
+
+        .layout-card-vehicle {
+            height: 124rem;
+        }
+
+        ::ng-deep {
+            .p-image-preview-container>img {
+                width: 62px;
+                height: 62px;
+                object-fit: cover;
+                border-radius: 6px 6px 0 0;
+            }
+        }
+
+        .layout-file {
+
+            .layout-file-img {
+                width: 62px;
+                height: 62px;
+
+                ::ng-deep {
+                    .p-image-preview {
+                        width: 62px;
+                        height: 62px;
+                    }
+                }
+
+            }
+
+            label {
+                padding: 5px 0px;
+                width: 62px;
+                height: 38px;
+                border-radius: 0 0 6px 6px;
+                cursor: pointer;
+
+                span {
+                    display: none;
+                }
+            }
+
+            button {
+                width: 62px;
+                border-radius: 0 0 6px 6px;
+
+                span {
+                    display: none;
+                }
+            }
+        }
+    }
+
+}

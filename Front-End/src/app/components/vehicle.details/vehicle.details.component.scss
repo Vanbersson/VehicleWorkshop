@@ -1,0 +1,39 @@
+  :host {
+      .layout-file {
+          display: flex;
+          flex-direction: column;
+          background-color: var(--color-grey-300);
+          justify-content: center;
+          align-items: center;
+          border-radius: 6px;
+
+          .layout-file-img {
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              width: 80px;
+              height: 80px;
+
+              .p-image-preview {
+                  display: flex;
+                  justify-content: center;
+                  width: 80px;
+                  height: 80px;
+                  object-fit: cover;
+              }
+
+          }
+      }
+
+      .layout-photo-person {
+          display: flex;
+          flex-direction: column;
+          background-color: var(--color-grey-300);
+          justify-content: center;
+          align-items: center;
+          width: 80px;
+          height: 80px;
+          border-radius: 100%;
+      }
+
+  }

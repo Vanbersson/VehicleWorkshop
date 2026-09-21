@@ -1,0 +1,146 @@
+<!-- Print -->
+<div id="print-sectionId" style="display: none;">
+    <div style="text-align: center; justify-items: center;">
+        <span><strong>PEDIDO DE COMPRA</strong></span>
+    </div>
+    <span>NATIVA MÁQUINAS E IMPLEMENTOS LTDA</span>    
+    <table style="border: 1px solid #000; padding: 4px; width: 100%;">
+        <tr>
+            <td>
+                <span>Pedido Nº: <strong>{{purchaseOrder().id}}</strong></span>
+            </td>
+            <td>
+                <span>Vendedor: {{purchaseOrder().attendantName | uppercase}}</span>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <span>Data: {{purchaseOrder().generationDate | date: 'dd/MM/yyyy'}}</span>
+            </td>
+            <td>
+                @if(purchaseOrder().attendantDddCellphone == '' || purchaseOrder().attendantCellphone == ''){
+                <span>Celular:</span>
+                }@else {
+                <span>Celular: {{"("+purchaseOrder().attendantDddCellphone+")"+"
+                    "+purchaseOrder().attendantCellphone}}</span>
+                }
+            </td>
+        </tr>
+        <tr>
+            <td><span>Código Forn.: {{purchaseOrder().clientCompanyId}}</span></td>
+            <td><span>E-mail: {{purchaseOrder().attendantEmail}}</span></td>
+        </tr>
+        <tr>
+            <td><span>Fornecedor: {{purchaseOrder().clientCompanyName }}</span></td>
+            <td><span>Data Entrega: {{purchaseOrder().dateDelivery | date: 'dd/MM/yyyy'}}</span></td>
+        </tr>
+        <tr>
+            <td>
+                @if(purchaseOrder().nfNum != 0){ <span>NF: {{purchaseOrder().nfNum}}</span> }@else{
+                <span>NF:</span> }
+            </td>
+            <td><span>Pagamento: {{purchaseOrder().paymentTypeDesc | uppercase }}</span></td>
+        </tr>
+    </table>
+
+    @if(this.purchaseOrder().type === estoque){
+    <table class="print-table">
+        <tr>
+            <th>Código</th>
+            <th>Descrição</th>
+            <th>Qtd</th>
+            <th>Preço</th>
+            <th>Desconto</th>
+            <th>Total</th>
+        </tr>
+        <tr *ngFor="let item of purchaseOrderItems()" style="height: 20px;">
+            <td>{{item?.itemCode }}</td>
+            <td>{{item?.itemDescription | uppercase }}</td>
+            <td>{{item?.quantity || ''}}</td>
+            <td>{{item?.price  | currency }}</td>
+            <td>{{item?.discount  | currency}}</td>
+            <td>
+                @if(item?.quantity! > 0){
+                    {{(item?.price! * item?.quantity!) - item?.discount!  | currency}}
+                }   
+            </td>
+        </tr>
+        <br>
+        <tr style="height: 20px;">
+            <td></td>
+            <td></td>
+            <td></td>
+            <td><strong>{{totalItemsPrice() | currency}}</strong></td>
+            <td><strong>{{totalItemsDiscount() | currency}}</strong></td>
+            <td><strong>{{totalItemsPrice() - totalItemsDiscount() | currency}}</strong></td>
+        </tr>
+    </table>
+    }@else {
+        <table class="print-table">
+        <tr>
+            <th>Descrição</th>
+            <th>Qtd</th>
+            <th>Preço</th>
+            <th>Desconto</th>
+            <th>Total</th>
+        </tr>
+        <tr *ngFor="let item of purchaseOrderItemsCons()" style="height: 20px;">
+            <td>{{item?.description | uppercase }}</td>
+            <td>{{item?.quantity || ''}}</td>
+            <td>{{item?.price  | currency }}</td>
+            <td>{{item?.discount  | currency}}</td>
+            <td>
+                @if(item?.quantity! > 0){
+                    {{(item?.price! * item?.quantity!) - item?.discount!  | currency}}
+                }   
+            </td>
+        </tr>
+        <br>
+        <tr style="height: 20px;">
+            <td></td>
+            <td></td>
+            <td><strong>{{totalItemsPrice() | currency}}</strong></td>
+            <td><strong>{{totalItemsDiscount() | currency}}</strong></td>
+            <td><strong>{{totalItemsPrice() - totalItemsDiscount() | currency}}</strong></td>
+        </tr>
+    </table>
+    }
+    <br>
+   <div style="height: 60px; width: 100%; border: 1px solid #000; text-align: left;
+    padding: 4px; font-family: Arial, Helvetica, sans-serif; border-collapse: collapse;break-inside: avoid;">
+        <label for="">Inf.: </label>{{purchaseOrder().information | uppercase}}
+    </div>
+    <br>
+    <table style="width: 100%; text-align: center; break-inside: avoid;">
+        <tr>
+            <td class="text-xs" style="text-align: center; justify-items: center;">
+                <div style="
+                    display: flex;
+                    flex-direction: column;
+                    width: 200px;">
+                    <span>AUTORIZADO POR</span>
+                    <strong>
+                        {{ purchaseOrder().responsibleUserName }}
+                    </strong>
+                    <div style="
+                        border-bottom: 1px solid #000;
+                        margin-top: 25px;  width: 200px;"></div>
+                    <span>Comprador</span>
+                </div>
+            </td>
+            <td class="text-xs" style="text-align: center; justify-items: center;">
+                <div style="
+                    display: flex;
+                    flex-direction: column;
+                    width: 200px;">
+                    <span>AUTORIZADO POR</span>
+                    <div style="height: 10px;"></div>
+                    <div style="
+                        border-bottom: 1px solid #000;
+                        margin-top: 25px;"></div>
+                    <span>Responsável</span>
+                </div>
+            </td>
+        </tr>
+    </table>  
+</div>

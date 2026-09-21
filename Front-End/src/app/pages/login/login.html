@@ -1,0 +1,29 @@
+<p-toast />
+<div class="login-container">
+    <div class="card-login">
+        <div class="card-login-title">
+            <span>Conecte-se</span>
+        </div>
+        <P class="mb-4">Faça login em sua conta</P>
+        <div class="grid grid-cols-12 gap-4 w-full">
+            <div class="col-span-12">
+                <label>Digite seu email</label>
+                <input pInputText class="w-full" type="email" [(ngModel)]="email" />
+            </div>
+            <div class="col-span-12">
+                <label>Digite sua senha</label>
+                <p-password [toggleMask]="true" [feedback]="false" [(ngModel)]="password" fluid />
+            </div>
+            <div class="col-span-12">
+                <p-button type="button" icon="pi pi-sign-in" label="Entrar" (onClick)="login()" fluid severity="info" />
+            </div>
+        </div>
+    </div>
+
+    <div class="card-login-info">
+        <div class="info-tile">
+            <span>Bem-vindo</span>
+        </div>
+        <p>Sua oficina perto de você.</p>
+    </div>
+</div>

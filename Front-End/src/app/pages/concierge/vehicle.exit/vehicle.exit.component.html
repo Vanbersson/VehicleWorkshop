@@ -1,0 +1,158 @@
+<div class="layout-card">
+    <p-toast />
+    <div class="layout-card-title">
+        <span>Saída de veículos</span>
+        <div class="mobile-visible-none">
+            <p-button icon="pi pi-sign-out" label="Saída" [outlined]="true" severity="danger" [disabled]="selectedVehicle.length == 0"
+                (onClick)="confirm()" />
+            <p-divider layout="vertical" />
+            <p-button icon="pi pi-sync" label="Recarregar" [outlined]="true" (onClick)="init()"></p-button>
+        </div>
+        <div class="mobile-visible">
+            <p-button icon="pi pi-sign-out" size="small" severity="danger" label="Saída" [disabled]="selectedVehicle.length == 0" (onClick)="confirm()" />
+            <p-button icon="pi pi-sync" size="small" [outlined]="true" (onClick)="init()"></p-button>
+        </div>
+    </div>
+    <p-table #tableFilter dataKey="id" [value]="listVehicleExit()" [(selection)]="selectedVehicle" showGridlines [scrollable]="true" 
+        currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords}" [showCurrentPageReport]="true"
+        [globalFilterFields]="['id','vehiclePlate','modelDescription', 'vehicleFleet','entryDate','clientCompanyName','attendantUserName']"
+        [paginator]="true" [rows]="10" [rowsPerPageOptions]="[10, 25, 50]">
+        <ng-template pTemplate="caption">
+            <div class="flex align-items-center">
+                <p-iconField iconPosition="left">
+                    <p-inputIcon>
+                        <i class="pi pi-search"></i>
+                    </p-inputIcon>
+                    <input pInputText type="text" (input)="tableFilter.filterGlobal($any($event.target).value, 'contains')" placeholder="Pesquisar" />
+                </p-iconField>
+            </div>
+        </ng-template>
+        <ng-template pTemplate="header">
+            <tr>
+                <th>
+                    Sel.
+                </th>
+                <th class="disabled-col" pSortableColumn="id">Código<p-sortIcon field="id"></p-sortIcon></th>
+                <th pSortableColumn="vehiclePlate">Placa<p-sortIcon field="vehiclePlate"></p-sortIcon></th>
+                <th class="disabled-col" pSortableColumn="modelDescription">Modelo<p-sortIcon field="modelDescription"></p-sortIcon></th>
+                <th pSortableColumn="vehicleFleet">Frota<p-sortIcon field="vehicleFleet"></p-sortIcon></th>
+                <th class="disabled-col" pSortableColumn="entryDate">Entrada<p-sortIcon field="entryDate"></p-sortIcon></th>
+                <th class="disabled-col" pSortableColumn="clientCompanyName">Empresa<p-sortIcon field="clientCompanyName"></p-sortIcon></th>
+                <th class="disabled-col" pSortableColumn="attendantUserName">Consultor<p-sortIcon field="attendantUserName"></p-sortIcon></th>
+                <th class="disabled-col" pSortableColumn="nameUserExitAuth1">1ª Auto<p-sortIcon field="nameUserExitAuth1"></p-sortIcon></th>
+                <th class="disabled-col" pSortableColumn="nameUserExitAuth2">2ª Auto<p-sortIcon field="nameUserExitAuth2"></p-sortIcon></th>
+            </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-vehicle let-rowIndex="rowIndex">
+            <tr [pSelectableRow]="vehicle">
+                <td> <p-tableCheckbox [value]="vehicle" /></td>
+                <td class="disabled-col"><span class="text-500">{{ vehicle.id }}</span></td>
+                <td>
+                    @if(vehicle.vehicleNew == "yes"){
+                    <p-tag value="NOVO" severity="info"></p-tag>
+                    }@else {
+                    <span class="text-500">{{vehicle.vehiclePlate | uppercase}}</span>
+                    }
+                </td>
+                <td class="disabled-col"><span class="text-500">{{ vehicle.modelDescription | uppercase }}</span></td>
+                <td><span class="text-500">{{ vehicle.vehicleFleet | uppercase }}</span></td>
+                <td class="disabled-col"><span class="text-500">{{ vehicle.entryDate }}</span></td>
+                <td class="disabled-col"><span class="text-500">{{ vehicle.clientCompanyName | uppercase }}</span></td>
+                <td class="disabled-col"><span class="text-500">{{ vehicle.attendantUserName | uppercase }}</span></td>
+                <td class="disabled-col"><span class="text-500">{{ vehicle.auth1ExitUserName | uppercase }}</span></td>
+                <td class="disabled-col"><span class="text-500">{{ vehicle.auth2ExitUserName | uppercase }}</span></td>
+            </tr>
+        </ng-template>
+    </p-table>
+</div>
+
+<p-confirmDialog #cd>
+    <ng-template pTemplate="headless" let-message let-onAccept="onAccept" let-onReject="onReject">
+        <div class="flex flex-col items-center rounded-lg bg-surface-0 p-5 dark:bg-surface-900">
+            <div class="mb-4 inline-flex h-24 w-24 items-center justify-center rounded-full bg-primary">
+                <i class="pi pi-comment !text-5xl text-white"></i>
+            </div>
+            <p class="mb-2">Informações do veículo</p>
+            <div class="mb-4 flex flex-col">
+                <div class="flex items-center gap-2">
+                    Placa:
+                    <span class="block text-2xl font-bold">
+                      @if(valueInfoPlaca == 'NOVO'){Veículo sem placa}@else{{{ valueInfoPlaca | uppercase }}}  
+                    </span>
+                </div>
+                <div class="flex items-center gap-2">
+                    Modelo:
+                    <span class="block text-2xl font-bold">
+                        {{ valueInfoModel | uppercase }}
+                    </span>
+                </div>
+            </div>
+            <div style="min-width: 24rem;">
+                <div class="col-span-12 md:col-span-4 flex justify-between gap-1">
+                    <div class="layout-file">
+                        <div class="layout-file-img">
+                            <p-image *ngIf="photoVehicle1()" [src]="photoVehicle1()" alt="" [preview]="true" />
+                        </div>
+                        <button pButton *ngIf="photoVehicle1()" severity="danger" (click)="deleteFileVehicle1()">
+                            <i class="pi pi-trash"></i>
+                            <span>Remover</span>
+                        </button>
+                        <button pButton *ngIf="!photoVehicle1()" type="button" (click)="photoFile1Vehicle()">
+                            <i class="pi pi-plus"></i>
+                            <span>Incluir</span>
+                        </button>
+                    </div>
+                    <div class="layout-file">
+                        <div class="layout-file-img">
+                            <p-image *ngIf="photoVehicle2()" [imageStyle]="{'object-fit':'cover'}" [src]="photoVehicle2()" alt="" [preview]="true" />
+                        </div>
+                        <button *ngIf="photoVehicle2()" pButton severity="danger" (click)="deleteFileVehicle2()">
+                            <i class="pi pi-trash"></i>
+                            <span>Remover</span>
+                        </button>
+                        <button *ngIf="!photoVehicle2()" pButton type="button" (click)="photoFile2Vehicle()">
+                            <i class="pi pi-plus"></i>
+                            <span>Incluir</span>
+                        </button>
+                    </div>
+                    <div class="layout-file">
+                        <div class="layout-file-img">
+                            <p-image *ngIf="photoVehicle3()" [imageStyle]="{'object-fit':'cover'}" [src]="photoVehicle3()" alt="" [preview]="true" />
+                        </div>
+                        <button *ngIf="photoVehicle3()" pButton severity="danger" (click)="deleteFileVehicle3()">
+                            <i class="pi pi-trash"></i>
+                            <span>Remover</span>
+                        </button>
+                        <button *ngIf="!photoVehicle3()" pButton type="button" (click)="photoFile3Vehicle()">
+                            <i class="pi pi-plus"></i>
+                            <span>Incluir</span>
+                        </button>
+                    </div>
+                    <div class="layout-file">
+                        <div class="layout-file-img">
+                            <p-image *ngIf="photoVehicle4()" [imageStyle]="{'object-fit':'cover'}" [src]="photoVehicle4()" alt="" [preview]="true" />
+                        </div>
+                        <button *ngIf="photoVehicle4()" pButton severity="danger" (click)="deleteFileVehicle4()">
+                            <i class="pi pi-trash"></i>
+                            <span>Remover</span>
+                        </button>
+                        <button *ngIf="!photoVehicle4()" pButton type="button" (click)="photoFile4Vehicle()">
+                            <i class="pi pi-plus"></i>
+                            <span>Incluir</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="flex w-full justify-center mt-2">
+                    <textarea rows="4" cols="30" pInputTextarea [(ngModel)]="valueInfoVehicle" fluid></textarea>
+                </div>
+            </div>
+            <span class="mt-4 mb-2 block text-2xl font-bold">{{ message.header }}</span>
+            <p>{{ message.message }}</p>
+            <div class="flex flex-col items-center w-full border-b border-surface-200 dark:border-surface-700"></div>
+            <div class="flex w-full gap-3 mt-4">
+                <button pButton label="Sim" class="flex-1" (click)="onAccept()"></button>
+                <button pButton label="Não" severity="secondary" outlined class="flex-1" (click)="onReject()"> </button>
+            </div>
+        </div>
+    </ng-template>
+</p-confirmDialog>

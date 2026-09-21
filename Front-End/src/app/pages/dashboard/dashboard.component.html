@@ -1,0 +1,143 @@
+<div class="grid grid-cols-12 gap-4">
+    <div class="col-span-12 lg:col-span-6 xl:col-span-3">
+        <div class="card mb-0">
+            <div class="flex justify-between mb-3">
+                <div>
+                    <span class="block text-500 font-medium mb-3">
+                        Veículos
+                    </span>
+
+                    <div class="text-900 font-medium text-xl">
+                        {{ countVehicle().at(0) }}
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-center bg-blue-100 rounded-md w-10 h-10">
+                    <i class="pi pi-car text-blue-500 text-xl"></i>
+                </div>
+            </div>
+
+            <span class="text-green-500 font-medium">
+                Veículos
+            </span>
+
+            <span class="text-500">
+                em atendimento
+            </span>
+        </div>
+    </div>
+
+    <div class="col-span-12 lg:col-span-6 xl:col-span-3">
+        <div class="card mb-0">
+            <div class="flex justify-between mb-3">
+                <div>
+                    <span class="block text-500 font-medium mb-3">
+                        Autorizados
+                    </span>
+
+                    <div class="text-900 font-medium text-xl">
+                        {{ countVehicle().at(1) }}
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-center bg-green-100 rounded-md w-10 h-10">
+                    <i class="pi pi-thumbs-up-fill text-green-500 text-xl"></i>
+                </div>
+            </div>
+
+            <span class="text-green-500 font-medium">
+                Veículos
+            </span>
+
+            <span class="text-500">
+                com saída autorizada
+            </span>
+        </div>
+    </div>
+    <div class="col-span-12 lg:col-span-6 xl:col-span-3">
+        <div class="card mb-0">
+            <div class="flex justify-between mb-3">
+                <div>
+                    <span class="block text-500 font-medium mb-3">
+                        Orçamento
+                    </span>
+                    <div class="text-900 font-medium text-xl">
+                        0
+                    </div>
+                </div>
+                <div class="flex items-center justify-center bg-cyan-100 rounded-md w-10 h-10">
+                    <i class="pi pi-verified text-cyan-500 text-xl"></i>
+                </div>
+            </div>
+            <span class="text-green-500 font-medium">
+                Orçamentos
+            </span>
+            <span class="text-500">
+                gerados
+            </span>
+        </div>
+    </div>
+
+    <div class="col-span-12 lg:col-span-6 xl:col-span-3">
+        <div class="card mb-0">
+            <div class="flex justify-between mb-3">
+                <div>
+                    <span class="block text-500 font-medium mb-3">
+                        Valor
+                    </span>
+                    <div class="text-900 font-medium text-xl">
+                        {{ 0 | currency }}
+                    </div>
+                </div>
+                <div class="flex items-center justify-center bg-yellow-100 rounded-md w-10 h-10">
+                    <i class="pi pi-dollar text-yellow-500 text-xl"></i>
+                </div>
+            </div>
+            <span class="text-green-500 font-medium">
+                Valor
+            </span>
+            <span class="text-500">
+                total dos orçamentos
+            </span>
+        </div>
+    </div>
+    <div class="col-span-12 card ">
+
+        <div class="grid grid-cols-12 gap-4">
+            <div class="col-span-8">
+                <label for="clientCompanyName"> Cliente </label>
+                <input pInputText id="clientCompanyName" type="text" class="w-full" style="text-transform: uppercase" [(ngModel)]="clientName" disabled />
+            </div>
+             <div class="col-span-2 flex flex-col">
+                <label for="">Filtro</label>
+                <app-filterclient (outputClient)="selectClientCompany.set($event)" />
+            </div>
+            <div *ngIf="isSearchClient" class="col-span-2 flex flex-col">
+                <label for=""> Limpar </label>
+                <p-button icon="pi pi-filter-slash" severity="danger" (onClick)="init()" />
+            </div>
+        </div>
+    </div>
+    <div class="col-span-12 lg:col-span-6">
+        <div class="card">
+            <div class="flex justify-center w-full mb-2">
+                <span><strong>Passagem de veículos por ano</strong></span>
+            </div>
+            <div class="flex justify-center w-full mb-2">
+                <span *ngIf="clientName">{{clientName | uppercase}}</span>
+            </div>
+            <p-chart type="bar" [data]="clientData1" [options]="clientOptions1" />
+        </div>
+    </div>
+    <div class="col-span-12 lg:col-span-6 ">
+        <div class="card">
+            <div class="flex justify-center w-full mb-2">
+                <span><strong>Seviços realizados</strong></span>
+            </div>
+            <div class="flex justify-center w-full mb-2">
+                <span *ngIf="clientName">{{clientName | uppercase}}</span>
+            </div>
+            <p-chart type="line" [data]="clientData2" [options]="clientOptions2" />
+        </div>
+    </div>
+</div>

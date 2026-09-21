@@ -1,0 +1,135 @@
+<div id="print-EPI" style="display: none; width: 100%; height: 100%;">
+
+    <table class="print-table-info">
+        <tbody>
+            <tr>
+                <td>
+                    <span>
+                        <strong>FICHA DE ENTREGA DE EPI</strong>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <span>
+                        Termo de reponsabilidade pela guarda e uso de equipamento de proteção individual - EPI
+                    </span>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <br>
+    <div class="flex flex-col">
+        <div class="flex gap-2">
+            <span>Requisição:</span>
+            <span>{{reqId}}</span>
+        </div>
+        <div class="flex gap-4">
+            <div class="flex gap-2">
+                <span>Nome:</span>
+                <span>{{nameMec}}</span>
+            </div>
+            <div class="flex gap-2">
+                <span>Cargo:</span>
+                <span>{{depMec}}</span>
+            </div>
+        </div>
+    </div>
+    <br>
+    <table class="print-table">
+        <thead>
+            <tr>
+                <th>MATERIAL</th>
+                <th style="width: 10%;">QUANT.</th>
+                <th>Nº C.A.</th>
+                <th>DTA ENTRE.</th>
+                <th>DTA DEVOL.</th>
+                <th>VISTO FUNCIO.</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr *ngFor="let item of listEPI">
+                <td>{{item.materialDescription | uppercase}}</td>
+                <td>{{item.deliveryQuantity | number:'1.2-2'}}</td>
+                <td>{{item.materialNumberCA}}</td>
+                <td>{{item.deliveryDate | date:'dd/MM/yyyy HH:mm'}}</td>
+                <td>{{item.returnDate | date:'dd/MM/yyyy HH:mm'}}</td>
+                <td></td>
+            </tr>
+        </tbody>
+    </table>
+    <br>
+    <table class="print-table-lei">
+        <tbody>
+            <tr>
+                <td>
+                    <span>
+                        Recebi da empresa NATIVA MÁQUINAS E IMPLEMENTOS LTDA, a título de empréstimo, para meu uso
+                        exclusivo e
+                        obrigatório nas dependências da empresa, conforme determinado na NR-6 da Portaria3. 214/78, os
+                        equipamentos
+                        especificados neste termo de responsabilidade, comprometendo-me a mantê-los em perfeito estado
+                        de
+                        conservação, ficando ciente de que:
+                        <strong>
+                            1- Recebi treinamento quanto à necessidade na utilização dos referidos EPI’s, a maneira
+                            correta de
+                            usá-los, guardá-los e higienizá-los, bem como da minha responsabilidade quanto a seu uso
+                            conforme
+                            determinado na NR-1 da Portaria 3.214/78.
+                        </strong>2- Se o equipamento for danificado ou inutilizado por emprego inadequado, mau uso,
+                        negligência
+                        ou
+                        extravio, a empresa me fornecerá novo equipamento e cobrará o valor de um equipamento da mesma
+                        marca ou
+                        equivalente ao da praça (parágrafo único do artigo 462 da CLT).
+                        3- Fico proibido de dar ou emprestar o equipamento que estiver sob minha responsabilidade, só
+                        podendo
+                        fazê-lo se receber ordem por escrito da pessoa autorizada para tal fim.
+                        4- Em caso de dano, inutilização ou extravio do equipamento deverei comunicar imediatamente ao
+                        setor
+                        competente.
+                        5- Terminando os serviços ou no caso de rescisão do contrato de trabalho, devolverei o
+                        equipamento completo
+                        e em perfeito estado de conservação, considerando-se o tempo do uso do mesmo, ao setor
+                        competente.
+                        6- Estando os equipamentos em minha posse, estarei sujeito a inspeções sem prévio aviso.
+                        7- Fico ciente de que não utilizando o equipamento de proteção individual em serviço estarei
+                        sujeito as
+                        sanções disciplinares cabíveis que irão desde simples advertências até a dispensa por justa
+                        causa nos
+                        termos do Art. 482 da C.L.T. combinado com a NR-1 e NR-6 da Portaria 3.214/78.
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <br>
+                    <br>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <span>
+                        Cabo de Santo Agostinho, ________de________________de ________
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <br>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <span>
+                        Ciente: ____________________________________________________
+                    </span>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+
+
+</div>

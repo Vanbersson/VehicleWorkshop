@@ -1,0 +1,488 @@
+<div class="layout-card">
+    <!-- Info -->
+    <p-toast />
+    <div class="layout-card-title">
+        <span>Entrada de veículos</span>
+        <div class="layout-button-alert">
+            @if (listVehicleEntry.length > 0) {
+            <p-button [label]="listVehicleEntry.length.toString()" [rounded]="true" severity="warn" [outlined]="true" size="large" (onClick)="showDialogVehicle()" />
+            }
+        </div>
+    </div>
+    <p-stepper [(value)]="activeStepper" class="basis-[40rem]">
+        <p-step-list>
+            <p-step [value]="1" class="flex flex-row flex-auto gap-2">
+                <ng-template #content let-activateCallback="activateCallback" let-value="value">
+                    <button class="bg-transparent border-0 inline-flex flex-col gap-2" (click)="activateCallback()">
+                        <span class="rounded-full border-2 w-12 h-12 inline-flex items-center justify-center" [ngClass]="{
+                                        'bg-primary text-primary-contrast border-primary': value <= activeStepper,
+                                        'border-surface': value > activeStepper
+                                    }">
+                            <i class="pi pi-building"></i>
+                        </span>
+                    </button>
+                </ng-template>
+            </p-step>
+            <p-step [value]="2" class="flex flex-row flex-auto gap-2">
+                <ng-template #content let-activateCallback="activateCallback" let-value="value">
+                    <button class="bg-transparent border-0 inline-flex flex-col gap-2" (click)="nextStepperClientCompany()">
+                        <span class="rounded-full border-2 w-12 h-12 inline-flex items-center justify-center" [ngClass]="{
+                                        'bg-primary text-primary-contrast border-primary': value <= activeStepper,
+                                        'border-surface': value > activeStepper
+                                    }">
+                            <i class="pi pi-fw pi-id-card"></i>
+                        </span>
+                    </button>
+                </ng-template>
+            </p-step>
+            <p-step [value]="3" class="flex flex-row flex-auto gap-2">
+                <ng-template #content let-activateCallback="activateCallback" let-value="value">
+                    <button class="bg-transparent border-0 inline-flex flex-col gap-2" (click)="nextSterpperDriver()">
+                        <span class="rounded-full border-2 w-12 h-12 inline-flex items-center justify-center" [ngClass]="{
+                                        'bg-primary text-primary-contrast border-primary': value <= activeStepper,
+                                        'border-surface': value > activeStepper
+                                    }">
+                            <i class="pi pi-car"></i>
+                        </span>
+                    </button>
+                </ng-template>
+            </p-step>
+        </p-step-list>
+        <p-step-panels>
+            <p-step-panel [value]="1">
+                <ng-template #content let-activateCallback="activateCallback">
+                    <form [formGroup]="formClientCompany" class="layout-card-step">
+                        <span>Vamos fazer a entrada de um novo veículo</span>
+                        <p>
+                            Por favor selecione a empresa em que esse veículo pertence.
+                        </p>
+                        <div class="grid grid-cols-12 gap-4">
+                            <!-- Empresa sem cadastro -->
+                            <div class="col-span-12 flex align-items-center gap-2">
+                                <p-checkbox
+                                    inputId="ClientCompanyNotId"
+                                    binary="true"
+                                    formControlName="clientCompanyNot"
+                                    (onChange)="validationClientCompany()">
+                                </p-checkbox>
+                                <label
+                                    for="ClientCompanyNotId"
+                                    class="text-primary font-medium">
+                                    Empresa sem cadastro!
+                                </label>
+                            </div>
+                            <!-- Código -->
+                            <div class="col-span-12 md:col-span-2">
+                                <label for="clientCompanyId">Código</label>
+                                <p-inputNumber
+                                    inputId="clientCompanyId"
+                                    formControlName="clientCompanyId"
+                                    [useGrouping]="false"
+                                    fluid>
+                                </p-inputNumber>
+                            </div>
+                            <!-- Empresa -->
+                            <div class="col-span-10 md:col-span-8">
+                                <label for="clientCompanyName">Empresa</label>
+                                <input
+                                    pInputText
+                                    id="clientCompanyName"
+                                    formControlName="clientCompanyName"
+                                    class="w-full"
+                                    style="text-transform: uppercase;">
+                            </div>
+                            <!-- Filtro -->
+                            <div class="flex flex-col col-span-2">
+                                <label>Filtro</label>
+                                <app-filterclient (outputClient)="selectClientCompany.set($event)">
+                                </app-filterclient>
+                            </div>
+                            <!-- CNPJ -->
+                            <div class="col-span-12 md:col-span-2">
+                                <label for="clientCompanyCnpj">CNPJ</label>
+                                <p-inputMask
+                                    id="clientCompanyCnpj"
+                                    mask="99.999.999/9999-99"
+                                    formControlName="clientCompanyCnpj"
+                                    fluid>
+                                </p-inputMask>
+                            </div>
+                            <!-- CPF -->
+                            <div class="col-span-12 md:col-span-2">
+                                <label for="clientCompanyCpf">CPF</label>
+                                <p-inputMask
+                                    id="clientCompanyCpf"
+                                    mask="999.999.999-99"
+                                    formControlName="clientCompanyCpf"
+                                    fluid>
+                                </p-inputMask>
+                            </div>
+                            <!-- RG -->
+                            <div class="col-span-12 md:col-span-2">
+                                <label for="clientCompanyRg">RG</label>
+                                <p-inputNumber
+                                    inputId="clientCompanyRg"
+                                    formControlName="clientCompanyRg"
+                                    [useGrouping]="false"
+                                    fluid>
+                                </p-inputNumber>
+                            </div>
+                        </div>
+                    </form>
+                    <p-divider type="solid" />
+                    <div class="flex justify-end">
+                        <p-button (onClick)="nextStepperClientCompany()" label="Avançar" icon="pi pi-arrow-right" iconPos="right" />
+                    </div>
+                </ng-template>
+            </p-step-panel>
+            <p-step-panel [value]="2">
+                <ng-template #content let-activateCallback="activateCallback">
+                     <form [formGroup]="formDriver" class="layout-card-step">
+                    <span>Vamos informar o motorista</span>
+                    <p>
+                        Por favor selecione o motorista.
+                    </p>
+                    <div class="grid grid-cols-12 gap-4">
+                        <div class="col-span-12 flex align-center mt-2">
+                            <div class="layout-photo-person">
+                                <p-image *ngIf="driverEntryPhoto" [imageStyle]="{'border-radius':'100%','object-fit':'cover','width':'80px','height':'80px'}" [src]="driverEntryPhoto" alt="imagem motorista" [preview]="true" />  
+                            </div>
+                        </div>
+                            <div class="col-span-12 md:col-span-1">
+                            <label for="driverEntryId">Código</label>
+                            <p-inputNumber inputId="driverEntryId" [useGrouping]="false" formControlName="driverEntryId" fluid/>
+                        </div>
+                        <div class="col-span-10 md:col-span-6">
+                            <label for="driverEntryName">Nome</label>
+                            <input pInputText id="driverEntryName" type="text" class="w-full" formControlName="driverEntryName" [style]="{'text-transform':'uppercase'}">
+                        </div>
+                        <div class="col-span-2 md:col-span-1 flex flex-col">
+                            <label for="">Filtro</label>
+                            <app-filterdriver (outputDriver)="selectDriver.set($event)"/>
+                        </div>
+                        <div class="md:col-span-4"></div>
+                        <div class="col-span-12 md:col-span-3">
+                            <label for="driverEntryCpf">CPF</label>
+                            <p-inputMask id="driverEntryCpf" mask="999.999.999-99" unmask="true" formControlName="driverEntryCpf" fluid/>
+                        </div>
+                        <div class="col-span-12 md:col-span-3">
+                            <label for="driverEntryRg">RG</label>
+                            <p-inputNumber id="clientCompanyRg" mode="decimal" [useGrouping]="false" formControlName="driverEntryRg" fluid/>
+                        </div>
+                        <div class="md:col-span-8"></div>
+                        <div class="col-span-12 md:col-span-6 flex align-items-center gap-2">
+                            <div class="layout-file">
+                                <div class="layout-file-img">
+                                    <p-image *ngIf="driverEntryPhotoDoc1"  [imageStyle]="{'border-radius':'8px','object-fit':'cover'}" [src]="driverEntryPhotoDoc1" alt="" [preview]="true" />
+                                </div>
+                            </div>
+                            <div class="layout-file">
+                                <div class="layout-file-img">
+                                    <p-image *ngIf="driverEntryPhotoDoc2"  [imageStyle]="{'border-radius':'8px','object-fit':'cover'}" [src]="driverEntryPhotoDoc2" alt="" [preview]="true" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+                <p-divider type="solid" />
+                <div class="flex justify-between">
+                    <p-button (onClick)="activateCallback(1)" label="Voltar" severity="secondary" icon="pi pi-arrow-left" />
+                    <p-button (onClick)="nextSterpperDriver()" label="Avançar" icon="pi pi-arrow-right"  iconPos="right" />
+                </div>
+                </ng-template>
+            </p-step-panel>
+            <p-step-panel [value]="3">
+                <ng-template #content let-activateCallback="activateCallback">
+                    <form [formGroup]="formVehicle" class="layout-card-step">
+                    <span>Vamos informar agora os dados do veículo</span>
+                    <div class="grid grid-cols-12 gap-2">
+                        <div class="col-span-12 md:col-span-1">
+                            <label for="plate">Placa</label>
+                            <p-inputMask id="plate" mask="***-****" [unmask]="true" [style]="{'text-transform':'uppercase'}" formControlName="vehiclePlate" fluid/>
+                            <small class="block text-sm text-red-500" *ngIf="formVehicle.get('vehiclePlate')?.invalid">Campo obrigatório</small>
+                        </div>
+                        <div class="col-span-12 md:col-span-1">
+                            <label for="fleet">Frota</label>
+                            <input pInputText type="text" class="w-full" maxlength="10" [style]="{'text-transform':'uppercase'}" formControlName="vehicleFleet"/>
+                        </div>
+                        <div class="col-span-12 md:col-span-2">
+                            <label for="vehiclemodelid">Modelos</label>
+                            <p-select
+                            formControlName="modelVehicle"
+                            [options]="vehicleModels()"
+                            optionLabel="description"
+                            [style]="{'text-transform':'uppercase'}" fluid />
+                            <small class="block text-sm text-red-500" *ngIf="formVehicle.get('modelVehicle')?.invalid">Campo obrigatório</small>
+                        </div>
+                        <div class="col-span-12 md:col-span-3">
+                            <label for="dateEntry">Data Entrada</label>
+                            <p-datepicker [showOnFocus]="false" [showIcon]="true" inputId="dateEntry" [showTime]="true" dateFormat="dd/mm/yy" (onInput)="applyDateTimeMask($event)" formControlName="entryDate" fluid/>
+                            <small class="block text-sm text-red-500" *ngIf="formVehicle.get('entryDate')?.invalid">Campo obrigatório</small>
+                        </div>
+                        
+                        <div class="col-span-12 md:col-span-3">
+                            <label for="exitDatePrevision">Previsão saída</label>
+                            <p-datepicker [showOnFocus]="false" [showIcon]="true" inputId="exitDatePrevision" [showTime]="true" dateFormat="dd/mm/yy" (onInput)="applyDateTimeMask($event)" formControlName="exitDatePrevision" fluid/>
+                        </div>
+                        <div class="md:col-span-2"></div>
+                        <div class="col-span-12 md:col-span-2">
+                            <label for="vehiclecolorid">Cor</label>
+                            <p-select
+                            formControlName="vehicleColor"
+                            [showClear]="true"
+                            [options]="colors"
+                            optionLabel="color"
+                            [style]="{'text-transform':'uppercase'}" fluid/>
+                        </div>
+                        <div class="col-span-12 md:col-span-2">
+                            <label for="kmatual">KM Atual</label>
+                            <p-inputNumber inputId="kmatual" [useGrouping]="false" formControlName="vehicleKmEntry" fluid/>
+                        </div>
+                        <div class="col-span-12 md:col-span-2">
+                            <label for="consultorid">Consultor</label>
+                            <p-select 
+                            formControlName="attendant"
+                            [showClear]="true"
+                            [options]="attendants()"
+                            optionLabel="name"
+                            [style]="{'text-transform':'uppercase'}" fluid />
+                        </div>
+                        <div class="col-span-12 md:col-span-2">
+                            <label class="block font-medium">Veículo novo</label>
+                            <div class="flex items-center gap-4 border border-gray-300 rounded-md p-3">
+                                <div class="flex items-center">
+                                    <p-radioButton
+                                        inputId="newyes"
+                                        name="vehicleNew"
+                                        [value]="yes"
+                                        formControlName="vehicleNew"
+                                        (onClick)="deleteRequirePlaca()">
+                                    </p-radioButton>
+                                    <label for="newyes" class="ml-2">Sim</label>
+                                </div>
+                                <div class="flex items-center">
+                                    <p-radioButton
+                                        inputId="newnot"
+                                         name="vehicleNew"
+                                        [value]="not"
+                                        formControlName="vehicleNew"
+                                        (onClick)="addRequirePlaca()">
+                                    </p-radioButton>
+                                    <label for="newnot" class="ml-2">Não</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-span-12 md:col-span-2">
+                            <label class="block font-medium">Ordem serviço</label>
+                            <div class="flex items-center gap-4 border border-gray-300 rounded-md p-3">
+                                <div class="flex items-center">
+                                    <p-radioButton
+                                        inputId="serviceyes3"
+                                        name="service"
+                                        [value]="yes"
+                                        formControlName="vehicleServiceOrder">
+                                    </p-radioButton>
+                                    <label for="serviceyes3" class="ml-2">Sim</label>
+                                </div>
+                                <div class="flex items-center">
+                                    <p-radioButton
+                                        inputId="servicenot4"
+                                        name="service"
+                                        [value]="not"
+                                        formControlName="vehicleServiceOrder">
+                                    </p-radioButton>
+                                    <label for="servicenot4" class="ml-2">Não</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="md:col-span-2"></div>
+                         <!-- Teste check list -->
+                        <div *ngIf="modChecklist.checklist1Enabled == yes" class="col-span-12 md:col-span-2">
+                            <label for="coneid">{{modChecklist.checklist1Desc}}</label>
+                            <input pInputText class="w-full" formControlName="checklist1Desc" maxlength="50"/>
+                        </div>
+                        <div *ngIf="modChecklist.checklist2Enabled == yes" class="col-span-12 md:col-span-2">
+                            <label for="extintorid">{{modChecklist.checklist2Desc}}</label>
+                            <input pInputText class="w-full" formControlName="checklist2Desc" maxlength="50"/>
+                        </div>
+                        <div *ngIf="modChecklist.checklist3Enabled == yes" class="col-span-12 md:col-span-2">
+                            <label for="pneuid">{{modChecklist.checklist3Desc}}</label>
+                            <input pInputText class="w-full" formControlName="checklist3Desc" maxlength="50"/>
+                        </div>
+                        <div *ngIf="modChecklist.checklist4Enabled == yes" class="col-span-12 md:col-span-2">
+                            <label for="pneurodaid">{{modChecklist.checklist4Desc}}</label>
+                            <input pInputText class="w-full" formControlName="checklist4Desc" maxlength="50"/>
+                        </div>
+                        <div *ngIf="modChecklist.checklist5Enabled == yes" class="col-span-12 md:col-span-2">
+                            <label for="cxferramentaid">{{modChecklist.checklist5Desc}}</label>
+                            <input pInputText class="w-full" formControlName="checklist5Desc" maxlength="50"/>
+                        </div>
+                        <div *ngIf="modChecklist.checklist6Enabled == yes" class="col-span-12 md:col-span-2">
+                            <label for="coneid">{{modChecklist.checklist6Desc}}</label>
+                            <input pInputText class="w-full" formControlName="checklist6Desc" maxlength="50"/>
+                        </div>
+                        <div *ngIf="modChecklist.checklist7Enabled == yes" class="col-span-12 md:col-span-2">
+                            <label for="extintorid">{{modChecklist.checklist7Desc}}</label>
+                              <input pInputText class="w-full" formControlName="checklist7Desc" maxlength="50"/>
+                        </div>
+                        <div *ngIf="modChecklist.checklist8Enabled == yes" class="col-span-12 md:col-span-2">
+                            <label for="pneuid">{{modChecklist.checklist8Desc}}</label>
+                            <input pInputText class="w-full" formControlName="checklist8Desc" maxlength="50"/>
+                        </div>
+                        <div *ngIf="modChecklist.checklist9Enabled == yes" class="col-span-12 md:col-span-2">
+                            <label for="pneurodaid">{{modChecklist.checklist9Desc}}</label>
+                            <input pInputText class="w-full" formControlName="checklist9Desc" maxlength="50"/>
+                        </div>
+                        <div *ngIf="modChecklist.checklist10Enabled == yes" class="col-span-12 md:col-span-2">
+                            <label for="cxferramentaid">{{modChecklist.checklist10Desc}}</label>
+                            <input pInputText class="w-full" formControlName="checklist10Desc" maxlength="50"/>
+                        </div>
+                        <div *ngIf="modChecklist.checklist11Enabled == yes" class="col-span-12 md:col-span-2">
+                            <label for="pneurodaid">{{modChecklist.checklist11Desc}}</label>
+                            <input pInputText class="w-full" formControlName="checklist11Desc" maxlength="50"/>
+                        </div>
+                        <div *ngIf="modChecklist.checklist12Enabled == yes" class="col-span-12 md:col-span-2">
+                            <label for="cxferramentaid">{{modChecklist.checklist12Desc}}</label>
+                            <input pInputText class="w-full" formControlName="checklist12Desc" maxlength="50"/>
+                        </div>
+                         <div *ngIf="modChecklist.checklist13Enabled == yes" class="col-span-12 md:col-2">
+                            <label for="cxferramentaid">{{modChecklist.checklist13Desc}}</label>
+                            <input pInputText class="w-full" formControlName="checklist13Desc" maxlength="50"/>
+                        </div>
+                        <div *ngIf="modChecklist.checklist14Enabled == yes" class="col-12 md:col-span-2">
+                            <label for="cxferramentaid">{{modChecklist.checklist14Desc}}</label>
+                            <input pInputText class="w-full" formControlName="checklist14Desc" maxlength="50"/>
+                        </div>
+                        <div *ngIf="modChecklist.checklist15Enabled == yes" class="col-span-12 md:col-span-2">
+                            <label for="cxferramentaid">{{modChecklist.checklist15Desc}}</label>
+                            <input pInputText class="w-full" formControlName="checklist15Desc" maxlength="50"/>
+                        </div>
+                        <div *ngIf="modChecklist.checklist16Enabled == yes" class="col-span-12 md:col-span-2">
+                            <label for="cxferramentaid">{{modChecklist.checklist16Desc}}</label>
+                            <input pInputText class="w-full" formControlName="checklist16Desc" maxlength="50"/>
+                        </div>
+                        <div *ngIf="modChecklist.checklist17Enabled == yes" class="col-span-12 md:col-span-2">
+                            <label for="cxferramentaid">{{modChecklist.checklist17Desc}}</label>
+                            <input pInputText class="w-full" formControlName="checklist17Desc" maxlength="50"/>
+                        </div>
+                        <div *ngIf="modChecklist.checklist18Enabled == yes" class="col-span-12 md:col-span-2">
+                            <label for="cxferramentaid">{{modChecklist.checklist18Desc}}</label>
+                            <input pInputText class="w-full" formControlName="checklist18Desc" maxlength="50"/>
+                        </div>
+                        <div *ngIf="modChecklist.checklist19Enabled == yes" class="col-span-12 md:col-span-2">
+                            <label for="cxferramentaid">{{modChecklist.checklist19Desc}}</label>
+                            <input pInputText class="w-full" formControlName="checklist19Desc" maxlength="50"/>
+                        </div>
+                        <div *ngIf="modChecklist.checklist20Enabled == yes" class="col-span-12 md:col-span-2">
+                            <label for="cxferramentaid">{{modChecklist.checklist20Desc}}</label>
+                            <input pInputText class="w-full" formControlName="checklist20Desc" maxlength="50"/>
+                        </div> 
+                        <!-- Teste check list -->                  
+                        <div class="col-span-12">
+                            <label for="informacao" class="ml-2">Informações</label>
+                            <textarea pInputTextarea maxlength="255" id="informacao" rows="4" cols="30" formControlName="entryInformation" fluid></textarea>
+                        </div>
+                        <div class="col-span-12 md:col-span-4 flex justify-between gap-1">
+                            <div class="layout-file">
+                                <div class="layout-file-img">
+                                    <p-image *ngIf="photoVehicle1()" [src]="photoVehicle1()" alt="" [preview]="true"/>
+                                </div>
+                                <button pButton *ngIf="photoVehicle1()" severity="danger" (click)="deleteFileVehicle1()">
+                                    <i class="pi pi-trash"></i>
+                                    <span>Remover</span>
+                                </button>
+                                <button pButton *ngIf="!photoVehicle1()" type="button" (click)="photoFile1Vehicle()">
+                                    <i class="pi pi-plus"></i>
+                                    <span>Incluir</span>
+                                </button>
+                            </div> 
+                            <div class="layout-file">
+                                <div class="layout-file-img">
+                                    <p-image *ngIf="photoVehicle2()" [src]="photoVehicle2()" alt="" [preview]="true"/>
+                                </div>
+                                <button *ngIf="photoVehicle2()" pButton severity="danger" (click)="deleteFileVehicle2()">
+                                    <i class="pi pi-trash"></i>
+                                    <span>Remover</span>
+                                </button>
+                                <button *ngIf="!photoVehicle2()" pButton type="button" (click)="photoFile2Vehicle()">
+                                    <i class="pi pi-plus"></i>
+                                    <span>Incluir</span>
+                                </button>
+                            </div>
+                            <div class="layout-file">
+                                <div class="layout-file-img">
+                                    <p-image *ngIf="photoVehicle3()" [src]="photoVehicle3()" alt="" [preview]="true"/>
+                                </div>
+                                <button *ngIf="photoVehicle3()" pButton severity="danger" (click)="deleteFileVehicle3()">
+                                    <i class="pi pi-trash"></i>
+                                    <span>Remover</span>
+                                </button>  
+                                <button *ngIf="!photoVehicle3()" pButton type="button" (click)="photoFile3Vehicle()">
+                                    <i class="pi pi-plus"></i>
+                                    <span>Incluir</span>
+                                </button>  
+                            </div>
+                            <div class="layout-file">
+                                <div class="layout-file-img">
+                                    <p-image *ngIf="photoVehicle4()" [src]="photoVehicle4()" alt="" [preview]="true"/>
+                                </div>
+                                <button *ngIf="photoVehicle4()" pButton severity="danger" (click)="deleteFileVehicle4()">
+                                    <i class="pi pi-trash"></i>
+                                    <span>Remover</span>
+                                </button>
+                                <button *ngIf="!photoVehicle4()" pButton type="button" (click)="photoFile4Vehicle()">
+                                    <i class="pi pi-plus"></i>
+                                    <span>Incluir</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+                <p-divider type="solid" />
+                <div class="flex justify-start gap-2">
+                    <button pButton (click)="activateCallback(2)" label="Voltar" severity="secondary" icon="pi pi-arrow-left"></button>
+                    <button pButton icon="pi pi-plus" label="Adicionar " [outlined]="true" (click)="addVehicleEntry()"></button>
+                </div>
+                </ng-template>
+            </p-step-panel>
+        </p-step-panels>
+    </p-stepper>
+</div>
+
+<!-- Dialog Veículos -->
+<p-dialog header="Lista de veículos" [(visible)]="dialogVehicleVisible" [modal]="true"
+    [breakpoints]="{ '1199px': '75vw', '575px': '90vw' }">
+    <p-table [value]="listVehicleEntry" [tableStyle]="{ 'min-width': '60rem' }" styleClass="p-datatable-sm">
+        <ng-template pTemplate="header">
+            <tr>
+                <th pSortableColumn="vehiclePlate">Placa<p-sortIcon field="vehiclePlate"></p-sortIcon></th>
+                <th pSortableColumn="vehicleFleet">Frota<p-sortIcon field="vehicleFleet"></p-sortIcon></th>
+                <th pSortableColumn="modelDescription">Modelo<p-sortIcon field="modelDescription"></p-sortIcon></th>
+                <th pSortableColumn="attendantUserName">Consultor<p-sortIcon field="attendantUserName"></p-sortIcon>
+                </th>
+                <th pSortableColumn="clientCompanyName">Empresa<p-sortIcon field="clientCompanyName"></p-sortIcon></th>
+                <th></th>
+            </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-vehicle let-index="rowIndex">
+            <tr>
+                <td *ngIf="vehicle.vehicleNew == yes"><p-tag value="NOVO" severity="info"></p-tag></td>
+                <td *ngIf="vehicle.vehicleNew == not">{{vehicle.vehiclePlate | uppercase}}</td>
+                <td>{{vehicle.vehicleFleet}}</td>
+                <td>{{vehicle.modelDescription | uppercase}}</td>
+                <td *ngIf="vehicle.attendantUserId == 0"><p-tag value="FALTA" severity="danger"></p-tag></td>
+                <td *ngIf="vehicle.attendantUserId != 0">{{vehicle.attendantUserName | uppercase}}</td>
+                <td *ngIf="vehicle.clientCompanyId == 0"><p-tag value="FALTA" severity="danger"></p-tag></td>
+                <td *ngIf="vehicle.clientCompanyId != 0">{{ firstSecondaryName(vehicle.clientCompanyName) | uppercase }}
+                </td>
+                <td>
+                    <button pButton [text]="true" icon="pi pi-trash" severity="danger"
+                        (click)="deleteVehicleEntry(index)"></button>
+                </td>
+            </tr>
+        </ng-template>
+    </p-table>
+    <div class="flex justify-end mt-3">
+        <button pButton type="submit" pRipple label="Finalizar" icon="pi pi-check" class="p-button-text" (click)="save()"></button>
+    </div>
+</p-dialog>

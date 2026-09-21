@@ -1,0 +1,96 @@
+<div class="layout-card">
+    <p-toast />
+    <div class="layout-card-title">
+        <span>Marcas</span>
+        <p-button icon="pi pi-plus" [outlined]="true" label="Marca" (onClick)="showNewBrand()" />
+    </div>
+    <p-table #tableModel [value]="listBrands()" currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} Cadastros" showGridlines
+        [globalFilterFields]="['id','status','name']" [paginator]="true" [rows]="10"
+        [rowsPerPageOptions]="[10, 25, 50]">
+        <ng-template pTemplate="caption">
+            <div class="flex justify-content-between">
+                <p-iconField iconPosition="left">
+                    <p-inputIcon>
+                        <i class="pi pi-search"></i>
+                    </p-inputIcon>
+                    <input pInputText type="text" (input)="tableModel.filterGlobal($event.target.value, 'contains')"
+                        placeholder="Pesquisar" />
+                </p-iconField>
+            </div>
+        </ng-template>
+        <ng-template pTemplate="header">
+            <tr>
+                <th pSortableColumn="id" style="width:10%">Código <p-sortIcon field="id"></p-sortIcon></th>
+                <th pSortableColumn="status" style="width:10%">Status <p-sortIcon field="status"></p-sortIcon></th>
+                <th pSortableColumn="name" style="width:80%">Nome<p-sortIcon field="name"></p-sortIcon></th>
+                <th></th>
+            </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-brand>
+            <tr>
+                <td>{{brand.id}}</td>
+                <td>
+                    <i class="pi " [ngClass]="{
+                        'pi-times-circle text-red-500':brand.status == disabled,
+                        'pi-check-circle text-green-500':brand.status == enabled}">
+                    </i> <span *ngIf="isMobile"> {{brand.status | uppercase}}</span>
+                </td>
+                <td>{{brand.name | uppercase}}</td>
+                <td>
+                  <p-button icon="pi pi-pencil" [text]="true" size="small" severity="secondary" (onClick)="edit(brand)"/>  
+                </td>
+            </tr>
+        </ng-template>
+    </p-table>
+</div>
+
+<p-dialog header="Cadastro da Marca" [(visible)]="dialogVisible" [modal]="true" [style]="{width: '450px'}"
+    [breakpoints]="{ '1199px': '75vw', '575px': '90vw' }">
+    <form [formGroup]="formBrand" (ngSubmit)="save()">
+        <div class="grid grid-cols-12 gap-4">
+            <!-- Nome -->
+            <div class="col-span-12">
+                <label for="nameId" class="block mb-2">
+                    Nome
+                </label>
+                <input pInputText id="nameId" formControlName="name" maxlength="100" class="w-full" />
+
+                <small *ngIf="formBrand.get('name')?.invalid && formBrand.get('name')?.touched" class="text-red-500">
+                    Campo obrigatório
+                </small>
+            </div>
+            <!-- Status -->
+            <div class="col-span-12">
+                <label class="block mb-2 font-medium">
+                    Status
+                </label>
+                <div class="border border-surface-300 rounded-lg p-4 flex gap-6">
+                    <div class="flex items-center gap-2">
+                        <p-radioButton inputId="enabledId" [value]="enabled" formControlName="status">
+                        </p-radioButton>
+
+                        <label for="enabledId">
+                            {{ enabled }}
+                        </label>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <p-radioButton inputId="disabledId" [value]="disabled" formControlName="status">
+                        </p-radioButton>
+
+                        <label for="disabledId">
+                            {{ disabled }}
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Botões -->
+        <div class="flex justify-end gap-2 mt-6">
+            <button pButton type="button" text icon="pi pi-times" label="Fechar" (click)="hideDialog()">
+            </button>
+
+            <button pButton type="submit" text icon="pi pi-check" label="Salvar">
+            </button>
+        </div>
+    </form>
+</p-dialog>

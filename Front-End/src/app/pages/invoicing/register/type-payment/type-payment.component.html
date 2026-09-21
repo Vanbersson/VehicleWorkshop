@@ -1,0 +1,89 @@
+<div class="layout-card">
+    <p-toast />
+    <div class="layout-card-title">
+        <span>Condição de Pagamento</span>
+        <p-button icon="pi pi-plus" [outlined]="true" label="Novo" (onClick)="showNewPay()" />
+    </div>
+    <p-table #dt1 dataKey="id" [value]="typePays()" [rowHover]="true" showGridlines
+        currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords}" [showCurrentPageReport]="true"
+        [globalFilterFields]="['id', 'description','status']" [paginator]="true" [rows]="10"
+        [rowsPerPageOptions]="[10, 25, 50]">
+        <ng-template pTemplate="caption">
+            <div class="flex justify-content-between">
+                <p-iconField iconPosition="left">
+                    <p-inputIcon>
+                        <i class="pi pi-search"></i>
+                    </p-inputIcon>
+                    <input pInputText type="text" (input)="dt1.filterGlobal($event.target.value, 'contains')"
+                        placeholder="Pesquisar" />
+                </p-iconField>
+            </div>
+        </ng-template>
+        <ng-template pTemplate="header">
+            <tr>
+                <th pSortableColumn="id" style="width:10%">
+                    Código <p-sortIcon field="id" />
+                </th>
+                <th pSortableColumn="status" style="width:10%">
+                    Status <p-sortIcon field="status" />
+                </th>
+                <th pSortableColumn="description" style="width:80%">
+                    Descrição <p-sortIcon field="description" />
+                </th>
+                <th></th>
+            </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-cat>
+            <tr>
+                <td>{{cat.id}}</td>
+                <td class="gap-2">
+                    <i class="pi " [ngClass]="{
+                        'pi-times-circle text-red-500':cat.status == disabled,
+                        'pi-check-circle text-green-500':cat.status == enabled}">
+                    </i>
+                    {{cat.status | uppercase}}
+                </td>
+                <td>{{cat.description | uppercase}}</td>
+
+                <td>
+                    <p-button icon="pi pi-pencil" [text]="true" severity="secondary" size="small" (onClick)="edit(cat)"/>
+                </td>
+            </tr>
+        </ng-template>
+    </p-table>
+</div>
+
+ <p-dialog header="Cadastro Condição de pagamento" [(visible)]="visibleDialog" [modal]="true" 
+    [style]="{ width: '40rem', height:'22rem' }" [breakpoints]="{ '1199px': '75vw', '575px': '90vw' }">
+    <form [formGroup]="formPay">
+        <div class="grid grid-cols-12 gap-2 mt-4">
+            <div class="col-span-12 md:col-span-2">
+                <label for="">Código</label>
+                 <p-inputNumber mode="decimal" [useGrouping]="false" formControlName="id" fluid/>
+            </div>
+            <div class="col-span-12 md:col-span-10">
+                <label for="">Descrição</label>
+                <input pInputText class="w-full" formControlName="description"/>
+                <small class="block text-sm text-red-500" *ngIf="formPay.get('description')?.invalid">Campo obrigatório</small>
+            </div>
+            <div class="col-span-12">
+                <label for="">Status</label>
+                <div class="flex items-center gap-2 border border-gray-300 rounded-md p-3">
+                    <div class="flex align-center">
+                        <p-radioButton inputId="st1" [value]="enabled" formControlName="status"></p-radioButton>
+                        <label for="st1" class="ml-2">{{enabled}}</label>
+                    </div>
+                    <div class="flex align-items-center">
+                        <p-radioButton inputId="st2" [value]="disabled" formControlName="status"></p-radioButton>
+                        <label for="st2" class="ml-2">{{disabled}}</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+   <div class="flex flex-col items-center w-full border-b border-surface-200 dark:border-surface-700 mt-4"></div>
+    <div class="col-12 flex justify-end gap-2 mt-4">
+        <button pButton type="button" pRipple label="Fechar" icon="pi pi-times" class="p-button-text" (click)="hideDialog()"></button>
+        <button pButton type="button" pRipple label="Salvar" icon="pi pi-check" class="p-button-text" (click)="save()"></button>
+    </div>
+</p-dialog> 

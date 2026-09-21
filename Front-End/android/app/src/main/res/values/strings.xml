@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Vehicle Workshop</string>
+    <string name="title_activity_main">Vehicle Workshop</string>
+    <string name="package_name">br.com.atenatruck.vehicleworkshop</string>
+    <string name="custom_url_scheme">br.com.atenatruck.vehicleworkshop</string>
+</resources>

@@ -1,0 +1,51 @@
+<div class="layout-card">
+     <!-- Toast -->
+    <p-toast />
+    <div class="layout-card-title">
+        <span>Pedidos de Compra</span>
+        <p-button icon="pi pi-plus" [outlined]="true" label="Novo" (onClick)="newPurchaseOrder()" />
+    </div>
+    <p-table #tableFilter dataKey="id" [value]="purchaseOrders()" showGridlines [rowHover]="true" [showCurrentPageReport]="true"
+        [tableStyle]="{ 'min-width': '50rem' }"
+        [globalFilterFields]="['id','statusDelivery','nfNum', 'clientCompanyName', 'responsibleName', 'type','dateDelivery']"
+        [paginator]="true" [rows]="15" [rowsPerPageOptions]="[15, 25, 50]" size="small">
+        <ng-template pTemplate="caption">
+            <div class="flex">
+                <p-iconField iconPosition="left">
+                    <p-inputIcon>
+                        <i class="pi pi-search"></i>
+                    </p-inputIcon>
+                    <input pInputText type="text" (input)="tableFilter.filterGlobal($any($event.target).value, 'contains')" placeholder="Pesquisar" />
+                </p-iconField>
+            </div>
+        </ng-template>
+        <ng-template pTemplate="header">
+            <tr>
+                <th pSortableColumn="id" style="width:10%;">Pedido<p-sortIcon field="id"></p-sortIcon></th>
+                <th pSortableColumn="statusDelivery" style="width:10%;">Entrega<p-sortIcon field="statusDelivery"></p-sortIcon></th>
+                <th pSortableColumn="dateDelivery" style="width:10%;">Prazo entrega<p-sortIcon field="dateDelivery"></p-sortIcon></th>
+                <th pSortableColumn="nfNum" style="width:10%;">Nota<p-sortIcon field="nfNum"></p-sortIcon></th>
+                <th pSortableColumn="clientCompanyName" style="width:30%;">Fornecedor<p-sortIcon field="clientCompanyName"></p-sortIcon></th>
+                <th pSortableColumn="responsibleName" style="width:15%;">Responsavel<p-sortIcon field="responsibleName"></p-sortIcon></th>
+                <th pSortableColumn="type" style="width:15%;">Tipo<p-sortIcon field="type"></p-sortIcon></th>
+                <th></th>
+            </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-purchase>
+            <tr>
+                <td>{{purchase.id}}</td>
+                <td><p-tag [value]="purchase.statusDelivery" [severity]="getStatusSeverity(purchase.statusDelivery)" /></td>
+                <td>{{purchase.dateDelivery | date: 'dd/MM/yyyy'}}</td>
+                @if(purchase.nfNum != 0){
+                <td>{{purchase.nfNum}}</td>
+                }@else {
+                <td></td>
+                }
+                <td>{{ abreviaNome(purchase.clientCompanyName) | uppercase}}</td>
+                <td>{{purchase.responsibleUserName | uppercase}}</td>
+                <td>{{purchase.type | uppercase}}</td>
+                <td><p-button icon="pi pi-pencil" [text]="true" severity="secondary" size="small" (onClick)="edit(purchase.id)" /></td>
+            </tr>
+        </ng-template>
+    </p-table>
+</div>

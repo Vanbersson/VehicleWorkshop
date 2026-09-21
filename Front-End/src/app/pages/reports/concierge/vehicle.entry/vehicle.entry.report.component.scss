@@ -1,0 +1,63 @@
+:host {
+
+    .layout-card-title {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 1rem;
+
+        span {
+            display: flex;
+            align-items: center;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--color-grey-800);
+        }
+
+    }   
+
+    .layout-mobile-button {
+        display: inline-block;
+
+        button {
+            span {
+                display: block;
+                margin-left: 0.25rem;
+            }
+        }
+    }
+
+    ::ng-deep {
+        .vehicle-details-dialog {
+            display: flex;
+            width: 90rem;
+            min-height: 44rem;
+        }
+
+        .p-button.p-button-icon-only {
+            padding: 0.5rem 0;
+        }
+
+        .p-tag {
+            font-weight: 400;
+        }
+
+        .p-tag.p-tag-secondary {
+            background-color: var(--color-grey-300);
+            color: var(--color-text-primary);
+        }
+
+    }
+
+    @media (max-width: 991px) {
+        .layout-mobile-button {
+
+            button {
+                span {
+                    display: none;
+                    margin: 0;
+                }
+            }
+        }
+
+    }
+}

@@ -1,0 +1,158 @@
+<div class="layout-card">
+     <p-toast />
+    <div class="layout-card-title">
+        <span>Veículos</span>
+        <p-button icon="pi pi-sync" [outlined]="true" label="Recarregar" (onClick)="init()"/>
+    </div>  
+     <!-- Desktop -->
+     <p-table #tableFilter1 dataKey="id" [value]="listVehicleEntry()" [(selection)]="selectedItems" [rowHover]="true" [scrollable]="true" scrollHeight="100rem"
+        [globalFilterFields]="['id','vehiclePlate','modelDescription', 'vehicleFleet','entryDate','clientCompanyName','attendantUserName']" showGridlines
+        currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords}" 
+        [paginator]="true" [rows]="10" [rowsPerPageOptions]="[10, 25, 50]" [showCurrentPageReport]="true"
+        [tableStyle]="{'min-height': '20rem' }" >
+        <ng-template #caption>
+            <div class="flex">
+                <p-button label="Limpar" [outlined]="true" icon="pi pi-filter-slash" (click)="clearTable(tableFilter1)" />
+                <p-iconfield iconPosition="left" class="ml-auto">
+                    <p-inputicon>
+                        <i class="pi pi-search"></i>
+                    </p-inputicon>
+                    <input pInputText type="text" (input)="tableFilter1.filterGlobal($event.target.value, 'contains')" placeholder="Pesquisar" />
+                </p-iconfield>
+            </div>
+        </ng-template>
+        <ng-template #header>
+            <tr>
+                <th>
+                    <div class="flex items-center justify-between">
+                        Sel.
+                    </div>
+                </th>
+                <th style="min-width:5rem">
+                    <div class="flex items-center justify-between">
+                        Código
+                        <p-columnFilter type="text" field="id" display="menu" />
+                    </div>
+                </th>
+                <th style="min-width:5rem">
+                    <div class="flex items-center justify-between">
+                        Placa
+                        <p-columnFilter type="text" field="vehiclePlate" display="menu" />
+                    </div>
+                </th>
+                <th style="min-width:5rem">
+                    <div class="flex items-center justify-between">
+                        Modelo
+                        <p-columnFilter type="text" field="modelDescription" display="menu" />
+                    </div>
+                </th>
+                <th style="min-width:5rem">
+                    <div class="flex items-center justify-between">
+                        Frota
+                        <p-columnFilter type="text" field="vehicleFleet" display="menu" />
+                    </div>
+                </th>
+                <th style="min-width:5rem">
+                    <div class="flex items-center justify-between">
+                        Nro. O.S.
+                        <p-columnFilter type="text" field="numServiceOrder" display="menu" />
+                    </div>
+                </th>
+                <th style="min-width:5rem">
+                    <div class="flex items-center justify-between">
+                        Entrada
+                        <p-columnFilter type="text" field="entryDate" display="menu"></p-columnFilter>
+                    </div>
+                </th>
+                <th style="min-width:10rem">
+                    <div class="flex items-center justify-between">
+                        Empresa
+                        <p-columnFilter type="text" field="clientCompanyName" display="menu" />
+                    </div>
+                </th>
+                <th style="min-width:10rem">
+                    <div class="flex items-center justify-between">
+                        Consultor
+                        <p-columnFilter type="text" field="attendantUserName" display="menu"></p-columnFilter>
+                    </div>
+                </th>
+                <th style="min-width:5rem">
+                    <div class="flex items-center justify-between">
+                        Liberação
+                        <p-columnFilter field="authExitStatus" matchMode="equals" display="menu">
+                            <ng-template #filter let-value let-filter="filterCallback">
+                                <p-select [options]="statusLiberacao()" (onChange)="filter($event.value)" placeholder="Selecione" class="w-full">
+                                    <ng-template let-option #item>
+                                        <div class="flex flex-row items-center gap-2">
+                                            <i class="pi " [ngClass]="{
+                                                'pi-times-circle text-red-500':option.value== notAuth,
+                                                'pi-check-circle text-green-500':option.value == firstAuth,
+                                                'pi-thumbs-up-fill text-green-600':option.value == authorized}">
+                                            </i>
+                                             <p-tag [value]="option.label" [severity]="getSeverityAuth(option.value)"></p-tag> 
+                                        </div>
+                                    </ng-template>
+                                </p-select>
+                            </ng-template>
+                        </p-columnFilter>
+                    </div>
+                </th>
+                <th style="min-width:5rem">
+                    <div class="flex items-center justify-between">
+                        
+                    </div>
+                </th>
+                <th style="min-width:5rem">
+                    <div class="flex items-center justify-between">
+                          <p-button *ngIf="selectedItems.length > 0" type="button" label="Liberar" icon="pi pi-car" size="small" severity="success" (onClick)="addAuthorizationAll()"></p-button>
+                      </div>
+                </th>
+            </tr>
+        </ng-template>
+        <ng-template #body let-vehicle>
+            <tr [pSelectableRow]="vehicle">
+                <td> <p-tableCheckbox [value]="vehicle"></p-tableCheckbox> </td>
+                <td><span class="text-500">{{ vehicle.id }}</span></td>
+                <td>
+                    @if(vehicle.vehicleNew == "yes"){
+                    <p-tag value="NOVO" severity="info"></p-tag>
+                    }@else {
+                    <span class="text-500">{{vehicle.vehiclePlate | uppercase}}</span>
+                    }
+                </td>
+                <td><span class="text-500">{{ vehicle.modelDescription | uppercase }}</span>
+                </td>
+                <td><span class="text-500">{{ vehicle.vehicleFleet | uppercase}}</span></td>
+                <td><span class="text-500">{{ vehicle.numServiceOrder}}</span></td>
+                <td><span class="text-500">{{ vehicle.entryDate }}</span></td>
+                <td>
+                    @if(vehicle.clientCompanyName =="FALTA"){
+                    <p-tag value="FALTA" severity="danger"></p-tag>
+                    }@else {
+                    <span class="text-500">{{ vehicle.clientCompanyName | uppercase }}</span>
+                    }
+                </td>
+                <td>
+                    @if(vehicle.attendantUserName == "FALTA"){
+                    <p-tag value="FALTA" severity="danger"></p-tag>
+                    }@else {
+                    <span class="text-500">{{ vehicle.attendantUserName | uppercase }}</span>
+                    }
+                </td>
+                <td class="text-center">
+                    <i class="pi " [ngClass]="{
+                        'pi-times-circle text-red-500':vehicle.authExitStatus == notAuth,
+                        'pi-check-circle text-green-500':vehicle.authExitStatus == firstAuth,
+                        'pi-thumbs-up-fill text-green-600':vehicle.authExitStatus == authorized}">
+                    </i>
+                </td>
+                <td>
+                    <p-button type="button"  icon="pi pi-pencil" text="true" size="small" severity="secondary" (onClick)="editVeiculo(vehicle.id)"></p-button>
+                </td>
+                <td>
+                  <p-button type="button" label="Liberar" icon="pi pi-car" text="true" size="small" severity="success" (onClick)="authExit(vehicle)"></p-button> 
+                 </td>
+            </tr>
+        </ng-template>
+    </p-table>
+</div>

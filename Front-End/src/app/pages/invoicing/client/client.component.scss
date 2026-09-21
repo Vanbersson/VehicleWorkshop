@@ -1,0 +1,35 @@
+.layout-card-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+
+    span {
+        display: flex;
+        align-items: center;
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--color-grey-800);
+    }
+}
+
+.layout-card-aba {
+    min-height: 33rem;
+}
+
+::ng-deep {
+    .p-button.p-button-icon-only {
+        padding: 0.5rem 0;
+    }
+
+    .p-inputgroup .p-inputtext,
+    .p-fluid .p-inputgroup .p-inputtext,
+    .p-inputgroup .p-inputwrapper,
+    .p-inputgroup .p-inputwrapper>.p-component {
+        flex: 1 1 auto;
+        width: 100%;
+        border-bottom-right-radius: 0;
+        border-top-right-radius: 0;
+    }
+
+}

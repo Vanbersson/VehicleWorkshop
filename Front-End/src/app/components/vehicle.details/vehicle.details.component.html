@@ -1,0 +1,446 @@
+ <div style="min-height: 36rem;">
+    <p-tabs value="0">
+        <p-tablist>
+            <p-tab value="0">Veículo</p-tab>
+            <p-tab value="1">Porteiro</p-tab>
+            <p-tab value="2">Proprietário</p-tab>
+            <p-tab value="3">Motorista</p-tab>
+        </p-tablist>
+        <p-tabpanels>
+            <p-tabpanel value="0">
+                <form [formGroup]="formVehicle">
+                    <div class="grid grid-cols-12 gap-2">
+                        <div class="col-span-12 md:col-span-1">
+                            <label for="vehicleId">Código</label>
+                            <p-inputNumber inputId="vehicleId" [useGrouping]="false" formControlName="id" fluid/>
+                        </div>
+                        <div class="col-span-12 md:col-span-2">
+                            <label for="entryDateId">Data Entrada</label>
+                            <input pInputText id="entryDateId" type="text" class="w-full" [style]="{'text-transform':'uppercase'}" formControlName="entryDate" />
+                        </div>
+                        <div class="col-span-12 md:col-span-2">
+                            <label for="exitDateId">Data Saída</label>
+                            <input pInputText id="exitDateId" type="text" class="w-full" [style]="{'text-transform':'uppercase'}" formControlName="exitDate" />
+                        </div>
+                        <div class="col-span-12 md:col-span-2">
+                            <label for="exitDatePrevisionId">Previsão saída</label>
+                            <input pInputText id="exitDatePrevisionId" type="text" class="w-full" [style]="{'text-transform':'uppercase'}" formControlName="exitDatePrevision" />
+                        </div>
+                        <div class="col-span-12 md:col-span-2">
+                            <div class="flex justify-content-between">
+                                <label for="nameUserExitAuth1">1ª Auto</label>
+                                <small>{{dateExitAuth1() | date: 'dd/MM/yyyy HH:mm' }}</small>
+                            </div>
+                            <input pInputText id="nameUserExitAuth1" type="text" class="w-full" [style]="{'text-transform':'capitalize'}" formControlName="nameUserExitAuth1" />
+                        </div>
+                        <div class="col-span-12 md:col-span-2">
+                            <div class="flex justify-content-between">
+                                <label for="nameUserExitAuth2">2ª Auto</label>
+                                <small>{{dateExitAuth2() | date: 'dd/MM/yyyy HH:mm' }}</small>
+                            </div>
+                            <input pInputText id="nameUserExitAuth2" type="text" class="w-full" [style]="{'text-transform':'capitalize'}" formControlName="nameUserExitAuth2" />
+                        </div>
+                        <div class="md:col-span-1">
+                        </div>
+                        <div class="col-span-12 md:col-span-2">
+                            <label for="vehiclePlateId">Placa</label>
+                            <p-inputMask id="vehiclePlateId" mask="***-****" [unmask]="true" [style]="{'text-transform':'uppercase'}" formControlName="vehiclePlate" fluid/>
+                        </div>
+                        <div class="col-span-12 md:col-span-2">
+                            <label for="vehicleFleetId">Frota</label>
+                            <input pInputText type="text" class="w-full" maxlength="10" [style]="{'text-transform':'uppercase'}" formControlName="vehicleFleet"/>
+                        </div>
+                        <div class="col-span-12 md:col-span-2">
+                            <label for="modelVehicleId">Modelos</label>
+                            <input pInputText id="modelVehicleId" type="text" class="w-full" [style]="{'text-transform':'uppercase'}" formControlName="modelVehicle" />
+                        </div>
+                        <div class="col-span-12 md:col-span-2">
+                            <label for="vehiclecolorid">Cor</label>
+                            <input pInputText id="vehicleColorId" type="text" class="w-full" [style]="{'text-transform':'uppercase'}" formControlName="vehicleColor" />
+                        </div>
+                        <div class="col-span-12 md:col-span-2">
+                            <label for="kmEntry">KM Entrada</label>
+                            <input pInputText id="kmEntryId" type="text" class="w-full" formControlName="kmEntry" />
+                        </div>
+                        <div class="col-span-12 md:col-span-2">
+                            <label for="kmExit">KM Saída</label>
+                            <input pInputText id="kmExitId" type="text" class="w-full" formControlName="kmExit" />
+                        </div>
+                        <div class="col-span-12 md:col-span-2">
+                            <label for="consultorid">Consultor</label>
+                            <input pInputText id="attendantId" type="text" class="w-full" [style]="{'text-transform':'uppercase'}" formControlName="attendant" />
+                        </div>                        
+                        <div class="col-span-12 md:col-span-2">
+                            <label for="numServiceOrder">Nro. O.S.</label>
+                            <input pInputText id="numServiceOrder" type="text" class="w-full" formControlName="numServiceOrder" />
+                        </div>
+                        <div class="col-span-12 md:col-span-2">
+                            <label for="numNfe">NFe</label>
+                            <input pInputText id="numNfe" type="text" class="w-full" formControlName="numNfe" />
+                        </div>
+                        <div class="col-span-12 md:col-span-2">
+                            <label for="numNfse">NFS-e</label>
+                            <input pInputText id="numNfse" type="text" class="w-full" formControlName="numNfse" />
+                        </div>
+                        <div class="col-span-12 lg:col-span-2 md:col-span-12">
+                            <label for="">Veículo novo</label>
+                            <div class="flex items-center gap-2 border border-gray-300 rounded-md p-3">
+                                <div class="flex align-center">
+                                    <p-radioButton inputId="newyes" name="vehicleNew" [value]="yes" formControlName="vehicleNew" ></p-radioButton>
+                                    <label for="newyes" class="ml-2">Sim</label>
+                                </div>
+                                <div class="flex align-items-center">
+                                    <p-radioButton inputId="newnot" name="vehicleNew" [value]="not" formControlName="vehicleNew" ></p-radioButton>
+                                    <label for="newnot" class="ml-2">Não</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-span-12 lg:col-span-2 md:col-span-12">
+                            <label>Ordem serviço</label>
+                            <div class="flex items-center gap-2 border border-gray-300 rounded-md p-3">
+                                <div class="flex align-center">
+                                    <p-radioButton inputId="serviceyes" name="vehicleService" [value]="yes" formControlName="vehicleServiceOrder"></p-radioButton>
+                                    <label for="serviceyes" class="ml-2">Sim</label>
+                                </div>
+                                <div class="flex align-items-center">
+                                    <p-radioButton inputId="servicenot" name="vehicleService" [value]="not" formControlName="vehicleServiceOrder"></p-radioButton>
+                                    <label for="servicenot" class="ml-2">Não</label>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Checklist -->
+                        <div *ngIf="modChecklist.checklist1Enabled == yes" class="col-span-12 md:col-span-2 ">
+                            <label for="coneid">{{modChecklist.checklist1Label}}</label>
+                            <input pInputText class="w-full" formControlName="checklist1Desc" maxlength="50"/>
+                        </div>
+                        <div *ngIf="modChecklist.checklist2Enabled == yes" class="col-span-12 md:col-span-2">
+                            <label for="extintorid">{{modChecklist.checklist2Label}}</label>
+                            <input pInputText class="w-full" formControlName="checklist2Desc" maxlength="50"/>
+                        </div>
+                        <div *ngIf="modChecklist.checklist3Enabled == yes" class="col-span-12 md:col-span-2">
+                            <label for="pneuid">{{modChecklist.checklist3Label}}</label>
+                            <input pInputText class="w-full" formControlName="checklist3Desc" maxlength="50"/>
+                        </div>
+                        <div *ngIf="modChecklist.checklist4Enabled == yes" class="col-span-12 md:col-span-2">
+                            <label for="pneurodaid">{{modChecklist.checklist4Label}}</label>
+                            <input pInputText class="w-full" formControlName="checklist4Desc" maxlength="50"/>
+                        </div>
+                        <div *ngIf="modChecklist.checklist5Enabled == yes" class="col-span-12 md:col-span-2">
+                            <label for="cxferramentaid">{{modChecklist.checklist5Label}}</label>
+                            <input pInputText class="w-full" formControlName="checklist5Desc" maxlength="50"/>
+                        </div>
+                        <div *ngIf="modChecklist.checklist6Enabled == yes" class="col-span-12 md:col-span-2">
+                            <label for="coneid">{{modChecklist.checklist6Label}}</label>
+                            <input pInputText class="w-full" formControlName="checklist6Desc" maxlength="50"/>
+                        </div>
+                        <div *ngIf="modChecklist.checklist7Enabled == yes" class="col-span-12 md:col-span-2">
+                            <label for="extintorid">{{modChecklist.checklist7Label}}</label>
+                            <input pInputText class="w-full" formControlName="checklist7Desc" maxlength="50"/>
+                        </div>
+                        <div *ngIf="modChecklist.checklist8Enabled == yes" class="col-span-12 md:col-span-2">
+                            <label for="pneuid">{{modChecklist.checklist8Label}}</label>
+                            <input pInputText class="w-full" formControlName="checklist8Desc" maxlength="50"/>
+                        </div>
+                        <div *ngIf="modChecklist.checklist9Enabled == yes" class="col-span-12 md:col-span-2">
+                            <label for="pneurodaid">{{modChecklist.checklist9Label}}</label>
+                            <input pInputText class="w-full" formControlName="checklist9Desc" maxlength="50"/>
+                        </div>
+                        <div *ngIf="modChecklist.checklist10Enabled == yes" class="col-span-12 md:col-span-2">
+                            <label for="cxferramentaid">{{modChecklist.checklist10Label}}</label>
+                            <input pInputText class="w-full" formControlName="checklist10Desc" maxlength="50"/>
+                        </div>
+                        <div *ngIf="modChecklist.checklist11Enabled == yes" class="col-span-12 md:col-span-2">
+                            <label for="pneurodaid">{{modChecklist.checklist11Label}}</label>
+                            <input pInputText class="w-full" formControlName="checklist11Desc" maxlength="50"/>
+                        </div>
+                        <div *ngIf="modChecklist.checklist12Enabled == yes" class="col-span-12 md:col-span-2">
+                            <label for="cxferramentaid">{{modChecklist.checklist12Label}}</label>
+                            <input pInputText class="w-full" formControlName="checklist12Desc" maxlength="50"/>
+                        </div>
+                        <div *ngIf="modChecklist.checklist13Enabled == yes" class="col-span-12 md:col-span-2">
+                            <label for="cxferramentaid">{{modChecklist.checklist13Label}}</label>
+                            <input pInputText class="w-full" formControlName="checklist13Desc" maxlength="50"/>
+                        </div>
+                        <div *ngIf="modChecklist.checklist14Enabled == yes" class="col-span-12 md:col-span-2">
+                            <label for="cxferramentaid">{{modChecklist.checklist14Label}}</label>
+                            <input pInputText class="w-full" formControlName="checklist14Desc" maxlength="50"/>
+                        </div>
+                        <div *ngIf="modChecklist.checklist15Enabled == yes" class="col-span-12 md:col-span-2">
+                            <label for="cxferramentaid">{{modChecklist.checklist15Label}}</label>
+                            <input pInputText class="w-full" formControlName="checklist15Desc" maxlength="50"/>
+                        </div>
+                        <div *ngIf="modChecklist.checklist16Enabled == yes" class="col-span-12 md:col-span-2">
+                            <label for="cxferramentaid">{{modChecklist.checklist16Label}}</label>
+                            <input pInputText class="w-full" formControlName="checklist16Desc" maxlength="50"/>
+                        </div>
+                        <div *ngIf="modChecklist.checklist17Enabled == yes" class="col-span-12 md:col-span-2">
+                            <label for="cxferramentaid">{{modChecklist.checklist17Label}}</label>
+                            <input pInputText class="w-full" formControlName="checklist17Desc" maxlength="50"/>
+                        </div>
+                        <div *ngIf="modChecklist.checklist18Enabled == yes" class="col-span-12 md:col-span-2">
+                            <label for="cxferramentaid">{{modChecklist.checklist18Label}}</label>
+                            <input pInputText class="w-full" formControlName="checklist18Desc" maxlength="50"/>
+                        </div>
+                        <div *ngIf="modChecklist.checklist19Enabled == yes" class="col-span-12 md:col-span-2">
+                            <label for="cxferramentaid">{{modChecklist.checklist19Label}}</label>
+                            <input pInputText class="w-full" formControlName="checklist19Desc" maxlength="50"/>
+                        </div>
+                        <div *ngIf="modChecklist.checklist20Enabled == yes" class="col-span-12 md:col-span-2">
+                            <label for="cxferramentaid">{{modChecklist.checklist20Label}}</label>
+                            <input pInputText class="w-full" formControlName="checklist20Desc" maxlength="50"/>
+                        </div> 
+                        <!-- Checklist -->
+                        <div class="col-span-12">
+                            <label for="informacao" class="ml-2">Informações</label>
+                            <textarea pInputTextarea maxlength="255" id="informacao" rows="4" cols="30" formControlName="information" fluid></textarea>
+                        </div>
+                        <div class="col-span-12 lg:col-span-4 md:col-span-12 flex align-center justify-between gap-1">
+                            <!-- image 1 -->
+                            <div class="layout-file">
+                                <div class="layout-file-img">
+                                    <p-image *ngIf="photoVehicle1()" [src]="photoVehicle1()" alt="" [preview]="true"/>
+                                </div>
+                            </div> 
+                            <!-- image 2 -->
+                            <div class="layout-file">
+                                <div class="layout-file-img">
+                                    <p-image *ngIf="photoVehicle2()" [src]="photoVehicle2()" alt="" [preview]="true"/>
+                                </div>
+                            </div> 
+                            <!-- image 3 -->
+                            <div class="layout-file">
+                                <div class="layout-file-img">
+                                    <p-image *ngIf="photoVehicle3()" [src]="photoVehicle3()" alt="" [preview]="true"/>
+                                </div>
+                            </div>
+                            <!-- image 4 -->
+                            <div class="layout-file">
+                                <div class="layout-file-img">
+                                    <p-image *ngIf="photoVehicle4()" [src]="photoVehicle4()" alt="" [preview]="true"/>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </p-tabpanel>
+            <p-tabpanel value="1">
+                <form [formGroup]="formConcierge">
+                    <div class="grid grid-cols-12 gap-2">
+                        <!-- Entry -->
+                        <div class="col-span-12 flex align-center">
+                            <span class="w-15rem font-semibold">Porteiro Entrada</span>
+                            <div class="layout-card-divid"></div>
+                        </div>
+                        <div class="col-span-12 md:col-span-2">
+                            <label for="entryId">Código</label>
+                            <input pInputText type="text" class="w-full" formControlName="entryId">
+                        </div>
+                        <div class="col-span-12 md:col-span-6">
+                            <label for="entryName">Nome</label>
+                            <input pInputText type="text" class="w-full" [style]="{'text-transform':'uppercase'}" formControlName="entryName">
+                        </div>
+                        <div class="md:col-span-4"></div>
+                        <div class="col-span-12 md:col-span-6">
+                            <label for="entryInf" class="ml-2">Informações</label>
+                            <textarea pInputTextarea maxlength="255" id="entryInf" rows="4" cols="30" formControlName="entryInf" fluid></textarea>
+                        </div>
+                        <div class="col-span-12 md:col-span-6 flex align-end gap-2">
+                            <div class="layout-file">
+                                <div class="layout-file-img">
+                                    <p-image *ngIf="entryPhoto1" [imageStyle]="{'border-radius':'8px','object-fit':'cover'}" [src]="entryPhoto1" alt="" [preview]="true" />
+                                </div>
+                            </div>
+                            <div class="layout-file">
+                                <div class="layout-file-img">
+                                    <p-image *ngIf="entryPhoto2" [imageStyle]="{'border-radius':'8px','object-fit':'cover'}" [src]="entryPhoto2" alt="" [preview]="true" />
+                                </div>
+                            </div>
+                            <div class="layout-file">
+                                <div class="layout-file-img">
+                                    <p-image *ngIf="entryPhoto3" [imageStyle]="{'border-radius':'8px','object-fit':'cover'}" [src]="entryPhoto3" alt="" [preview]="true" />
+                                </div>
+                            </div>
+                            <div class="layout-file">
+                                <div class="layout-file-img">
+                                    <p-image *ngIf="entryPhoto4" [imageStyle]="{'border-radius':'8px','object-fit':'cover'}" [src]="entryPhoto4" alt="" [preview]="true" />
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Exit -->
+                        <div class="col-span-12 flex align-center">
+                            <span class="w-15rem font-semibold">Porteiro Saída</span>
+                            <div class="layout-card-divid"></div>
+                        </div>
+                        <div class="col-span-12 md:col-span-2">
+                            <label for="exitId">Código</label>
+                            <input pInputText type="text" class="w-full" formControlName="exitId">
+                        </div>
+                        <div class="col-span-12 md:col-span-6">
+                            <label for="exitName">Nome</label>
+                            <input pInputText type="text" class="w-full" [style]="{'text-transform':'uppercase'}" formControlName="exitName">
+                        </div>
+                        <div class="md:col-span-4"></div>
+                        <div class="col-span-12 md:col-span-6">
+                            <label for="exitInf" class="ml-2">Informações</label>
+                            <textarea pInputTextarea maxlength="255" id="entryInf" rows="4" cols="30" formControlName="exitInformation" fluid></textarea>
+                        </div>
+                        <div class="col-span-12 md:col-span-6 flex align-end gap-2">
+                            <div class="layout-file">
+                                <div class="layout-file-img">
+                                    <p-image *ngIf="exitPhoto1" [imageStyle]="{'border-radius':'8px','object-fit':'cover'}" [src]="exitPhoto1" alt="" [preview]="true" />
+                                </div>
+                            </div>
+                            <div class="layout-file">
+                                <div class="layout-file-img">
+                                    <p-image *ngIf="exitPhoto2" [imageStyle]="{'border-radius':'8px','object-fit':'cover'}" [src]="exitPhoto2" alt="" [preview]="true" />
+                                </div>
+                            </div>
+                            <div class="layout-file">
+                                <div class="layout-file-img">
+                                    <p-image *ngIf="exitPhoto3" [imageStyle]="{'border-radius':'8px','object-fit':'cover'}" [src]="exitPhoto3" alt="" [preview]="true" />
+                                </div>
+                            </div>
+                            <div class="layout-file">
+                                <div class="layout-file-img">
+                                    <p-image *ngIf="exitPhoto4" [imageStyle]="{'border-radius':'8px','object-fit':'cover'}" [src]="exitPhoto4" alt="" [preview]="true" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </p-tabpanel>
+            <p-tabpanel value="2">
+                <form [formGroup]="formClientCompany">
+                    <div class="grid grid-cols-12 gap-2">
+                        <div class="col-span-12 flex align-center gap-2">
+                            <p-checkbox inputId="ClientCompanyNotId" value="not" formControlName="clientCompanyNot" />
+                            <label  for="ClientCompanyNotId" style="color: #3B82F6;">Empresa sem cadastro!</label>
+                        </div>
+                        <div class="col-span-12 md:col-span-2">
+                            <label for="clientCompanyId">Código</label>
+                            <p-inputNumber inputId="clientCompanyId" [useGrouping]="false" formControlName="clientCompanyId" fluid/>
+                        </div>
+                        <div class="col-span-10 md:col-span-6">
+                            <label for="clientCompanyName">Empresa</label>
+                            <input pInputText id="clientCompanyName" type="text" class="w-full" formControlName="clientCompanyName" />
+                        </div>
+                        <div class="md:col-span-4"></div>
+                        <div class="col-span-12 md:col-span-2">
+                            <label for="clientCompanyCnpj">CNPJ</label>
+                            <p-inputMask id="clientCompanyCnpj" mask="99.999.999/9999-99" formControlName="clientCompanyCnpj" fluid/>
+                        </div>
+                        <div class="col-span-12 md:col-span-2">
+                            <label for="clientCompanyCpf">CPF</label>
+                            <p-inputMask id="clientCompanyCpf" mask="999.999.999-99" formControlName="clientCompanyCpf" fluid/>
+                        </div>
+                        <div class="col-span-12 md:col-span-2">
+                            <label for="clientCompanyRg">RG</label>
+                            <p-inputNumber inputId="clientCompanyRg" [useGrouping]="false" formControlName="clientCompanyRg" fluid/>
+                        </div>
+                    </div>
+                </form>
+            </p-tabpanel>
+            <p-tabpanel value="3">
+                <form [formGroup]="formDriver">
+                <!-- Motorista entrada -->
+                <div class="grid grid-cols-12 gap-2 ">
+                    <div class="col-span-12 flex align-center">
+                        <span class="w-15rem font-semibold">Motorista Entrada</span>
+                        <div class="layout-card-divid"></div>
+                    </div>
+                    <div class="col-span-12 md:col-span-6 flex align-center">
+                        <div class="layout-photo-person">
+                        @if(driverEntryPhoto){ <p-image  [imageStyle]="{
+                                'width':'80px',
+                                'height':'80px',
+                                'border-radius':'9999px',
+                                'object-fit':'cover'
+                            }" [src]="driverEntryPhoto" alt="Image" [preview]="true" /> } 
+                        </div> 
+                    </div>
+                    <div class="col-span-12 md:col-span-6 flex align-center gap-2">
+                        <div class="layout-file">
+                            <div class="layout-file-img">
+                                @if(driverEntryPhotoDoc1){ <p-image [src]="driverEntryPhotoDoc1" alt="Image" [preview]="true" /> }
+                            </div>
+                        </div>
+                        <div class="layout-file">
+                            <div class="layout-file-img">
+                                @if(driverEntryPhotoDoc2){ <p-image [src]="driverEntryPhotoDoc2" alt="Image" [preview]="true" /> }
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-span-12 md:col-span-2">
+                        <label for="driverEntryId">Código</label>
+                        <input pInputText id="driverEntryId" type="text" class="w-full" [style]="{'text-transform':'capitalize'}" formControlName="driverEntryId">
+                    </div>
+                    <div class="col-span-12 md:col-span-4">
+                        <label for="driverEntryName">Nome</label>
+                        <input pInputText id="driverEntryName" type="text" class="w-full" [style]="{'text-transform':'capitalize'}" formControlName="driverEntryName">
+                    </div>
+                    <div class="col-span-12 md:col-span-2">
+                        <label for="driverEntryCpf">CPF</label>
+                        <p-inputMask id="driverEntryCpf" mask="999.999.999-99" unmask="true" formControlName="driverEntryCpf" fluid/>
+                    </div>
+                    <div class="col-span-12 md:col-span-2">
+                        <label for="driverEntryRg">RG</label>
+                        <p-inputNumber id="driverEntryRg" mode="decimal" [useGrouping]="false" formControlName="driverEntryRg" fluid/>
+                    </div>
+                </div>
+                <!-- Motorista saída -->
+                <div class="grid grid-cols-12 gap-2">
+                    <div class="col-span-12 flex align-center">
+                        <span class="w-15rem font-semibold">Motorista Saída</span>
+                        <div class="layout-card-divid"></div>
+                    </div>
+                    <div class="col-span-12 md:col-span-6 flex align-center">
+                        <div class="layout-photo-person">
+                            @if(driverExitPhoto){ <p-image  [imageStyle]="{
+                                'width':'80px',
+                                'height':'80px',
+                                'border-radius':'9999px',
+                                'object-fit':'cover'
+                            }" [src]="driverExitPhoto" alt="" [preview]="true" /> }
+                        </div>
+                    </div>
+                    <div class="col-span-12 md:col-span-6 flex align-center gap-2">
+                        <div class="layout-file">
+                            <div class="layout-file-img">
+                                @if(driverExitPhotoDoc1){ <p-image [src]="driverExitPhotoDoc1" alt="" [preview]="true" /> }
+                            </div>
+                        </div>
+                        <div class="layout-file">
+                            <div class="layout-file-img">
+                                @if(driverExitPhotoDoc2){ <p-image [src]="driverExitPhotoDoc2" alt="" [preview]="true" /> }
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-span-12 md:col-span-2">
+                        <label for="driverExitId">Código</label>
+                        <input pInputText id="driverExitId" type="text" class="w-full" [style]="{'text-transform':'capitalize'}" formControlName="driverExitId">
+                    </div>
+                    <div class="col-span-12 md:col-span-4">
+                        <label for="driverExitName">Nome</label>
+                        <input pInputText id="driverExitName" type="text" class="w-full" [style]="{'text-transform':'capitalize'}" formControlName="driverExitName">
+                    </div>
+                    <div class="col-span-12 md:col-span-2">
+                        <label for="driverExitCpf">CPF</label>
+                        <p-inputMask id="driverExitCpf" mask="999.999.999-99" unmask="true" formControlName="driverExitCpf" fluid/>
+                    </div>
+                    <div class="col-span-12 md:col-span-2">
+                        <label for="driverExitRg">RG</label>
+                        <p-inputNumber id="driverExitRg" mode="decimal" [useGrouping]="false" formControlName="driverExitRg" fluid/>
+                    </div>
+                    
+                </div>
+            </form>
+        </p-tabpanel>
+        </p-tabpanels>
+    </p-tabs>
+    
+</div>
+<div class="flex flex-col items-center w-full border-b border-surface-200 dark:border-surface-700"></div>
+<div class="col-span-12 flex justify-center mt-4">
+    <p-button icon="pi pi-share-alt" [rounded]="true" severity="info" label="Compartilhar" (onClick)="shareWhatsapp()"/>
+</div>
+

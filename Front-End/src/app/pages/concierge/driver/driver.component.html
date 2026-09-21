@@ -1,0 +1,502 @@
+<div class="layout-card">
+    <!-- Info -->
+    <p-toast />
+    <div class="layout-card-title">
+        <span>Motorista</span>
+        <p-button icon="pi pi-plus" [outlined]="true" label="Motorista" (onClick)="newDriver()" />
+    </div>
+    <p-table #dt1 dataKey="id" [value]="listDriver()" [rowHover]="true" showGridlines
+        currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords}" [showCurrentPageReport]="true"
+        [globalFilterFields]="['id', 'status', 'name', 'cpf', 'rg']" 
+        [paginator]="true" [rows]="10" [rowsPerPageOptions]="[10, 25, 50]" 
+        [tableStyle]="{ 'min-width': '80rem' }" size="small">
+        <ng-template pTemplate="caption">
+            <div class="flex justify-content-between">
+                <p-iconField iconPosition="left">
+                    <p-inputIcon>
+                        <i class="pi pi-search"></i>
+                    </p-inputIcon>
+                    <input pInputText type="text" (input)="dt1.filterGlobal($event.target.value, 'contains')" placeholder="Pesquisar" />
+                </p-iconField>
+            </div>
+        </ng-template>
+        <ng-template pTemplate="header">
+            <tr>
+                <th pSortableColumn="id" style="width:10%">
+                    Código <p-sortIcon field="id" />
+                </th>
+                <th pSortableColumn="status" style="width:10%">
+                   Status <p-sortIcon field="status" />
+                </th>
+                <th pSortableColumn="name" style="width:50%">
+                    Nome <p-sortIcon field="name" />
+                </th>
+                <th pSortableColumn="cpf" style="width:10%">
+                    CPF <p-sortIcon field="cpf" />
+                </th>
+                <th pSortableColumn="rg" style="width:10%">
+                    RG <p-sortIcon field="rg" />
+                </th>
+                <th pSortableColumn="cnhCategory" style="width:10%">
+                    CNH <p-sortIcon field="cnhCategory" />
+                </th>
+                <th></th>
+            </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-driver>
+            <tr>
+                <td><span class="text-500">{{ driver.id }}</span></td>
+                <td>
+                    <i class="pi " [ngClass]="{
+                        'pi-times-circle text-red-500':driver.status == disabled,
+                        'pi-check-circle text-green-500':driver.status == enabled}">
+                    </i> {{driver.status | uppercase}}
+                </td>
+                <td><span class="text-500">{{ driver.name | uppercase }}</span></td>
+                <td><span class="text-500">{{ maskCPF(driver.cpf)  }}</span></td>
+                <td><span class="text-500">{{ driver.rg }}</span></td>
+                <td><span class="text-500">{{ driver.cnhCategory | uppercase }}</span></td>
+                
+                <td>
+                    <p-button icon="pi pi-pencil" [text]="true" severity="secondary" size="small" (onClick)="edit(driver.id)"/>
+                </td>
+            </tr>
+        </ng-template>
+    </p-table>
+</div>
+<!-- Dialog new driver -->
+<p-dialog [(visible)]="visibleDialogNew" header="Cadastro do Motorista" [modal]="true" [maximizable]="true"
+    [style]="{ width: '70rem',height:'60rem' }" [breakpoints]="{ '1199px': '75vw', '575px': '90vw' }">
+    <form [formGroup]="formDriver">
+        <div class="grid grid-cols-12 gap-4">
+
+             <div class="col-span-6 flex flex-col gap-2">
+                <label class="block mb-1">Foto do motorista</label>
+                <div class="flex items-start">
+                    <div class="layout-file">
+                        <div class="layout-file-img">
+                            <p-image
+                                *ngIf="driverPhotoUrl()"
+                                [src]="driverPhotoUrl()"
+                                [imageStyle]="{
+                                'width':'80px',
+                                'height':'80px', 
+                                'object-fit': 'cover' }"
+                                alt=""
+                                [preview]="true">
+                            </p-image>
+                        </div>
+
+                        <button
+                            *ngIf="driverPhotoUrl()"
+                            pButton
+                            type="button"
+                            severity="danger"
+                            (click)="deletePhoto()">
+                            <i class="pi pi-trash"></i>
+                            <span>Remover</span>
+                        </button>
+
+                        <button
+                            *ngIf="!driverPhotoUrl()"
+                            pButton
+                            type="button"
+                            (click)="selectPhoto()">
+                            <i class="pi pi-plus"></i>
+                            <span>Incluir</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-span-6 flex flex-col gap-2">
+                <label class="block mb-1">Fotos da CNH</label>
+
+                <div class="flex justify-start gap-2">
+
+                    <div class="layout-file">
+                        <div class="layout-file-img">
+                            <p-image
+                                *ngIf="driverPhotoDoc1Url()"
+                                [src]="driverPhotoDoc1Url()"
+                                [imageStyle]="{
+                                'width':'80px',
+                                'height':'80px', 
+                                'object-fit': 'cover'  }"
+                                alt=""
+                                [preview]="true">
+                            </p-image>
+                        </div>
+
+                        <button
+                            *ngIf="driverPhotoDoc1Url()"
+                            pButton
+                            type="button"
+                            severity="danger"
+                            (click)="deleteEntryFileDriver1()">
+                            <i class="pi pi-trash"></i>
+                            <span>Remover</span>
+                        </button>
+
+                        <button
+                            *ngIf="!driverPhotoDoc1Url()"
+                            pButton
+                            type="button"
+                            (click)="photoFile1Driver()">
+                            <i class="pi pi-plus"></i>
+                            <span>Incluir</span>
+                        </button>
+                    </div>
+
+                    <div class="layout-file">
+                        <div class="layout-file-img">
+                            <p-image
+                                *ngIf="driverPhotoDoc2Url()"
+                                [src]="driverPhotoDoc2Url()"
+                                [imageStyle]="{ 
+                                'width':'80px',
+                                'height':'80px', 
+                                'object-fit': 'cover' 
+                                 }"
+                                alt=""
+                                [preview]="true">
+                            </p-image>
+                        </div>
+
+                        <button
+                            *ngIf="driverPhotoDoc2Url()"
+                            pButton
+                            type="button"
+                            severity="danger"
+                            (click)="deleteEntryFileDriver2()">
+                            <i class="pi pi-trash"></i>
+                            <span>Remover</span>
+                        </button>
+
+                        <button
+                            *ngIf="!driverPhotoDoc2Url()"
+                            pButton
+                            type="button"
+                            (click)="photoFile2Driver()">
+                            <i class="pi pi-plus"></i>
+                            <span>Incluir</span>
+                        </button>
+                    </div>
+
+                </div>
+            </div> 
+
+            <div class="col-span-12 md:col-span-2">
+                <label for="" class="block mb-1">Código</label>
+                <p-inputNumber
+                    mode="decimal"
+                    [useGrouping]="false"
+                    formControlName="id" fluid/>
+            </div>
+            <div class="col-span-12 md:col-span-10">
+                <label for="" class="block mb-1">Nome</label>
+                <input
+                    pInputText
+                    maxlength="100"
+                    class="uppercase"
+                    class="w-full"
+                    formControlName="name" />
+                <small
+                    class="text-red-500 text-sm"
+                    *ngIf="formDriver.get('name')?.invalid">
+                    Campo obrigatório
+                </small>
+            </div>
+
+            <div class="col-span-12 md:col-span-3">
+                <label for="" class="block mb-1">Data Nascimento</label>
+                <p-datepicker
+                    [showOnFocus]="false"
+                    [showIcon]="true"
+                    inputId="buttondisplay"
+                    dateFormat="dd/mm/yy"
+                    (onInput)="applyDateMask($event)"
+                    formControlName="dateBirth" fluid/>
+                <small
+                    class="text-red-500 text-sm"
+                    *ngIf="formDriver.get('dateBirth')?.invalid">
+                    Campo obrigatório
+                </small>
+            </div>
+
+            <div class="col-span-12 md:col-span-3">
+                <label for="" class="block mb-1">CPF</label>
+                <p-inputMask
+                    mask="999.999.999-99"
+                    [unmask]="true"
+                    formControlName="cpf" fluid/>
+                <small
+                    class="text-red-500 text-sm"
+                    *ngIf="formDriver.get('cpf')?.invalid">
+                    Campo obrigatório
+                </small>
+            </div>
+
+            <div class="col-span-12 md:col-span-3 ">
+                <label for="" class="block mb-1">RG</label>
+                <p-inputNumber
+                    mode="decimal"
+                    [useGrouping]="false"
+                    formControlName="rg"
+                    fluid />
+                <small
+                    class="text-red-500 text-sm"
+                    *ngIf="formDriver.get('rg')?.invalid">
+                    Campo obrigatório
+                </small>
+            </div>
+
+            <div class="col-span-12 md:col-span-3">
+                <label for="" class="block mb-1">Sexo</label>
+                <p-select
+                    [options]="sexos"
+                    optionLabel="type"
+                    formControlName="maleFemale" fluid/>
+                <small
+                    class="text-red-500 text-sm"
+                    *ngIf="formDriver.get('maleFemale')?.invalid">
+                    Campo obrigatório
+                </small>
+            </div>
+
+            <div class="col-span-12 md:col-span-6 ">
+                <label for="" class="block mb-1">E-mail</label>
+                <input
+                    pInputText
+                    maxlength="100"
+                    class="w-full"
+                    formControlName="email" />
+            </div>
+
+            <div class="col-span-12 md:col-span-3 ">
+                <label for="" class="block mb-1">Nº Registro CNH</label>
+                <p-inputNumber
+                    mode="decimal"
+                    [useGrouping]="false"
+                    formControlName="cnhRegister"
+                    fluid />
+                <small
+                    class="text-red-500 text-sm"
+                    *ngIf="formDriver.get('cnhRegister')?.invalid">
+                    Campo obrigatório
+                </small>
+            </div>
+
+            <div class="col-span-12 md:col-span-3">
+                <label for="" class="block mb-1">Categoria CNH</label>
+                <input
+                    pInputText
+                    maxlength="10"
+                    class="uppercase w-full"
+                    formControlName="cnhCategory" />
+                <small
+                    class="text-red-500 text-sm"
+                    *ngIf="formDriver.get('cnhCategory')?.invalid">
+                    Campo obrigatório
+                </small>
+            </div>
+
+            <div class="col-span-12 md:col-span-3 ">
+                <label for="" class="block mb-1">Validade CNH</label>
+                <p-datepicker
+                    [showOnFocus]="false"
+                    [showIcon]="true"
+                    inputId="buttondisplay"
+                    dateFormat="dd/mm/yy"
+                    (onInput)="applyDateMask($event)"
+                    formControlName="cnhValidation" fluid/>
+                <small
+                    class="text-red-500 text-sm"
+                    *ngIf="formDriver.get('cnhValidation')?.invalid">
+                    Campo obrigatório
+                </small>
+            </div>   
+            <div class="col-span-12 md:col-span-1">
+                <label for="DDDPhoneId" class="block mb-1">DDD</label>
+                <p-inputMask
+                    id="DDDPhoneId"
+                    mask="99"
+                    [unmask]="true"
+                    formControlName="dddPhone"
+                    fluid />
+            </div>
+
+            <div class="col-span-12 md:col-span-3">
+                <label for="PhoneId" class="block mb-1">Telefone</label>
+                <p-inputMask
+                    id="PhoneId"
+                    mask="9999-9999"
+                    [unmask]="true"
+                    formControlName="phone"
+                    fluid />
+            </div>
+            <div class="col-span-12 md:col-span-1">
+                <label for="DDDCellphoneId" class="block mb-1">DDD</label>
+                <p-inputMask
+                    id="DDDCellphoneId"
+                    mask="99"
+                    [unmask]="true"
+                    formControlName="dddCellphone"
+                    fluid />
+            </div>
+
+            <div class="col-span-12 md:col-span-3">
+                <label for="cellphoneId" class="block mb-1">Celular</label>
+                <p-inputMask
+                    id="cellphoneId"
+                    mask="99999-9999"
+                    [unmask]="true"
+                    formControlName="cellphone"
+                    fluid />
+            </div>
+
+            <div class="col-span-12 md:col-span-2">
+                <label for="ClientzipCode" class="block mb-1">CEP</label>
+
+                <p-inputGroup>
+                    <p-inputMask
+                        id="ClientzipCode"
+                        mask="99999-999"
+                        [unmask]="true"
+                        formControlName="zipCode"
+                        fluid />
+                    <button
+                        pButton
+                        type="button"
+                        icon="pi pi-search"
+                        severity="warn"
+                        (click)="searchCEP()">
+                    </button>
+                </p-inputGroup>
+                <small
+                    class="text-red-500 text-sm"
+                    *ngIf="formDriver.get('zipCode')?.invalid">
+                    Campo obrigatório
+                </small>
+            </div>
+
+            <div class="col-span-12 md:col-span-9 ">
+                <label for="Clientaddress" class="block mb-1">Logradouro</label>
+                <input
+                    id="Clientaddress"
+                    pInputText
+                    type="text"
+                    maxlength="100"
+                    class="uppercase w-full"
+                    formControlName="address" />
+                <small
+                    class="text-red-500 text-sm"
+                    *ngIf="formDriver.get('address')?.invalid">
+                    Campo obrigatório
+                </small>
+            </div>
+            <div class="col-span-12 md:col-span-1 ">
+                <label for="ClientAddressNumber" class="block mb-1">Nº</label>
+                <p-inputNumber
+                    id="ClientAddressNumber"
+                    formControlName="addressNumber"
+                    [useGrouping]="false"
+                    fluid />
+            </div>
+
+            <div class="col-span-12 md:col-span-1 ">
+                <label for="ClientState" class="block mb-1">UF</label>
+                <p-inputMask
+                    id="ClientState"
+                    mask="aa"
+                    [unmask]="true"
+                    class="uppercase"
+                    formControlName="state"
+                    fluid />
+                <small
+                    class="text-red-500 text-sm"
+                    *ngIf="formDriver.get('state')?.invalid">
+                    Campo obrigatório
+                </small>
+            </div>
+            <div class="col-span-12 md:col-span-5">
+                <label for="ClientCity" class="block mb-1">Cidade</label>
+                <input
+                    id="ClientCity"
+                    pInputText
+                    type="text"
+                    maxlength="100"
+                    class="uppercase w-full"
+                    formControlName="city" />
+                <small
+                    class="text-red-500 text-sm"
+                    *ngIf="formDriver.get('city')?.invalid">
+                    Campo obrigatório
+                </small>
+            </div>
+
+            <div class="col-span-12 md:col-span-6">
+                <label for="ClientNeighborhood" class="block mb-1">Bairro</label>
+                <input
+                    id="ClientNeighborhood"
+                    pInputText
+                    type="text"
+                    maxlength="100"
+                    class="uppercase w-full"
+                    formControlName="neighborhood" />
+                <small
+                    class="text-red-500 text-sm"
+                    *ngIf="formDriver.get('neighborhood')?.invalid">
+                    Campo obrigatório
+                </small>
+            </div>
+
+            <div class="col-span-12 md:col-span-8 ">
+                <label for="ClientAddressComplement" class="block mb-1">Complemento</label>
+                <input
+                    id="ClientAddressComplement"
+                    pInputText
+                    type="text"
+                    maxlength="100"
+                    class="uppercase w-full"
+                    formControlName="addressComplement" />
+            </div>
+            <div class="col-span-12 md:col-span-4">
+                <label class="block mb-1">Status</label>
+
+                <div class="flex items-center gap-4 border border-surface-300 rounded-lg p-3">
+
+                    <div class="flex items-center">
+                        <p-radioButton
+                            inputId="st1"
+                            [value]="enabled"
+                            formControlName="status">
+                        </p-radioButton>
+
+                        <label for="st1" class="ml-2">
+                            {{ enabled }}
+                        </label>
+                    </div>
+
+                    <div class="flex items-center">
+                        <p-radioButton
+                            inputId="st2"
+                            [value]="disabled"
+                            formControlName="status">
+                        </p-radioButton>
+
+                        <label for="st2" class="ml-2">
+                            {{ disabled }}
+                        </label>
+                    </div>
+
+                </div>
+            </div>       
+        </div>
+    </form>
+    <p-divider type="solid" />
+    <div class="flex justify-end gap-2 mt-3">
+        <button pButton type="button" pRipple label="Fechar" icon="pi pi-times" class="p-button-text" (click)="hideDialog()"></button>
+        <button pButton type="button" pRipple label="Salvar" icon="pi pi-check" class="p-button-text" (click)="save()"></button>
+    </div>
+</p-dialog>

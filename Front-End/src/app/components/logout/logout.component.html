@@ -1,0 +1,32 @@
+<p-toast />
+
+<p-confirmDialog>
+    <ng-template
+        pTemplate="headless"
+        let-message
+        let-onAccept="onAccept"
+        let-onReject="onReject">
+
+        <div class="bg-surface-0 dark:bg-surface-900 rounded-xl p-8 flex flex-col items-center shadow-xl">
+
+            <div class="bg-primary rounded-full w-24 h-24 flex items-center justify-center">
+                <i class="pi pi-sign-out !text-5xl text-white"></i>
+            </div>
+
+            <h2 class="mt-6 text-2xl font-bold">
+                {{ message.header }}
+            </h2>
+
+            <p class="mt-2 text-center text-surface-600 dark:text-surface-300">
+                {{ message.message }}
+            </p>
+            <div class="flex flex-col items-center w-full border-b border-surface-200 dark:border-surface-700"></div>
+
+            <div class="flex items-center gap-3 mt-4">
+                <button pButton label="Sim" (click)="onAccept()" class="w-30"></button>
+                <button pButton label="Não" (click)="onReject()" class="p-button-outlined w-30"></button>
+            </div>
+        </div>
+
+    </ng-template>
+</p-confirmDialog>

@@ -1,0 +1,31 @@
+:host {
+    .print-table {
+        border-collapse: collapse;
+        width: 100%;
+    }
+
+    .print-table td,
+    .print-table th {
+        border: 1px solid #000;
+
+        text-align: left;
+    }
+
+    .print-table-info {
+        border-collapse: collapse;
+        width: 100%;
+    }
+
+    .print-table-info td {
+        text-align: center;
+    }
+
+    .print-table-lei {
+        border-collapse: collapse;
+        width: 100%;
+    }
+
+    .print-table-lei td {
+        text-align: justify;
+    }
+}

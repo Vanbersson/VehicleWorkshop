@@ -1,0 +1,193 @@
+<div class="layout-card">
+    <p-toast />
+    <div class="layout-card-title">
+        <span>Material</span>
+        <p-button icon="pi pi-plus" [outlined]="true" label="Material" (onClick)="showNewMaterial()" />
+    </div>
+    <p-table #dt dataKey="id" [value]="listMat()" [showCurrentPageReport]="true" showGridlines
+        currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} Cadastros"
+        [globalFilterFields]="['id','description']" [tableStyle]="{ 'min-width': '50rem' }" [paginator]="true"
+        [rows]="10" [rowsPerPageOptions]="[10, 25, 50]" size="small">
+        <ng-template pTemplate="caption">
+            <div class="flex justify-between">
+                <p-iconField iconPosition="left">
+                    <p-inputIcon>
+                        <i class="pi pi-search"></i>
+                    </p-inputIcon>
+                    <input pInputText type="text" (input)="dt.filterGlobal($event.target.value, 'contains')" placeholder="Pesquisar" />
+                </p-iconField>
+            </div>
+        </ng-template>
+        <ng-template pTemplate="header">
+            <tr>
+                <th pSortableColumn="id" style="width:10%">Código<p-sortIcon
+                        field="id"></p-sortIcon></th>
+                <th pSortableColumn="status" style="width:10%">Status<p-sortIcon
+                        field="status"></p-sortIcon></th>
+                <th pSortableColumn="categoryId" style="width:10%">Categoria<p-sortIcon
+                        field="categoryId"></p-sortIcon></th>
+                <th pSortableColumn="description"  style="width:40%">Descrição<p-sortIcon
+                        field="description"></p-sortIcon></th>
+                <th pSortableColumn="quantityAvailableLoan" style="width:10%">Empréstimo<p-sortIcon
+                        field="quantityAvailableLoan"></p-sortIcon></th>
+                <th pSortableColumn="quantityAvailableKit" style="width:10%">Kit<p-sortIcon
+                        field="quantityAvailableKit"></p-sortIcon></th>
+                <th pSortableColumn="validityDay" style="width:10%">Validade<p-sortIcon
+                        field="validityDay"></p-sortIcon></th>
+                <th></th>
+            </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-mat>
+            <tr>
+                <td>{{mat.id}}</td>
+                <td>
+                    <i class="pi " [ngClass]="{
+                        'pi-times-circle text-red-500':mat.status == disabled,
+                        'pi-check-circle text-green-500':mat.status == enabled}">
+                    </i> {{mat.status | uppercase}}
+                </td>
+                <td>{{filterCategoriesDesc(mat.categoryId) | uppercase }}</td>
+                <td>{{mat.description | uppercase}}</td>
+                <td>{{mat.quantityAvailableLoan}}</td>
+                 <td>{{mat.quantityAvailableKit}}</td>
+                <td>@if (mat.validityDay != null) { {{mat.validityDay}} }</td>
+                <td>
+                    <p-button icon="pi pi-pencil"  [text]="true" severity="secondary" size="small" (onClick)="editMat(mat.id)"/>
+                </td>
+            </tr>
+        </ng-template>
+    </p-table>
+</div>
+
+<p-dialog header="Cadastro" [(visible)]="visibleDialog" [modal]="true" [style]="{width: '50rem'}">
+    <form [formGroup]="formMat" (ngSubmit)="save()">
+        <div class="grid grid-cols-12 gap-4">
+            <div class="col-span-12 mt-2 layout-dialog-img">  
+                <img *ngIf="photoMat()" class="layout-img-large" [src]="photoMat()" alt="photo material" width="140" height="140" loading="lazy" />
+            </div>
+            <div class="col-span-12 md:col-span-6">
+                <label for="description">Descrição</label>
+                <input pInputText class="w-full" id="description" formControlName="description" />
+                <small class="block text-sm text-red-500" *ngIf="formMat.get('description')?.invalid">Campo obrigatório</small>
+            </div>
+            <div class="col-span-12 md:col-span-4">
+                <label for="categoryId">Categoria</label>
+                <p-select [options]="listCat()" optionLabel="description" placeholder="Selecione" formControlName="categories" [style]="{'text-transform':'uppercase'}" fluid/>
+                <small class="block text-sm text-red-500" *ngIf="formMat.get('categories')?.invalid">Campo obrigatório</small>
+            </div>
+            <div class="col-span-12 md:col-span-2">
+                <label for="validityDayId">Dias valid.</label>
+                <p-inputNumber [useGrouping]="false" formControlName="validityDay" fluid/>
+            </div>
+            <div class="col-span-10 md:col-span-4 flex items-center">
+                <button pButton type="button" label="Selecionar imagem" (click)="onSelectFile()" fluid></button>
+            </div>
+            <div class="col-span-2 md:col-span-2 flex items-center">
+                <button type="button" pButton icon="pi pi-trash" severity="danger" (click)="deleteFile()" ></button>
+            </div>
+            <div class="col-span-12 md:col-span-6 flex flex-col gap-2 border border-gray-300 rounded-md p-3">
+                <span>Tipo requisição</span>
+                <div class="flex gap-2">
+                    <div class="flex items-center">
+                        <p-radioButton inputId="typeLoanId" name="type" [value]="LOAN" formControlName="type"></p-radioButton>
+                        <label for="typeLoanId" class="ml-2">Empréstimo</label>
+                    </div>
+                    <div class="flex items-center">
+                        <p-radioButton inputId="typeKitId" name="type" [value]="KIT" formControlName="type"></p-radioButton>
+                        <label for="typeKitId" class="ml-2">Kit Mec.</label>
+                    </div>
+                    <div class="flex items-center">
+                        <p-radioButton inputId="typeAmbosId" name="type" [value]="BOTH" formControlName="type"></p-radioButton>
+                        <label for="typeAmbosId" class="ml-2">Ambos</label>
+                    </div>
+                </div>
+            </div>            
+            <div class="col-span-6 p-0">
+                <div class="grid grid-cols-12 gap-2 border border-gray-300 rounded-md p-3">
+                    <div class="col-span-12">
+                        <label for="">Empréstimo</label>
+                        <div class="flex flex-col items-center w-full border-b border-surface-200 dark:border-surface-700 "></div>
+                    </div>
+                    <div class="col-span-6 flex flex-col">
+                        <label for="quantityAccountingId">Contábil</label>
+                        <p-inputNumber *ngIf="editQuantityLoan" [minFractionDigits]="2" formControlName="quantityAccountingLoan" fluid/>
+                        <p-inputGroup *ngIf="!editQuantityLoan">
+                            <p-inputNumber [minFractionDigits]="2" formControlName="quantityAccountingLoan" fluid/>
+                            <button type="button" pButton icon="pi pi-lock" class="p-button-warn" (click)="confirmEditQuant()"></button>
+                        </p-inputGroup>
+                        <small class="block text-sm text-red-500" *ngIf="formMat.get('quantityAccountingLoan')?.invalid">Campo obrigatório</small>
+                    </div>
+                    <div class="col-span-6 flex flex-col">
+                        <label for="quantityAvailableId">Disponível</label>
+                        <p-inputNumber [minFractionDigits]="2" formControlName="quantityAvailableLoan" fluid/>
+                    </div>
+                </div>
+            </div>
+            <div class="col-span-6 p-0">
+                <div class="grid grid-cols-12 gap-2 border border-gray-300 rounded-md p-3">
+                    <div class="col-span-12">
+                        <label for="">Kit Mecânico</label>
+                        <div class="flex flex-col items-center w-full border-b border-surface-200 dark:border-surface-700 "></div>
+                    </div>
+                    
+                    <div class="col-span-6 flex flex-col">
+                        <label for="quantityAccountingId">Contábil</label>
+                        <p-inputNumber *ngIf="editQuantityKit" [minFractionDigits]="2" formControlName="quantityAccountingKit" fluid/>
+                        <p-inputGroup *ngIf="!editQuantityKit">
+                            <p-inputNumber [minFractionDigits]="2" formControlName="quantityAccountingKit" fluid/>
+                            <button type="button" pButton icon="pi pi-lock" class="p-button-warn" (click)="confirmEditQuant()"></button>
+                        </p-inputGroup>
+                        <small class="block text-sm text-red-500" *ngIf="formMat.get('quantityAccountingKit')?.invalid">Campo obrigatório</small>
+                    </div>
+                    <div class="col-span-6 flex flex-col">
+                        <label for="quantityAvailableId">Disponível</label>
+                        <p-inputNumber [minFractionDigits]="2" formControlName="quantityAvailableKit" fluid/>
+                    </div>
+                </div>
+            </div>      
+            <div class="col-span-12 md:col-span-6">
+                <label for="">Status</label>
+                <div class="flex items-center gap-2 border border-gray-300 rounded-md p-3">
+                    <div class="flex align-center">
+                        <p-radioButton inputId="st1" name="status" [value]="enabled" formControlName="status"></p-radioButton>
+                        <label for="st1" class="ml-2">{{enabled}}</label>
+                    </div>
+                    <div class="flex align-items-center">
+                        <p-radioButton inputId="st2" name="status" [value]="disabled" formControlName="status"></p-radioButton>
+                        <label for="st2" class="ml-2">{{disabled}}</label>
+                    </div>
+                </div>
+            </div>
+            <div class="col-span-12 md:col-span-4 m-0">
+                 <label for="numberCAId">Nº CA</label>
+                <p-inputNumber [useGrouping]="false" formControlName="numberCA" fluid/>
+            </div>
+        </div>
+        <div class="flex flex-col items-center w-full border-b border-surface-200 dark:border-surface-700 mt-4"></div>
+        <div class="flex justify-end gap-2 mt-4">
+            <button pButton type="button" pRipple label="Fechar" icon="pi pi-times" class="p-button-text" (click)=" hideDialog()"></button>
+            <button pButton type="submit" pRipple label="Salvar" icon="pi pi-check" class="p-button-text"></button>
+        </div>
+    </form>
+</p-dialog>
+<!-- Comfirm -->
+ <p-confirmDialog #cd>
+    <ng-template  pTemplate="headless"
+        let-message
+        let-onAccept="onAccept"
+        let-onReject="onReject">
+        <div class="bg-surface-0 dark:bg-surface-900 rounded-xl p-8 flex flex-col items-center shadow-xl">
+            <div class="bg-primary rounded-full w-24 h-24 flex items-center justify-center">
+                <i class="pi pi-question !text-5xl text-white"></i>
+            </div>
+            <span class="font-bold text-2xl block mb-2 mt-4">
+                {{ message.header }}
+            </span>
+            <p class="mb-0">{{ message.message }}</p>
+            <div class="flex items-center gap-3 mt-4">
+                <button pButton label="Sim" (click)="onAccept()" class="w-30"></button>
+                <button pButton label="Não" (click)="onReject()" class="p-button-outlined w-30"></button>
+            </div>
+        </div>
+    </ng-template>
+</p-confirmDialog> 

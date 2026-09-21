@@ -1,0 +1,533 @@
+<div class="layout-card">
+    <p-toast />
+    <div class="layout-card-title">
+        <span>Requisições</span>
+       <div class="mobile-disabled gap-2">
+            <p-button icon="pi pi-plus" [outlined]="true" label="Solicitação" (onClick)="showDialogReq()" />
+            <p-button icon="pi pi-plus" [outlined]="true" label="Entrega de Materiais" (onClick)="showDialogDeliveryMat()" />
+            <p-button icon="pi pi-reply" [outlined]="true" label="Devolver" severity="danger" [disabled]="selectedMaterials.length == 0" (onClick)="returnMaterial()" />            
+        </div> 
+        <div class="mobile-enabled">
+             <p-button (click)="op.toggle($event)" icon="pi pi-ellipsis-v"  text="true" severity="secondary"/>
+            <p-popover #op>
+                <div class="flex flex-col gap-2">
+                    <p-button icon="pi pi-plus" [outlined]="true" label="Solicitação" (onClick)="showDialogReq()" size="small"/>
+                    <p-button icon="pi pi-plus" [outlined]="true" label="Entrega de Materiais" (onClick)="showDialogDeliveryMat()" size="small"/>
+                    <p-button icon="pi pi-reply" [outlined]="true" label="Devolver" severity="danger" [disabled]="selectedMaterials.length == 0" (onClick)="returnMaterial()" size="small"/> 
+                </div>
+            </p-popover>
+        </div>
+    </div>
+
+    <p-table #dt1 dataKey="mechanic.id" [value]="listRequestMec()" showGridlines
+        [globalFilterFields]="['name']"
+        sortField="id" 
+        sortMode="single"  
+        rowGroupMode="subheader" 
+        groupRowsBy="id" [tableStyle]="{ 'min-width': '70rem' }">
+        <ng-template #caption>
+            <div class="flex justify-between">
+                <p-iconField iconPosition="left">
+                    <p-inputIcon>
+                        <i class="pi pi-search"></i>
+                    </p-inputIcon>
+                    <input pInputText type="text" (input)="dt1.filterGlobal($event.target.value, 'contains')" placeholder="Pesquisar" />
+                </p-iconField>
+                <p-button icon="pi pi-filter-slash" [outlined]="true" label="Limpar" (onClick)="cleanSelected()" />
+            </div>
+        </ng-template>
+        <ng-template #header>
+            <tr>
+                <th style="width:5%"></th>
+                <th style="width:5%"></th>
+                <th style="width:90%">Mecânicos</th>
+            </tr>
+        </ng-template>
+        <ng-template #groupheader let-mec let-rowIndex="rowIndex" let-expanded="expanded">
+            <tr>
+                <td>
+                    <button type="button" pButton pRipple [pRowToggler]="mec" text rounded plain class="mr-2" [icon]="expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"></button>
+                </td>
+                <td>
+                    <img *ngIf="mec.photoUrl" class="laout-table-img" [src]="mec.photoUrl" alt="Photo mechanic" loading="lazy" />
+                </td>
+                <td>{{mec.name | titlecase}}</td>
+            </tr>
+        </ng-template>
+        <ng-template #expandedrow let-mec>
+            <tr>
+                <td colspan="3">
+                    <p-table #dt1 [value]="mec.materials" dataKey="matmecId" 
+                            [(selection)]="selectedMaterials"
+                            rowGroupMode="rowspan" 
+                            groupRowsBy="requestId"
+                            sortField="requestId" 
+                            sortMode="single"  
+                            size="small">
+                            <ng-template pTemplate="header">
+                                <tr>
+                                    <th pSortableColumn="requestId" style="width: 5%">Requisição<p-sortIcon field="requestId"></p-sortIcon></th>
+                                    <th></th>
+                                    <th pSortableColumn="deliveryDate" style="width: 10%">Entregue<p-sortIcon field="deliveryDate"></p-sortIcon></th>
+                                    <th pSortableColumn="categoryDesc" style="width: 10%">Categoria<p-sortIcon field="categoryDesc"></p-sortIcon></th>
+                                    <th pSortableColumn="materialPhoto" style="width: 5%">Foto<p-sortIcon field="materialPhoto"></p-sortIcon></th>
+                                    <th pSortableColumn="materialDesc" style="width: 40%">Descrição<p-sortIcon field="materialDesc"></p-sortIcon></th>
+                                    <th pSortableColumn="deliveryQuantity" style="width: 10%">Quant.<p-sortIcon field="deliveryQuantity"></p-sortIcon></th>
+                                    <th pSortableColumn="deliveryInformation" style="width: 20%">Inf.<p-sortIcon field="deliveryInformation"></p-sortIcon></th>
+                                    <th></th>
+                                </tr>
+                            </ng-template>
+                            <ng-template pTemplate="body" let-mat let-rowgroup="rowgroup" let-rowspan="rowspan">
+                                <tr>
+                                    <td *ngIf="rowgroup" [attr.rowspan]="rowspan">
+                                        {{mat.requestId}}
+                                    </td>
+                                    <td>
+                                        <p-tableCheckbox [value]="mat" />
+                                    </td>
+                                    <td>{{mat.deliveryDate | date:'dd/MM/yyyy'}}</td>
+                                     <td>{{mat.categoryDesc | uppercase}}</td>
+                                    <td>
+                                        @if (mat.materialPhoto) {
+                                            <img class="laout-table-img" [src]="mat.materialPhoto" alt="photo material" />
+                                        }
+                                    </td>
+                                    <td>{{mat.materialDesc | uppercase}}</td>
+                                    <td>{{mat.deliveryQuantity | number:'1.2-2'}}</td>
+                                    <td>
+                                       {{mat.deliveryInformation | uppercase}}
+                                    </td>
+                                    <td *ngIf="rowgroup" [attr.rowspan]="rowspan">
+                                        <p-button icon="pi pi-clipboard" [text]="true" severity="secondary" (onClick)="showDialogDetails(mat.requestId)"/>
+                                    </td> 
+                                </tr>
+                            </ng-template>
+                        </p-table>
+
+                </td>
+            </tr>
+        </ng-template>
+    </p-table>
+</div>
+
+<!-- Requisição de materiais -->
+<p-dialog header="Entrega de Materiais" [(visible)]="visibleDialogPegar" modal="true" [maximizable]="true"
+    [breakpoints]="{ '1199px': '75vw', '575px': '90vw' }" [style]="{width: '60rem', height:'60rem'}">
+    <form [formGroup]="formPegar">
+        <div class="mt-2 layout-dialog-img">
+            <img *ngIf="photoMec()" class="layout-img-large" [src]="photoMec()" alt="photo mechanic" loading="lazy" />
+            <div *ngIf="!photoMec()" class="layout-img-select-large"></div>
+        </div>
+        <div class="grid grid-cols-12 gap-4">
+            <div class="col-span-12 md:col-span-6 p-1">
+                <label for="mechanicId">Mecânicos</label>
+                <p-select [options]="listMec()" [showClear]="true" optionLabel="name" formControlName="mechanic" (onChange)="selectMechanic()"
+                 [style]="{height:'45.5px','text-transform':'uppercase'}" fluid>
+                    <ng-template #selectedItem let-selectedOption>
+                        <div class="flex items-center gap-2" *ngIf="selectedOption">
+                            <div *ngIf="!selectedOption.photoUrl" class="layout-icon-select"></div>
+                            <img *ngIf="selectedOption.photoUrl" class="layout-img-small" [src]="selectedOption.photoUrl" alt="" />
+                            <div>{{ selectedOption.name }}</div>
+                        </div>
+                    </ng-template>
+                    <ng-template let-mec #item>
+                        <div class="flex items-center gap-2">
+                            <div *ngIf="!mec.photoUrl" class="layout-icon-select"></div>
+                            <img *ngIf="mec.photoUrl" class="layout-img-small" [src]="mec.photoUrl" alt="" />
+                            <div>{{ mec.name }}</div>
+                        </div>
+                    </ng-template>
+                </p-select>
+                <small class="block text-sm text-red-500" *ngIf="formPegar.get('mechanic')?.invalid">Campo obrigatório</small>
+            </div>
+            <div class="col-span-12 md:col-span-6 p-1">
+                <label for="categoryId">Categoria</label>
+                <p-select [options]="listCat()" optionLabel="description" [showClear]="true" formControlName="category" (onChange)="selectCategory()" [style]="{height:'45.5px','text-transform':'uppercase','align-items':'center'}" fluid />
+                <small class="block text-sm text-red-500" *ngIf="formPegar.get('category')?.invalid">Campo obrigatório</small>
+            </div>
+            <div *ngIf="listRequest().length" class="col-span-10 p-1">
+                <label for="categoryId">Solicitações pedentes</label>
+                <p-select [options]="listRequest()" [showClear]="true" optionLabel="name" formControlName="request" (onChange)="selectRequest()"
+                 [style]="{height:'45.5px','text-transform':'uppercase'}" fluid>
+                    <ng-template #selectedItem let-selectedOption>
+                        <div class="flex items-center gap-2" *ngIf="selectedOption">
+                            <div style="margin: 0.42rem;"><span><strong>Nº. {{ selectedOption.id }}</strong></span> - {{ selectedOption.requestInformation | uppercase }}</div>
+                        </div>
+                    </ng-template>
+                    <ng-template let-req #item>
+                        <div class="flex items-center gap-2">
+                            <div><span><strong>Nº. {{ req.id }}</strong></span> - {{ req.requestInformation | uppercase }}</div>
+                        </div>
+                    </ng-template>
+                </p-select>
+            </div>
+            <div *ngIf="listRequest().length" class="col-span-2 flex items-center gap-2">
+                <p-checkbox inputId="deliveryCompletedId" value="not" formControlName="deliveryCompleted"/>
+                <label for="deliveryCompletedId">Manter Aberto</label>
+            </div>
+            <div class="col-span-12 p-0">
+                <label for="mechanicId">Materiais</label>
+                <p-multiSelect [options]="listMatTemp()" (onChange)="selectMaterial()" display="chip" [disabled]="disabledSelectMat"
+                    [selectionLimit]="quantitySelectDefaultMat()" optionLabel="description" fluid
+                    formControlName="material" [style]="{height:'45.5px'}">
+                    <ng-template let-value pTemplate="selectedItems">
+                        <div class="inline-flex items-center gap-2" *ngFor="let mat of value">
+                            <img *ngIf="mat.photoUrl" class="layout-img-small" [src]="mat.photoUrl" height="32" width="32" />
+                            <img *ngIf="!mat.photoUrl" class="layout-img-small" src="assets/icons/icontool.jpg" alt="photo material" width="32" height="32" />
+                            <div style="margin: 0.42rem;">{{ mat.description | uppercase }}</div>
+                        </div>
+                        <div *ngIf="!value || value.length === 0">Selecione</div>
+                    </ng-template>
+                    <ng-template let-mat pTemplate="item">
+                        <div class="flex items-center gap-2">
+                            <img *ngIf="mat.photoUrl" class="layout-img-small" [src]="mat.photoUrl" height="32" width="32" />
+                            <img *ngIf="!mat.photoUrl" class="layout-img-small" src="assets/icons/icontool.jpg" alt="photo material" width="32" height="32" />
+                            <div>{{ mat.description | uppercase}}</div>
+                            <div class="font-bold"> - {{mat.quantityAvailableLoan}}</div>
+                        </div>
+                    </ng-template>
+                </p-multiSelect>
+                <small class="block text-sm text-red-500" *ngIf="formPegar.get('material')?.invalid">Campo obrigatório</small>
+            </div>
+        </div>
+    </form>
+    <div class="mt-4" style="height: 280px;">
+        <p-table [value]="tempMaterialSelected" dataKey="id" editMode="row" [scrollable]="true" scrollHeight="280px" size="small">
+            <ng-template pTemplate="header">
+                <tr>
+                    <th style="width:5%">Código</th>
+                    <th style="width:10%">Foto</th>
+                    <th style="width:40%">Descrição</th>
+                    <th *ngIf="selectTypeCategory == EPI" style="width:15%">Nº CA</th>
+                    <th style="width:10%">Quant.</th>
+                    <th style="width:20%">Informações</th>
+                    <th></th>
+                </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-mat let-editing="editing" let-ri="rowIndex">
+                <tr [pEditableRow]="mat">
+                    <td>{{mat.id}}</td>
+                    <td>
+                        <img *ngIf="mat.photoUrl" class="layout-img-small" [src]="mat.photoUrl" loading="lazy" />
+                    </td>
+                    <td>{{mat.description | uppercase}}</td>
+                    <!-- Nº CA -->
+                    <td *ngIf="selectTypeCategory == EPI">
+                        <p-cellEditor>
+                            <ng-template pTemplate="input">
+                                <p-inputNumber model="decimal" [useGrouping]="false" [(ngModel)]="mat.numberCA" fluid/>
+                            </ng-template>
+                            <ng-template pTemplate="output">
+                              <div *ngIf="mat.numberCA != 0">{{mat.numberCA}}</div>
+                            </ng-template>
+                        </p-cellEditor>
+                    </td>
+                    <td *ngIf="selectTypeCategory == EPI || selectTypeCategory == FERRAMENTA">
+                        {{mat.quantityLoan | number:'1.2-2'}}
+                    </td>
+                    <td  *ngIf="selectTypeCategory == UNIFORME">
+                        <p-cellEditor>
+                            <ng-template pTemplate="input">
+                                <p-inputNumber model="decimal" [useGrouping]="false" [(ngModel)]="mat.quantityLoan" fluid/>
+                            </ng-template>
+                            <ng-template pTemplate="output">
+                                {{mat.quantityLoan | number:'1.2-2'}}
+                            </ng-template>
+                        </p-cellEditor>
+                    </td>
+                    <td>
+                        <input type="text" pInputText [(ngModel)]="mat.informationLoan" class="w-full"/>
+                    </td>
+                    <td *ngIf="selectTypeCategory == UNIFORME || selectTypeCategory == EPI">
+                        <div class="flex items-center justify-center gap-2">
+                            <button 
+                                *ngIf="!editing" 
+                                pButton 
+                                pRipple 
+                                type="button" 
+                                pInitEditableRow 
+                                icon="pi pi-pencil" 
+                                (click)="onRowEditInit(mat)" 
+                                class="p-button-text">
+                            </button>
+                            <button 
+                                *ngIf="editing" 
+                                pButton 
+                                pRipple 
+                                type="button" 
+                                pSaveEditableRow 
+                                icon="pi pi-check" 
+                                (click)="onRowEditSave(mat, ri)" 
+                                class="p-button-text p-button-success mr-1">
+                            </button>
+                            <button 
+                                *ngIf="editing" 
+                                pButton pRipple 
+                                type="button" 
+                                pCancelEditableRow 
+                                icon="pi pi-times" 
+                                (click)="onRowEditCancel(mat, ri)" 
+                                class="p-button-text p-button-danger">
+                            </button>
+                        </div>
+                    </td>
+                    <td *ngIf="selectTypeCategory != UNIFORME"></td>
+                </tr>
+            </ng-template>
+        </p-table>
+    </div>
+     <div class="flex flex-col items-center w-full border-b border-surface-200 dark:border-surface-700 mt-4"></div>
+    <div class="flex justify-end mt-4">
+        <button pButton type="button" pRipple label="Fechar" icon="pi pi-times" class="p-button-text" (click)=" hideDialogDeliveryMat()"></button>
+        <button pButton type="button" pRipple label="Confirmar" icon="pi pi-check" class="p-button-text" [disabled]="formPegar.get('material')?.invalid!" (click)="confirmDeliveryMaterial()"></button>
+    </div>
+</p-dialog>
+
+<!-- Retorno de material -->
+<p-dialog header="Devoluções de Materiais" [(visible)]="visibleDialogDev" modal="true" 
+    [maximizable]="true" closable="false"
+    [breakpoints]="{ '1199px': '75vw', '575px': '90vw' }" [style]="{width: '80rem', height:'40rem'}">
+    <div style="min-height: 30rem;">
+        <p-table [value]="listReturnMaterial()" showGridlines [tableStyle]="{ 'min-width': '40rem'}" [tableStyle]="{ 'min-width': '50rem' }" size="small">
+            <ng-template pTemplate="header">
+                <tr>
+                    <th style="width: 10%">Requisição</th>
+                    <th style="width: 35%">Mecânico</th>
+                    <th style="width: 10%">Categoria</th>
+                    <th style="width: 40%">Material</th>
+                    <th style="width: 5%">Quantidade</th>
+                    <th style="width: 10%">Informações</th>
+                </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-mat>
+                <tr>
+                    <td>{{mat.requestId}}</td>
+                    <td>{{mat.mechanicName | uppercase}}</td>
+                    <td>{{mat.categoryDesc | uppercase}}</td>
+                    <td>{{mat.materialDesc | uppercase}}</td>
+                    <td>{{mat.deliveryQuantity | number:'1.2-2'}}</td>
+                    <td><input pInputText type="text" [(ngModel)]="mat.returnInformation"/></td>
+                </tr>
+            </ng-template>
+        </p-table>
+    </div>
+    <div class="flex flex-col items-center w-full border-b border-surface-200 dark:border-surface-700 mt-2"></div>
+    <div class="flex justify-end gap-2 mt-2">
+        <button pButton type="button" pRipple label="Fechar" icon="pi pi-times" class="p-button-text" (click)="hideDialogDev()"></button>
+        <button pButton type="button" pRipple label="Devolver Materiais" icon="pi pi-check" class="p-button-text" (click)="confirmReturnMaterial()"></button>
+    </div>
+</p-dialog>
+
+<!-- Confirm password mechanic -->
+<p-confirmDialog #dv key="confimMecCodePass">
+    <ng-template pTemplate="headless"
+        let-message
+        let-onAccept="onAccept"
+        let-onReject="onReject">
+        <div class="bg-surface-0 dark:bg-surface-900 rounded-xl p-8 flex flex-col items-center shadow-xl">
+             <span class="font-bold text-2xl block mb-2 mt-4">
+                {{ message.header | uppercase}}
+            </span>
+            <div class="mt-2 ">
+                <img *ngIf="photoMec()"  class="layout-img-large" [src]="photoMec()" alt="photo mechanic" loading="lazy" width="300" />
+                <div *ngIf="!photoMec()" class="layout-img-select-large"></div>
+            </div>
+            <span class="font-bold text-2xl block mb-2">
+                {{ message.message | uppercase}}
+            </span>
+            <p class="mb-0">Por favor digite sua senha.</p>
+            <form [formGroup]="formCodePass" (ngSubmit)="onConfirmCodePassMechanic(dv)">
+                <div class="grid grid-cols-12">
+                    <div class="col-span-12">
+                        <input pInputText type="text" formControlName="maskedPassword" class="w-full" (input)="onInputPassword()"  [style]="{'height':'60px'}"/>
+                    </div>
+                </div>
+            </form>
+           <div class="flex flex-col items-center w-full border-b border-surface-200 dark:border-surface-700 mt-4"></div>
+            <div class="flex items-center gap-2 mt-4">
+                <button pButton label="Confirmar" (click)="onConfirmCodePassMechanic(dv)" class="w-40"></button>
+                <button pButton label="Cancelar" (click)="onReject()" class="p-button-outlined w-40"></button>
+            </div>
+        </div>
+    </ng-template>
+</p-confirmDialog>
+
+<!-- Solicitação -->
+<p-dialog header="Solicitação de Materiais" [(visible)]="visibleDialogRequest" modal="true"
+    [breakpoints]="{ '1199px': '75vw', '575px': '90vw' }" [style]="{width: '60rem', height:'54rem'}">
+    <form [formGroup]="formRequest">
+         <div class="grid grid-cols-12 gap-4">
+            <div class="col-span-12 md:col-span-6">
+                <label for="mechanicId">Mecânico</label>
+                <p-select [options]="listMec()" [showClear]="true" optionLabel="name" formControlName="mechanic" 
+                 [style]="{height:'45.5px','text-transform':'uppercase'}" fluid>
+                    <ng-template #selectedItem let-selectedOption>
+                        <div class="flex items-center gap-2" *ngIf="selectedOption">
+                            <div *ngIf="!selectedOption.photoUrl" class="layout-icon-select"></div>
+                            <img *ngIf="selectedOption.photoUrl" class="layout-img-small" [src]="selectedOption.photoUrl" alt="" />
+                            <div>{{ selectedOption.name }}</div>
+                        </div>
+                    </ng-template>
+                    <ng-template let-mec #item>
+                        <div class="flex items-center gap-2">
+                            <div *ngIf="!mec.photoUrl" class="layout-icon-select"></div>
+                            <img *ngIf="mec.photoUrl" class="layout-img-small" [src]="mec.photoUrl" alt="" />
+                            <div>{{ mec.name }}</div>
+                        </div>
+                    </ng-template>
+                    <ng-template #dropdownicon>
+                        <i class="pi pi-users"></i>
+                    </ng-template>
+                </p-select>
+            </div>
+            <div class="md:col-span-6"></div>
+            <div class="col-span-12 md:col-span-6 flex flex-col gap-2 border border-gray-300 rounded-md p-3">
+                <span>Tipo</span>
+                <div class="flex gap-2">
+                    <div class="flex items-center">
+                        <p-radioButton inputId="typeFerrId" name="type" [value]="FERRAMENTA" formControlName="type"></p-radioButton>
+                        <label for="typeFerrId" class="ml-2">Ferramenta</label>
+                    </div>
+                    <div class="flex items-center">
+                        <p-radioButton inputId="typeEpiId" name="type" [value]="EPI" formControlName="type"></p-radioButton>
+                        <label for="typeEpiId" class="ml-2">EPI</label>
+                    </div>
+                    <div class="flex items-center">
+                        <p-radioButton inputId="typeUnifId" name="type" [value]="UNIFORME" formControlName="type"></p-radioButton>
+                        <label for="typeUnifId" class="ml-2">Uniforme</label>
+                    </div>
+                    <div class="flex items-center">
+                        <p-radioButton inputId="typeOutroId" name="type" [value]="OUTRO" formControlName="type"></p-radioButton>
+                        <label for="typeOutroId" class="ml-2">Outro</label>
+                    </div>
+                </div>
+            </div>
+            <div class="col-span-12">
+                <label for="inforReqId">Informação da solicitação</label>
+                <textarea rows="5" cols="30" pInputTextarea formControlName="inforReq" fluid></textarea>
+            </div>
+        </div>
+    </form>
+    <div class="flex justify-end mb-2 mt-2">
+         <p-button type="button" icon="pi pi-plus" label="Salvar Solicitação" [outlined]="true" (onClick)="newRequest()" />
+    </div>
+    <div class="flex flex-col items-center w-full border-b border-surface-200 dark:border-surface-700 mb-2"></div>
+    <p-table [value]="listRequestPendent()" showGridlines size="small" [scrollable]="true" scrollHeight="280px">
+        <ng-template pTemplate="header">
+            <tr>
+                <th style="width: 5%">Nº</th>
+                <th style="width: 20%">Mecânico</th>
+                <th style="width: 75%">Solicitação</th>
+                
+            </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-req>
+            <tr>
+                <td>{{req.id}}</td>
+                <td>{{getMechanicName(req.mechanicId) | uppercase }}</td>
+                <td>{{req.requestInformation | uppercase}}</td>
+            </tr>
+        </ng-template>
+    </p-table>
+</p-dialog>
+
+<!-- Visualizar Requisição -->
+ <p-dialog header="Detalhe da requisição" [(visible)]="visibleDialogDetailsRequest" modal="true" 
+    [breakpoints]="{ '1199px': '75vw', '575px': '90vw' }" [style]="{width: '64rem'}">
+    <form [formGroup]="formDetailsRequest">
+        <div class="grid grid-cols-12 gap-2">
+            <div class="col-span-12 md:col-span-4 flex gap-2">
+                <span>Requisição:</span>
+                <span class="text-500 font-medium"><strong>{{formDetailsRequest.get('id')?.value}}</strong></span>
+            </div>
+            <div class="col-span-12 md:col-span-4 flex gap-2">
+                <span>Status:</span>
+                <span class="text-500 font-medium"><strong>{{formDetailsRequest.get('status')?.value | uppercase}}</strong></span>
+            </div>
+             <div class="col-span-12 md:col-span-4 flex gap-2">
+                <label>Categoria:</label>
+                <span class="text-500 font-medium"><strong>{{formDetailsRequest.get('categoryType')?.value | uppercase}}</strong></span>
+            </div>
+            <div class="col-span-12">
+                <div class="flex flex-col items-center w-full border-b border-surface-200 dark:border-surface-700"></div>
+            </div>
+            
+           
+            <div class="col-span-6 md:col-span-4 flex gap-2">
+                <span>Mecânico:</span>
+                <span class="text-500 font-medium">{{formDetailsRequest.get('mechanicName')?.value | uppercase}}</span>
+            </div> 
+            <div class="col-span-6 md:col-span-4 flex gap-2">
+                <span>Departamento</span>
+                <span class="text-500 font-medium">{{formDetailsRequest.get('mechanicDepartment')?.value | uppercase}}</span>
+            </div> 
+            <div class="md:col-span-4"></div>
+
+            <!-- <div class="col-span-12 md:col-span-2">
+                <label for="">Usuário</label>
+                <div class="layout-input-disabled">
+                    <span class="text-500 font-medium ">{{formDetailsRequest.get('requestUserId')?.value}}</span>
+                </div>
+            </div> -->
+            <!-- <div class="col-span-12 md:col-span-4 flex gap-2">
+                <span>Nome</span>
+                <span class="text-500 font-medium ">{{formDetailsRequest.get('requestUserName')?.value | uppercase}}</span>
+            </div> 
+            <div class="col-span-12 md:col-span-4 flex gap-2">
+                <span>Data</span>
+                <span class="text-500 font-medium ">{{formDetailsRequest.get('requestDate')?.value | date:'dd/MM/yyyy hh:mm'}}</span>
+            </div>  
+            <div class="md:col-span-4"></div> -->
+             <div class="col-span-12">
+                <label for="">Solicitação</label>
+                <div class="flex items-center gap-2 border border-gray-300 rounded-md p-3" style="min-height: 4rem;">
+                    <span>{{formDetailsRequest.get('requestInformation')?.value | uppercase}}</span>
+                </div>
+            </div>        
+        </div>
+    </form>
+    <div style="min-height: 23rem" class="mt-2">   
+        <p-table [value]="listMaterialDetailsRequest()" showGridlines
+        [tableStyle]="{'min-width': '120rem'}" 
+        [scrollable]="true" scrollWidht="400px" scrollHeight="310px"  size="small">
+            <ng-template pTemplate="header">
+                <tr>
+                    <th>Código</th>
+                    <th>Descrição</th>
+                    <th>Entregue Quant.</th>
+                    <th>Entregue Usuá.</th>
+                    <th>Entregue Data</th>
+                    <th>Entregue Inf.</th>
+                    <th>Retorno Quant.</th>
+                    <th>Retorno Usuá.</th>
+                    <th>Retorno Data</th>
+                    <th>Retorno Inf.</th>
+                </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-mat>
+                <tr>
+                    <td>{{mat.materialId}}</td>
+                    <td>{{mat.materialDescription | uppercase}}</td>
+                    <td>{{mat.deliveryQuantity | number: '1.2-2'}}</td>
+                    <td>{{mat.deliveryUserName | uppercase}}</td>
+                    <td>{{mat.deliveryDate | date:'dd/MM/yyyy HH:mm'}}</td>
+                    <td>{{mat.deliveryInformation | uppercase}}</td>
+                    <td>{{mat.returnQuantity | number: '1.2-2' }}</td>
+                    <td>{{mat.returnUserName | uppercase}}</td>
+                    <td>{{mat.returnDate | date:'dd/MM/yyyy HH:mm'}}</td>
+                    <td>{{mat.returnInformation | uppercase}}</td>
+                </tr>
+            </ng-template>
+        </p-table>
+    </div>
+    <div class="flex flex-col items-center w-full border-b border-surface-200 dark:border-surface-700"></div>
+    <div class="flex justify-between mt-2">
+        <div class="flex gap-2">
+            <p-button type="button" icon="pi pi-print" label="Termo EPI" [outlined]="true" [disabled]="isPrintDetailsEPI" (onClick)="printEPI()"/>
+            <!-- <p-button type="button" icon="pi pi-print" label="Requisição" [outlined]="true"/> -->
+        </div>
+        <button pButton type="button" pRipple label="Fechar" icon="pi pi-times" class="p-button-text" (click)="hideDialogDetails()"></button>
+    </div>  
+ </p-dialog>
+
+ <app-print-epi #printEPIComponent/> 

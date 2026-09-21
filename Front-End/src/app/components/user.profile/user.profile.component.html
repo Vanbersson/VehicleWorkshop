@@ -1,0 +1,146 @@
+<p-toast />
+<p-dialog
+    header="Editar Perfil"
+    [modal]="true"
+    [(visible)]="visible"
+    [style]="{ width: '44rem' }">
+
+    <form [formGroup]="userForm" (ngSubmit)="save()">
+
+        <div class="grid grid-cols-12 gap-4">
+            <!-- Foto -->
+<div class="col-span-12 flex justify-center">
+                <div class="layout-photo-person">
+                    @if(userPhotoUrl()){
+                        <p-image [src]="userPhotoUrl()" width="80" height="80" alt="Imagem do usuário" [preview]="true"
+                            [imageStyle]="{
+                            'width':'80px',
+                            'height':'80px',
+                            'border-radius':'9999px',
+                            'object-fit':'cover'
+                        }">
+                        </p-image>
+                        <button pButton type="button" severity="danger" [text]="true" label="Remover" (click)="deletePhoto()">
+                        </button>
+                    } @else {
+                    <div class="layout-photo-person-label">
+                        <button pButton type="button" label="Foto" [rounded]="true" [text]="true" size="small" (click)="selectPhoto()">
+                        </button>
+                    </div>
+                    }
+                </div>
+            </div>
+            <!-- Nome -->
+            <div class="col-span-12">
+                <label for="nameid" class="block mb-2">Nome</label>
+                <input
+                    pInputText
+                    id="nameid"
+                    formControlName="name"
+                    class="w-full" />
+                <small
+                    class="text-red-500"
+                    *ngIf="userForm.get('name')?.invalid && userForm.get('name')?.dirty">
+                    Campo obrigatório
+                </small>
+            </div>
+            <!-- Email -->
+            <div class="col-span-12 md:col-span-6">
+                <label class="block mb-2" for="emailId">
+                    Email
+                </label>
+                <input
+                    pInputText
+                    id="emailId"
+                    formControlName="email"
+                    class="w-full" />
+            </div>
+            <!-- Celular -->
+            <div class="col-span-12 md:col-span-4">
+                <label class="block mb-2" for="cellphoneid">
+                    Celular
+                </label>
+                <p-inputMask
+                    id="cellphoneid"
+                    mask="(99) 9 9999-9999"
+                    unmask="true"
+                    formControlName="cellphone"
+                    class="w-full">
+                </p-inputMask>
+            </div>
+            <!-- Desconto -->
+            <div class="col-span-12 md:col-span-2">
+                <label class="block mb-2">
+                    Desconto
+                </label>
+                <p-inputNumber suffix="%" class="w-full" formControlName="limitDiscount" fluid>
+                </p-inputNumber>
+            </div>
+            <!-- Cargo -->
+            <div class="col-span-12 md:col-span-6">
+                <label class="block mb-2">
+                    Cargo
+                </label>
+                <input
+                    pInputText
+                    formControlName="roleDesc"
+                    class="w-full" />
+            </div>
+            <!-- Espaço -->
+            <div class="hidden md:block md:col-span-6"></div>
+            <!-- Situação -->
+            <div class="col-span-12 md:col-span-6">
+                <span class="block mb-2">
+                    Situação
+                </span>
+                <div class="border rounded-lg border-surface-300 p-4 flex gap-6">
+                    <div class="flex items-center gap-2">
+                        <p-radioButton
+                            inputId="ativo"
+                            [value]="enabled"
+                            formControlName="status">
+                        </p-radioButton>
+
+                        <label for="ativo">
+                            Ativado
+                        </label>
+
+                    </div>
+
+                    <div class="flex items-center gap-2">
+
+                        <p-radioButton
+                            inputId="inativo"
+                            [value]="disabled"
+                            formControlName="status">
+                        </p-radioButton>
+
+                        <label for="inativo">
+                            Desativado
+                        </label>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <p-divider></p-divider>
+
+        <div class="flex justify-end">
+
+            <button
+                pButton
+                type="submit"
+                icon="pi pi-check"
+                label="Salvar"
+                class="p-button-text">
+            </button>
+
+        </div>
+
+    </form>
+
+</p-dialog>

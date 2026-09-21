@@ -1,0 +1,15 @@
+:host{
+    .print-table {
+        border-collapse: collapse;
+        width: 100%;
+    }
+
+    .print-table td,
+    .print-table th {
+        border: 1px solid #000;
+        font-weight: 400;
+        text-align: left;
+    }
+
+    
+}

@@ -1,0 +1,343 @@
+<div class="layout-card">
+    <!-- Info -->
+    <p-toast />
+    <div class="layout-card-title">
+        <span>Usuários</span>
+        <div class="flex">
+            <p-button icon="pi pi-plus" label="Usuário" [outlined]="true" (onClick)="showDialogSave()" />
+        </div>
+    </div>
+    <p-table #tableFilter dataKey="id" [value]="users()" [globalFilterFields]="['id','name','email','roleDesc']" showGridlines>
+        <ng-template pTemplate="caption">
+            <div class="flex">
+                <p-iconField iconPosition="left">
+                    <p-inputIcon>
+                        <i class="pi pi-search"></i>
+                    </p-inputIcon>
+                    <input pInputText type="text"
+                        (input)="tableFilter.filterGlobal($any($event.target).value, 'contains')"
+                        placeholder="Pesquisar" />
+                </p-iconField>
+            </div>
+        </ng-template>
+        <ng-template pTemplate="header">
+            <tr>
+                <th pSortableColumn="id" style="width:10%">Código<p-sortIcon field="id"></p-sortIcon></th>
+                <th pSortableColumn="status" style="width:10%">Status<p-sortIcon field="status"></p-sortIcon></th>
+                <th pSortableColumn="name" style="width:40%">Nome<p-sortIcon field="name"></p-sortIcon></th>
+                <th pSortableColumn="email" style="width:22%">E-mail<p-sortIcon field="email"></p-sortIcon></th>
+                <th pSortableColumn="roleDesc" style="width:20%">Cargo<p-sortIcon field="roleDesc"></p-sortIcon></th>
+                <th></th>
+                <th></th>
+            </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-user>
+            <tr>
+                <td>{{user.id}}</td>
+                <td>
+                    <i class="pi " [ngClass]="{
+                        'pi-times-circle text-red-500':user.status == disabled,
+                        'pi-check-circle text-green-500':user.status == enabled}">
+                    </i> {{user.status | uppercase}}
+                </td>
+                <td class="flex items-center gap-2">
+                    <img class="layout-tab-img" *ngIf="user.photoUrl" [src]="user.photoUrl" style="vertical-align: middle" />
+                    <p-avatar *ngIf="!user.photoUrl" [label]="firstLetter(user)" size="large" shape="circle" [style]="{ 'background-color': '#dee9fc', color: '#1a2551' }"></p-avatar>
+                    <span>{{user.name | uppercase}}</span>
+                </td>
+                <td>{{user.email | uppercase}}</td>
+                <td>{{user.roleDesc | uppercase}}</td>
+                <td><p-button type="button" icon="pi pi-pencil" [text]="true" size="small" severity="secondary" (onClick)="editUser(user.id)" /></td>
+                <td><p-button type="button" icon="pi pi-shield" size="small" label="Senha" severity="danger" (onClick)="showUpdatePass(user)" /></td>
+            </tr>
+        </ng-template>
+    </p-table>
+</div>
+<!-- Cadastro usuário -->
+<p-dialog header="Cadastro de usuário" [(visible)]="visibleDialogUser" [modal]="true"
+    [style]="{ width: '52rem', height:'47rem' }" [breakpoints]="{ '1199px': '75vw', '575px': '90vw' }">
+    <form [formGroup]="formUser" (ngSubmit)="saveData()" class="space-y-6">
+        <div class="grid grid-cols-12 gap-4">
+            <!-- Foto -->
+            <div class="col-span-12 flex justify-center">
+                <div class="layout-photo-person">
+                    @if(userPhoto()){
+                    <p-image [src]="userPhoto()" width="80" height="80" alt="Imagem do usuário" [preview]="true"
+                        [imageStyle]="{
+                            'width':'80px',
+                            'height':'80px',
+                            'border-radius':'9999px',
+                            'object-fit':'cover'
+                        }">
+                    </p-image>
+                    <button pButton type="button" severity="danger" [text]="true" label="Remover"
+                        (click)="deletePhoto()">
+                    </button>
+                    } @else {
+                    <div class="layout-photo-person-label">
+                        <button pButton type="button" label="Foto" [rounded]="true" [text]="true" size="small"
+                            (click)="selectPhoto()">
+                        </button>
+                    </div>
+                    }
+                </div>
+            </div>
+            <!-- Código -->
+            <div class="col-span-12 md:col-span-2">
+                <label for="id" class="block mb-2">
+                    Código
+                </label>
+                <p-inputNumber inputId="id" formControlName="id" fluid>
+                </p-inputNumber>
+            </div>
+            <!-- Nome -->
+            <div class="col-span-12 md:col-span-10">
+                <label for="nameid" class="block mb-2">
+                    Nome
+                </label>
+                <input pInputText id="nameid" class="w-full" formControlName="name">
+                <small class="text-red-500" *ngIf="formUser.get('name')?.invalid">
+                    Campo obrigatório
+                </small>
+            </div>
+            <!-- Email -->
+            <div class="col-span-12 md:col-span-6">
+                <label for="emailid" class="block mb-2 ">
+                    Email
+                </label>
+                <input pInputText id="emailid" type="email" class="w-full" formControlName="email">
+                <small class="text-red-500" *ngIf="formUser.get('email')?.invalid">
+                    Campo obrigatório
+                </small>
+            </div>
+
+            <!-- Celular -->
+            <div class="col-span-12 md:col-span-4">
+                <label class="block mb-2 ">
+                    Celular
+                </label>
+                <p-inputMask class="w-full" mask="(99) 9 9999-9999" formControlName="cellphone" unmask="true" fluid>
+                </p-inputMask>
+            </div>
+            <!-- Desconto -->
+            <div class="col-span-12 md:col-span-2">
+                <label class="block mb-2 ">
+                    Desconto
+                </label>
+                <p-inputNumber suffix="%" class="w-full" formControlName="limitDiscount" fluid>
+                </p-inputNumber>
+            </div>
+            <!-- Senha -->
+            <div class="col-span-12 md:col-span-4">
+                <label class="block mb-2 ">
+                    Senha
+                </label>
+                <input *ngIf="isEditUser" pInputText class="w-full" formControlName="password" fluid>
+                <p-password *ngIf="!isEditUser" class="w-full" formControlName="password" [feedback]="false"
+                    [toggleMask]="true" fluid>
+                </p-password>
+                <small class="text-red-500" *ngIf="formUser.get('password')?.invalid">
+                    Campo obrigatório
+                </small>
+            </div>
+            <!-- Confirmar senha -->
+            <div class="col-span-12 md:col-span-4">
+                <label class="block mb-2 ">
+                    Repetir senha
+                </label>
+                <input *ngIf="isEditUser" pInputText class="w-full" formControlName="passwordValid">
+                <p-password *ngIf="!isEditUser" class="w-full" formControlName="passwordValid" [feedback]="false"
+                    [toggleMask]="true" fluid>
+                </p-password>
+                <small class="text-red-500" *ngIf="formUser.get('passwordValid')?.invalid">
+                    Campo obrigatório
+                </small>
+            </div>
+            <!-- Cargo -->
+            <div class="col-span-12 md:col-span-4">
+                <label class="block mb-2">
+                    Cargo
+                </label>
+                <p-select class="w-full" [options]="roles" optionLabel="description" placeholder="Selecione" 
+                 [style]="{'text-transform':'uppercase'}" formControlName="roleDesc" fluid>
+                </p-select>
+            </div>
+            <!-- Perfil -->
+            <div class="col-span-12 md:col-span-5">
+                <div class="rounded-lg border border-surface-200 dark:border-surface-700 p-4 space-y-3">
+                    <span>Perfil</span>
+                    <div class="flex items-center gap-2">
+                        <p-radioButton inputId="admin1" [value]="admin" formControlName="roleFunc"></p-radioButton>
+                        <label for="admin1"> Administrador </label>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <p-radioButton inputId="user1" [value]="user" formControlName="roleFunc"></p-radioButton>
+                        <label for="user1"> Usuário </label>
+                    </div>
+                </div>
+            </div>
+            <!-- Situação -->
+            <div class="col-span-12 md:col-span-5">
+                <div class="rounded-lg border border-surface-200 dark:border-surface-700 p-4 space-y-3">
+                    <span> Situação </span>
+                    <div class="flex items-center gap-2">
+                        <p-radioButton inputId="enabled1" [value]="enabled" formControlName="status">
+                        </p-radioButton>
+                        <label for="enabled1"> Ativado </label>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <p-radioButton inputId="disabled1" [value]="disabled" formControlName="status">
+                        </p-radioButton>
+                        <label for="disabled1"> Desativado </label>
+                    </div>
+                </div>
+            </div>
+            <!-- Botões -->
+            <div class="col-span-12 md:col-span-4">
+                <p-button label="Menus" class="w-full" (onClick)="showDialogMenu()" fluid>
+                </p-button>
+            </div>
+            <div class="col-span-12 md:col-span-4">
+                <p-button label="Funções" class="w-full" (onClick)="showDialogFunc()" fluid>
+                </p-button>
+            </div>
+
+        </div>
+        <div class="col-span-12 border-b border-surface-200 dark:border-surface-700"></div>
+        <div class="flex justify-end gap-3">
+            <p-button label="Fechar" icon="pi pi-times" [text]="true" (onClick)="hideDialogUser()">
+            </p-button>
+            <p-button type="submit" label="Salvar" [text]="true" icon="pi pi-check">
+            </p-button>
+        </div>
+    </form>
+</p-dialog>
+<!-- Permissões -->
+<p-dialog header="Funções do usuário" [(visible)]="visibleDialogPerm" [modal]="true" [style]="{ width: '50rem' }"
+    [breakpoints]="{ '1199px': '75vw', '575px': '90vw' }">
+    <p-table #dt1 dataKey="id" [value]="permissions()" [(selection)]="permissionsSelect"
+        [globalFilterFields]="['id', 'description']" size="small">
+        <ng-template pTemplate="caption">
+            <div class="flex justify-content-between">
+                <p-iconField iconPosition="left">
+                    <p-inputIcon>
+                        <i class="pi pi-search"></i>
+                    </p-inputIcon>
+                    <input pInputText type="text" (input)="dt1.filterGlobal($event.target.value, 'contains')"
+                        placeholder="Pesquisar" />
+                </p-iconField>
+            </div>
+        </ng-template>
+        <ng-template pTemplate="header">
+            <tr>
+                <th>Sel.</th>
+                <th pSortableColumn="id" style="width: 20%;">Código<p-sortIcon field="id"></p-sortIcon></th>
+                <th pSortableColumn="menu" style="width: 20%;">Menu<p-sortIcon field="menu"></p-sortIcon></th>
+                <th pSortableColumn="description">Descrição<p-sortIcon field="description"></p-sortIcon></th>
+            </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-permission>
+            <tr [pSelectableRow]="permission">
+                <td>
+                    <p-tableCheckbox [value]="permission" />
+                </td>
+                <td>{{permission.id}}</td>
+                <td>{{permission.menu | uppercase}}</td>
+                <td>{{permission.description | uppercase}}</td>
+            </tr>
+        </ng-template>
+    </p-table>
+    <div class="flex justify-end gap-2 mt-3">
+        <button pButton type="button" pRipple label="Fechar" icon="pi pi-times" class="p-button-text" (click)="hideDialogFunc()"></button>
+        <button pButton type="button" pRipple label="Salvar" icon="pi pi-check" class="p-button-text" (click)="savePermissions()"></button>
+    </div>
+</p-dialog>
+<!-- Menu -->
+<p-dialog header="Menus do usuário" [(visible)]="visibleDialogMenu" [modal]="true" [style]="{ width: '40rem'}"
+    [breakpoints]="{ '1199px': '75vw', '575px': '90vw' }">
+    <p-tree [value]="menus" selectionMode="checkbox" [(selection)]="menuSelect" [propagateSelectionDown]="false"
+        [propagateSelectionUp]="false" />
+    <div class="col-span-12 border-b border-surface-200 dark:border-surface-700"></div>
+    <div class="col-span-12 flex justify-end gap-2 mt-2">
+        <button pButton type="button" pRipple label="Fechar" icon="pi pi-times" class="p-button-text" (click)="hideDialogMenu()"></button>
+        <button pButton type="button" pRipple label="Salvar" icon="pi pi-check" class="p-button-text" (click)="saveMenus()"></button>
+    </div>
+</p-dialog>
+<!-- Update password -->
+<p-dialog header="Alterar senha do usuário" [(visible)]="visibleUpdatePass" [modal]="true" [style]="{ width: '30rem' }"
+    [breakpoints]="{ '1199px': '75vw', '575px': '90vw' }">
+    <form [formGroup]="formPassword" class="space-y-6">
+        <div class="grid grid-cols-12 gap-4">
+            <!-- Nome do usuário -->
+            <div class="col-span-12">
+                <span class="font-bold text-surface-700 dark:text-surface-200">
+                    {{ nameUserUpdatePass | uppercase }}
+                </span>
+            </div>
+            <!-- Senha -->
+            <div class="col-span-12">
+                <label for="passwordid" class="block mb-2">
+                    Senha
+                </label>
+                <p-password id="passwordid" class="w-full" formControlName="password" [feedback]="false"
+                    [toggleMask]="true" fluid>
+                </p-password>
+                <small class="block mt-1 text-red-500" *ngIf="formPassword.get('password')?.invalid">
+                    Campo obrigatório
+                </small>
+            </div>
+            <!-- Confirmar senha -->
+            <div class="col-span-12">
+                <label for="passwordvalidid" class="block mb-2">
+                    Repetir senha
+                </label>
+                <p-password id="passwordvalidid" class="w-full" formControlName="passwordValid" [feedback]="false"
+                    [toggleMask]="true" fluid>
+                </p-password>
+                <small class="block mt-1 text-red-500" *ngIf="formPassword.get('passwordValid')?.invalid">
+                    Campo obrigatório
+                </small>
+                <small class="block mt-1 text-red-500"
+                    *ngIf="formPassword.get('password')?.value !== formPassword.get('passwordValid')?.value">
+                    Senhas diferentes
+                </small>
+            </div>
+        </div>
+
+        <!-- Botão -->
+        <div class="flex justify-end">
+            <p-button label="Atualizar senha" icon="pi pi-check" [text]="true" (onClick)="saveUpdatePassword()">
+            </p-button>
+
+        </div>
+
+    </form>
+
+    <!-- 
+    <form [formGroup]="formPassword">
+        <div class="p-fluid p-formgrid grid">
+            <div class="col-12">
+                <span class="text-700 font-bold">{{nameUserUpdatePass | uppercase}}</span>
+            </div>
+            <div class="col-12">
+                <label for="passwordid">Senha</label>
+                <p-password id="passwordid" formControlName="password" [feedback]="false" [toggleMask]="true" />
+                <small class="p-error block" *ngIf="formPassword.get('password')?.invalid">Campo obrigatório</small>
+            </div>
+            <div class="col-12">
+                <label for="passwordvalidid">Repetir senha</label>
+                <p-password id="passwordvalidid" formControlName="passwordValid" [feedback]="false"
+                    [toggleMask]="true" />
+                <small class="p-error block" *ngIf="formPassword.get('passwordValid')?.invalid">Campo
+                    Obrigatório</small>
+                <small class="p-error block"
+                    *ngIf="formPassword.get('password')?.value != formPassword.get('passwordValid')?.value">Senha
+                    diferentes</small>
+            </div>
+        </div>
+        <div class="flex justify-content-end">
+            <button pButton type="button" pRipple label="Atualizar senha" icon="pi pi-check" class="p-button-text"
+                (click)="saveUpdatePassword()"></button>
+        </div>
+    </form> -->
+</p-dialog>

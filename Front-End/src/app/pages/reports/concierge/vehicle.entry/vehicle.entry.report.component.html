@@ -1,0 +1,214 @@
+<div class="layout-card">
+    <p-toast />
+    <div class="layout-card-title">
+        <span>Relatório de veículos</span>
+        <p-button icon="pi pi-filter-slash" [outlined]="true" label="Limpar" (onClick)="cleanList()" />
+    </div>
+    <p-table #dt1 dataKey="id" [value]="listVehicleEntry()" [rowHover]="true" showGridlines
+        currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} entradas"
+        [globalFilterFields]="['id', 'placa', 'modelDescription', 'frota', 'numServiceOrder', 'dateEntry','dateExit','clientCompanyName','nameUserAttendant','budgetStatus']"
+        [paginator]="true" [rows]="10" [rowsPerPageOptions]="[10, 25, 50]" [showCurrentPageReport]="true"
+        [tableStyle]="{ 'min-width': '100rem' }"  size="small">
+        <ng-template pTemplate="caption">
+            <div class="flex justify-between">
+                <p-iconField iconPosition="left">
+                    <p-inputIcon>
+                        <i class="pi pi-search"></i>
+                    </p-inputIcon>
+                    <input pInputText type="text" (input)="dt1.filterGlobal($event.target.value, 'contains')" placeholder="Pesquisar" />
+                </p-iconField>
+                <div class="layout-mobile-button">
+                   <!--  <button pButton [disabled]="disabledExport" type="button" [text]="true" severity="success" (click)="exportExcel()">
+                        <i class="pi pi-file-excel"></i>
+                        <span>Excel</span>
+                    </button> -->
+                    <button pButton type="button" [outlined]="true" severity="warn" (click)="showDialog()">
+                        <i class="pi pi-filter"></i>
+                        <span>Filtros</span>
+                    </button>
+                </div>
+            </div>
+        </ng-template>
+        <ng-template pTemplate="header">
+            <tr>
+                <th pSortableColumn="id">
+                    Código <p-sortIcon field="id" />
+                </th>
+                <th pSortableColumn="placa">
+                    Placa <p-sortIcon field="placa" />
+                </th>
+                <th pSortableColumn="modelDescription">
+                    Modelo <p-sortIcon field="modelDescription" />
+                </th>
+                <th pSortableColumn="frota">
+                    Frota <p-sortIcon field="frota" />
+                </th>
+                <th pSortableColumn="numServiceOrder">
+                    Nro O.S. <p-sortIcon field="numServiceOrder" />
+                </th>
+                <th pSortableColumn="dateEntry">
+                    Entrada <p-sortIcon field="dateEntry" />
+                </th>
+                <th pSortableColumn="dateExit" >
+                    Saída <p-sortIcon field="dateExit" />
+                </th>
+                <th pSortableColumn="clientCompanyName">
+                    Empresa <p-sortIcon field="clientCompanyName" />
+                </th>
+                <th pSortableColumn="nameUserAttendant">
+                    Consultor <p-sortIcon field="nameUserAttendant" />
+                </th>
+                <th pSortableColumn="nameUserAttendant">
+                    Ent. Porteiro <p-sortIcon field="nameUserAttendant" />
+                </th>
+                <th pSortableColumn="nameUserAttendant">
+                    Saí. Porteiro <p-sortIcon field="nameUserAttendant" />
+                </th>
+                <th>
+                </th>
+            </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-vehicle>
+            <tr>
+                <td>{{ vehicle.id }}</td>
+                <td>
+                    @if(vehicle.vehicleNew == "yes"){
+                    <p-tag value="NOVO" severity="info"></p-tag>
+                    }@else {
+                    {{vehicle.vehiclePlate | uppercase}}
+                    }
+                </td>
+                <td>{{ vehicle.modelDescription | uppercase}}</td>
+                <td>{{ vehicle.vehicleFleet | uppercase}}</td>
+                <td>{{ vehicle.numServiceOrder}}</td>
+                <td>{{ vehicle.entryDate }}</td>
+                <td>{{ vehicle.exitDate }}</td>
+                <td>{{ vehicle.clientCompanyName | uppercase }}</td>
+                <td>{{ vehicle.attendantUserName | uppercase }}</td>
+                <td>{{vehicle.entryUserName | uppercase}}</td>
+                <td>{{vehicle.exitUserName | uppercase}}</td>
+                <td>
+                    <p-button icon="pi pi-eye" [text]="true" severity="secondary" size="small" (onClick)="showVehicle(vehicle.id)"/>
+                </td>
+            </tr>
+        </ng-template>
+    </p-table>
+</div>
+
+<p-dialog [(visible)]="dialogVisible" header="Filtros" [modal]="true" [style]="{ width: '70rem',height:'58rem' }"
+    [breakpoints]="{ '1199px': '75vw', '575px': '90vw' }" [maximizable]="true">
+    <form [formGroup]="formFilter" style="min-height: 46rem;">
+        <div class="grid grid-cols-12 gap-2">
+            <div class="col-span-12 flex justify-end mt-2">
+                <p-button icon="pi pi-filter-slash" [outlined]="true" label="Limpar" (onClick)="cleanform()" />
+            </div>
+            <div class="col-span-12 md:col-span-3">
+                <label for="dateIniId">Período inicial</label>
+                <p-datepicker [iconDisplay]="'input'" [showIcon]="true" dateFormat="dd/mm/yy" inputId="buttondisplay" formControlName="dateInit" fluid/>
+            </div>
+            <div class="col-span-12 md:col-span-3">
+                <label for="dateIniId">Período final</label>
+                <p-datepicker [iconDisplay]="'input'" [showIcon]="true" dateFormat="dd/mm/yy" inputId="buttondisplay" formControlName="dateFinal" fluid/>
+            </div>
+            <div class="md:col-span-6"></div>
+            <div class="col-span-12 md:col-span-6 ">
+                <label for="">Situação do veículo</label>
+                <div class="flex items-center gap-4 border border-surface-300 rounded-lg p-3">
+                    <div class="flex align-center">
+                        <p-radioButton value="E" inputId="type1" formControlName="type"></p-radioButton>
+                        <label for="type1" class="ml-2">
+                            Entrou
+                        </label>
+                    </div>
+                    <div class="flex align-center">
+                        <p-radioButton value="S" inputId="type2" formControlName="type"></p-radioButton>
+                        <label for="type2" class="ml-2">
+                           Saiu
+                        </label>
+                    </div>
+                    <div class="flex align-center">
+                        <p-radioButton value="A" inputId="type3" formControlName="type"></p-radioButton>
+                        <label for="type3" class="ml-2">
+                            Ambos
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="col-span-12 md:col-span-3">
+                <label>Veículos Novos</label>
+                <div class="flex items-center gap-4 border border-surface-300 rounded-lg p-3">
+                    <p-checkbox formControlName="vehicleNew" value="yes" inputId="vehicleNewId" />
+                    <label for="vehicleNewId">Sim</label>
+                </div>
+            </div>
+            <div class="md:col-span-3"></div>
+            <div class="col-span-12 md:col-span-3">
+                <label for="vehiclemodelid">Modelos</label>
+                <p-select
+                    formControlName="modelVehicle"
+                    [showClear]="true"
+                    [options]="vehicleModels()"
+                    optionLabel="description"
+                    [style]="{'text-transform':'uppercase'}" fluid />
+            </div>
+             <div class="col-span-12 md:col-span-3">
+                <label for="vehiclemodelid">Consutor</label>
+                <p-select
+                    formControlName="userAttendant"
+                    [showClear]="true"
+                    [options]="attendantsUser()"
+                    optionLabel="name"
+                    [style]="{'text-transform':'uppercase'}" fluid />
+            </div>
+            <div class="col-span-12 md:col-span-3">
+                <label for="vehiclemodelid">Porteiro</label>
+                <p-select
+                    formControlName="userConcierge"
+                    [showClear]="true"
+                    [options]="conciergeUser()"
+                    optionLabel="name"
+                    [style]="{'text-transform':'uppercase'}" fluid />
+            </div>
+                <div class="md:col-span-3"></div>
+            <div class="col-span-12 md:col-span-2">
+                <label for="clientCompanyCodeId">Código</label>
+                <p-inputNumber inputId="clientCompanyCodeId" mode="decimal" [useGrouping]="false" formControlName="clientCompanyId" fluid />
+            </div>
+            <div class="col-span-10 md:col-span-6">
+                <label for="clientCompanyNameId">Empresa</label>
+                <input pInputText id="clientCompanyNameId" type="text" class="w-full" formControlName="clientCompanyName" />
+            </div>
+            <div class="col-span-2 md:col-span-1 flex flex-col">
+                <label for="">Filtro</label>
+                <app-filterclient (outputClient)="selectClientCompany.set($event)" />
+            </div>          
+            <div class="md:col-span-3"></div>
+            <div class="col-span-12 md:col-span-2">
+                <label for="codeId">Código</label>
+                <p-inputNumber inputId="codeId" mode="decimal" [useGrouping]="false" formControlName="vehicleId" fluid/>
+            </div>
+            <div class="col-span-12 md:col-span-2">
+                <label for="placaId">Placa</label>
+                <p-inputMask id="placaId" mask="***-****" [unmask]="true" [style]="{'text-transform':'uppercase'}" formControlName="vehiclePlate" fluid />
+            </div>
+            <div class="col-span-12 md:col-span-2">
+                <label for="frotaId">Frota</label>
+                <input pInputText id="frotaId" type="text" class="w-full" formControlName="vehicleFleet" />
+            </div>
+            <div class="col-span-12 md:col-span-2">
+                <label for="numServiceOrderId">Nro. O.S.</label>
+                 <p-inputNumber inputId="numServiceOrderId" [useGrouping]="false" formControlName="numServiceOrder" fluid/>
+            </div>
+            <div class="md:col-span-4"></div>
+        </div>
+    </form>
+    <div class="flex flex-col items-center w-full border-b border-surface-200 dark:border-surface-700"></div>
+    <div class="flex justify-end gap-2 mt-4">
+        <button pButton type="button" pRipple label="Fechar" icon="pi pi-times" class="p-button-text" (click)="hideDialog()"></button>
+        <button pButton type="button" pRipple label="Pesquisar" icon="pi pi-search" class="p-button-text" (click)="searchFilter()"></button>
+    </div>
+</p-dialog>
+
+<p-dialog [(visible)]="dialogVisibleVehicleDetails" header="Informações do veículo" [modal]="true" styleClass="vehicle-details-dialog">
+    <app-vehicle-details #vehicleDetails/>
+</p-dialog>
