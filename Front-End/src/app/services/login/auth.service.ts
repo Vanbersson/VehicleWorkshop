@@ -1,5 +1,6 @@
 import { IAuth } from '@/app/interfaces/i.auth';
 import { MessageResponse } from '@/app/models/message-response';
+import { User } from '@/app/models/user';
 import { environment } from '@/environments/environment';
 import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
@@ -11,8 +12,8 @@ import { Observable } from 'rxjs';
 export class AuthService {
   constructor(private http: HttpClient) { }
 
-  login(login: IAuth): Observable<HttpResponse<MessageResponse>> {
-    return this.http.post<MessageResponse>(environment.apiuUrl + "/auth/login", login, { observe: "response" });
+  login(login: IAuth): Observable<HttpResponse<User>> {
+    return this.http.post<User>(environment.apiuUrl + "/auth/login", login, { observe: "response" });
   }
 
   isAuthenticated(): boolean {

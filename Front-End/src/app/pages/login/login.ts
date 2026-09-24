@@ -1,15 +1,12 @@
-import { StatusSuccessError } from '@/app/models/status-suc-err';
-import { User } from '@/app/models/user';
-import { StorageService } from '@/app/services/storage/storage.service';
 import { HttpResponse } from '@angular/common/http';
 import { Component } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { lastValueFrom } from 'rxjs';
+import { Router } from '@angular/router';
 
 import { ToastModule } from 'primeng/toast';
 import { InputTextModule } from 'primeng/inputtext';
 import { PasswordModule } from 'primeng/password';
-import { CheckboxModule } from 'primeng/checkbox';
 import { ButtonModule } from 'primeng/button';
 import { MessageService, TreeNode } from 'primeng/api';
 
@@ -17,23 +14,26 @@ import { MessageResponse } from '@/app/models/message-response';
 import { IAuth } from '@/app/interfaces/i.auth';
 import { AuthService } from '@/app/services/login/auth.service';
 import { MenuUserService } from '@/app/services/menu/menu-user.service';
-import { Route, Router } from '@angular/router';
+import { StatusSuccessError } from '@/app/models/status-suc-err';
+import { User } from '@/app/models/user';
+import { StorageService } from '@/app/services/storage/storage.service';
 import { LoadingService } from '@/app/services/loading/loading.service';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [ToastModule, FormsModule, InputTextModule, PasswordModule, CheckboxModule,
+  imports: [ToastModule, ReactiveFormsModule, InputTextModule, PasswordModule,
     InputTextModule, ButtonModule],
   templateUrl: './login.html',
   styleUrl: './login.scss',
   providers: [MessageService]
 })
 export default class Login {
-  email: string = '';
-  password: string = '';
-  checked: boolean = false;
   private user: User = new User();
+  formLogin = new FormGroup({
+    email: new FormControl<string>('', Validators.required),
+    password: new FormControl<string>('', [Validators.required, Validators.minLength(8)])
+  });
 
   constructor(private loading: LoadingService,
     private messageService: MessageService,
@@ -43,20 +43,17 @@ export default class Login {
     private router: Router) { }
 
   async login() {
-    if (this.email.trim() == '' || this.password.trim() == '') {
-      this.messageService.add({ severity: 'warn', summary: 'Atenção', detail: 'Usuário ou senha não informado' });
+    const { value, valid } = this.formLogin;
+    if (!valid) {
       return;
     }
-
-    const login: IAuth = { email: this.email, password: this.password! };
+    const login: IAuth = { email: value.email!, password: value.password! };
     this.loading.show();
     const result = await this.loginService(login);
     this.loading.hide();
-    if (result.status == 200 && result.body?.status == StatusSuccessError.succes) {
-
-      this.messageService.add({ severity: 'success', summary: result.body.header, detail: result.body.message, icon: 'pi pi-check' });
-      this.user = result.body.data;
-
+    if (result.status == 200) {
+      this.user = result.body!;
+      this.messageService.add({ severity: 'success', summary: 'Login', detail: `Bem-Vindo ${this.user.name}` , icon: 'pi pi-check' });
       this.storageService.companyId = this.user.companyId!.toString();
       this.storageService.resaleId = this.user.resaleId!.toString();
       this.storageService.photo = this.user.photoUrl;
@@ -78,18 +75,18 @@ export default class Login {
       setTimeout(() => {
         this.router.navigateByUrl('/');
       }, 1000);
-    } else {
-      this.messageService.add({ severity: 'error', summary: 'Login', detail: 'Usuário ou senha invalída', icon: 'pi pi-times' });
     }
   }
 
-  private async loginService(login: IAuth): Promise<HttpResponse<MessageResponse>> {
+  private async loginService(login: IAuth): Promise<HttpResponse<User>> {
     try {
       return await lastValueFrom(this.authService.login(login));
     } catch (error: any) {
+      this.messageService.add({ severity: 'error', summary: 'Login', detail: 'Usuário ou senha inválida', icon: 'pi pi-times' });
       return error;
     }
   }
+  
   private async menusUser(compamyId: number, resaleId: number, userId: number): Promise<TreeNode[]> {
     try {
       return await lastValueFrom(this.menuService.listMenusUser(compamyId, resaleId, userId));

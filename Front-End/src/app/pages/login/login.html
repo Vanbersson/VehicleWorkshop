@@ -5,19 +5,21 @@
             <span>Conecte-se</span>
         </div>
         <P class="mb-4">Faça login em sua conta</P>
-        <div class="grid grid-cols-12 gap-4 w-full">
-            <div class="col-span-12">
-                <label>Digite seu email</label>
-                <input pInputText class="w-full" type="email" [(ngModel)]="email" />
+        <form [formGroup]="formLogin" (submit)="login()" class="w-full">
+            <div class="grid grid-cols-12 gap-4">
+                <div class="col-span-12">
+                    <label>Digite seu email</label>
+                    <input type="email" pInputText class="w-full" formControlName="email" />
+                </div>
+                <div class="col-span-12">
+                    <label>Digite sua senha</label>
+                    <p-password [toggleMask]="true" [feedback]="false" formControlName="password" fluid />
+                </div>
+                <div class="col-span-12">
+                    <p-button type="submit" icon="pi pi-sign-in" label="Entrar" severity="info" fluid />
+                </div>
             </div>
-            <div class="col-span-12">
-                <label>Digite sua senha</label>
-                <p-password [toggleMask]="true" [feedback]="false" [(ngModel)]="password" fluid />
-            </div>
-            <div class="col-span-12">
-                <p-button type="button" icon="pi pi-sign-in" label="Entrar" (onClick)="login()" fluid severity="info" />
-            </div>
-        </div>
+        </form>
     </div>
 
     <div class="card-login-info">
