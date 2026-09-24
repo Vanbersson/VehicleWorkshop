@@ -23,18 +23,17 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 public class WebSecurityConfig {
 
     @Autowired
-    SecurityFilter securityFilter;
+    private SecurityFilter securityFilter;
 
     @Bean
     public WebMvcConfigurer corsConfig() {
-
         return new WebMvcConfigurer() {
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/**")
-                        //.allowedOrigins("https://www.atenatruck.com.br") // frontend
+                        //.allowedOrigins("https://www.atenatruck.com.br", "https://atenatruck.com.br") // frontend
                         .allowedOrigins("*")// frontend dev
-                        .allowedMethods(HttpMethod.POST.name(), HttpMethod.GET.name())
-                        .allowedHeaders(HttpHeaders.CONTENT_TYPE, HttpHeaders.AUTHORIZATION);
+                        .allowedMethods("GET", "POST")
+                        .allowedHeaders("Authorization", "Content-Type");
             }
         };
     }
@@ -50,7 +49,6 @@ public class WebSecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/vehicle/entry/budget/token/valid/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/vehicle/entry/budget/token/approbation/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/auth/login").permitAll()
-
                         .requestMatchers(HttpMethod.POST, "/user").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )

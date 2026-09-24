@@ -1,3 +1,30 @@
 <div class="layout-card">
-    <p>request.equipment.report works!</p>
+    <p-toast />
+    <div class="layout-card-title">
+        <span class="text-500 font-medium">Requisições</span>
+        <p-button icon="pi pi-filter-slash" [outlined]="true" label="Limpar" />
+    </div>
+    <p-table  showGridlines>
+        <ng-template #header>
+            <tr>
+                <th style="width: 10%;">Requisição</th>
+                <th style="width: 10%;">Tipo</th>
+                <th style="width: 60%;">Mecânico</th>
+                <th style="width: 10%;">Entrega</th>
+                <th style="width: 10%;">Devolução</th>
+                <th></th>
+            </tr>
+        </ng-template>
+        <ng-template #body>
+            <tr>
+                <td>102</td>
+                <td>FERRAMENTA</td>
+                <td>MISAEL</td>
+                <td>11/09/2026 15:01</td>
+                <td>21/09/2026 15:01</td>
+                <td><p-button icon="pi pi-pencil" [text]="true" severity="secondary" size="small" /></td>
+            </tr>
+        </ng-template>
+
+    </p-table>
 </div>

@@ -21,7 +21,7 @@ import java.util.*;
 public class AutheticationController {
 
     @Autowired
-    TokenService tokenService;
+    private TokenService tokenService;
 
     @Autowired
     private AuthenticationManager authenticationManager;
@@ -40,10 +40,10 @@ public class AutheticationController {
             Map<String, Object> map = new HashMap<>();
             map.put("companyId", user.getCompanyId());
             map.put("resaleId", user.getResaleId());
-            map.put("status",user.getStatus());
+            map.put("status", user.getStatus());
             map.put("id", user.getId());
             map.put("name", user.getName());
-            map.put("email",user.getEmail());
+            map.put("email", user.getEmail());
             map.put("roleDesc", user.getRoleDesc());
             map.put("roleFunc", user.getRoleFunc());
             map.put("cellphone", user.getCellphone());

@@ -78,11 +78,9 @@ export default class Login {
       setTimeout(() => {
         this.router.navigateByUrl('/');
       }, 1000);
+    } else {
+      this.messageService.add({ severity: 'error', summary: 'Login', detail: 'Usuário ou senha invalída', icon: 'pi pi-times' });
     }
-    if (result.body?.status == StatusSuccessError.error) {
-      this.messageService.add({ severity: 'info', summary: result.body.header, detail: result.body.message, icon: 'pi pi-info-circle' });
-    }
-
   }
 
   private async loginService(login: IAuth): Promise<HttpResponse<MessageResponse>> {
@@ -95,7 +93,7 @@ export default class Login {
   private async menusUser(compamyId: number, resaleId: number, userId: number): Promise<TreeNode[]> {
     try {
       return await lastValueFrom(this.menuService.listMenusUser(compamyId, resaleId, userId));
-    } catch (error) {
+    } catch (error: any) {
       return [];
     }
   }

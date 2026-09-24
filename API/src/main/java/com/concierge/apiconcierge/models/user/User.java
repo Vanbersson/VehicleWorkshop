@@ -16,20 +16,13 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(of = "id")
-@SecondaryTable(name = "tb_company", pkJoinColumns = @PrimaryKeyJoinColumn(name = "id"))
-@SecondaryTable(name = "tb_resale", pkJoinColumns = @PrimaryKeyJoinColumn(name = "id"))
-@SecondaryTable(name = "tb_user_role", pkJoinColumns = @PrimaryKeyJoinColumn(name = "id"))
-@Entity(name = "tb_user")
+@Entity
 @Table(name = "tb_user")
-public class User implements Serializable, UserDetails {
-    private static final long serialVersionUID = 5L;
+public class User implements UserDetails {
 
-
-    @JoinColumn(table = "tb_company", referencedColumnName = "id")
     @Column(name = "company_id")
     private Integer companyId;
 
-    @JoinColumn(table = "tb_resale", referencedColumnName = "id")
     @Column(name = "resale_id")
     private Integer resaleId;
 
@@ -52,8 +45,7 @@ public class User implements Serializable, UserDetails {
 
     @Column(name = "photo_url")
     private String photoUrl;
-
-    @JoinColumn(table = "tb_user_role", referencedColumnName = "id")
+    
     @Column(name = "role_id")
     private Integer roleId;
 
