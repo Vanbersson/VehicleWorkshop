@@ -167,11 +167,11 @@
                 <div class="rounded-lg border border-surface-200 dark:border-surface-700 p-4 space-y-3">
                     <span>Perfil</span>
                     <div class="flex items-center gap-2">
-                        <p-radioButton inputId="admin1" [value]="admin" formControlName="roleFunc"></p-radioButton>
+                        <p-radioButton inputId="admin1" name="roleFunc" [value]="admin" formControlName="roleFunc"></p-radioButton>
                         <label for="admin1"> Administrador </label>
                     </div>
                     <div class="flex items-center gap-2">
-                        <p-radioButton inputId="user1" [value]="user" formControlName="roleFunc"></p-radioButton>
+                        <p-radioButton inputId="user1" name="roleFunc" [value]="user" formControlName="roleFunc"></p-radioButton>
                         <label for="user1"> Usuário </label>
                     </div>
                 </div>
@@ -181,12 +181,12 @@
                 <div class="rounded-lg border border-surface-200 dark:border-surface-700 p-4 space-y-3">
                     <span> Situação </span>
                     <div class="flex items-center gap-2">
-                        <p-radioButton inputId="enabled1" [value]="enabled" formControlName="status">
+                        <p-radioButton inputId="enabled1" name="status" [value]="enabled" formControlName="status">
                         </p-radioButton>
                         <label for="enabled1"> Ativado </label>
                     </div>
                     <div class="flex items-center gap-2">
-                        <p-radioButton inputId="disabled1" [value]="disabled" formControlName="status">
+                        <p-radioButton inputId="disabled1" name="status" [value]="disabled" formControlName="status">
                         </p-radioButton>
                         <label for="disabled1"> Desativado </label>
                     </div>

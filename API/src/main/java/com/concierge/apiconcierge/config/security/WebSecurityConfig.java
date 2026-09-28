@@ -31,7 +31,7 @@ public class WebSecurityConfig {
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/**")
                         //.allowedOrigins("https://www.atenatruck.com.br", "https://atenatruck.com.br") // frontend
-                        .allowedOrigins("*")// frontend dev
+                        .allowedOrigins("*")//dev
                         .allowedMethods("GET", "POST")
                         .allowedHeaders("Authorization", "Content-Type");
             }

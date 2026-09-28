@@ -34,7 +34,7 @@
                                 <p-datepicker [disabled]="vehicleExit" [showOnFocus]="false" [showIcon]="true" inputId="exitDatePrevision" [showTime]="true" dateFormat="dd/mm/yy" (onInput)="applyDateTimeMask($event)" formControlName="exitDatePrevision" fluid/>
                             </div>
                             <div class="col-span-12 md:col-span-2">
-                                <div class="flex justify-content-between">
+                                <div class="flex justify-between">
                                     <label for="nameUserExitAuth1">1ª Auto</label>
                                     <small>{{dateExitAuth1() | date: 'dd/MM/yyyy HH:mm' }}</small>
                                 </div>
@@ -44,7 +44,7 @@
                                 </p-inputGroup>
                             </div>
                             <div class="col-span-12 md:col-span-2">
-                                <div class="flex justify-content-between">
+                                <div class="flex justify-between">
                                     <label for="nameUserExitAuth2">2ª Auto</label>
                                     <small>{{dateExitAuth2() | date: 'dd/MM/yyyy HH:mm' }}</small>
                                 </div>
@@ -57,8 +57,8 @@
                             </div>
                             <div class="col-span-12 md:col-span-2">
                                 <label for="vehiclePlateId">Placa</label>
-                                <p-inputMask id="vehiclePlateId" *ngIf="!isVehicleTogether" mask="***-****" [unmask]="true" [style]="{'text-transform':'uppercase'}" formControlName="vehiclePlate" [disabled]="vehicleExit" fluid/>
-                                <p-inputGroup *ngIf="isVehicleTogether">
+                                <p-inputMask id="vehiclePlateId" *ngIf="!isVehicleTogether()" mask="***-****" [unmask]="true" [style]="{'text-transform':'uppercase'}" formControlName="vehiclePlate" [disabled]="vehicleExit" fluid/>
+                                <p-inputGroup *ngIf="isVehicleTogether()">
                                     <p-inputMask id="vehiclePlateId" mask="***-****" [unmask]="true" [style]="{'text-transform':'uppercase'}" formControlName="vehiclePlate" [disabled]="vehicleExit" fluid/>
                                     <button type="button" pButton icon="pi pi-eye" (click)="showVehicleTogether()"></button>
                                 </p-inputGroup>

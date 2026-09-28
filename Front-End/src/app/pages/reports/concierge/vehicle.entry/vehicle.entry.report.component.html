@@ -6,7 +6,7 @@
     </div>
     <p-table #dt1 dataKey="id" [value]="listVehicleEntry()" [rowHover]="true" showGridlines
         currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} entradas"
-        [globalFilterFields]="['id', 'placa', 'modelDescription', 'frota', 'numServiceOrder', 'dateEntry','dateExit','clientCompanyName','nameUserAttendant','budgetStatus']"
+        [globalFilterFields]="['id', 'vehiclePlate', 'modelDescription', 'vehicleFleet', 'numServiceOrder', 'entryDate','exitDate','clientCompanyName','nameUserAttendant','entryUserName','exitUserName']"
         [paginator]="true" [rows]="10" [rowsPerPageOptions]="[10, 25, 50]" [showCurrentPageReport]="true"
         [tableStyle]="{ 'min-width': '100rem' }"  size="small">
         <ng-template pTemplate="caption">
@@ -34,35 +34,35 @@
                 <th pSortableColumn="id">
                     Código <p-sortIcon field="id" />
                 </th>
-                <th pSortableColumn="placa">
-                    Placa <p-sortIcon field="placa" />
+                <th pSortableColumn="vehiclePlate">
+                    Placa <p-sortIcon field="vehiclePlate" />
                 </th>
                 <th pSortableColumn="modelDescription">
                     Modelo <p-sortIcon field="modelDescription" />
                 </th>
-                <th pSortableColumn="frota">
-                    Frota <p-sortIcon field="frota" />
+                <th pSortableColumn="vehicleFleet">
+                    Frota <p-sortIcon field="vehicleFleet" />
                 </th>
                 <th pSortableColumn="numServiceOrder">
                     Nro O.S. <p-sortIcon field="numServiceOrder" />
                 </th>
-                <th pSortableColumn="dateEntry">
-                    Entrada <p-sortIcon field="dateEntry" />
+                <th pSortableColumn="entryDate">
+                    Entrada <p-sortIcon field="entryDate" />
                 </th>
-                <th pSortableColumn="dateExit" >
-                    Saída <p-sortIcon field="dateExit" />
+                <th pSortableColumn="exitDate" >
+                    Saída <p-sortIcon field="exitDate" />
                 </th>
                 <th pSortableColumn="clientCompanyName">
                     Empresa <p-sortIcon field="clientCompanyName" />
                 </th>
-                <th pSortableColumn="nameUserAttendant">
-                    Consultor <p-sortIcon field="nameUserAttendant" />
+                <th pSortableColumn="attendantUserName">
+                    Consultor <p-sortIcon field="attendantUserName" />
                 </th>
-                <th pSortableColumn="nameUserAttendant">
-                    Ent. Porteiro <p-sortIcon field="nameUserAttendant" />
+                <th pSortableColumn="entryUserName">
+                    Ent. Porteiro <p-sortIcon field="entryUserName" />
                 </th>
-                <th pSortableColumn="nameUserAttendant">
-                    Saí. Porteiro <p-sortIcon field="nameUserAttendant" />
+                <th pSortableColumn="exitUserName">
+                    Saí. Porteiro <p-sortIcon field="exitUserName" />
                 </th>
                 <th>
                 </th>

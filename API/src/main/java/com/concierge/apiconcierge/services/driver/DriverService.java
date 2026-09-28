@@ -63,7 +63,7 @@ public class DriverService implements IDriverService {
 
     @SneakyThrows
     @Override
-    public MessageResponse listAll(Integer companyId, Integer resaleId) {
+    public List<Map<String, Object>> listAll(Integer companyId, Integer resaleId) {
         try {
             MessageResponse response = this.validation.listAll(companyId, resaleId);
             if (ConstantsMessage.SUCCESS.equals(response.getStatus())) {
@@ -79,9 +79,9 @@ public class DriverService implements IDriverService {
                     map.put("cnhCategory", driver.getCnhCategory());
                     list.add(map);
                 }
-                response.setData(list);
+                return list;
             }
-            return response;
+            return List.of();
         } catch (Exception e) {
             throw new DriverException(e.getMessage());
         }
@@ -162,19 +162,24 @@ public class DriverService implements IDriverService {
         }
     }
 
+
     @SneakyThrows
     @Override
-    public MessageResponse savePhotoDriver(MultipartFile file, String driverId, String companyId, String resaleId) {
+    public MessageResponse saveImage(MultipartFile file, String local) {
         try {
             MessageResponse response = new MessageResponse();
             response.setStatus(ConstantsMessage.SUCCESS);
             response.setHeader("Imagem");
             response.setMessage("Salvo com sucesso.");
 
-            String local = companyId + "/" +
-                    resaleId + "/drivers/" +
-                    driverId + "/image1.jpg";
+            // Segurança básica
+            if (local.contains("..") || local.isBlank()) {
+                response.setStatus(ConstantsMessage.ERROR);
+                response.setMessage("Caminho inválido.");
+                return response;
+            }
 
+            // Nome do arquivo
             Path filePath = Paths.get(UPLOAD_DIR + local);
 
             // Cria diretórios se necessário
@@ -199,77 +204,7 @@ public class DriverService implements IDriverService {
 
     @SneakyThrows
     @Override
-    public MessageResponse savePhotoDoc1(MultipartFile file, String driverId, String companyId, String resaleId) {
-        try {
-            MessageResponse response = new MessageResponse();
-            response.setStatus(ConstantsMessage.SUCCESS);
-            response.setHeader("Imagem");
-            response.setMessage("Salvo com sucesso.");
-
-            String local = companyId + "/" +
-                    resaleId + "/drivers/" +
-                    driverId + "/image2.jpg";
-
-            Path filePath = Paths.get(UPLOAD_DIR + local);
-
-            // Cria diretórios se necessário
-            Files.createDirectories(filePath.getParent());
-
-            // Salva ou substitui se existir)
-            Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
-
-            // URL pública
-            String url = "/images/" + local;
-
-            // Retornar o caminho do arquivo salvo
-            Map<String, String> map = new HashMap<>();
-            map.put("url", url);
-
-            response.setData(map);
-            return response;
-        } catch (Exception e) {
-            throw new Exception(e.getMessage());
-        }
-    }
-
-    @SneakyThrows
-    @Override
-    public MessageResponse savePhotoDoc2(MultipartFile file, String driverId, String companyId, String resaleId) {
-        try {
-            MessageResponse response = new MessageResponse();
-            response.setStatus(ConstantsMessage.SUCCESS);
-            response.setHeader("Imagem");
-            response.setMessage("Salvo com sucesso.");
-
-            String local = companyId + "/" +
-                    resaleId + "/drivers/" +
-                    driverId + "/image3.jpg";
-
-            Path filePath = Paths.get(UPLOAD_DIR + local);
-
-            // Cria diretórios se necessário
-            Files.createDirectories(filePath.getParent());
-
-            // Salva ou substitui se existir)
-            Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
-
-            // URL pública
-            String url = "/images/" + local;
-
-            // Retornar o caminho do arquivo salvo
-            Map<String, String> map = new HashMap<>();
-            map.put("url", url);
-
-            response.setData(map);
-            return response;
-        } catch (Exception e) {
-            throw new Exception(e.getMessage());
-        }
-    }
-
-    @SneakyThrows
-    @Override
-    public MessageResponse deletePhoto(String driverId, String code, String companyId, String resaleId) {
+    public MessageResponse deleteImage(String local) {
         try {
             MessageResponse response = new MessageResponse();
             response.setStatus(ConstantsMessage.SUCCESS);
@@ -278,14 +213,10 @@ public class DriverService implements IDriverService {
 
             Path basePath = Paths.get(UPLOAD_DIR).toAbsolutePath().normalize();
 
-            String local = companyId + "/" +
-                    resaleId + "/drivers/" +
-                    driverId + "/image" + code + ".jpg";
-
             Path filePath = basePath.resolve(local).normalize();
 
             // Proteção contra path traversal
-            if (!filePath.startsWith(basePath)) {
+            if (!filePath.startsWith(basePath) || local.isBlank()) {
                 response.setStatus(ConstantsMessage.ERROR);
                 response.setMessage("Caminho inválido.");
                 return response;
@@ -298,15 +229,9 @@ public class DriverService implements IDriverService {
             }
 
             Files.delete(filePath);
-
-
-//            responseUser.setPhotoUrl("");
-//            this.repository.save(responseUser);
-
             return response;
         } catch (Exception e) {
             throw new Exception(e.getMessage());
         }
     }
-
 }

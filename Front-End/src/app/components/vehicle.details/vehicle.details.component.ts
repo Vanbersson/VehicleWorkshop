@@ -46,8 +46,8 @@ export class VehicleDetailsComponent {
   vehicleEntry!: VehicleEntry;
   yes = YesNotEnum.YES;
   not = YesNotEnum.NOT;
-  public dateExitAuth1 = signal<string>('');
-  public dateExitAuth2 = signal<string>('');
+  public dateExitAuth1 = signal<string | Date>('');
+  public dateExitAuth2 = signal<string | Date>('');
   modChecklist: VehicleEntryChecklist = new VehicleEntryChecklist();
   photoVehicle1 = signal<string>('');
   photoVehicle2 = signal<string>('');
@@ -188,6 +188,10 @@ export class VehicleDetailsComponent {
       checklist19Desc: checklist.checklist19Desc,
       checklist20Desc: checklist.checklist20Desc
     });
+
+    //data hora auth
+    this.dateExitAuth1.set(this.vehicleEntry.auth1ExitDate);
+    this.dateExitAuth2.set(this.vehicleEntry.auth2ExitDate);
     //checklist
     this.modChecklist = checklist;
     this.photoVehicle1.set(vehicle.attendantPhoto1Url);

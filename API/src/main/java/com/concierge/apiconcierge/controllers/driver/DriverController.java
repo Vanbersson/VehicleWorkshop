@@ -13,6 +13,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
+import java.util.Map;
+
 @RestController
 @RequestMapping("/driver")
 public class DriverController {
@@ -46,9 +49,9 @@ public class DriverController {
 
     @GetMapping("/{companyId}/{resaleId}/filter/all")
     public ResponseEntity<Object> listAll(@PathVariable(name = "companyId") Integer companyId,
-                                           @PathVariable(name = "resaleId") Integer resaleId) {
+                                          @PathVariable(name = "resaleId") Integer resaleId) {
         try {
-            MessageResponse response = this.service.listAll(companyId, resaleId);
+            List<Map<String, Object>> response = this.service.listAll(companyId, resaleId);
             return ResponseEntity.status(HttpStatus.OK).body(response);
         } catch (Exception ex) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new MessageResponseDto(ex.getMessage()));
@@ -115,56 +118,27 @@ public class DriverController {
         }
     }
 
-    @PostMapping("/save/photo")
-    public ResponseEntity<Object> savePhotoDriver(@RequestParam("file") MultipartFile file,
-                                                  @RequestParam("driver") String driverId,
-                                                  @RequestParam("company") String companyId,
-                                                  @RequestParam("resale") String resaleId) {
+    @PostMapping("/save/image")
+    public ResponseEntity<Object> saveImage(@RequestParam("file") MultipartFile file,
+                                            @RequestParam("local") String local) {
         try {
-            MessageResponse response = this.service.savePhotoDriver(file, driverId, companyId, resaleId);
+            MessageResponse response = this.service.saveImage(file, local);
             return ResponseEntity.status(HttpStatus.OK).body(response);
         } catch (Exception ex) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new MessageResponseDto(ex.getMessage()));
         }
     }
 
-    @PostMapping("/save/doc1")
-    public ResponseEntity<Object> savePhotoDoc1(@RequestParam("file") MultipartFile file,
-                                                @RequestParam("driver") String driverId,
-                                                @RequestParam("company") String companyId,
-                                                @RequestParam("resale") String resaleId) {
+    @PostMapping("/delete/image")
+    public ResponseEntity<Object> deleteImage(@RequestParam("local") String local) {
         try {
-            MessageResponse response = this.service.savePhotoDoc1(file, driverId, companyId, resaleId);
+            MessageResponse response = this.service.deleteImage(local);
             return ResponseEntity.status(HttpStatus.OK).body(response);
         } catch (Exception ex) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new MessageResponseDto(ex.getMessage()));
         }
     }
 
-    @PostMapping("/save/doc2")
-    public ResponseEntity<Object> savePhotoDoc2(@RequestParam("file") MultipartFile file,
-                                                @RequestParam("driver") String driverId,
-                                                @RequestParam("company") String companyId,
-                                                @RequestParam("resale") String resaleId) {
-        try {
-            MessageResponse response = this.service.savePhotoDoc2(file, driverId, companyId, resaleId);
-            return ResponseEntity.status(HttpStatus.OK).body(response);
-        } catch (Exception ex) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new MessageResponseDto(ex.getMessage()));
-        }
-    }
 
-    @PostMapping("/delete/photo")
-    public ResponseEntity<Object> deletePhoto(@RequestParam("driver") String driverId,
-                                              @RequestParam("code") String code,
-                                              @RequestParam("company") String companyId,
-                                              @RequestParam("resale") String resaleId) {
-        try {
-            MessageResponse response = this.service.deletePhoto(driverId, code, companyId, resaleId);
-            return ResponseEntity.status(HttpStatus.OK).body(response);
-        } catch (Exception ex) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new MessageResponseDto(ex.getMessage()));
-        }
-    }
 
 }

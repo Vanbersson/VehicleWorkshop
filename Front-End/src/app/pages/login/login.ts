@@ -10,11 +10,9 @@ import { PasswordModule } from 'primeng/password';
 import { ButtonModule } from 'primeng/button';
 import { MessageService, TreeNode } from 'primeng/api';
 
-import { MessageResponse } from '@/app/models/message-response';
 import { IAuth } from '@/app/interfaces/i.auth';
 import { AuthService } from '@/app/services/login/auth.service';
 import { MenuUserService } from '@/app/services/menu/menu-user.service';
-import { StatusSuccessError } from '@/app/models/status-suc-err';
 import { User } from '@/app/models/user';
 import { StorageService } from '@/app/services/storage/storage.service';
 import { LoadingService } from '@/app/services/loading/loading.service';
@@ -86,7 +84,7 @@ export default class Login {
       return error;
     }
   }
-  
+
   private async menusUser(compamyId: number, resaleId: number, userId: number): Promise<TreeNode[]> {
     try {
       return await lastValueFrom(this.menuService.listMenusUser(compamyId, resaleId, userId));

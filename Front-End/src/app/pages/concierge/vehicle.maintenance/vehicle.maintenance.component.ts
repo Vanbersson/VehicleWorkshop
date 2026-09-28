@@ -211,7 +211,7 @@ export default class VehicleMaintenanceComponent implements OnInit, DoCheck {
   //dialog visibleVehiclePlateTogether
   visibleVehiclePlateTogether: boolean = false;
   vehiclesTogether = signal<VehicleEntry[]>([]);
-  isVehicleTogether: boolean = false;
+  isVehicleTogether = signal<boolean>(false);
 
   constructor(
     private budgetService: BudgetService,
@@ -368,7 +368,9 @@ export default class VehicleMaintenanceComponent implements OnInit, DoCheck {
   private loadForms() {
     //mostrar veículos justos
     if (this.vehicleEntry.vehiclePlateTogether) {
-      this.isVehicleTogether = true;
+      this.isVehicleTogether.set(true);
+    }else{
+      this.isVehicleTogether.set(false);
     }
     //Vehicle
     this.formVehicle.patchValue({
