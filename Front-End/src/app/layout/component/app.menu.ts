@@ -140,6 +140,25 @@ export class AppMenu {
                 ]
             },
             {
+                key: '5_0',
+                visible: false,
+                label: 'CRM',
+                path: '/crm',
+                items: [
+                    { key: '5_1', visible: false, label: 'Regiões', icon: 'pi pi-map', routerLink: [''] },
+                    { key: '5_2', visible: false, label: 'Agenda de visitas', icon: 'pi pi-address-book', routerLink: [''] },
+                    { key: '5_3', visible: false, label: 'Atendimento', icon: 'pi pi-th-large', routerLink: [''] },
+                    { key: '5_4', visible: false, label: 'Relatório', icon: 'pi pi-clipboard', routerLink: [''] },
+                    {
+                        key: '5_99', visible: false, label: 'Cadastros', path: '/register',
+                        items: [
+                            { key: '5_99_0', visible: false, label: 'Tipo Atendimento', routerLink: [''] },
+
+                        ]
+                    }
+                ]
+            },
+            {
                 key: '100_0',
                 visible: false,
                 label: 'Relatórios',
@@ -177,15 +196,10 @@ export class AppMenu {
                     {
                         key: '999_2', visible: false, label: 'Cadastros', path: '/register',
                         items: [
-                            {
-                                key: '999_2_0', visible: false, label: 'Empresa', routerLink: '/config/register/company',
-                            },
-                            {
-                                key: '999_2_1', visible: false, label: 'Usuários', routerLink: '/config/register/user'
-                            },
-                            {
-                                key: '999_2_2', visible: false, label: 'Marcas', routerLink: '/config/register/brand'
-                            }
+                            { key: '999_2_0', visible: false, label: 'Empresa', routerLink: '/config/register/company' },
+                            { key: '999_2_1', visible: false, label: 'Usuários', routerLink: '/config/register/user' },
+                            { key: '999_2_2', visible: false, label: 'Marcas', routerLink: '/config/register/brand' },
+                            { key: '999_2_3', visible: false, label: 'Vendedores', routerLink: '/config/register/attendant' }
                         ]
                     }
                 ]

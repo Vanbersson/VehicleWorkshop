@@ -240,6 +240,8 @@ export default class DriverComponent implements OnInit {
   }
   public newDriver() {
     this.isNewDriver = true;
+    //Habilita o campo CPF
+    this.formDriver.get('cpf')?.enable();
     this.showDialog();
   }
   public async save() {
@@ -282,8 +284,6 @@ export default class DriverComponent implements OnInit {
     //Inicia load
     this.loadingService.show();
     const resultSave = await this.saveDriver(this.driver);
-    //Fecha load
-    this.loadingService.hide();
     if (resultSave.status == 201 && resultSave.body?.status == StatusSuccessError.succes) {
       this.messageService.add({ severity: 'success', summary: resultSave.body.header, detail: resultSave.body.message, icon: 'pi pi-check' });
       this.driver = resultSave.body.data;
@@ -302,13 +302,15 @@ export default class DriverComponent implements OnInit {
         this.isNewPhotoDoc2 = false;
         this.driver.photoDoc2Url = await this.saveImage(this.driver.id!, 'image3.jpg', this.driverPhotoDoc2Url());
       }
-      const resultUpdate = await this.updateDriver(this.driver);
+      await this.updateDriver(this.driver);
       //Lista motoristas
       this.listDrivers();
-    } else if (resultSave.status == 201 && resultSave.body?.status == StatusSuccessError.error) {
+    }
+    if (resultSave.status == 201 && resultSave.body?.status == StatusSuccessError.error) {
       this.messageService.add({ severity: 'info', summary: resultSave.body.header, detail: resultSave.body.message, icon: 'pi pi-info-circle' });
     }
-
+    //Fecha load
+    this.loadingService.hide();
   }
   async edit(id: number) {
     //Inicia load
@@ -321,6 +323,8 @@ export default class DriverComponent implements OnInit {
       this.isNewDriver = false;
       this.showDialog();
       this.driver = result.body.data;
+      //desabilita o campo CPF
+      this.formDriver.get('cpf')?.disable();
 
       this.formDriver.patchValue({
         status: this.driver.status,
@@ -360,7 +364,6 @@ export default class DriverComponent implements OnInit {
     }
     //Inicia load
     this.loadingService.show();
-
     //Salva a foto do motorista
     if (this.isNewPhotoDriver) {
       this.isNewPhotoDriver = false;
@@ -411,7 +414,7 @@ export default class DriverComponent implements OnInit {
     this.driver.status = value.status!;
     this.driver.name = value.name!;
     this.driver.dateBirth = value.dateBirth!;
-    this.driver.cpf = value.cpf!;
+    //this.driver.cpf = value.cpf!;
     this.driver.rg = value.rg!.toString();
     this.driver.maleFemale = value.maleFemale!['type'] == StatusMaleFemaleEnum.male ? StatusMaleFemaleEnum.male : StatusMaleFemaleEnum.female;
     this.driver.cnhRegister = value.cnhRegister!.toString();

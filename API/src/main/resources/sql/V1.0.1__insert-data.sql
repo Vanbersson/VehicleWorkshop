@@ -107,9 +107,12 @@ VALUES
 ('4_99_1','Condição de pagamento'),
 
 ('5_0','CRM'),
-('5_1','Mapa'),
+('5_1','Regiões'),
+('5_2','Agenda de visitas'),
+('5_3','Atendimento'),
+('5_4','Relatório'),
 ('5_99','Cadastros'),
-('5_99_0','Vendedores'),
+('5_99_0','Tipo Atendimento'),
 
 ('100_0','Relatório'),
 ('100_1','Portaria'),
@@ -126,7 +129,8 @@ VALUES
 ('999_2','Cadastros'),
 ('999_2_0','Empresa'),
 ('999_2_1','Usuários'),
-('999_2_2','Marcas');
+('999_2_2','Marcas'),
+('999_2_3','Vendedores');
 
 INSERT INTO `tb_company`
 (`status`, `name`, `cnpj`, `email`, `cellphone`, `phone`, `zip_code`, `state`, `city`, `neighborhood`, `address`, `address_number`)

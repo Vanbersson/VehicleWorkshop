@@ -328,6 +328,26 @@ public class VehicleEntryService implements IVehicleEntryService {
 
     @SneakyThrows
     @Override
+    public MessageResponse filterFreeAdmission(Integer companyId, Integer resaleId, String plate) {
+        try {
+            MessageResponse response = this.validation.filterPlate(companyId, resaleId, plate);
+            if (ConstantsMessage.SUCCESS.equals(response.getStatus())) {
+                VehicleEntry vehicle = repository.filterFreeAdmission(companyId, resaleId, plate, StatusVehicleEnum.Entered);
+                if (vehicle != null) {
+                    response.setStatus(ConstantsMessage.ERROR);
+                    response.setMessage("Veículo Já se encontra na empresa.");
+                } else {
+                    response.setMessage("Entrada liberada.");
+                }
+            }
+            return response;
+        } catch (Exception ex) {
+            throw new VehicleEntryException(ex.getMessage());
+        }
+    }
+
+    @SneakyThrows
+    @Override
     public MessageResponse filterTogether(Integer companyId, Integer resaleId, String together) {
         try {
             MessageResponse response = this.validation.filterPlate(companyId, resaleId, together);

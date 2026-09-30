@@ -75,5 +75,5 @@ export class VehicleEntry {
     numNfe: string = '';
     numNfse: string = '';
 
-   checklistId: number | null = null;
+    checklistId: number | null = null;
 }

@@ -199,10 +199,13 @@ export default class UserComponent implements OnInit {
       },
       {
         key: '5_0', label: 'CRM', children: [
-          { key: '5_1', label: 'Mapa' },
+          { key: '5_1', label: 'Regiões' },
+          { key: '5_2', label: 'Agenda de visitas' },
+          { key: '5_3', label: 'Atendimento' },
+          { key: '5_4', label: 'Relatório' },
           {
             key: '5_99', label: 'Cadastros', children: [
-              { key: '5_99_0', label: 'Vendedores' }
+              { key: '5_99_0', label: 'Tipo Atendimento' }
             ]
           },
         ]
@@ -238,6 +241,7 @@ export default class UserComponent implements OnInit {
               { key: '999_2_0', label: 'Empresa', icon: 'pi pi-building' },
               { key: '999_2_1', label: 'Usuários', icon: 'pi pi-users' },
               { key: '999_2_2', label: 'Marcas' },
+              { key: '999_2_3', label: 'Vendedores', icon: 'pi pi-users' },
             ]
           },
 

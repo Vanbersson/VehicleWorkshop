@@ -102,6 +102,7 @@ export default class VehicleEntryComponent implements OnInit, DoCheck {
   });
   //Vehicle
   colors: IColor[] = []
+  isSavePhoto = signal<boolean>(false);
   photoVehicle1 = signal<string>('');
   photoVehicle2 = signal<string>('');
   photoVehicle3 = signal<string>('');
@@ -335,7 +336,6 @@ export default class VehicleEntryComponent implements OnInit, DoCheck {
     const photo: IPhotoResult = await this.photoService.takePicture();
     if (photo.status == StatusPhotoResult.SUCCESS) {
       this.photoVehicle1.set(photo.base64!);
-      this.vehicleEntry.entryPhoto1Url = this.photoVehicle1();
     }
     if (photo.status == StatusPhotoResult.LIMIT) {
       this.messageService.add({ severity: 'info', summary: 'Imagem', detail: this.photoService.maxSiseLabel, icon: 'pi pi-info-circle', life: 3000 });
@@ -348,7 +348,6 @@ export default class VehicleEntryComponent implements OnInit, DoCheck {
     const photo: IPhotoResult = await this.photoService.takePicture();
     if (photo.status == StatusPhotoResult.SUCCESS) {
       this.photoVehicle2.set(photo.base64!);
-      this.vehicleEntry.entryPhoto2Url = this.photoVehicle2();
     }
     if (photo.status == StatusPhotoResult.LIMIT) {
       this.messageService.add({ severity: 'info', summary: 'Imagem', detail: this.photoService.maxSiseLabel, icon: 'pi pi-info-circle', life: 3000 });
@@ -361,7 +360,6 @@ export default class VehicleEntryComponent implements OnInit, DoCheck {
     const photo: IPhotoResult = await this.photoService.takePicture();
     if (photo.status == StatusPhotoResult.SUCCESS) {
       this.photoVehicle3.set(photo.base64!);
-      this.vehicleEntry.entryPhoto3Url = this.photoVehicle3();
     }
     if (photo.status == StatusPhotoResult.LIMIT) {
       this.messageService.add({ severity: 'info', summary: 'Imagem', detail: this.photoService.maxSiseLabel, icon: 'pi pi-info-circle', life: 3000 });
@@ -374,7 +372,6 @@ export default class VehicleEntryComponent implements OnInit, DoCheck {
     const photo: IPhotoResult = await this.photoService.takePicture();
     if (photo.status == StatusPhotoResult.SUCCESS) {
       this.photoVehicle4.set(photo.base64!);
-      this.vehicleEntry.entryPhoto4Url = this.photoVehicle4();
     }
     if (photo.status == StatusPhotoResult.LIMIT) {
       this.messageService.add({ severity: 'info', summary: 'Imagem', detail: this.photoService.maxSiseLabel, icon: 'pi pi-info-circle', life: 3000 });
@@ -385,19 +382,15 @@ export default class VehicleEntryComponent implements OnInit, DoCheck {
   }
   public deleteFileVehicle1() {
     this.photoVehicle1.set('');
-    this.vehicleEntry.entryPhoto1Url = "";
   }
   public deleteFileVehicle2() {
     this.photoVehicle2.set('');
-    this.vehicleEntry.entryPhoto2Url = "";
   }
   public deleteFileVehicle3() {
     this.photoVehicle3.set('');
-    this.vehicleEntry.entryPhoto3Url = "";
   }
   public deleteFileVehicle4() {
     this.photoVehicle4.set('');
-    this.vehicleEntry.entryPhoto4Url = "";
   }
   public addRequirePlaca() {
     this.formVehicle.controls['vehiclePlate'].addValidators(Validators.required);
@@ -462,18 +455,17 @@ export default class VehicleEntryComponent implements OnInit, DoCheck {
       if (this.formVehicle.get('vehicleNew')!.value == YesNotEnum.NOT) {
         //verifica se o veículo ja se encontra na empresa
         const plate = this.formVehicle.get('vehiclePlate')!.value;
-        const result = await this.filterPlate(plate!);
+        const result = await this.filterFreeAdmission(plate!);
         if (result.status == 200 && result.body?.status == StatusSuccessError.succes) {
-          this.messageService.add({ severity: 'error', summary: 'Veículo ' + this.upperCasePipe.transform(plate), detail: "Já se encontra na empresa", life: 10000 });
-        } else {
           this.loadVehicleEntry();
+        }
+        if (result.status == 200 && result.body?.status == StatusSuccessError.error) {
+          this.messageService.add({ severity: 'info', summary: result.body.header, detail: result.body.message, icon: 'pi pi-info-circle' });
         }
       } else {
         this.loadVehicleEntry();
       }
     }
-
-
   }
   public deleteVehicleEntry(index: number) {
     var listTemp: any[] = [];
@@ -523,34 +515,33 @@ export default class VehicleEntryComponent implements OnInit, DoCheck {
 
     this.vehicleEntry.companyId = this.storageService.companyId;
     this.vehicleEntry.resaleId = this.storageService.resaleId;
-
     this.vehicleEntry.entryUserId = this.storageService.id;
     this.vehicleEntry.entryUserName = this.storageService.name;
     this.vehicleEntry.entryDate = this.formatDateTime(vehicleValue.entryDate!)
+
+    this.vehicleEntry.entryPhoto1Url = this.photoVehicle1();
+    this.vehicleEntry.entryPhoto2Url = this.photoVehicle2();
+    this.vehicleEntry.entryPhoto3Url = this.photoVehicle3();
+    this.vehicleEntry.entryPhoto4Url = this.photoVehicle4();
+
     this.vehicleEntry.exitDatePrevision = vehicleValue.exitDatePrevision == null ? "" : this.formatDateTime(vehicleValue.exitDatePrevision);
     this.vehicleEntry.entryInformation = vehicleValue?.entryInformation ?? "";
-
     if (this.formClientCompany.get('clientCompanyNot')!.value!.length == 0) {
       this.vehicleEntry.clientCompanyId = this.clientCompany.id;
       this.vehicleEntry.clientCompanyName = this.clientCompany.name;
     }
-
     this.vehicleEntry.driverEntryId = this.driver.id;
     this.vehicleEntry.driverEntryName = this.driver.name;
-
     this.vehicleEntry.attendantUserId = vehicleValue.attendant?.id ?? null;
     this.vehicleEntry.attendantUserName = vehicleValue.attendant?.name ?? "";
-
     this.vehicleEntry.modelId = vehicleValue.modelVehicle!.id;
     this.vehicleEntry.modelDescription = vehicleValue.modelVehicle!.description;
-
     this.vehicleEntry.vehiclePlate = vehicleValue?.vehiclePlate ?? "";
     this.vehicleEntry.vehicleFleet = vehicleValue.vehicleFleet != null ? vehicleValue.vehicleFleet : "";
     this.vehicleEntry.vehicleNew = vehicleValue.vehicleNew!;
     this.vehicleEntry.vehicleServiceOrder = vehicleValue.vehicleServiceOrder!;
     this.vehicleEntry.vehicleColor = vehicleValue.vehicleColor?.color ?? null;
     this.vehicleEntry.vehicleKmEntry = vehicleValue.vehicleKmEntry != null ? vehicleValue.vehicleKmEntry.toString() : "";
-
     /* Checklist */
     const checklist: VehicleEntryChecklist = new VehicleEntryChecklist();
     checklist.companyId = this.vehicleEntry.companyId;
@@ -716,28 +707,17 @@ export default class VehicleEntryComponent implements OnInit, DoCheck {
 
   public async save() {
     if (await this.validPermission() == false) { return; }
-
     this.loadingService.show();
     //Gerar ID 
+    this.vehiclePlateTogether = '';
     if (this.listVehicleEntry.length > 1) {
       this.vehiclePlateTogether = this.generateSecureId();
     }
-    //Save vehicles
+    //Salvar todos os veículos
     for (let index = 0; index < this.listVehicleEntry.length; index++) {
       const vehicle = this.listVehicleEntry[index];
-
+      //Códigos dos veículos que entraram juntos
       vehicle.vehiclePlateTogether = this.vehiclePlateTogether;
-
-      const img1Temp = vehicle.entryPhoto1Url;
-      const img2Temp = vehicle.entryPhoto2Url;
-      const img3Temp = vehicle.entryPhoto3Url;
-      const img4Temp = vehicle.entryPhoto4Url;
-
-      vehicle.entryPhoto1Url = "";
-      vehicle.entryPhoto2Url = "";
-      vehicle.entryPhoto3Url = "";
-      vehicle.entryPhoto4Url = "";
-
       //Save checklist
       const resultSaveCheckList = await this.saveChecklist(this.listChecklist.at(index)!);
       if (resultSaveCheckList.status == 201 && resultSaveCheckList.body?.status == StatusSuccessError.succes) {
@@ -746,37 +726,42 @@ export default class VehicleEntryComponent implements OnInit, DoCheck {
       }
       if (resultSaveCheckList.status == 201 && resultSaveCheckList.body?.status == StatusSuccessError.error) {
         this.messageService.add({ severity: 'info', summary: resultSaveCheckList.body.header, detail: resultSaveCheckList.body.message, icon: 'pi pi-info-circle' });
-        return;
       }
-
+      const img1 = vehicle.entryPhoto1Url;
+      const img2 = vehicle.entryPhoto2Url;
+      const img3 = vehicle.entryPhoto3Url;
+      const img4 = vehicle.entryPhoto4Url;
+      vehicle.entryPhoto1Url = '';
+      vehicle.entryPhoto2Url = '';
+      vehicle.entryPhoto3Url = '';
+      vehicle.entryPhoto4Url = '';
       const result = await this.saveVehicle(vehicle);
       if (result.status == 201 && result.body?.status == StatusSuccessError.succes) {
         vehicle.id = result.body.data.id;
-
-        let isUpdatePhoto: boolean = false;
         //Image save
-        const img1 = await this.savePhoto(vehicle, img1Temp, 1);
         if (img1) {
-          vehicle.entryPhoto1Url = img1;
-          isUpdatePhoto = true;
+          vehicle.entryPhoto1Url = await this.savePhoto(vehicle.id!, img1, 1);
+          this.isSavePhoto.set(true);
         }
-        const img2 = await this.savePhoto(vehicle, img2Temp, 2);
         if (img2) {
-          vehicle.entryPhoto2Url = img2;
-          isUpdatePhoto = true;
+          vehicle.entryPhoto2Url = await this.savePhoto(vehicle.id!, img2, 2);
+          this.isSavePhoto.set(true);
         }
-        const img3 = await this.savePhoto(vehicle, img3Temp, 3);
         if (img3) {
-          vehicle.entryPhoto3Url = img3;
-          isUpdatePhoto = true;
+          vehicle.entryPhoto3Url = await this.savePhoto(vehicle.id!, img3, 3);
+          this.isSavePhoto.set(true);
         }
-        const img4 = await this.savePhoto(vehicle, img4Temp, 4);
         if (img4) {
-          vehicle.entryPhoto4Url = img4;
-          isUpdatePhoto = true;
+          vehicle.entryPhoto4Url = await this.savePhoto(vehicle.id!, img4, 4);
+          this.isSavePhoto.set(true);
         }
-        if (isUpdatePhoto) {
-          const restulUpdate = await this.updateVehicle(vehicle);
+        //Verifica se salvou alguma foto e atualiza o veículo
+        if (this.isSavePhoto()) {
+          this.isSavePhoto.set(false);
+          const resultUpdate = await this.updateVehicle(vehicle);
+          if (resultUpdate.status == 200 && resultUpdate.body?.status == StatusSuccessError.error) {
+            this.messageService.add({ severity: 'info', summary: result.body.header, detail: result.body.message, icon: 'pi pi-info-circle' });
+          }
         }
         this.messageService.add({ severity: 'success', summary: vehicle.modelDescription, detail: "Salvo com sucesso", icon: 'pi pi-check' });
         if (index == (this.listVehicleEntry.length - 1)) {
@@ -793,50 +778,28 @@ export default class VehicleEntryComponent implements OnInit, DoCheck {
           this.stepperClientCompany();
           this.addRequirePlaca();
         }
-      } else if (result.status == 201 && result.body?.status == StatusSuccessError.error) {
+      }
+      if (result.status == 201 && result.body?.status == StatusSuccessError.error) {
         this.messageService.add({ severity: 'info', summary: result.body.header, detail: result.body.message, icon: 'pi pi-info-circle' });
       }
-
     }
     this.loadingService.hide();
-
   }
 
-  private async savePhoto(ve: VehicleEntry, img: string, order: number): Promise<string> {
-
-    if (img == "") {
-      return "";
+  private async savePhoto(id: number, img: string, order: number): Promise<string> {
+    if (img == '') {
+      return '';
     }
     try {
       let path =
         `${this.storageService.companyId}/` +
         `${this.storageService.resaleId}/concierge/vehicle/` +
-        `${ve.id}/entry/`;
-
+        `${id}/entry/image${order}.jpg`;
       const { base64, mime } = this.cleanBase64(img);
       const file = this.base64ToFile(base64, mime);
-
       const formData = new FormData();
       formData.append('file', file);
-
-      switch (order) {
-        case 1:
-          path += "image1.jpg";
-          formData.append('local', path);
-          break;
-        case 2:
-          path += "image2.jpg";
-          formData.append('local', path);
-          break;
-        case 3:
-          path += "image3.jpg";
-          formData.append('local', path);
-          break;
-        case 4:
-          path += "image4.jpg";
-          formData.append('local', path);
-          break;
-      }
+      formData.append('local', path);
       const resultSave = await this.saveImage(formData);
       if (resultSave.status == 200 && resultSave.body?.status == StatusSuccessError.succes) {
         return `${environment.apiuUrl}${resultSave.body.data["url"]}`;
@@ -851,10 +814,8 @@ export default class VehicleEntryComponent implements OnInit, DoCheck {
     if (!base64.includes(',')) {
       return { base64, mime: 'image/jpeg' };
     }
-
     const [header, data] = base64.split(',');
     const mime = header.match(/data:(.*);base64/)?.[1] || 'image/jpeg';
-
     return { base64: data, mime };
   }
   private base64ToFile(base64: string, mime: string): File {
@@ -892,11 +853,11 @@ export default class VehicleEntryComponent implements OnInit, DoCheck {
       return error;
     }
   }
-  private async filterPlate(plate: string): Promise<HttpResponse<MessageResponse>> {
+  private async filterFreeAdmission(plate: string): Promise<HttpResponse<MessageResponse>> {
     try {
-      return await lastValueFrom(this.vehicleService.filterPlate(plate));
+      return await lastValueFrom(this.vehicleService.filterFreeAdmission(plate));
     } catch (error: any) {
-      //this.messageService.add({ severity: 'error', summary: 'Erro', detail: error.error.message, icon: 'pi pi-times' });
+      this.messageService.add({ severity: 'error', summary: 'Erro', detail: error.error.message, icon: 'pi pi-times' });
       return error;
     }
   }

@@ -148,6 +148,18 @@ public class VehicleEntryController {
         }
     }
 
+    @GetMapping("/{companyId}/{resaleId}/filter/free/admission/{plate}")
+    public ResponseEntity<Object> filterFreeAdmission(@PathVariable(name = "companyId") Integer companyId,
+                                              @PathVariable(name = "resaleId") Integer resaleId,
+                                              @PathVariable(name = "plate") String plate) {
+        try {
+            MessageResponse response = this.service.filterFreeAdmission(companyId, resaleId, plate);
+            return ResponseEntity.status(HttpStatus.OK).body(response);
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new MessageResponseDto(ex.getMessage()));
+        }
+    }
+
     @GetMapping("/{companyId}/{resaleId}/filter/together/{together}")
     public ResponseEntity<Object> filterTogether(@PathVariable(name = "companyId") Integer companyId,
                                                  @PathVariable(name = "resaleId") Integer resaleId,

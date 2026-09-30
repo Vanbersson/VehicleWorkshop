@@ -51,7 +51,7 @@ export class VehicleEntryService {
     return this.http.post<MessageResponse>(environment.apiuUrl + "/vehicle/entry/update/checklist", ch, { headers: this.myHeaders(), observe: 'response' });
   }
 
-   filterChecklist(id: number): Observable<HttpResponse<MessageResponse>> {
+  filterChecklist(id: number): Observable<HttpResponse<MessageResponse>> {
     return this.http.get<MessageResponse>(environment.apiuUrl + "/vehicle/entry/" + this.companyResale + "/filter/checklist/" + id, { headers: this.myHeaders(), observe: 'response' });
   }
 
@@ -59,7 +59,11 @@ export class VehicleEntryService {
     return this.http.get<MessageResponse>(environment.apiuUrl + "/vehicle/entry/" + this.companyResale + "/filter/plate/" + plate, { headers: this.myHeaders(), observe: 'response' });
   }
 
-   filterTogether(together: string): Observable<HttpResponse<MessageResponse>> {
+  filterFreeAdmission(plate: string): Observable<HttpResponse<MessageResponse>> {
+    return this.http.get<MessageResponse>(`${environment.apiuUrl}/vehicle/entry/${this.companyResale}/filter/free/admission/${plate}`, { headers: this.myHeaders(), observe: 'response' });
+  }
+
+  filterTogether(together: string): Observable<HttpResponse<MessageResponse>> {
     return this.http.get<MessageResponse>(environment.apiuUrl + "/vehicle/entry/" + this.companyResale + "/filter/together/" + together, { headers: this.myHeaders(), observe: 'response' });
   }
 
@@ -79,7 +83,7 @@ export class VehicleEntryService {
   }
 
   deleteImage(data: FormData): Observable<HttpResponse<MessageResponse>> {
-    return this.http.post<MessageResponse>(environment.apiuUrl + "/vehicle/entry/delete/image",data, { headers: this.myHeaders(), observe: 'response' });
+    return this.http.post<MessageResponse>(environment.apiuUrl + "/vehicle/entry/delete/image", data, { headers: this.myHeaders(), observe: 'response' });
   }
 
   private myHeaders(): HttpHeaders {

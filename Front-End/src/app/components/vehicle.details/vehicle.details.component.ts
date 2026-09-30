@@ -126,13 +126,13 @@ export class VehicleDetailsComponent {
 
   formDriver = new FormGroup({
     driverEntryId: new FormControl<number | null>({ value: null, disabled: true }),
-    driverEntryName: new FormControl<string>({ value: '', disabled: true }),
-    driverEntryCpf: new FormControl<string>({ value: '', disabled: true }),
-    driverEntryRg: new FormControl<string | null>({ value: null, disabled: true }),
+    driverEntryName: new FormControl<string>(''),
+    driverEntryCpf: new FormControl<string>(''),
+    driverEntryRg: new FormControl<string | null>(''),
     driverExitId: new FormControl<number | null>({ value: null, disabled: true }),
-    driverExitName: new FormControl<string>({ value: '', disabled: true }),
-    driverExitCpf: new FormControl<string>({ value: '', disabled: true }),
-    driverExitRg: new FormControl<string | null>({ value: null, disabled: true }),
+    driverExitName: new FormControl<string>(''),
+    driverExitCpf: new FormControl<string>(''),
+    driverExitRg: new FormControl<string | null>(''),
   });
 
   driverEntryPhoto!: string;

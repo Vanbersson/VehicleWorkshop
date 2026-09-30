@@ -66,6 +66,24 @@ public class DriverValidation implements IDriverValidation {
             response.setMessage(ConstantsMessage.NOT_INFORMED);
             return response;
         }
+        if (driver.getRg().length() > 11) {
+            response.setStatus(ConstantsMessage.ERROR);
+            response.setHeader("RG");
+            response.setMessage("Qtd. Digitos inválido.");
+            return response;
+        }
+        if (driver.getCnhRegister().isBlank()) {
+            response.setStatus(ConstantsMessage.ERROR);
+            response.setHeader("Registro CNH");
+            response.setMessage(ConstantsMessage.NOT_INFORMED);
+            return response;
+        }
+        if (driver.getCnhRegister().length() > 11) {
+            response.setStatus(ConstantsMessage.ERROR);
+            response.setHeader("Registro CNH");
+            response.setMessage("Qtd. Digitos inválido.");
+            return response;
+        }
         response.setStatus(ConstantsMessage.SUCCESS);
         response.setHeader("Motorista");
         response.setMessage("Cadastrado com sucesso.");
@@ -111,24 +129,28 @@ public class DriverValidation implements IDriverValidation {
             response.setMessage(ConstantsMessage.NOT_INFORMED);
             return response;
         }
-        boolean isValidCpf = this.isValidCpf(driver.getCpf());
-        if (!isValidCpf) {
-            response.setStatus(ConstantsMessage.ERROR);
-            response.setHeader("CPF");
-            response.setMessage("CPF inválido");
-            return response;
-        }
         if (driver.getRg().isBlank()) {
             response.setStatus(ConstantsMessage.ERROR);
             response.setHeader("RG");
             response.setMessage(ConstantsMessage.NOT_INFORMED);
             return response;
         }
-        Driver result = this.repository.filterCPF(driver.getCompanyId(), driver.getResaleId(), driver.getCpf());
-        if (result.getId() != driver.getId()) {
+        if (driver.getRg().length() > 11) {
             response.setStatus(ConstantsMessage.ERROR);
-            response.setHeader("Motorista já cadastrado.");
+            response.setHeader("RG");
+            response.setMessage("Qtd. Digitos inválido.");
+            return response;
+        }
+        if (driver.getCnhRegister().isBlank()) {
+            response.setStatus(ConstantsMessage.ERROR);
+            response.setHeader("Registro CNH");
             response.setMessage(ConstantsMessage.NOT_INFORMED);
+            return response;
+        }
+        if (driver.getCnhRegister().length() > 11) {
+            response.setStatus(ConstantsMessage.ERROR);
+            response.setHeader("Registro CNH");
+            response.setMessage("Qtd. Digitos inválido.");
             return response;
         }
         response.setStatus(ConstantsMessage.SUCCESS);

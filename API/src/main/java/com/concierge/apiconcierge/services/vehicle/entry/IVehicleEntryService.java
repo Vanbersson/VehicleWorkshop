@@ -13,35 +13,38 @@ import java.util.Map;
 
 public interface IVehicleEntryService {
 
-    public MessageResponse save(VehicleEntry vehicle, String userEmail);
+    MessageResponse save(VehicleEntry vehicle, String userEmail);
 
-    public MessageResponse update(VehicleEntry vehicle, String userEmail);
+    MessageResponse update(VehicleEntry vehicle, String userEmail);
 
-    public MessageResponse exit(VehicleExitDto dataExit, String userEmail);
+    MessageResponse exit(VehicleExitDto dataExit, String userEmail);
 
-    public List<Map<String, Object>> listAllAuthorized(Integer companyId, Integer resaleId);
+    List<Map<String, Object>> listAllAuthorized(Integer companyId, Integer resaleId);
 
-    public List<Map<String, Object>> listAll(Integer companyId, Integer resaleId);
+    List<Map<String, Object>> listAll(Integer companyId, Integer resaleId);
 
-    public MessageResponse filterId(Integer companyId, Integer resaleId, Integer id);
+    MessageResponse filterId(Integer companyId, Integer resaleId, Integer id);
 
-    public MessageResponse saveChecklist(VehicleEntryChecklist ch, String userEmail);
+    MessageResponse saveChecklist(VehicleEntryChecklist ch, String userEmail);
 
-    public MessageResponse updateChecklist(VehicleEntryChecklist ch);
+    MessageResponse updateChecklist(VehicleEntryChecklist ch);
 
-    public MessageResponse filterChecklist(Integer companyId, Integer resaleId, Integer id);
+    MessageResponse filterChecklist(Integer companyId, Integer resaleId, Integer id);
 
-    public MessageResponse filterPlate(Integer companyId, Integer resaleId, String plate);
+    MessageResponse filterPlate(Integer companyId, Integer resaleId, String plate);
 
-    public MessageResponse filterTogether(Integer companyId, Integer resaleId, String together);
+    MessageResponse filterFreeAdmission(Integer companyId, Integer resaleId, String plate);
 
-    public MessageResponse addAuthExit(AuthExitDto authExitDto, String userEmail);
+    MessageResponse filterTogether(Integer companyId, Integer resaleId, String together);
 
-    public MessageResponse deleteAuthExit1(AuthExitDto authExitDto, String userEmail);
+    MessageResponse addAuthExit(AuthExitDto authExitDto, String userEmail);
 
-    public MessageResponse deleteAuthExit2(AuthExitDto authExitDto, String userEmail);
+    MessageResponse deleteAuthExit1(AuthExitDto authExitDto, String userEmail);
 
-    public MessageResponse saveImage(MultipartFile file, String local);
-    public MessageResponse deleteImage(String local);
+    MessageResponse deleteAuthExit2(AuthExitDto authExitDto, String userEmail);
+
+    MessageResponse saveImage(MultipartFile file, String local);
+
+    MessageResponse deleteImage(String local);
 
 }

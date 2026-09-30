@@ -323,7 +323,7 @@ id int not null AUTO_INCREMENT,
 status tinyint not null,
 name varchar(100) not null,
 cpf varchar(11) not null,
-rg varchar(15) not null,
+rg varchar(11) not null,
 date_birth datetime not null,
 male_female tinyint not null,
 cnh_register varchar(11) not null,
@@ -671,10 +671,6 @@ FOREIGN KEY(resale_id) REFERENCES tb_resale(id),
 FOREIGN KEY(purchase_id) REFERENCES tb_purchase_order(id),
 PRIMARY KEY(id)
 );
-
-
-
-## workshop
 
 CREATE TABLE IF NOT EXISTS tb_mechanic_department(
 company_id int not null,
