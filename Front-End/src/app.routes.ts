@@ -33,7 +33,7 @@ export const appRoutes: Routes = [
                 path: 'part',
                 children: [
                     { path: 'purchase/order', title: 'Pedido de compra', loadComponent: () => import('./app/pages/parts/purchase.order/purchase.order.component') },
-                     { path: 'purchase/order/maintenance/:id', title: 'Pedido de compra manuteção', loadComponent: () => import('./app/pages/parts/purchase.order.maintenance/purchase.order.maintenance.component') },
+                    { path: 'purchase/order/maintenance/:id', title: 'Pedido de compra manuteção', loadComponent: () => import('./app/pages/parts/purchase.order.maintenance/purchase.order.maintenance.component') },
                     {
                         path: 'register',
                         children: [
@@ -50,16 +50,16 @@ export const appRoutes: Routes = [
                 children: [
                     { path: 'budget/list', title: 'Orçamento', loadComponent: () => import('./app/pages/workshop/budget/budget.component') },
                     {
-                        path:'equipment',
-                        children:[
-                              { path: 'request/material', title: 'Requisições', loadComponent: () => import('./app/pages/workshop/equipment/request.equipment/request.equipment.component') },
-                              {
-                                path:'register',
-                                children:[
-                                     { path: 'category/material', title: 'Categoria', loadComponent: () => import('./app/pages/workshop/equipment/register/category/category.material.component') },
-                                     { path: 'material', title: 'Material', loadComponent: () => import('./app/pages/workshop/equipment/register/material/material.component') },
+                        path: 'equipment',
+                        children: [
+                            { path: 'request/material', title: 'Requisições', loadComponent: () => import('./app/pages/workshop/equipment/request.equipment/request.equipment.component') },
+                            {
+                                path: 'register',
+                                children: [
+                                    { path: 'category/material', title: 'Categoria', loadComponent: () => import('./app/pages/workshop/equipment/register/category/category.material.component') },
+                                    { path: 'material', title: 'Material', loadComponent: () => import('./app/pages/workshop/equipment/register/material/material.component') },
                                 ]
-                              }
+                            }
                         ]
                     },
                     {
@@ -85,6 +85,21 @@ export const appRoutes: Routes = [
                 ]
             },
             {
+                path: 'crm',
+                children: [
+                    { path: 'regions', title: 'Regiões', loadComponent: () => import('./app/pages/crm/regions/regions.component') },
+                    { path: 'visit/schedule', title: 'Regiões', loadComponent: () => import('./app/pages/crm/visit.schedule/visit.schedule.component') },
+                    { path: 'new/customer', title: 'Atendimento', loadComponent: () => import('./app/pages/crm/new.customer/new.customer.component') },
+                     { path: 'report', title: 'Relatório', loadComponent: () => import('./app/pages/crm/report/report.component') },
+                    {
+                        path: 'register', children: [
+                            { path: 'type/customer', title: 'Tipo Atendimento', loadComponent: () => import('./app/pages/crm/register/type.customer/type.customer.component') },
+                           
+                        ]
+                    }
+                ]
+            },
+            {
                 path: 'report',
                 children: [
                     {
@@ -93,12 +108,12 @@ export const appRoutes: Routes = [
                         ]
                     },
                     {
-                        path:'part', children:[
+                        path: 'part', children: [
                             { path: 'purchase/order', title: 'Pedido de Comprar', loadComponent: () => import('./app/pages/reports/parts/purchase/purchase.report.component') }
                         ]
                     },
                     {
-                        path:'workshop', children:[
+                        path: 'workshop', children: [
                             { path: 'equipment/request/material', title: 'Requisições', loadComponent: () => import('./app/pages/reports/workshop/equipment/request.equipment.report/request.equipment.report.component') }
                         ]
                     }
@@ -116,7 +131,8 @@ export const appRoutes: Routes = [
                         children: [
                             { path: 'company', title: 'Empresa', loadComponent: () => import('./app/pages/settings/register/company/company') },
                             { path: 'user', title: 'Usuários', loadComponent: () => import('./app/pages/settings/register/user/user.component') },
-                            { path: 'brand', title: 'Marcas', loadComponent: () => import('./app/pages/settings/register/brand/brand.component') }
+                            { path: 'brand', title: 'Marcas', loadComponent: () => import('./app/pages/settings/register/brand/brand.component') },
+                            { path: 'attendant', title: 'Vendedores', loadComponent: () => import('./app/pages/settings/register/attendant/attendant.component') }
                         ]
                     }
                 ]

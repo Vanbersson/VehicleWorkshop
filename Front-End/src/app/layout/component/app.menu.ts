@@ -145,14 +145,14 @@ export class AppMenu {
                 label: 'CRM',
                 path: '/crm',
                 items: [
-                    { key: '5_1', visible: false, label: 'Regiões', icon: 'pi pi-map', routerLink: [''] },
-                    { key: '5_2', visible: false, label: 'Agenda de visitas', icon: 'pi pi-address-book', routerLink: [''] },
-                    { key: '5_3', visible: false, label: 'Atendimento', icon: 'pi pi-th-large', routerLink: [''] },
-                    { key: '5_4', visible: false, label: 'Relatório', icon: 'pi pi-clipboard', routerLink: [''] },
+                    { key: '5_1', visible: false, label: 'Regiões', icon: 'pi pi-map', routerLink: ['crm/regions'] },
+                    { key: '5_2', visible: false, label: 'Agenda de visitas', icon: 'pi pi-address-book', routerLink: ['crm/visit/schedule'] },
+                    { key: '5_3', visible: false, label: 'Atendimento', icon: 'pi pi-th-large', routerLink: ['crm/new/customer'] },
+                    { key: '5_4', visible: false, label: 'Relatório', icon: 'pi pi-clipboard', routerLink: ['crm/report'] },
                     {
                         key: '5_99', visible: false, label: 'Cadastros', path: '/register',
                         items: [
-                            { key: '5_99_0', visible: false, label: 'Tipo Atendimento', routerLink: [''] },
+                            { key: '5_99_0', visible: false, label: 'Tipo Atendimento', routerLink: ['crm/register/type/customer'] },
 
                         ]
                     }
