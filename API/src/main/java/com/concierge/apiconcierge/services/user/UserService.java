@@ -129,6 +129,33 @@ public class UserService implements IUserService {
 
     @SneakyThrows
     @Override
+    public MessageResponse listAllEnabled(String emailUser) {
+        try {
+            User resultUser = this.repository.loginEmail(emailUser);
+            List<User> users = this.repository.listAllEnabled(resultUser.getCompanyId(), resultUser.getResaleId(), StatusEnableDisable.Habilitado);
+            List<Map<String, Object>> list = new ArrayList<>();
+            for (User user : users) {
+                Map<String, Object> map = new HashMap<>();
+                map.put("id", user.getId());
+                map.put("status", user.getStatus());
+                map.put("name", user.getName());
+                map.put("email", user.getEmail());
+                map.put("roleDesc", user.getRoleDesc());
+                map.put("photoUrl", user.getPhotoUrl());
+                list.add(map);
+            }
+            MessageResponse response = new MessageResponse();
+            response.setStatus(ConstantsMessage.SUCCESS);
+            response.setMessage("Usuários encontrado.");
+            response.setData(list);
+            return response;
+        } catch (Exception ex) {
+            throw new UserException(ex.getMessage());
+        }
+    }
+
+    @SneakyThrows
+    @Override
     public MessageResponse filterId(Integer companyId, Integer resaleId, Integer id) {
         try {
             MessageResponse response = this.validation.filterId(companyId, resaleId, id);

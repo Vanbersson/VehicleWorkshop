@@ -6,21 +6,23 @@ import org.springframework.web.multipart.MultipartFile;
 
 public interface IUserService {
 
-    public MessageResponse save(User user);
+    MessageResponse save(User user);
 
-    public MessageResponse update(User user);
+    MessageResponse update(User user);
 
-    public MessageResponse updatePass(Integer companyId, Integer resaleId, Integer id, String pass);
+    MessageResponse updatePass(Integer companyId, Integer resaleId, Integer id, String pass);
 
-    public MessageResponse listAll(Integer companyId, Integer resaleId);
+    MessageResponse listAll(Integer companyId, Integer resaleId);
 
-    public MessageResponse filterId(Integer companyId, Integer resaleId, Integer id);
+    MessageResponse listAllEnabled(String emailUser);
 
-    public MessageResponse filterRoleId(Integer companyId, Integer resaleId, Integer roleId);
+    MessageResponse filterId(Integer companyId, Integer resaleId, Integer id);
 
-    public MessageResponse filterEmail(Integer companyId, Integer resaleId, String email);
+    MessageResponse filterRoleId(Integer companyId, Integer resaleId, Integer roleId);
 
-    public MessageResponse saveImage(MultipartFile file, String local);
+    MessageResponse filterEmail(Integer companyId, Integer resaleId, String email);
 
-    public MessageResponse deleteImage(String local);
+    MessageResponse saveImage(MultipartFile file, String local);
+
+    MessageResponse deleteImage(String local);
 }

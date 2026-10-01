@@ -71,6 +71,17 @@ public class UserController {
         }
     }
 
+    @GetMapping("/all/enabled")
+    public ResponseEntity<Object> listAllEnabled(HttpServletRequest request) {
+        try {
+           String emailUser = this.getEmail(request);
+            MessageResponse response = this.service.listAllEnabled(emailUser);
+            return ResponseEntity.status(HttpStatus.OK).body(response);
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new MessageResponseDto(ex.getMessage()));
+        }
+    }
+
     @GetMapping("/{companyId}/{resaleId}/filter/id/{id}")
     public ResponseEntity<Object> filterId(@PathVariable(name = "companyId") Integer companyId,
                                            @PathVariable(name = "resaleId") Integer resaleId,

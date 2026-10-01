@@ -14,6 +14,9 @@ public interface IUserRepository extends JpaRepository<User, Integer> {
     @Query(value = "SELECT * FROM `tb_user` WHERE company_id=?1 and resale_id=?2", nativeQuery = true)
     List<User> listAll(Integer companyId, Integer resaleId);
 
+    @Query(value = "SELECT * FROM `tb_user` WHERE company_id=?1 and resale_id=?2 AND status=?3", nativeQuery = true)
+    List<User> listAllEnabled(Integer companyId, Integer resaleId, StatusEnableDisable status);
+
     @Query(value = "SELECT * FROM tb_user WHERE company_id=?1 AND resale_id=?2 AND status=?3 AND role_id=?4", nativeQuery = true)
     List<User> filterRoleId(Integer companyId, Integer resaleId, StatusEnableDisable status, Integer roleId);
 
