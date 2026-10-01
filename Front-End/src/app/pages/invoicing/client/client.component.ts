@@ -36,6 +36,8 @@ import { StatusSuccessError } from '@/app/models/status-suc-err';
 import { MessageResponse } from '@/app/models/message-response';
 import { ClientCategoryService } from '@/app/services/client/client.category.service';
 import { FilterClientApolloComponent } from '@/app/components/filter.client.apollo/filter.client.apollo.component';
+import { ClientCompanyRegion } from '@/app/models/client.company.region';
+import { ClientCompanyRegionService } from '@/app/services/client/client.company.region';
 
 @Component({
   selector: 'app-client',
@@ -67,6 +69,7 @@ export default class ClientComponent implements OnInit, DoCheck {
     id: new FormControl<number | null>({ value: null, disabled: true }),
     status: new FormControl<StatusEnabDisabEnum>(StatusEnabDisabEnum.ENABLED, Validators.required),
     fantasia: new FormControl<string>(""),
+    region: new FormControl<ClientCompanyRegion | null>(null),
     name: new FormControl<string>("", Validators.required),
     category: new FormControl<ClientCategory | null>(null, Validators.required),
     clifor: new FormControl<ITypeClient | null>(null, Validators.required),
@@ -107,6 +110,8 @@ export default class ClientComponent implements OnInit, DoCheck {
 
   importClientCompanyApollo = signal<ClientCompany>(new ClientCompany());
 
+  regions = signal<ClientCompanyRegion[]>([]);
+
   constructor(
     private loadingService: LoadingService,
     private storageService: StorageService,
@@ -114,7 +119,8 @@ export default class ClientComponent implements OnInit, DoCheck {
     private cepService: CEPService,
     private confirmationService: ConfirmationService,
     private messageService: MessageService,
-    private clientService: ClientCompanyService) {
+    private clientService: ClientCompanyService,
+    private regionService: ClientCompanyRegionService) {
   }
   ngDoCheck(): void {
     //Client
@@ -147,6 +153,8 @@ export default class ClientComponent implements OnInit, DoCheck {
 
     const resultCate = await this.listAllCategories();
     this.categories.set(resultCate.body?.data);
+
+    this.regions.set(await this.listAllRegions());
 
     //Close load
     this.loadingService.hide();
@@ -256,7 +264,6 @@ export default class ClientComponent implements OnInit, DoCheck {
     if (!valid) {
       return;
     }
-
     this.client.companyId = this.storageService.companyId;
     this.client.resaleId = this.storageService.resaleId;
     this.client.status = value.status!;
@@ -272,6 +279,7 @@ export default class ClientComponent implements OnInit, DoCheck {
     this.client.emailHome = value.emailHome!;
     this.client.emailWork = value.emailWork!;
     this.client.zipCode = value.zipCode!;
+    this.client.regionId = value.region?.id!;
     this.client.address = value.address!;
     this.client.addressNumber = value.addressNumber != null ? value.addressNumber : "";
     this.client.city = value.city!;
@@ -343,6 +351,7 @@ export default class ClientComponent implements OnInit, DoCheck {
 
     this.formClient.patchValue({
       fantasia: cli.fantasia,
+
       name: cli.name,
       category: null,
       clifor: { type: cli.clifor, value: cli.clifor },
@@ -424,7 +433,7 @@ export default class ClientComponent implements OnInit, DoCheck {
       id: cli.id,
       fantasia: cli.fantasia,
       name: cli.name,
-      category: this.filterIdCategory(this.client.categoryId!),
+      category: this.categories().find(c => c.id === this.client.categoryId) ?? null,
       clifor: { type: cli.clifor, value: cli.clifor },
       fisjur: cli.fisjur,
       cnpj: cli.cnpj,
@@ -440,6 +449,7 @@ export default class ClientComponent implements OnInit, DoCheck {
       cellphone: cli.cellphone != "" ? cli.cellphone : null,
       emailHome: cli.emailHome,
       emailWork: cli.emailWork,
+      region: this.regions().find(r => r.id == cli.regionId) ?? null,
       zipCode: cli.zipCode,
       address: cli.address,
       addressNumber: cli.addressNumber != "" ? cli.addressNumber : null,
@@ -479,8 +489,9 @@ export default class ClientComponent implements OnInit, DoCheck {
     this.client.emailHome = value.emailHome!;
     this.client.emailWork = value.emailWork!;
     this.client.zipCode = value.zipCode!;
+    this.client.regionId = value.region?.id!;
     this.client.address = value.address!;
-    this.client.addressNumber = value.addressNumber != null ? value.addressNumber : "";;
+    this.client.addressNumber = value.addressNumber != null ? value.addressNumber : "";
     this.client.city = value.city!;
     this.client.state = value.state!;
     this.client.neighborhood = value.neighborhood!;
@@ -552,6 +563,7 @@ export default class ClientComponent implements OnInit, DoCheck {
       id: null,
       name: "",
       fantasia: "",
+      region: null,
       category: null,
       clifor: null,
       fisjur: FisJurEnum.FISICA,
@@ -644,6 +656,14 @@ export default class ClientComponent implements OnInit, DoCheck {
     try {
       return await lastValueFrom(this.cepService.search(cep));
     } catch (error: any) {
+      return error;
+    }
+  }
+  private async listAllRegions(): Promise<ClientCompanyRegion[]> {
+    try {
+      return await lastValueFrom(this.regionService.listAll());
+    } catch (error: any) {
+      this.messageService.add({ severity: 'error', summary: 'Erro', detail: error.error.message, icon: 'pi pi-times' });
       return error;
     }
   }

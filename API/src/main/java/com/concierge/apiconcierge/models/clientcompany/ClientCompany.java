@@ -21,7 +21,7 @@ public class ClientCompany {
     @Column(name = "resale_id")
     private Integer resaleId;
 
-    @Column(name="date_register")
+    @Column(name = "date_register")
     private Date dateRegister;
 
     @Id
@@ -72,6 +72,9 @@ public class ClientCompany {
     private String dddPhone;
 
     private String phone;
+
+    @Column(name = "region_id")
+    private Integer regionId;
 
     @Column(name = "zip_code")
     private String zipCode;

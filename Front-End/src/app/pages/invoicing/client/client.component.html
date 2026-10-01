@@ -142,21 +142,27 @@
                                 [style]="{'text-transform':'uppercase'}" pInputText formControlName="fantasia" />
                         </div>
                         <div class="col-span-12 md:col-span-3">
+                            <label for="CliForId">Regiões</label>
+                            <p-select [options]="regions()" optionLabel="description" [style]="{'text-transform':'uppercase'}"
+                                placeholder="Selecione" formControlName="region" fluid />
+                            <small class="block text-sm text-red-500" *ngIf="formClient.get('region')?.invalid">Campo
+                                obrigatório</small>
+                        </div>
+                        <div class="col-span-12 md:col-span-3">
                             <label for="CliForId">Categoria</label>
-                            <p-select [options]="categories()" optionLabel="description" 
+                            <p-select [options]="categories()" optionLabel="description" [style]="{'text-transform':'uppercase'}"
                                 placeholder="Selecione" formControlName="category" fluid />
                             <small class="block text-sm text-red-500" *ngIf="formClient.get('category')?.invalid">Campo
                                 obrigatório</small>
                         </div>
                         <div class="col-span-12 md:col-span-3">
                             <label for="CliForId">Cliente/Fornecedor</label>
-                            <p-select [options]="clifor" optionLabel="type"
+                            <p-select [options]="clifor" optionLabel="type"[style]="{'text-transform':'uppercase'}"
                                 placeholder="Selecione" formControlName="clifor" fluid />
                             <small class="block text-sm text-red-500" *ngIf="formClient.get('clifor')?.invalid">Campo
                                 obrigatório</small>
                         </div>
-                        <div class="md:col-span-3">
-                        </div>
+                       
                         <div class="col-span-12 md:col-span-1">
                             <label for="DddPhoneId">DDD</label>
                             <p-inputMask id="DddPhoneId" mask="99" [unmask]="true" formControlName="dddPhone" fluid />

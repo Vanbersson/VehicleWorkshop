@@ -198,6 +198,7 @@ ddd_cellphone varchar(2),
 cellphone varchar(9),
 ddd_phone varchar(2),
 phone varchar(8),
+region_id int,
 zip_code varchar(8) not null,
 state varchar(2) not null,
 city varchar(100) not null,
@@ -214,6 +215,7 @@ contact_cellphone varchar(9),
 FOREIGN KEY(company_id) REFERENCES tb_company(id),
 FOREIGN KEY(resale_id) REFERENCES tb_resale(id),
 FOREIGN KEY(category_id) REFERENCES tb_client_category(id),
+FOREIGN KEY(region_id) REFERENCES tb_client_company_region(id),
 primary KEY(id)
 );
 

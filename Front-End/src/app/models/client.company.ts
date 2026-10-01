@@ -10,6 +10,7 @@ export class ClientCompany {
     status: StatusEnabDisabEnum = StatusEnabDisabEnum.DISABLED;
     name: string = '';
     fantasia: string = '';
+    regionId: number | null = null;
     categoryId: number | null = null;
     clifor: CliForEnum = CliForEnum.AMBOS;
     fisjur: FisJurEnum = FisJurEnum.OUTRAS;

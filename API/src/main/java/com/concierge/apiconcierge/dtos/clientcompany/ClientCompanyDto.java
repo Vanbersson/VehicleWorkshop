@@ -30,6 +30,7 @@ public record ClientCompanyDto(
         String cellphone,
         String dddPhone,
         String phone,
+        Integer regionId,
         String zipCode,
         String state,
         String city,
