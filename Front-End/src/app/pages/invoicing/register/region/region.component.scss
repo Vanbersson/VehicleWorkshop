@@ -1,0 +1,16 @@
+:host {
+    .layout-card-title {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+
+        span {
+            display: flex;
+            align-items: center;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--color-grey-800);
+        }
+    }
+}

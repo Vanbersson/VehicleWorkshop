@@ -133,7 +133,8 @@ export class AppMenu {
                         key: '4_99', visible: false, label: 'Cadastros', path: '/register',
                         items: [
                             { key: '4_99_0', visible: false, label: 'Categoria de Clientes', routerLink: ['invoicing/register/category'] },
-                            { key: '4_99_1', visible: false, label: 'Condição de pagamento', routerLink: ['invoicing/register/payment'] }
+                            { key: '4_99_1', visible: false, label: 'Condição de pagamento', routerLink: ['invoicing/register/payment'] },
+                            { key: '4_99_2', visible: false, label: 'Região', routerLink: ['invoicing/register/region'] }
                         ]
                     }
 
