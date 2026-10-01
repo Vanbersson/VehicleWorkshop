@@ -162,6 +162,18 @@ FOREIGN KEY(resale_id) REFERENCES tb_resale(id),
 PRIMARY KEY(id)
 );
 
+CREATE TABLE IF NOT EXISTS tb_client_company_region(
+company_id int not null,
+resale_id int not null,
+id int not null AUTO_INCREMENT,
+status tinyint not null,
+description varchar(100) not null,
+uf varchar(2) not null,
+FOREIGN KEY(company_id) REFERENCES tb_company(id),
+FOREIGN KEY(resale_id) REFERENCES tb_resale(id),
+PRIMARY KEY(id)
+);
+
 CREATE TABLE IF NOT EXISTS tb_client_company (
 company_id int not null,
 resale_id int not null,
@@ -830,9 +842,25 @@ FOREIGN KEY(material_id) REFERENCES tb_tool_control_material(id),
 PRIMARY KEY(id)
 );
 
+### INICIO MENU CRM
+CREATE TABLE IF NOT EXISTS tb_salesperson(
+company_id int not null,
+resale_id int not null,
+id int not null AUTO_INCREMENT,
+status tinyint not null,
+name varchar(100) not null,
+typesales_part tinyint,
+typesales_service tinyint,
+typesales_vehicle tinyint,
+user_id int not null,
+photo_url varchar(255),
+FOREIGN KEY(company_id) REFERENCES tb_company(id),
+FOREIGN KEY(resale_id) REFERENCES tb_resale(id),
+FOREIGN KEY(user_id) REFERENCES tb_user(id),
+primary key(id)
+);
 
-
-
+### FIM MENU CRM
 
 #Falta verificar
 CREATE TABLE IF NOT EXISTS tb_nf_capa(

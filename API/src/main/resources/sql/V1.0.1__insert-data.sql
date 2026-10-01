@@ -105,6 +105,7 @@ VALUES
 ('4_99','Cadastros'),
 ('4_99_0','Categoria de Clientes'),
 ('4_99_1','Condição de pagamento'),
+('4_99_2','Região'),
 
 ('5_0','CRM'),
 ('5_1','Regiões'),
