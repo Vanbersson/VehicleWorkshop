@@ -664,7 +664,7 @@ export default class ClientComponent implements OnInit, DoCheck {
       return await lastValueFrom(this.regionService.listAll());
     } catch (error: any) {
       this.messageService.add({ severity: 'error', summary: 'Erro', detail: error.error.message, icon: 'pi pi-times' });
-      return error;
+      return [];
     }
   }
 

@@ -200,7 +200,8 @@ export class AppMenu {
                             { key: '999_2_0', visible: false, label: 'Empresa', routerLink: '/config/register/company' },
                             { key: '999_2_1', visible: false, label: 'Usuários', routerLink: '/config/register/user' },
                             { key: '999_2_2', visible: false, label: 'Marcas', routerLink: '/config/register/brand' },
-                            { key: '999_2_3', visible: false, label: 'Vendedores', routerLink: '/config/register/attendant' }
+                            { key: '999_2_3', visible: false, label: 'Vendedores', routerLink: '/config/register/salesperson' },
+                            { key: '999_2_4', visible: false, label: 'Grupo Vendedores', routerLink: '/config/register/salesperson/group' },
                         ]
                     }
                 ]

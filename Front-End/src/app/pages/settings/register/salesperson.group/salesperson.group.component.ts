@@ -1,4 +1,4 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { lastValueFrom } from 'rxjs';
@@ -15,42 +15,46 @@ import { DialogModule } from 'primeng/dialog';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 import { RadioButtonModule } from 'primeng/radiobutton';
-import { SelectModule } from 'primeng/select';
+import { MultiSelectModule } from 'primeng/multiselect';
 
 import { StatusEnabDisabEnum } from '@/app/models/status-enab-disab-enum';
 import { LoadingService } from '@/app/services/loading/loading.service';
-
-import { StatusSuccessError } from '@/app/models/status-suc-err';
+import { SalespersonGroupService } from '@/app/services/salesperson/salesperson.group.service';
+import { SalespersonGroup } from '@/app/models/salesperson/salesperson.group';
 import { MessageResponse } from '@/app/models/message-response';
+import { StatusSuccessError } from '@/app/models/status-suc-err';
 import { ClientCompanyRegion } from '@/app/models/client.company.region';
 import { ClientCompanyRegionService } from '@/app/services/client/client.company.region';
+import { Brand } from '@/app/models/brand';
+import { BrandService } from '@/app/services/brand/brand.service';
 
 @Component({
-  selector: 'app-client-company-region',
+  selector: 'app-salesperson.group',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, ToastModule, InputTextModule, InputNumberModule, SelectModule,
+  imports: [CommonModule, ReactiveFormsModule, ToastModule, InputTextModule, InputNumberModule, MultiSelectModule,
     InputGroupModule, IconFieldModule, TableModule, RadioButtonModule,
     ButtonModule, InputIconModule, DialogModule],
-  templateUrl: './region.component.html',
-  styleUrl: './region.component.scss',
+  templateUrl: './salesperson.group.component.html',
+  styleUrl: './salesperson.group.component.scss',
   providers: [MessageService]
 })
-export default class RegionComponent implements OnInit {
+export default class SalespersonGroupComponent {
   visibleDialog: boolean = false;
   enabled = StatusEnabDisabEnum.ENABLED;
   disabled = StatusEnabDisabEnum.DISABLED;
 
-  regions = signal<ClientCompanyRegion[]>([]);
+  groups = signal<SalespersonGroup[]>([]);
 
+  group!: SalespersonGroup;
+  isNewGroup: boolean = true;
 
-  region!: ClientCompanyRegion;
-  isNewReg: boolean = true;
-
-  formReg = new FormGroup({
+  formSalespersonGroup = new FormGroup({
     id: new FormControl<number | null>({ value: null, disabled: true }),
     status: new FormControl<StatusEnabDisabEnum>(StatusEnabDisabEnum.ENABLED, Validators.required),
     description: new FormControl<string>('', Validators.required),
-    uf: new FormControl<string>('', Validators.required),
+    ufs: new FormControl<string[]>([]),
+    brands: new FormControl<Brand[]>([]),
+    regions: new FormControl<ClientCompanyRegion[]>([]),
   });
   ufs = [
     { label: 'AC', value: 'AC' },
@@ -81,30 +85,34 @@ export default class RegionComponent implements OnInit {
     { label: 'SE', value: 'SE' },
     { label: 'TO', value: 'TO' }
   ];
+  brands = signal<Brand[]>([]);
+  regions = signal<ClientCompanyRegion[]>([]);
   constructor(
     private loadingService: LoadingService,
+    private salespersonGroupService: SalespersonGroupService,
+    private messageService: MessageService,
     private regionService: ClientCompanyRegionService,
-    private messageService: MessageService) { }
+    private brandService: BrandService) { }
 
   ngOnInit(): void {
     this.init();
   }
 
   private async init() {
-    //open Load
     this.loadingService.show();
+    this.groups.set(await this.listAllGroups());
+    this.brands.set(await this.listAllBrands());
     this.regions.set(await this.listAllRegions());
-    //Close Load
     this.loadingService.hide();
   }
 
   private showDialog() {
-    this.cleanForm();
     this.visibleDialog = true;
   }
 
-  newRegion() {
-    this.isNewReg = true;
+  newGroup() {
+    this.isNewGroup = true;
+    this.cleanForm();
     this.showDialog();
   }
 
@@ -113,100 +121,125 @@ export default class RegionComponent implements OnInit {
   }
 
   private cleanForm() {
-    this.formReg.patchValue({
+    this.formSalespersonGroup.patchValue({
       id: null,
       description: "",
       status: StatusEnabDisabEnum.ENABLED,
-      uf: ""
+      ufs: [],
+      brands: [],
+      regions: []
     });
   }
-  edit(reg: ClientCompanyRegion) {
-    this.showDialog();
-    this.isNewReg = false;
-    this.region = reg;
-    this.formReg.patchValue({
-      id: reg.id,
-      description: reg.description,
-      status: reg.status,
-      uf: reg.uf
+  edit(group: SalespersonGroup) {
+    this.cleanForm();
+    this.isNewGroup = false;
+    this.group = group;
+    this.formSalespersonGroup.patchValue({
+      id: group.id,
+      description: group.description,
+      status: group.status,
+      ufs: group.ufs ? group.ufs.split(',') : [],
+      brands: group.brands ? this.brands().filter(b => group.brands.split(',').includes(b.id!.toString())) : [],
+      regions: group.regions ? this.regions().filter(r => group.regions.split(',').includes(r.id!.toString())) : []
     });
+    this.showDialog();
   }
   save() {
-    if (this.isNewReg) {
-      this.saveReg();
+    if (this.isNewGroup) {
+      this.saveNewGroup();
     } else {
-      this.updateReg();
+      this.saveUpdateGroup();
     }
   }
 
-  private async saveReg() {
-    const { value, valid } = this.formReg;
+  private async saveNewGroup() {
+    const { value, valid } = this.formSalespersonGroup;
     if (!valid) {
       return;
     }
-    this.region = new ClientCompanyRegion();
-    this.region.status = value.status!;
-    this.region.description = value.description!;
-    this.region.uf = value.uf!;
-    //open Load
+    this.group = new SalespersonGroup();
+    this.group.status = value.status!;
+    this.group.description = value.description!;
+    this.group.ufs = value?.ufs!.join(',') ?? '';
+    this.group.brands = value?.brands!.join(',') ?? '';
+    this.group.regions = value?.regions!.join(',') ?? '';
     this.loadingService.show();
-    const resultSave = await this.saveRegion(this.region);
-    //Close Load
+    const resultSave = await this.saveGroup(this.group);
     this.loadingService.hide();
     if (resultSave.status == 201 && resultSave.body?.status == StatusSuccessError.succes) {
       this.messageService.add({ severity: 'success', summary: resultSave.body.header, detail: resultSave.body.message, icon: 'pi pi-check' });
-      this.region = resultSave.body.data;
-      this.formReg.get("id")?.setValue(this.region.id);
-      this.isNewReg = false;
-      this.init();
+      this.group = resultSave.body.data;
+      this.formSalespersonGroup.get("id")?.setValue(this.group.id);
+      this.isNewGroup = false;
+      this.groups.set(await this.listAllGroups());
     }
     if (resultSave.status == 201 && resultSave.body?.status == StatusSuccessError.error) {
       this.messageService.add({ severity: 'info', summary: resultSave.body.header, detail: resultSave.body.message, icon: 'pi pi-info-circle' });
     }
   }
-  private async updateReg() {
-    const { value, valid } = this.formReg;
+  private async saveUpdateGroup() {
+    const { value, valid } = this.formSalespersonGroup;
     if (!valid) {
       return;
     }
-    this.region.status = value.status!;
-    this.region.description = value.description!;
-    this.region.uf = value.uf!;
+    this.group.status = value.status!;
+    this.group.description = value.description!;
+    this.group.ufs = value?.ufs!.join(',') ?? '';
+    //Retornar os ids das marcas e regiões selecionadas, separados por vírgula
+    this.group.brands = value?.brands!.map((b: Brand) => b.id).join(',') ?? '';
+    this.group.regions = value?.regions!.map((r: ClientCompanyRegion) => r.id).join(',') ?? '';
     //open Load
     this.loadingService.show();
-    const resultSave = await this.updateRegion(this.region);
+    const resultSave = await this.updateGroup(this.group);
     //Close Load
     this.loadingService.hide();
     if (resultSave.status == 200 && resultSave.body?.status == StatusSuccessError.succes) {
       this.messageService.add({ severity: 'success', summary: resultSave.body.header, detail: resultSave.body.message, icon: 'pi pi-check' });
-      this.init();
+      this.groups.set(await this.listAllGroups());
     }
     if (resultSave.status == 200 && resultSave.body?.status == StatusSuccessError.error) {
       this.messageService.add({ severity: 'info', summary: resultSave.body.header, detail: resultSave.body.message, icon: 'pi pi-info-circle' });
     }
   }
+  private async listAllGroups(): Promise<SalespersonGroup[]> {
+    try {
+      return await lastValueFrom(this.salespersonGroupService.listAll());
+    } catch (error: any) {
+      this.messageService.add({ severity: 'error', summary: 'Erro', detail: error.error.message, icon: 'pi pi-times' });
+      return [];
+    }
+  }
+  private async saveGroup(group: SalespersonGroup): Promise<HttpResponse<MessageResponse>> {
+    try {
+      return await lastValueFrom(this.salespersonGroupService.save(group));
+    } catch (error: any) {
+      this.messageService.add({ severity: 'error', summary: 'Erro', detail: error.message, icon: 'pi pi-times' });
+      return error;
+    }
+  }
+  private async updateGroup(group: SalespersonGroup): Promise<HttpResponse<MessageResponse>> {
+    try {
+      return await lastValueFrom(this.salespersonGroupService.update(group));
+    } catch (error: any) {
+      this.messageService.add({ severity: 'error', summary: 'Erro', detail: error.message, icon: 'pi pi-times' });
+      return error;
+    }
+  }
   private async listAllRegions(): Promise<ClientCompanyRegion[]> {
     try {
-      return await lastValueFrom(this.regionService.listAll());
+      return await lastValueFrom(this.regionService.listAllEnabled());
     } catch (error: any) {
-      this.messageService.add({ severity: 'error', summary: 'Erro', detail: error.error.message, icon: 'pi pi-times' });
-      return error;
+      this.messageService.add({ severity: 'error', summary: 'Erro', detail: error.message, icon: 'pi pi-times' });
+      return [];
     }
   }
-  private async saveRegion(region: ClientCompanyRegion): Promise<HttpResponse<MessageResponse>> {
+
+  private async listAllBrands(): Promise<Brand[]> {
     try {
-      return await lastValueFrom(this.regionService.save(region));
+      return await lastValueFrom(this.brandService.listAllEnabled());
     } catch (error: any) {
-      this.messageService.add({ severity: 'error', summary: 'Erro', detail: error.error.message, icon: 'pi pi-times' });
-      return error;
-    }
-  }
-  private async updateRegion(region: ClientCompanyRegion): Promise<HttpResponse<MessageResponse>> {
-    try {
-      return await lastValueFrom(this.regionService.update(region));
-    } catch (error: any) {
-      this.messageService.add({ severity: 'error', summary: 'Erro', detail: error.error.message, icon: 'pi pi-times' });
-      return error;
+      this.messageService.add({ severity: 'error', summary: 'Erro', detail: error.message, icon: 'pi pi-times' });
+      return [];
     }
   }
 }

@@ -192,7 +192,8 @@ export default class UserComponent implements OnInit {
           {
             key: '4_99', label: 'Cadastros', children: [
               { key: '4_99_0', label: 'Categoria de Clientes' },
-              { key: '4_99_1', label: 'Condição de pagamento' }
+              { key: '4_99_1', label: 'Condição de pagamento' },
+              { key: '4_99_2', label: 'Região' },
             ]
           },
         ]
@@ -241,7 +242,8 @@ export default class UserComponent implements OnInit {
               { key: '999_2_0', label: 'Empresa', icon: 'pi pi-building' },
               { key: '999_2_1', label: 'Usuários', icon: 'pi pi-users' },
               { key: '999_2_2', label: 'Marcas' },
-              { key: '999_2_3', label: 'Vendedores', icon: 'pi pi-users' },
+              { key: '999_2_3', label: 'Vendedores' },
+              { key: '999_2_4', label: 'Grupo Vendedores' },
             ]
           },
 

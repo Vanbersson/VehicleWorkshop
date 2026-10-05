@@ -80,6 +80,7 @@ export const appRoutes: Routes = [
                         path: 'register', children: [
                             { path: 'category', title: 'Categoria', loadComponent: () => import('./app/pages/invoicing/register/category/category.component') },
                             { path: 'payment', title: 'Pagamento', loadComponent: () => import('./app/pages/invoicing/register/type-payment/type-payment.component') },
+                             { path: 'region', title: 'Região', loadComponent: () => import('./app/pages/invoicing/register/region/region.component') },
                         ]
                     }
                 ]
@@ -132,7 +133,8 @@ export const appRoutes: Routes = [
                             { path: 'company', title: 'Empresa', loadComponent: () => import('./app/pages/settings/register/company/company') },
                             { path: 'user', title: 'Usuários', loadComponent: () => import('./app/pages/settings/register/user/user.component') },
                             { path: 'brand', title: 'Marcas', loadComponent: () => import('./app/pages/settings/register/brand/brand.component') },
-                            { path: 'attendant', title: 'Vendedores', loadComponent: () => import('./app/pages/settings/register/attendant/attendant.component') }
+                            { path: 'salesperson', title: 'Vendedores', loadComponent: () => import('./app/pages/settings/register/salesperson/salesperson.component') },
+                            { path: 'salesperson/group', title: 'Grupo Vendedores', loadComponent: () => import('./app/pages/settings/register/salesperson.group/salesperson.group.component') }
                         ]
                     }
                 ]

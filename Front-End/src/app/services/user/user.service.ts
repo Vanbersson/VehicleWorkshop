@@ -31,6 +31,9 @@ export class UserService {
     listAll(): Observable<HttpResponse<MessageResponse>> {
         return this.http.get<MessageResponse>(environment.apiuUrl + "/user/" + this.companyResale + "/all", { headers: this.myHeaders(), observe: 'response' });
     }
+    listAllEnabled(): Observable<HttpResponse<MessageResponse>> {
+        return this.http.get<MessageResponse>(`${environment.apiuUrl}/user/all/enabled`, { headers: this.myHeaders(), observe: 'response' });
+    }
     filterId(id: number): Observable<HttpResponse<MessageResponse>> {
         return this.http.get<MessageResponse>(environment.apiuUrl + "/user/" + this.companyResale + "/filter/id/" + id, { headers: this.myHeaders(), observe: 'response' });
     }

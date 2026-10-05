@@ -131,7 +131,8 @@ VALUES
 ('999_2_0','Empresa'),
 ('999_2_1','Usuários'),
 ('999_2_2','Marcas'),
-('999_2_3','Vendedores');
+('999_2_3','Vendedores'),
+('999_2_4','Grupo Vendedores');
 
 INSERT INTO `tb_company`
 (`status`, `name`, `cnpj`, `email`, `cellphone`, `phone`, `zip_code`, `state`, `city`, `neighborhood`, `address`, `address_number`)

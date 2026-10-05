@@ -182,7 +182,7 @@ export default class BrandComponent implements OnInit {
   private async listAll(): Promise<Brand[]> {
     try {
       return await lastValueFrom(this.brandService.listAll());
-    } catch (error) {
+    } catch (error: any) {
       return [];
     }
   }
