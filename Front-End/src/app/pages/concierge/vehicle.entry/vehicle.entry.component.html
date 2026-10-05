@@ -248,7 +248,7 @@
                             [style]="{'text-transform':'uppercase'}" fluid />
                         </div>
                         <div class="col-span-12 md:col-span-2">
-                            <label class="block font-medium">Veículo novo</label>
+                            <label class="block font-medium">Sem Placa</label>
                             <div class="flex items-center gap-4 border border-gray-300 rounded-md p-3">
                                 <div class="flex items-center">
                                     <p-radioButton
@@ -466,7 +466,7 @@
         </ng-template>
         <ng-template pTemplate="body" let-vehicle let-index="rowIndex">
             <tr>
-                <td *ngIf="vehicle.vehicleNew == yes"><p-tag value="NOVO" severity="info"></p-tag></td>
+                <td *ngIf="vehicle.vehicleNew == yes"><p-tag value="SEM PLACA" severity="info"></p-tag></td>
                 <td *ngIf="vehicle.vehicleNew == not">{{vehicle.vehiclePlate | uppercase}}</td>
                 <td>{{vehicle.vehicleFleet}}</td>
                 <td>{{vehicle.modelDescription | uppercase}}</td>

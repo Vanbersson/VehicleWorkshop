@@ -49,7 +49,7 @@
                 <td class="disabled-col"><span class="text-500">{{ vehicle.id }}</span></td>
                 <td>
                     @if(vehicle.vehicleNew == "yes"){
-                    <p-tag value="NOVO" severity="info"></p-tag>
+                    <p-tag value="SEM PLACA" severity="info"></p-tag>
                     }@else {
                     <span class="text-500">{{vehicle.vehiclePlate | uppercase}}</span>
                     }

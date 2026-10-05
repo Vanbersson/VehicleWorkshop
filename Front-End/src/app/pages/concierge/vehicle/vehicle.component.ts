@@ -135,7 +135,7 @@ export default class VehicleComponent implements OnInit {
     const datePipe = new DatePipe('pt-BR');
     vehicle.entryDate = datePipe.transform(this.formatDateTime(new Date(vehicle.entryDate)), 'dd/MM/yyyy HH:mm')!;
     if (vehicle.vehicleNew == YesNotEnum.YES) {
-      vehicle.vehiclePlate = "NOVO";
+      vehicle.vehiclePlate = "Sem Placa";
     }
     if (vehicle.attendantUserName == "") {
       vehicle.attendantUserName = "FALTA";

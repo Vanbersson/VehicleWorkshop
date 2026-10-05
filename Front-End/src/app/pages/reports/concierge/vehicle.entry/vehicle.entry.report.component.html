@@ -73,7 +73,7 @@
                 <td>{{ vehicle.id }}</td>
                 <td>
                     @if(vehicle.vehicleNew == "yes"){
-                    <p-tag value="NOVO" severity="info"></p-tag>
+                    <p-tag value="SEM PLACA" severity="info"></p-tag>
                     }@else {
                     {{vehicle.vehiclePlate | uppercase}}
                     }
@@ -135,7 +135,7 @@
                 </div>
             </div>
             <div class="col-span-12 md:col-span-3">
-                <label>Veículos Novos</label>
+                <label>Veículos sem placa</label>
                 <div class="flex items-center gap-4 border border-surface-300 rounded-lg p-3">
                     <p-checkbox formControlName="vehicleNew" value="yes" inputId="vehicleNewId" />
                     <label for="vehicleNewId">Sim</label>
