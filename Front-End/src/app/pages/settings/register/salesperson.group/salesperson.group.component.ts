@@ -161,8 +161,8 @@ export default class SalespersonGroupComponent {
     this.group.status = value.status!;
     this.group.description = value.description!;
     this.group.ufs = value?.ufs!.join(',') ?? '';
-    this.group.brands = value?.brands!.join(',') ?? '';
-    this.group.regions = value?.regions!.join(',') ?? '';
+    this.group.brands = value?.brands?.map((b: Brand) => b.id).join(',') ?? '';
+    this.group.regions = value?.regions?.map((r: ClientCompanyRegion) => r.id).join(',') ?? '';
     this.loadingService.show();
     const resultSave = await this.saveGroup(this.group);
     this.loadingService.hide();
