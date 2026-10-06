@@ -55,7 +55,7 @@ public class ClientCompanyValidation implements IClientCompanyValidation {
                 response.setMessage(ConstantsMessage.NOT_INFORMED);
                 return response;
             }
-            if(!this.isValidCpf(client.getCpf())){
+            if (!this.isValidCpf(client.getCpf())) {
                 response.setStatus(ConstantsMessage.ERROR);
                 response.setHeader("CPF");
                 response.setMessage("Inválido.");
@@ -142,19 +142,18 @@ public class ClientCompanyValidation implements IClientCompanyValidation {
                 response.setMessage(ConstantsMessage.NOT_INFORMED);
                 return response;
             }
-            if(!this.isValidCpf(client.getCpf())){
+            if (!this.isValidCpf(client.getCpf())) {
                 response.setStatus(ConstantsMessage.ERROR);
                 response.setHeader("CPF");
                 response.setMessage("Inválido.");
                 return response;
             }
-
             ClientCompany clientFilterCPF = this.repository.filterCPF(client.getCompanyId(), client.getResaleId(), client.getCpf());
             if (clientFilterCPF != null) {
-                if(clientFilterCPF.getId() != client.getId()){
+                if (!clientFilterCPF.getId().equals(client.getId())) {
                     response.setStatus(ConstantsMessage.ERROR);
-                    response.setHeader("Cliente");
-                    response.setMessage("Já cadastrado ok.");
+                    response.setHeader("Cliente - " + clientFilterCPF.getId());
+                    response.setMessage("Já cadastrado.");
                     return response;
                 }
             }
@@ -164,6 +163,15 @@ public class ClientCompanyValidation implements IClientCompanyValidation {
                 response.setHeader("CNPJ");
                 response.setMessage(ConstantsMessage.NOT_INFORMED);
                 return response;
+            }
+            ClientCompany clientFilterCNPJ = this.repository.filterCNPJ(client.getCompanyId(), client.getResaleId(), client.getCnpj());
+            if (clientFilterCNPJ != null) {
+                if (!clientFilterCNPJ.getId().equals(client.getId())) {
+                    response.setStatus(ConstantsMessage.ERROR);
+                    response.setHeader("Cliente -" + clientFilterCNPJ.getId());
+                    response.setMessage("Já cadastrado.");
+                    return response;
+                }
             }
         }
         if (client.getClifor() == null) {
