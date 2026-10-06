@@ -26,15 +26,18 @@ import { StatusEnabDisabEnum } from '@/app/models/status-enab-disab-enum';
 import { IPhotoResult } from '@/app/interfaces/i.photo-result';
 import { PhotoService } from '@/app/services/photo/photo.service';
 import { StatusPhotoResult } from '@/app/models/status-photo-result';
-import { SalespersonTypeEnum } from '@/app/models/crm/salesperson.type.enum';
 import { SalespersonGroupService } from '@/app/services/salesperson/salesperson.group.service';
 import { SalespersonGroup } from '@/app/models/salesperson/salesperson.group';
+import { SalesTypeEnum } from '@/app/models/crm/sales.type.enum';
+import { SalespersonTypeEnum } from '@/app/models/crm/salesperson.type.enum';
+import { SalespersonService } from '@/app/services/salesperson/salesperson.service';
+import { LoadingService } from '@/app/services/loading/loading.service';
 
 
 @Component({
   selector: 'app-salesperson',
   standalone: true,
-  imports: [CommonModule, ButtonModule, TableModule, ToastModule, CheckboxModule, RadioButtonModule,InputMaskModule,MultiSelectModule,
+  imports: [CommonModule, ButtonModule, TableModule, ToastModule, CheckboxModule, RadioButtonModule, InputMaskModule, MultiSelectModule,
     SelectModule, DialogModule, InputTextModule, InputNumberModule, ReactiveFormsModule],
   templateUrl: './salesperson.component.html',
   styleUrl: './salesperson.component.scss',
@@ -79,18 +82,23 @@ export default class SalespersonComponent {
   enabled = StatusEnabDisabEnum.ENABLED;
   disabled = StatusEnabDisabEnum.DISABLED;
 
-  PART = SalespersonTypeEnum.PART;
-  SERVICE = SalespersonTypeEnum.SERVICE;
-  VEHICLE = SalespersonTypeEnum.VEHICLE;
+  PART = SalesTypeEnum.PART;
+  SERVICE = SalesTypeEnum.SERVICE;
+  VEHICLE = SalesTypeEnum.VEHICLE;
+
+  IN = SalespersonTypeEnum.INTERNAL;
+  EX = SalespersonTypeEnum.EXTERNAL;
+  BOTH = SalespersonTypeEnum.BOTH;
 
   salespersons = signal<Salesperson[]>([]);
   visible: boolean = false;
 
   formPerson = new FormGroup({
     status: new FormControl<StatusEnabDisabEnum>(StatusEnabDisabEnum.ENABLED),
-    typeSalesPart: new FormControl<SalespersonTypeEnum | null>(null),
-    typeSalesService: new FormControl<SalespersonTypeEnum | null>(null),
-    typeSalesVehicle: new FormControl<SalespersonTypeEnum | null>(null),
+    type: new FormControl<SalespersonTypeEnum>(SalespersonTypeEnum.INTERNAL),
+    typeSalesPart: new FormControl<SalesTypeEnum | null>(null),
+    typeSalesService: new FormControl<SalesTypeEnum | null>(null),
+    typeSalesVehicle: new FormControl<SalesTypeEnum | null>(null),
     id: new FormControl<number | null>({ value: null, disabled: true }),
     name: new FormControl<string>('', [Validators.required]),
     user: new FormControl<User | null>(null, [Validators.required]),
@@ -108,14 +116,17 @@ export default class SalespersonComponent {
 
   constructor(private messageService: MessageService,
     private userService: UserService,
+    private loadingService: LoadingService,
     private photoService: PhotoService,
+    private salespersonService: SalespersonService,
     private salespersonGroupService: SalespersonGroupService) { this.init(); }
 
   private async init() {
-    //users
+    this.loadingService.show();
+    this.salespersons.set(await this.listAll());
     this.attendantsUser.set(await this.getUsers());
-    //groups
     this.groups.set(await this.listAllGroups());
+    this.loadingService.hide();
   }
 
   private showDialog() {
@@ -160,15 +171,6 @@ export default class SalespersonComponent {
     return [];
   }
 
-  private async filterUserEnabled(): Promise<HttpResponse<MessageResponse>> {
-    try {
-      return await lastValueFrom(this.userService.listAllEnabled());
-    } catch (error: any) {
-      this.messageService.add({ severity: 'error', summary: 'Erro', detail: error.error.message, icon: 'pi pi-times' });
-      return error;
-    }
-  }
-
   async onSelectFile() {
     const photo: IPhotoResult = await this.photoService.takePicture();
     if (photo.status == StatusPhotoResult.SUCCESS) {
@@ -184,13 +186,30 @@ export default class SalespersonComponent {
   }
 
   private async listAllGroups(): Promise<SalespersonGroup[]> {
-      try {
-        return await lastValueFrom(this.salespersonGroupService.listAllEnabled());
-      } catch (error: any) {
-        this.messageService.add({ severity: 'error', summary: 'Erro', detail: error.error.message, icon: 'pi pi-times' });
-        return [];
-      }
+    try {
+      return await lastValueFrom(this.salespersonGroupService.listAllEnabled());
+    } catch (error: any) {
+      this.messageService.add({ severity: 'error', summary: 'Erro', detail: error.message, icon: 'pi pi-times' });
+      return [];
     }
+  }
+  private async filterUserEnabled(): Promise<HttpResponse<MessageResponse>> {
+    try {
+      return await lastValueFrom(this.userService.listAllEnabled());
+    } catch (error: any) {
+      this.messageService.add({ severity: 'error', summary: 'Erro', detail: error.message, icon: 'pi pi-times' });
+      return error;
+    }
+  }
+
+  private async listAll(): Promise<Salesperson[]> {
+    try {
+      return await lastValueFrom(this.salespersonService.listAll());
+    } catch (error: any) {
+      this.messageService.add({ severity: 'error', summary: 'Erro', detail: error.message, icon: 'pi pi-times' });
+      return [];
+    }
+  }
 
 
 }

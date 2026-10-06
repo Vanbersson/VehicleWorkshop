@@ -1,5 +1,5 @@
 export enum SalespersonTypeEnum {
-    PART = "Peças",
-    SERVICE = "Serviço",
-    VEHICLE = "Veículo",
+    INTERNAL = "Interno",
+    EXTERNAL = "Externo",
+    BOTH = "Ambos",
 }

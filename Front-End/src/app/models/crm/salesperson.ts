@@ -1,5 +1,7 @@
 import { StatusEnabDisabEnum } from "../status-enab-disab-enum";
+import { SalesTypeEnum } from "./sales.type.enum";
 import { SalespersonTypeEnum } from "./salesperson.type.enum";
+
 
 export class Salesperson {
     companyId: number | null = null;
@@ -8,9 +10,10 @@ export class Salesperson {
     id: number | null = null;
     status: StatusEnabDisabEnum = StatusEnabDisabEnum.DISABLED;
     name: string = '';
-    typeSalesPart: SalespersonTypeEnum | null = null;
-    typeSalesService: SalespersonTypeEnum | null = null;
-    typeSalesVehicle: SalespersonTypeEnum | null = null;
+    type: SalespersonTypeEnum = SalespersonTypeEnum.INTERNAL;
+    typeSalesPart: SalesTypeEnum | null = null;
+    typeSalesService: SalesTypeEnum | null = null;
+    typeSalesVehicle: SalesTypeEnum | null = null;
     userId: number | null = null;
 
 

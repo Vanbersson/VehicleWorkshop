@@ -32,8 +32,11 @@
                 <img class="layout-img-large" [src]="photoPerson()" alt="photo mechanic" />
                 }
             </div>
-            <div class="col-span-12 md:col-span-4 flex align-center">
+             <div class="col-span-12 md:col-span-4 flex align-center">
                 <button pButton type="button" label="Selecionar imagem" (click)="onSelectFile()" fluid></button>
+            </div> 
+            <div class="md:col-span-8">
+
             </div>
             <div class="col-span-12 md:col-span-4">
                 <label for="">Status</label>
@@ -50,6 +53,24 @@
                     </div>
                 </div>
             </div>
+            <div class="col-span-12 md:col-span-4">
+                <label for="">Vendedor</label>
+                <div class="flex items-center gap-2 border border-gray-300 rounded-md p-3">
+                    <div class="flex align-center">
+                        <p-radioButton inputId="type1" name="type" [value]="IN" formControlName="type"></p-radioButton>
+                        <label for="type1" class="ml-2">{{IN}}</label>
+                    </div>
+                    <div class="flex align-items-center">
+                        <p-radioButton inputId="type2" name="type" [value]="EX" formControlName="type"></p-radioButton>
+                        <label for="type2" class="ml-2">{{EX}}</label>
+                    </div>
+                    <div class="flex align-items-center">
+                        <p-radioButton inputId="type3" name="type" [value]="BOTH" formControlName="type"></p-radioButton>
+                        <label for="type3" class="ml-2">{{BOTH}}</label>
+                    </div>
+                </div>
+            </div>
+            
             <div class="col-span-12 md:col-span-4">
                 <span>Tipo de Vendas</span>
                 <div class="flex items-center gap-2 border border-gray-300 rounded-md p-3 gap-4">
@@ -82,7 +103,7 @@
                     optionLabel="name" [style]="{'text-transform':'uppercase'}" formControlName="user" fluid />
                 <small class="block text-sm text-red-500" *ngIf="formPerson.get('user')?.invalid">Campo obrigatório</small>
             </div>
-            <div class="col-span-12 md:col-span-4">
+            <div class="col-span-12 md:col-span-2">
                 <label for="">CPF</label>
                 <p-inputMask mask="999.999.999-99" [unmask]="true" formControlName="cpf" fluid/>
                 <small class="block text-sm text-red-500" *ngIf="formPerson.get('cpf')?.invalid">Campo obrigatório</small>
