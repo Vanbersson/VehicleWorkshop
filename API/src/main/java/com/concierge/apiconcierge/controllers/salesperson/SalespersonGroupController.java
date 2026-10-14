@@ -1,15 +1,12 @@
 package com.concierge.apiconcierge.controllers.salesperson;
 
-import com.concierge.apiconcierge.dtos.brand.BrandDto;
 import com.concierge.apiconcierge.dtos.message.MessageResponseDto;
 import com.concierge.apiconcierge.dtos.salesperson.SalespersonGroupDto;
-import com.concierge.apiconcierge.models.brand.Brand;
 import com.concierge.apiconcierge.models.message.MessageResponse;
 import com.concierge.apiconcierge.models.salesperson.SalespersonGroup;
 import com.concierge.apiconcierge.services.auth.TokenService;
 import com.concierge.apiconcierge.services.salesperson.group.ISalespersonGroupService;
 import jakarta.servlet.http.HttpServletRequest;
-import org.apache.catalina.LifecycleState;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;

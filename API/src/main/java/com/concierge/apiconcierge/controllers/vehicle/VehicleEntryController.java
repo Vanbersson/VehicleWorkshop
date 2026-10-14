@@ -2,24 +2,23 @@ package com.concierge.apiconcierge.controllers.vehicle;
 
 import com.concierge.apiconcierge.dtos.message.MessageResponseDto;
 import com.concierge.apiconcierge.dtos.vehicle.checklist.VehicleEntryChecklistDto;
-import com.concierge.apiconcierge.dtos.vehicle.entry.AuthExitDto;
-import com.concierge.apiconcierge.dtos.vehicle.entry.ExistsVehiclePlateDto;
+import com.concierge.apiconcierge.dtos.vehicleEntry.AuthExitDto;
 import com.concierge.apiconcierge.dtos.vehicle.entry.VehicleEntryDto;
 import com.concierge.apiconcierge.dtos.vehicle.entry.VehicleExitDto;
+import com.concierge.apiconcierge.dtos.vehicleEntry.ImageUpdateDto;
 import com.concierge.apiconcierge.models.message.MessageResponse;
 import com.concierge.apiconcierge.models.vehicle.checklist.VehicleEntryChecklist;
 import com.concierge.apiconcierge.models.vehicle.entry.VehicleEntry;
 import com.concierge.apiconcierge.services.auth.TokenService;
 import com.concierge.apiconcierge.services.vehicle.entry.IVehicleEntryService;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-
-import java.util.*;
 
 @RestController
 @RequestMapping("/vehicle/entry")
@@ -150,8 +149,8 @@ public class VehicleEntryController {
 
     @GetMapping("/{companyId}/{resaleId}/filter/free/admission/{plate}")
     public ResponseEntity<Object> filterFreeAdmission(@PathVariable(name = "companyId") Integer companyId,
-                                              @PathVariable(name = "resaleId") Integer resaleId,
-                                              @PathVariable(name = "plate") String plate) {
+                                                      @PathVariable(name = "resaleId") Integer resaleId,
+                                                      @PathVariable(name = "plate") String plate) {
         try {
             MessageResponse response = this.service.filterFreeAdmission(companyId, resaleId, plate);
             return ResponseEntity.status(HttpStatus.OK).body(response);
@@ -173,36 +172,31 @@ public class VehicleEntryController {
     }
 
     @PostMapping("/authorization/add")
-    public ResponseEntity<Object> addAuthorizationExit(@RequestBody AuthExitDto auth, HttpServletRequest request) {
-        try {
-            String userEmail = this.getEmail(request);
-            MessageResponse response = this.service.addAuthExit(auth, userEmail);
-            return ResponseEntity.status(HttpStatus.OK).body(response);
-        } catch (Exception ex) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new MessageResponseDto(ex.getMessage()));
-        }
+    public ResponseEntity<MessageResponse> addAuthorizationExit(@Valid @RequestBody AuthExitDto auth, HttpServletRequest request) {
+        String userEmail = this.getEmail(request);
+        MessageResponse response = this.service.addAuthExit(auth.vehicleId(), userEmail);
+        return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
-    @PostMapping("/authorization/delete1")
-    public ResponseEntity<Object> deleteAuthorizationExit1(@RequestBody AuthExitDto auth, HttpServletRequest request) {
-        try {
-            String userEmail = this.getEmail(request);
-            MessageResponse response = this.service.deleteAuthExit1(auth, userEmail);
-            return ResponseEntity.status(HttpStatus.OK).body(response);
-        } catch (Exception ex) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new MessageResponseDto(ex.getMessage()));
-        }
+    @PostMapping("/authorization/delete/1")
+    public ResponseEntity<Object> deleteAuthorizationExit1(@Valid @RequestBody AuthExitDto auth, HttpServletRequest request) {
+        String userEmail = this.getEmail(request);
+        MessageResponse response = this.service.deleteAuthExit1(auth.vehicleId(), userEmail);
+        return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
-    @PostMapping("/authorization/delete2")
-    public ResponseEntity<Object> deleteAuthorizationExit2(@RequestBody AuthExitDto auth, HttpServletRequest request) {
-        try {
-            String userEmail = this.getEmail(request);
-            MessageResponse response = this.service.deleteAuthExit2(auth, userEmail);
-            return ResponseEntity.status(HttpStatus.OK).body(response);
-        } catch (Exception ex) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new MessageResponseDto(ex.getMessage()));
-        }
+    @PostMapping("/authorization/delete/2")
+    public ResponseEntity<Object> deleteAuthorizationExit2(@Valid @RequestBody AuthExitDto auth, HttpServletRequest request) {
+        String userEmail = this.getEmail(request);
+        MessageResponse response = this.service.deleteAuthExit2(auth.vehicleId(), userEmail);
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    @PostMapping("/update/image")
+    public ResponseEntity<?> updateImage(@Valid @RequestBody ImageUpdateDto data, HttpServletRequest request) {
+        String userEmail = this.getEmail(request);
+        this.service.updateImage(data, userEmail);
+        return ResponseEntity.status(HttpStatus.OK).build();
     }
 
     @PostMapping("/save/image")

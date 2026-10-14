@@ -524,7 +524,7 @@ FOREIGN KEY(client_company_id) REFERENCES tb_client_company(id),
 primary key(id)
 );
 
-### INICIO MENU CRM
+-- INICIO MENU CRM
 CREATE TABLE IF NOT EXISTS tb_salesperson_group(
 company_id int not null,
 resale_id int not null,
@@ -545,17 +545,23 @@ resale_id int not null,
 id int not null AUTO_INCREMENT,
 status tinyint not null,
 name varchar(100) not null,
-typesales_part tinyint,
-typesales_service tinyint,
-typesales_vehicle tinyint,
+cpf varchar(11) not null,
+ddd_cellphone varchar(2),
+cellphone varchar(9),
+limit_discount numeric(3,0) not null,
+type_sales tinyint not null,
+type_sales_part tinyint,
+type_sales_service tinyint,
+type_sales_vehicle tinyint,
 user_id int not null,
+group_ids varchar(255) not null,
 photo_url varchar(255),
 FOREIGN KEY(company_id) REFERENCES tb_company(id),
 FOREIGN KEY(resale_id) REFERENCES tb_resale(id),
 FOREIGN KEY(user_id) REFERENCES tb_user(id),
 primary key(id)
 );
-### FIM MENU CRM
+-- FIM MENU CRM
 
 CREATE TABLE IF NOT EXISTS tb_vehicle_entry(
 company_id int not null,

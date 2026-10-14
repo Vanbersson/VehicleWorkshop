@@ -1,8 +1,8 @@
 package com.concierge.apiconcierge.services.vehicle.entry;
 
-import com.concierge.apiconcierge.dtos.vehicle.entry.AuthExitDto;
-import com.concierge.apiconcierge.dtos.vehicle.entry.ExistsVehiclePlateDto;
+import com.concierge.apiconcierge.dtos.vehicleEntry.AuthExitDto;
 import com.concierge.apiconcierge.dtos.vehicle.entry.VehicleExitDto;
+import com.concierge.apiconcierge.dtos.vehicleEntry.ImageUpdateDto;
 import com.concierge.apiconcierge.models.message.MessageResponse;
 import com.concierge.apiconcierge.models.vehicle.checklist.VehicleEntryChecklist;
 import com.concierge.apiconcierge.models.vehicle.entry.VehicleEntry;
@@ -37,11 +37,13 @@ public interface IVehicleEntryService {
 
     MessageResponse filterTogether(Integer companyId, Integer resaleId, String together);
 
-    MessageResponse addAuthExit(AuthExitDto authExitDto, String userEmail);
+    MessageResponse addAuthExit(Integer vehicleId, String userEmail);
 
-    MessageResponse deleteAuthExit1(AuthExitDto authExitDto, String userEmail);
+    MessageResponse deleteAuthExit1(Integer vehicleId, String userEmail);
 
-    MessageResponse deleteAuthExit2(AuthExitDto authExitDto, String userEmail);
+    MessageResponse deleteAuthExit2(Integer vehicleId, String userEmail);
+
+    void updateImage(ImageUpdateDto data,String userEmail);
 
     MessageResponse saveImage(MultipartFile file, String local);
 

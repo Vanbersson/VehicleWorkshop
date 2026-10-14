@@ -28,10 +28,10 @@ public class WebSecurityConfig {
     @Bean
     public WebMvcConfigurer corsConfig() {
         return new WebMvcConfigurer() {
+            @Override
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/**")
-                        //.allowedOrigins("https://www.atenatruck.com.br", "https://atenatruck.com.br") // frontend
-                        .allowedOrigins("*")//dev
+                        .allowedOrigins("https://www.atenatruck.com.br", "https://atenatruck.com.br","http://localhost:4200/")
                         .allowedMethods("GET", "POST")
                         .allowedHeaders("Authorization", "Content-Type");
             }

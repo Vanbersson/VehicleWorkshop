@@ -1,7 +1,9 @@
 package com.concierge.apiconcierge.services.vehicle.entry;
 
-import com.concierge.apiconcierge.dtos.vehicle.entry.AuthExitDto;
+import com.concierge.apiconcierge.dtos.vehicleEntry.AuthExitDto;
 import com.concierge.apiconcierge.dtos.vehicle.entry.VehicleExitDto;
+import com.concierge.apiconcierge.dtos.vehicleEntry.ImageUpdateDto;
+import com.concierge.apiconcierge.exceptions.BusinessException;
 import com.concierge.apiconcierge.exceptions.vehicle.VehicleEntryException;
 import com.concierge.apiconcierge.models.enums.YesNot;
 import com.concierge.apiconcierge.models.message.MessageResponse;
@@ -35,6 +37,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.sql.Array;
 import java.util.*;
 
 import static com.concierge.apiconcierge.util.ConstantsPermission.*;
@@ -107,15 +110,6 @@ public class VehicleEntryService implements IVehicleEntryService {
             if (ConstantsMessage.SUCCESS.equals(response.getStatus())) {
                 VehicleEntry result = this.repository.save(vehicle);
                 response.setData(result);
-
-//                if (vehicleEntry.getClientCompanyId() != null) {
-//                    if (vehicle.getBudgetStatus() != StatusBudgetEnum.NotBudget) {
-//                        this.updateBudget(vehicleEntry);
-//                    }
-//                }
-//                if (vehicleEntry.getDriverExitId() == 0) {
-//                    vehicleEntry.setDriverExitId(null);
-//                }
             }
             return response;
         } catch (Exception ex) {
@@ -385,70 +379,169 @@ public class VehicleEntryService implements IVehicleEntryService {
 
     @SneakyThrows
     @Override
-    public MessageResponse addAuthExit(AuthExitDto authExitDto, String userEmail) {
-        try {
-            VehicleEntry vehicle = this.repository.filterId(authExitDto.companyId(), authExitDto.resaleId(), authExitDto.vehicleId());
-            if (vehicle == null) {
-                throw new VehicleEntryException("Veículo não encontrado.");
-            }
-            MessageResponse response = this.validation.addAuthExit(vehicle, authExitDto, userEmail);
-            if (ConstantsMessage.SUCCESS.equals(response.getStatus())) {
-                if (vehicle.getAuth1ExitUserId() == null) {
-                    vehicle.setAuth1ExitUserId(authExitDto.userId());
-                    vehicle.setAuth1ExitUserName(authExitDto.userName());
-                    vehicle.setAuth1ExitDate(authExitDto.dateAuth());
-                    vehicle.setAuthExitStatus(statusAuthorization(vehicle));
-                    this.repository.save(vehicle);
-                } else if (vehicle.getAuth2ExitUserId() == null) {
-                    vehicle.setAuth2ExitUserId(authExitDto.userId());
-                    vehicle.setAuth2ExitUserName(authExitDto.userName());
-                    vehicle.setAuth2ExitDate(authExitDto.dateAuth());
-                    vehicle.setAuthExitStatus(statusAuthorization(vehicle));
-                    this.repository.save(vehicle);
+    public MessageResponse addAuthExit(Integer vehicleId, String userEmail) {
+        User resultUser = this.userRepository.loginEmail(userEmail);
+        VehicleEntry resultVehicle = this.repository.filterId(resultUser.getCompanyId(), resultUser.getResaleId(), vehicleId);
+        if (resultVehicle == null) {
+            throw new BusinessException("Veículo não encontrado.");
+        }
+        if (resultVehicle.getAuthExitStatus() == StatusAuthExitEnum.Authorized) {
+            throw new BusinessException("Veículo já autorizado.");
+        }
+        MessageResponse response = this.validation.addAuthExit(resultVehicle, resultUser);
+        if (ConstantsMessage.SUCCESS.equals(response.getStatus())) {
+            Map<String, Object> map = new HashMap<>();
+            //Veículos que realizou serviço
+            if (resultVehicle.getVehicleServiceOrder() == YesNot.yes) {
+                if (resultUser.getRoleFunc() != UserRoleEnum.ADMIN) {
+                    PermissionUser permission = this.permissionUser.findPermissionId(resultUser.getCompanyId(), resultUser.getResaleId(), resultUser.getId(), ADD_AUTH_EXIT_VEHICLE_1);
+                    if (permission == null) {
+                        response.setStatus(ConstantsMessage.ERROR);
+                        response.setHeader("Permissão - " + ADD_AUTH_EXIT_VEHICLE_1);
+                        response.setMessage(ConstantsMessage.NOT_PERMISSION);
+                        return response;
+                    }
+                }
+                //Primeira permissão
+                if (resultVehicle.getAuth1ExitUserId() == null) {
+                    //Verifica a permissão
+                    if (resultUser.getRoleFunc() != UserRoleEnum.ADMIN) {
+                        PermissionUser permission = this.permissionUser.findPermissionId(resultUser.getCompanyId(), resultUser.getResaleId(), resultUser.getId(), ADD_AUTH_EXIT_VEHICLE_1);
+                        if (permission == null) {
+                            response.setStatus(ConstantsMessage.ERROR);
+                            response.setHeader("Permissão - " + ADD_AUTH_EXIT_VEHICLE_1);
+                            response.setMessage(ConstantsMessage.NOT_PERMISSION);
+                            return response;
+                        }
+                    }
+                    resultVehicle.setAuth1ExitUserId(resultUser.getId());
+                    resultVehicle.setAuth1ExitUserName(resultUser.getName());
+                    resultVehicle.setAuth1ExitDate(new Date());
+                    resultVehicle.setAuthExitStatus(statusAuthorization(resultVehicle));
+                    this.repository.save(resultVehicle);
+                    map.put("userId", resultUser.getId());
+                    map.put("userName", resultUser.getName());
+                    map.put("dateAuth", resultVehicle.getAuth1ExitDate());
+                    response.setData(map);
+                    return response;
+                }
+                //Segunda permissão
+                if (resultVehicle.getAuth2ExitUserId() == null) {
+                    //Verifica permissão
+                    if (resultUser.getRoleFunc() != UserRoleEnum.ADMIN) {
+                        PermissionUser permission = this.permissionUser.findPermissionId(resultUser.getCompanyId(), resultUser.getResaleId(), resultUser.getId(), ADD_AUTH_EXIT_VEHICLE_2);
+                        if (permission == null) {
+                            response.setStatus(ConstantsMessage.ERROR);
+                            response.setHeader("Permissão - " + ADD_AUTH_EXIT_VEHICLE_2);
+                            response.setMessage(ConstantsMessage.NOT_PERMISSION);
+                            return response;
+                        }
+                    }
+                    resultVehicle.setAuth2ExitUserId(resultUser.getId());
+                    resultVehicle.setAuth2ExitUserName(resultUser.getName());
+                    resultVehicle.setAuth2ExitDate(new Date());
+                    resultVehicle.setAuthExitStatus(statusAuthorization(resultVehicle));
+                    this.repository.save(resultVehicle);
+                    map.put("userId", resultUser.getId());
+                    map.put("userName", resultUser.getName());
+                    map.put("dateAuth", resultVehicle.getAuth2ExitDate());
+                    response.setData(map);
+                    return response;
                 }
             }
+
+            if (resultVehicle.getVehicleServiceOrder() == YesNot.not) {
+                //Verifica a permissão
+                if (resultUser.getRoleFunc() != UserRoleEnum.ADMIN) {
+                    PermissionUser permission = this.permissionUser.findPermissionId(resultUser.getCompanyId(), resultUser.getResaleId(), resultUser.getId(), ADD_AUTH_EXIT_VEHICLE_WITHOUT_O_S);
+                    if (permission == null) {
+                        response.setStatus(ConstantsMessage.ERROR);
+                        response.setHeader("Permissão - " + ADD_AUTH_EXIT_VEHICLE_WITHOUT_O_S);
+                        response.setMessage(ConstantsMessage.NOT_PERMISSION);
+                        return response;
+                    }
+                }
+                if (resultVehicle.getAuth1ExitUserId() == null) {
+                    resultVehicle.setAuth1ExitUserId(resultUser.getId());
+                    resultVehicle.setAuth1ExitUserName(resultUser.getName());
+                    resultVehicle.setAuth1ExitDate(new Date());
+                    resultVehicle.setAuthExitStatus(statusAuthorization(resultVehicle));
+                    this.repository.save(resultVehicle);
+                    map.put("userId", resultUser.getId());
+                    map.put("userName", resultUser.getName());
+                    map.put("dateAuth", resultVehicle.getAuth1ExitDate());
+                    response.setData(map);
+                    return response;
+                } else if (resultVehicle.getAuth2ExitUserId() == null) {
+                    resultVehicle.setAuth2ExitUserId(resultUser.getId());
+                    resultVehicle.setAuth2ExitUserName(resultUser.getName());
+                    resultVehicle.setAuth2ExitDate(new Date());
+                    resultVehicle.setAuthExitStatus(statusAuthorization(resultVehicle));
+                    this.repository.save(resultVehicle);
+                    map.put("userId", resultUser.getId());
+                    map.put("userName", resultUser.getName());
+                    map.put("dateAuth", resultVehicle.getAuth2ExitDate());
+                    response.setData(map);
+                    return response;
+                }
+            }
+
+            throw new BusinessException("Não foi possivel autorizar.");
+        }
+        return response;
+    }
+
+    @SneakyThrows
+    @Override
+    public MessageResponse deleteAuthExit1(Integer vehicleId, String userEmail) {
+        User resultUser = this.userRepository.loginEmail(userEmail);
+        VehicleEntry resultVehicle = this.repository.filterId(resultUser.getCompanyId(), resultUser.getResaleId(), vehicleId);
+        if (resultVehicle == null) {
+            throw new BusinessException("Veículo não encontrado.");
+        }
+        MessageResponse response = this.validation.deleteAuthExit1(resultVehicle, resultUser);
+        if (ConstantsMessage.SUCCESS.equals(response.getStatus())) {
+            resultVehicle.setAuth1ExitUserId(null);
+            resultVehicle.setAuth1ExitUserName("");
+            resultVehicle.setAuth1ExitDate(null);
+            resultVehicle.setAuthExitStatus(this.deleteAuthExit(resultVehicle.getAuthExitStatus()));
+            this.repository.save(resultVehicle);
             return response;
-        } catch (Exception ex) {
-            throw new VehicleEntryException(ex.getMessage());
+        } else {
+            throw new BusinessException(response.getMessage());
         }
     }
 
     @SneakyThrows
     @Override
-    public MessageResponse deleteAuthExit1(AuthExitDto authExitDto, String userEmail) {
-        try {
-            VehicleEntry vehicle = this.repository.filterId(authExitDto.companyId(), authExitDto.resaleId(), authExitDto.vehicleId());
-            MessageResponse response = this.validation.deleteAuthExit1(vehicle, authExitDto, userEmail);
-            if (ConstantsMessage.SUCCESS.equals(response.getStatus())) {
-                vehicle.setAuth1ExitUserId(null);
-                vehicle.setAuth1ExitUserName("");
-                vehicle.setAuth1ExitDate(null);
-                vehicle.setAuthExitStatus(this.deleteAuthExit(vehicle.getAuthExitStatus()));
-                this.repository.save(vehicle);
-            }
+    public MessageResponse deleteAuthExit2(Integer vehicleId, String userEmail) {
+        User resultUser = this.userRepository.loginEmail(userEmail);
+        VehicleEntry resultVehicle = this.repository.filterId(resultUser.getCompanyId(), resultUser.getResaleId(), vehicleId);
+        if (resultVehicle == null) {
+            throw new BusinessException("Veículo não encontrado.");
+        }
+        MessageResponse response = this.validation.deleteAuthExit2(resultVehicle, resultUser);
+        if (ConstantsMessage.SUCCESS.equals(response.getStatus())) {
+            resultVehicle.setAuth2ExitUserId(null);
+            resultVehicle.setAuth2ExitUserName("");
+            resultVehicle.setAuth2ExitDate(null);
+            resultVehicle.setAuthExitStatus(this.deleteAuthExit(resultVehicle.getAuthExitStatus()));
+            this.repository.save(resultVehicle);
             return response;
-        } catch (Exception ex) {
-            throw new VehicleEntryException(ex.getMessage());
+        } else {
+            throw new BusinessException(response.getMessage());
         }
     }
 
-    @SneakyThrows
     @Override
-    public MessageResponse deleteAuthExit2(AuthExitDto authExitDto, String userEmail) {
-        try {
-            VehicleEntry vehicle = this.repository.filterId(authExitDto.companyId(), authExitDto.resaleId(), authExitDto.vehicleId());
-            MessageResponse response = this.validation.deleteAuthExit2(vehicle, authExitDto, userEmail);
-            if (ConstantsMessage.SUCCESS.equals(response.getStatus())) {
-                vehicle.setAuth2ExitUserId(null);
-                vehicle.setAuth2ExitUserName("");
-                vehicle.setAuth2ExitDate(null);
-                vehicle.setAuthExitStatus(this.deleteAuthExit(vehicle.getAuthExitStatus()));
-                this.repository.save(vehicle);
-            }
-            return response;
-        } catch (Exception ex) {
-            throw new VehicleEntryException(ex.getMessage());
-        }
+    public void updateImage(ImageUpdateDto data,String userEmail) {
+        User resultUser = this.userRepository.loginEmail(userEmail);
+        VehicleEntry resultVehicle = this.repository.filterId(resultUser.getCompanyId(), resultUser.getResaleId(), data.vehicleId());
+        resultVehicle.setEntryPhoto1Url(data.image1());
+        resultVehicle.setEntryPhoto2Url(data.image2());
+        resultVehicle.setEntryPhoto3Url(data.image3());
+        resultVehicle.setEntryPhoto4Url(data.image4());
+        this.repository.save(resultVehicle);
     }
 
     @SneakyThrows
@@ -522,39 +615,6 @@ public class VehicleEntryService implements IVehicleEntryService {
             throw new Exception(e.getMessage());
         }
     }
-
-//    private void updateBudget(VehicleEntry vehicle) {
-//        //update client budget
-//        Budget budget = this.repositoryBudget.filterVehicleId(vehicle.getCompanyId(), vehicle.getResaleId(), vehicle.getId());
-//        budget.setClientCompanyId(vehicle.getClientCompanyId());
-//        budget.setIdUserAttendant(vehicle.getIdUserAttendant());
-//        this.repositoryBudget.save(budget);
-//    }
-
-//    private VehicleEntry loadVehicle(VehicleEntry vehicle) {
-//        if (vehicle.getIdUserAttendant() == null || vehicle.getIdUserAttendant() == 0) {
-//            vehicle.setIdUserAttendant(null);
-//            vehicle.setNameUserAttendant("");
-//        }
-//        if (vehicle.getClientCompanyId() == null || vehicle.getClientCompanyId() == 0) {
-//            vehicle.setClientCompanyId(null);
-//            vehicle.setClientCompanyName("");
-//            vehicle.setClientCompanyCnpj("");
-//            vehicle.setClientCompanyCpf("");
-//            vehicle.setClientCompanyRg("");
-//        }
-//        if (vehicle.getIdUserExitAuth1() == null || vehicle.getIdUserExitAuth1() == 0) {
-//            vehicle.setIdUserExitAuth1(null);
-//            vehicle.setNameUserExitAuth1("");
-//            vehicle.setDateExitAuth1(null);
-//        }
-//        if (vehicle.getIdUserExitAuth2() == null || vehicle.getIdUserExitAuth2() == 0) {
-//            vehicle.setIdUserExitAuth2(null);
-//            vehicle.setNameUserExitAuth2("");
-//            vehicle.setDateExitAuth2(null);
-//        }
-//        return vehicle;
-//    }
 
     private StatusAuthExitEnum statusAuthorization(VehicleEntry vehicle) {
         if (vehicle.getAuthExitStatus() == StatusAuthExitEnum.NotAuth) {

@@ -1,15 +1,9 @@
-package com.concierge.apiconcierge.dtos.vehicle.entry;
+package com.concierge.apiconcierge.dtos.vehicleEntry;
 
-import jakarta.persistence.Lob;
-
-import java.util.Date;
+import jakarta.validation.constraints.NotNull;
 
 public record AuthExitDto(
-        Integer companyId,
-        Integer resaleId,
-        Integer vehicleId,
-        Integer userId,
-        String userName,
-        Date dateAuth) {
+        @NotNull(message = "Veículo não informado")
+        Integer vehicleId) {
 
 }
