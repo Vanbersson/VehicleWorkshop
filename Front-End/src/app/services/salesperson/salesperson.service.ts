@@ -25,11 +25,14 @@ export class SalespersonService {
     listAllEnabled(): Observable<Salesperson[]> {
         return this.http.get<Salesperson[]>(`${environment.apiuUrl}/salesperson/all/enabled`, { headers: this.myHeaders() });
     }
+    saveImage(data: FormData): Observable<HttpResponse<MessageResponse>> {
+        return this.http.post<MessageResponse>(`${environment.apiuUrl}/salesperson/save/image`, data, { headers: {'Authorization': `Bearer ${this.storage.token}`}, observe: 'response' });
+    }
 
     private myHeaders(): HttpHeaders {
         const httpOptions = new HttpHeaders({
             'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + this.storage.token,
+            'Authorization': `Bearer ${this.storage.token}`,
         });
         return httpOptions;
     }

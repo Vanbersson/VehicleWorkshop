@@ -182,12 +182,7 @@ export default class VehicleComponent implements OnInit {
   public async authExit(vehicle: VehicleEntry) {
     if (vehicle.authExitStatus != StatusVehicleAuthEnum.AUTH) {
       this.auth = new VehicleEntryAuth();
-      this.auth.companyId = this.storageService.companyId;
-      this.auth.resaleId = this.storageService.resaleId;
       this.auth.vehicleId = vehicle.id;
-      this.auth.userId = this.storageService.id;
-      this.auth.userName = this.storageService.name;
-      this.auth.dateAuth = this.formatDateTime(new Date());
       this.loadingService.show();
       const result = await this.addAuthExit(this.auth);
       this.loadingService.hide();

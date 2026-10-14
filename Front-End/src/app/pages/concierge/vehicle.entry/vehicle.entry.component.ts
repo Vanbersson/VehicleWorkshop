@@ -55,6 +55,13 @@ import { ModuleConciergeVehicleChecklist } from '@/app/models/module.concierge.v
 import { PermissionUserService } from '@/app/services/permission/permission.user.service';
 import { LoadingService } from '@/app/services/loading/loading.service';
 
+interface IUpdateImage {
+  vehicleId?: number;
+  image1?: string;
+  image2?: string;
+  image3?: string;
+  image4?: string;
+}
 
 @Component({
   selector: 'app-vehicle-entry',
@@ -755,13 +762,18 @@ export default class VehicleEntryComponent implements OnInit, DoCheck {
           vehicle.entryPhoto4Url = await this.savePhoto(vehicle.id!, img4, 4);
           this.isSavePhoto.set(true);
         }
+
         //Verifica se salvou alguma foto e atualiza o veículo
         if (this.isSavePhoto()) {
-          this.isSavePhoto.set(false);
-          const resultUpdate = await this.updateVehicle(vehicle);
-          if (resultUpdate.status == 200 && resultUpdate.body?.status == StatusSuccessError.error) {
-            this.messageService.add({ severity: 'info', summary: result.body.header, detail: result.body.message, icon: 'pi pi-info-circle' });
+          let imgUpdate: IUpdateImage = {
+            vehicleId: vehicle.id!,
+            image1: vehicle.entryPhoto1Url,
+            image2: vehicle.entryPhoto2Url,
+            image3: vehicle.entryPhoto3Url,
+            image4: vehicle.entryPhoto4Url
           }
+          this.isSavePhoto.set(false);
+          this.updateImage(imgUpdate);
         }
         this.messageService.add({ severity: 'success', summary: vehicle.modelDescription, detail: "Salvo com sucesso", icon: 'pi pi-check' });
         if (index == (this.listVehicleEntry.length - 1)) {
@@ -837,9 +849,9 @@ export default class VehicleEntryComponent implements OnInit, DoCheck {
       return error;
     }
   }
-  private async updateVehicle(vehicle: VehicleEntry): Promise<HttpResponse<MessageResponse>> {
+  private async updateImage(imgUpdate: IUpdateImage): Promise<HttpResponse<MessageResponse>> {
     try {
-      return await lastValueFrom(this.vehicleService.entryUpdate(vehicle));
+      return await lastValueFrom(this.vehicleService.updateImage(imgUpdate));
     } catch (error: any) {
       this.messageService.add({ severity: 'error', summary: 'Erro', detail: error.error.message, icon: 'pi pi-times' });
       return error;

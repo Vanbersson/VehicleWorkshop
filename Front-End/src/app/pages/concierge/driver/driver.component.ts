@@ -522,49 +522,6 @@ export default class DriverComponent implements OnInit {
     return "";
 
   }
-
-  /* private async saveDoc1(imgBase64: string, driverId: string): Promise<string> {
-    try {
-      const { base64, mime } = this.cleanBase64(imgBase64);
-      const imageFile = this.base64ToFile(base64, mime);
-
-      const formData = new FormData();
-      formData.append('file', imageFile);
-      formData.append('driver', driverId);
-      formData.append('company', this.storageService.companyId.toString());
-      formData.append('resale', this.storageService.resaleId.toString());
-
-      const resultSave = await this.savePhotoDoc1(formData);
-      if (resultSave.status == 200 && resultSave.body?.status == StatusSuccessError.succes) {
-        // this.messageService.add({ severity: 'success', summary: resultSave.body.header, detail: resultSave.body.message, icon: 'pi pi-check' });
-        return `${environment.apiuUrl}${resultSave.body.data["url"]}`;
-      }
-    } catch (error: any) {
-      this.messageService.add({ severity: 'error', summary: 'Erro', detail: error.error.message, icon: 'pi pi-times' });
-    }
-    return "";
-  }
-  private async saveDoc2(imgBase64: string, driverId: string): Promise<string> {
-    try {
-      const { base64, mime } = this.cleanBase64(imgBase64);
-      const imageFile = this.base64ToFile(base64, mime);
-
-      const formData = new FormData();
-      formData.append('file', imageFile);
-      formData.append('driver', driverId);
-      formData.append('company', this.storageService.companyId.toString());
-      formData.append('resale', this.storageService.resaleId.toString());
-
-      const resultSave = await this.savePhotoDoc2(formData);
-      if (resultSave.status == 200 && resultSave.body?.status == StatusSuccessError.succes) {
-        // this.messageService.add({ severity: 'success', summary: resultSave.body.header, detail: resultSave.body.message, icon: 'pi pi-check' });
-        return `${environment.apiuUrl}${resultSave.body.data["url"]}`;
-      }
-    } catch (error: any) {
-      this.messageService.add({ severity: 'error', summary: 'Erro', detail: error.error.message, icon: 'pi pi-times' });
-    }
-    return "";
-  } */
   private cleanBase64(base64: string): { base64: string; mime: string } {
     if (!base64.includes(',')) {
       return { base64, mime: 'image/jpeg' };
@@ -590,7 +547,7 @@ export default class DriverComponent implements OnInit {
     try {
       return await lastValueFrom(this.driverService.saveImage(data))
     } catch (error: any) {
-      this.messageService.add({ severity: 'error', summary: 'Erro', detail: error.error.message, icon: 'pi pi-times' });
+      this.messageService.add({ severity: 'error', summary: 'Erro', detail: error.message, icon: 'pi pi-times' });
       return error;
     }
   }
@@ -598,7 +555,7 @@ export default class DriverComponent implements OnInit {
     try {
       return await lastValueFrom(this.driverService.deleteImage(data))
     } catch (error: any) {
-      this.messageService.add({ severity: 'error', summary: 'Erro', detail: error.error.message, icon: 'pi pi-times' });
+      this.messageService.add({ severity: 'error', summary: 'Erro', detail: error.message, icon: 'pi pi-times' });
       return error;
     }
   }

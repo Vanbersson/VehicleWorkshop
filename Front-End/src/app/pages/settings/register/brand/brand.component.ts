@@ -154,35 +154,24 @@ export default class BrandComponent implements OnInit {
   private async saveNew(b: Brand): Promise<HttpResponse<MessageResponse>> {
     try {
       return await lastValueFrom(this.brandService.save(b));
-    } catch (error) {
-      let er: MessageResponse = new MessageResponse();
-      er.header = 'Atenção';
-      er.status = StatusSuccessError.error;
-      er.message = "Não foi possível salvar";
-      return new HttpResponse<MessageResponse>({
-        body: er,
-        status: 401
-      });
+    } catch (error: any) {
+      this.messageService.add({ severity: 'error', summary: 'Erro', detail: error.message, icon: 'pi pi-times' });
+      return error;
     }
   }
   private async saveUpdate(b: Brand): Promise<HttpResponse<MessageResponse>> {
     try {
       return await lastValueFrom(this.brandService.update(b));
-    } catch (error) {
-      let er: MessageResponse = new MessageResponse();
-      er.header = 'Atenção';
-      er.status = StatusSuccessError.error;
-      er.message = "Não foi possível atualizar";
-      return new HttpResponse<MessageResponse>({
-        body: er,
-        status: 401
-      });
+    } catch (error: any) {
+      this.messageService.add({ severity: 'error', summary: 'Erro', detail: error.message, icon: 'pi pi-times' });
+      return error;
     }
   }
   private async listAll(): Promise<Brand[]> {
     try {
       return await lastValueFrom(this.brandService.listAll());
     } catch (error: any) {
+      this.messageService.add({ severity: 'error', summary: 'Erro', detail: error.message, icon: 'pi pi-times' });
       return [];
     }
   }

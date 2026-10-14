@@ -29,7 +29,7 @@ export class SalespersonGroupService {
     private myHeaders(): HttpHeaders {
         const httpOptions = new HttpHeaders({
             'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + this.storage.token,
+            'Authorization': `Bearer ${this.storage.token}`,
         });
         return httpOptions;
     }

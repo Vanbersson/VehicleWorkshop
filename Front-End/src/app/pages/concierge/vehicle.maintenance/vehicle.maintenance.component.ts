@@ -341,25 +341,6 @@ export default class VehicleMaintenanceComponent implements OnInit, DoCheck {
           this.driverExit = resultDriverExit.body?.data!;
         }
       }
-
-      //Show only details
-      /*  if (this.detailsVehicle) {
-         this.vehicleExit = true;
-         this.formVehicle.get('vehicleNew')?.disable();
-         this.formVehicle.get('vehicleServiceOrder')?.disable();
-         this.formVehicle.get('entryDate')?.disable();
-       } else {
-         //Vehicle has already left
-         if (this.vehicleEntry.status == StatusVehicleEnum.EXITED) {
-           this.vehicleExit = true;
-           this.formVehicle.get('vehicleNew')?.disable();
-           this.formVehicle.get('vehicleServiceOrder')?.disable();
-         } else {
-           this.vehicleExit = false;
-           this.formVehicle.get('vehicleNew')?.enable();
-           this.formVehicle.get('vehicleServiceOrder')?.enable();
-         }
-       } */
       this.loadForms();
     }
     //Close load
@@ -369,7 +350,7 @@ export default class VehicleMaintenanceComponent implements OnInit, DoCheck {
     //mostrar veículos justos
     if (this.vehicleEntry.vehiclePlateTogether) {
       this.isVehicleTogether.set(true);
-    }else{
+    } else {
       this.isVehicleTogether.set(false);
     }
     //Vehicle
@@ -426,6 +407,8 @@ export default class VehicleMaintenanceComponent implements OnInit, DoCheck {
     } else {
       this.addRequirePlaca();
     }
+    //Validation O.S.
+    this.addRequireForms();
     //Autorização de saída
     if (this.vehicleEntry.auth1ExitDate) {
       this.dateExitAuth1.set(this.vehicleEntry.auth1ExitDate!.toString());
@@ -473,12 +456,6 @@ export default class VehicleMaintenanceComponent implements OnInit, DoCheck {
     }
     //tab driver
     this.loadDriver();
-    //Verificar essa função
-    if (this.vehicleEntry.authExitStatus != StatusVehicleAuthEnum.NOT) {
-      if (this.vehicleEntry.vehicleServiceOrder == YesNotEnum.YES) {
-        this.addRequireAttendant();
-      }
-    }
   }
 
   private loadDriver() {
@@ -813,28 +790,26 @@ export default class VehicleMaintenanceComponent implements OnInit, DoCheck {
 
     return new File([ia], 'image.jpg', { type: mime });
   }
-  private deleteRequireForms() {
-    this.deleteRequireAttendant();
-  }
+
   private addRequireForms() {
-    this.addRequireAttendant();
+    if (this.vehicleEntry.vehicleServiceOrder == YesNotEnum.YES) {
+      this.addRequireAttendant();
+    } else {
+      this.deleteRequireAttendant();
+    }
   }
   public async authExit() {
     const uppercase = new UpperCasePipe();
     if (this.vehicleEntry.authExitStatus != StatusVehicleAuthEnum.AUTH) {
       let auth = new VehicleEntryAuth();
-      auth.companyId = this.storageService.companyId;
-      auth.resaleId = this.storageService.resaleId;
       auth.vehicleId = this.vehicleEntry.id;
-      auth.userId = this.storageService.id;
-      auth.userName = this.storageService.name;
-      auth.dateAuth = this.formatDateTime(new Date());
       //Inicia loading
       this.loadingService.show();
       const permissionResult = await this.addAuthExit(auth);
       //Fecha loading
       this.loadingService.hide();
       if (permissionResult.status == 200 && permissionResult.body?.status == StatusSuccessError.succes) {
+        auth = permissionResult.body.data;
         //Status auth exit
         if (this.vehicleEntry.authExitStatus == StatusVehicleAuthEnum.NOT) {
           this.vehicleEntry.authExitStatus = StatusVehicleAuthEnum.FIST;
@@ -849,29 +824,36 @@ export default class VehicleMaintenanceComponent implements OnInit, DoCheck {
           this.vehicleEntry.auth1ExitUserId = auth.userId;
           this.vehicleEntry.auth1ExitUserName = auth.userName;
           this.vehicleEntry.auth1ExitDate = auth.dateAuth;
-          this.dateExitAuth1.set(auth.dateAuth);
+          this.dateExitAuth1.set(auth.dateAuth as string);
 
         } else if (this.vehicleEntry.auth2ExitUserId == null) {
           this.formVehicle.get('nameUserExitAuth2')?.setValue(auth.userName);
           this.vehicleEntry.auth2ExitUserId = auth.userId;
           this.vehicleEntry.auth2ExitUserName = auth.userName;
           this.vehicleEntry.auth2ExitDate = auth.dateAuth;
-          this.dateExitAuth2.set(auth.dateAuth);
+          this.dateExitAuth2.set(auth.dateAuth as string);
         }
-        //Valid
-        this.addRequireForms();
-      } else if (permissionResult.status == 200 && permissionResult.body?.status == StatusSuccessError.error) {
+      }
+      if (permissionResult.status == 200 && permissionResult.body?.status == StatusSuccessError.error) {
         this.messageService.add({ severity: 'info', summary: permissionResult.body.header, detail: permissionResult.body.message, icon: 'pi pi-info-circle' });
       }
-
     } else {
       this.messageService.add({ severity: 'info', summary: 'Veículo Liberado', detail: "Placa " + uppercase.transform(this.formVehicle.value.vehiclePlate), icon: 'pi pi-thumbs-up-fill' });
+    }
+  }
+  private async addAuthExit(auth: VehicleEntryAuth): Promise<HttpResponse<MessageResponse>> {
+    try {
+      return await lastValueFrom(this.vehicleService.entryAddAuth(auth));
+    } catch (error: any) {
+      this.messageService.add({ severity: 'error', summary: 'Erro', detail: error.error.message, icon: 'pi pi-times' });
+      return error;
     }
   }
   private updateAuthExitStatus() {
     if (this.vehicleEntry.authExitStatus == StatusVehicleAuthEnum.FIST) {
       this.vehicleEntry.authExitStatus = StatusVehicleAuthEnum.NOT;
-      this.deleteRequireForms();
+      // this.deleteRequireForms();
+      //this.deleteRequireAttendant();
     } else if (this.vehicleEntry.authExitStatus == StatusVehicleAuthEnum.AUTH) {
       this.vehicleEntry.authExitStatus = StatusVehicleAuthEnum.FIST;
     }
@@ -879,13 +861,10 @@ export default class VehicleMaintenanceComponent implements OnInit, DoCheck {
   public async deleteAuth1() {
     if (this.vehicleEntry.auth1ExitUserId != null) {
       let auth = new VehicleEntryAuth();
-      auth.companyId = this.storageService.companyId;
-      auth.resaleId = this.storageService.resaleId;
-      auth.vehicleId = this.id;
-      auth.userId = this.storageService.id;
-      auth.userName = this.storageService.name;
-
+      auth.vehicleId = this.vehicleEntry.id;
+      this.loadingService.show();
       const authResult = await this.delAuth1(auth);
+      this.loadingService.hide();
       if (authResult.status == 200 && authResult.body?.status == StatusSuccessError.succes) {
         this.messageService.add({ severity: 'success', summary: authResult.body.header, detail: authResult.body.message, icon: 'pi pi-check' });
         this.formVehicle.get('nameUserExitAuth1')?.setValue('');
@@ -903,19 +882,17 @@ export default class VehicleMaintenanceComponent implements OnInit, DoCheck {
     try {
       return await lastValueFrom(this.vehicleService.entryDeleteAuth1(auth));
     } catch (error: any) {
-      this.messageService.add({ severity: 'error', summary: 'Erro', detail: "Não catalogado.", icon: 'pi pi-times' });
+      this.messageService.add({ severity: 'error', summary: 'Erro', detail: error.error.message, icon: 'pi pi-times' });
       return error;
     }
   }
   public async deleteAuth2() {
     if (this.vehicleEntry.auth2ExitUserId != null) {
       let auth = new VehicleEntryAuth();
-      auth.companyId = this.storageService.companyId;
-      auth.resaleId = this.storageService.resaleId;
-      auth.vehicleId = this.id;
-      auth.userId = this.storageService.id;
-      auth.userName = this.storageService.name;
+      auth.vehicleId = this.vehicleEntry.id;
+      this.loadingService.show();
       const authResult = await this.delAuth2(auth);
+      this.loadingService.hide();
       if (authResult.status == 200 && authResult.body?.status == StatusSuccessError.succes) {
         this.messageService.add({ severity: 'success', summary: authResult.body.header, detail: authResult.body.message, icon: 'pi pi-check' });
         this.formVehicle.get('nameUserExitAuth2')?.setValue('');
@@ -933,7 +910,7 @@ export default class VehicleMaintenanceComponent implements OnInit, DoCheck {
     try {
       return await lastValueFrom(this.vehicleService.entryDeleteAuth2(auth));
     } catch (error: any) {
-      this.messageService.add({ severity: 'error', summary: 'Erro', detail: "Não catalogado.", icon: 'pi pi-times' });
+      this.messageService.add({ severity: 'error', summary: 'Erro', detail: error.error.message, icon: 'pi pi-times' });
       return error;
     }
   }
@@ -975,6 +952,7 @@ export default class VehicleMaintenanceComponent implements OnInit, DoCheck {
     this.driverExitPhotoDoc1 = '';
     this.driverExitPhotoDoc2 = '';
   }
+  
   //Budget
   public async confirmGerarOrcamento() {
     if (this.formVehicle.value.numServiceOrder == "" || this.formVehicle.value.numServiceOrder == null) {
@@ -1033,8 +1011,6 @@ export default class VehicleMaintenanceComponent implements OnInit, DoCheck {
   private validInformation(): boolean {
     const vehicleValue = this.formVehicle.value;
     const clientCompanyValue = this.formClientCompany.value;
-    const driverValue = this.formDriver.value;
-
     if (vehicleValue.entryDate == null) {
       this.messageService.add({ severity: 'error', summary: 'Data Entrada', detail: "Não informada", icon: 'pi pi-times' });
       return false;
@@ -1234,6 +1210,8 @@ export default class VehicleMaintenanceComponent implements OnInit, DoCheck {
       //Fecha loading
       this.loadingService.hide();
       if (resultVehicle.status == 200 && resultVehicle.body?.status == StatusSuccessError.succes) {
+        //Valid
+        this.addRequireForms();
         //update checklist
         if (this.modChecklist.id != null) {
           const resultChecklist = await this.updateChecklist(this.modChecklist);
@@ -1305,14 +1283,7 @@ export default class VehicleMaintenanceComponent implements OnInit, DoCheck {
       return error;
     }
   }
-  private async addAuthExit(auth: VehicleEntryAuth): Promise<HttpResponse<MessageResponse>> {
-    try {
-      return await lastValueFrom(this.vehicleService.entryAddAuth(auth));
-    } catch (error: any) {
-      this.messageService.add({ severity: 'error', summary: 'Erro', detail: "Não catalogado.", icon: 'pi pi-times' });
-      return error;
-    }
-  }
+
   private async filterChecklist(id: number): Promise<HttpResponse<MessageResponse>> {
     try {
       return await lastValueFrom(this.vehicleService.filterChecklist(id));

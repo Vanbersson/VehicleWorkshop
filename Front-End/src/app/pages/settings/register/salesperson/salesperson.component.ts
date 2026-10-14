@@ -32,6 +32,9 @@ import { SalesTypeEnum } from '@/app/models/crm/sales.type.enum';
 import { SalespersonTypeEnum } from '@/app/models/crm/salesperson.type.enum';
 import { SalespersonService } from '@/app/services/salesperson/salesperson.service';
 import { LoadingService } from '@/app/services/loading/loading.service';
+import { YesNotEnum } from '@/app/models/yes.not.enum';
+import { StorageService } from '@/app/services/storage/storage.service';
+import { environment } from '@/environments/environment';
 
 
 @Component({
@@ -90,15 +93,18 @@ export default class SalespersonComponent {
   EX = SalespersonTypeEnum.EXTERNAL;
   BOTH = SalespersonTypeEnum.BOTH;
 
+  YES = YesNotEnum.YES;
+  NOT = YesNotEnum.NOT;
+
   salespersons = signal<Salesperson[]>([]);
   visible: boolean = false;
 
   formPerson = new FormGroup({
     status: new FormControl<StatusEnabDisabEnum>(StatusEnabDisabEnum.ENABLED),
-    type: new FormControl<SalespersonTypeEnum>(SalespersonTypeEnum.INTERNAL),
-    typeSalesPart: new FormControl<SalesTypeEnum | null>(null),
-    typeSalesService: new FormControl<SalesTypeEnum | null>(null),
-    typeSalesVehicle: new FormControl<SalesTypeEnum | null>(null),
+    typeSales: new FormControl<SalespersonTypeEnum>(SalespersonTypeEnum.INTERNAL),
+    typeSalesPart: new FormControl<string[] | null>(null),
+    typeSalesService: new FormControl<string[] | null>(null),
+    typeSalesVehicle: new FormControl<string[] | null>(null),
     id: new FormControl<number | null>({ value: null, disabled: true }),
     name: new FormControl<string>('', [Validators.required]),
     user: new FormControl<User | null>(null, [Validators.required]),
@@ -115,6 +121,7 @@ export default class SalespersonComponent {
   groups = signal<SalespersonGroup[]>([]);
 
   constructor(private messageService: MessageService,
+    private storageService: StorageService,
     private userService: UserService,
     private loadingService: LoadingService,
     private photoService: PhotoService,
@@ -138,12 +145,22 @@ export default class SalespersonComponent {
   }
 
   cleanForm() {
+    this.formPerson.reset();
+    this.formPerson.patchValue({
+      status: StatusEnabDisabEnum.ENABLED,
+      typeSales: SalespersonTypeEnum.INTERNAL,
+      typeSalesPart: null,
+      typeSalesService: null,
+      typeSalesVehicle: null,
+    });
+    this.photoPerson.set('');
+    this.isNewPhoto = false;
+    this.salesperson = null as any;
 
   }
 
   newSalesperson() {
     this.isNewSalesperson = true;
-    this.salesperson = new Salesperson();
     this.cleanForm();
     this.showDialog();
   }
@@ -156,7 +173,27 @@ export default class SalespersonComponent {
     }
   }
 
-  private async saveNewPerson() { }
+  private async saveNewPerson() {
+
+    const { value } = this.formPerson;
+    this.salesperson = new Salesperson();
+
+    this.salesperson.status = value.status!;
+    this.salesperson.typeSales = value.typeSales!;
+    this.salesperson.typeSalesPart = value.typeSalesPart?.includes(YesNotEnum.YES) ? YesNotEnum.YES : YesNotEnum.NOT;
+    this.salesperson.typeSalesService = value.typeSalesService?.includes(YesNotEnum.YES) ? YesNotEnum.YES : YesNotEnum.NOT;
+    this.salesperson.typeSalesVehicle = value.typeSalesVehicle?.includes(YesNotEnum.YES) ? YesNotEnum.YES : YesNotEnum.NOT;
+
+    this.salesperson.name = value.name!;
+    this.salesperson.userId = value.user?.id!;
+    this.salesperson.cpf = value.cpf!;
+    this.salesperson.dddCellphone = value.dddCellphone!;
+    this.salesperson.cellphone = value.cellphone!;
+    this.salesperson.limitDiscount = value.limitDiscount!;
+    this.salesperson.groupId = value.group?.id!;
+
+    console.log('salesperson', this.salesperson);
+  }
 
   private async saveUpdatePerson() { }
 
@@ -185,6 +222,52 @@ export default class SalespersonComponent {
     }
   }
 
+  private async saveImage(id: number, name: string, pathImg: string): Promise<string> {
+    try {
+      let path =
+        `${this.storageService.companyId}/` +
+        `${this.storageService.resaleId}/salesperson/` +
+        `${id}/${name}`;
+
+      const { base64, mime } = this.cleanBase64(pathImg);
+      const file = this.base64ToFile(base64, mime);
+
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('local', path);
+
+      const resultSave = await this.saveImageSalesperson(formData);
+      if (resultSave.status == 200 && resultSave.body?.status == StatusSuccessError.succes) {
+        return `${environment.apiuUrl}${resultSave.body.data["url"]}`;
+      }
+    } catch (error: any) {
+      this.messageService.add({ severity: 'error', summary: 'Erro', detail: error.message, icon: 'pi pi-times' });
+    }
+    return "";
+
+  }
+  private cleanBase64(base64: string): { base64: string; mime: string } {
+    if (!base64.includes(',')) {
+      return { base64, mime: 'image/jpeg' };
+    }
+
+    const [header, data] = base64.split(',');
+    const mime = header.match(/data:(.*);base64/)?.[1] || 'image/jpeg';
+
+    return { base64: data, mime };
+  }
+  private base64ToFile(base64: string, mime: string): File {
+    const byteString = atob(base64);
+    const ab = new ArrayBuffer(byteString.length);
+    const ia = new Uint8Array(ab);
+
+    for (let i = 0; i < byteString.length; i++) {
+      ia[i] = byteString.charCodeAt(i);
+    }
+
+    return new File([ia], 'image.jpg', { type: mime });
+  }
+
   private async listAllGroups(): Promise<SalespersonGroup[]> {
     try {
       return await lastValueFrom(this.salespersonGroupService.listAllEnabled());
@@ -202,6 +285,14 @@ export default class SalespersonComponent {
     }
   }
 
+  private async saveImageSalesperson(data: FormData): Promise<HttpResponse<MessageResponse>> {
+    try {
+      return await lastValueFrom(this.salespersonService.saveImage(data));
+    } catch (error: any) {
+      this.messageService.add({ severity: 'error', summary: 'Erro', detail: error.message, icon: 'pi pi-times' });
+      return error;
+    }
+  }
   private async listAll(): Promise<Salesperson[]> {
     try {
       return await lastValueFrom(this.salespersonService.listAll());

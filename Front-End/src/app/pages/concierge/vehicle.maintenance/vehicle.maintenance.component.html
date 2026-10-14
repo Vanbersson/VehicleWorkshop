@@ -105,7 +105,7 @@
                                 [options]="attendants()"
                                 optionLabel="name"
                                 [style]="{'text-transform':'uppercase'}" fluid/>
-                                <small class="block text-sm text-red-500" *ngIf="formVehicle.get('attendant')?.invalid">Campo obrigatório</small>
+                                <small class="block text-sm text-red-500" *ngIf="formVehicle.get('attendant')?.hasError('required')">Campo obrigatório</small>
                             </div>                        
                             <div class="col-span-12 md:col-span-2">
                                 <label for="numServiceOrder">Nro. O.S.</label>

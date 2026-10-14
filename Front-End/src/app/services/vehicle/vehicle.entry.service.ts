@@ -68,15 +68,17 @@ export class VehicleEntryService {
   }
 
   entryAddAuth(auth: VehicleEntryAuth): Observable<HttpResponse<MessageResponse>> {
-    return this.http.post<MessageResponse>(environment.apiuUrl + "/vehicle/entry/authorization/add", auth, { headers: this.myHeaders(), observe: 'response' });
+    return this.http.post<MessageResponse>(`${environment.apiuUrl}/vehicle/entry/authorization/add`, auth, { headers: this.myHeaders(), observe: 'response' });
   }
-
   entryDeleteAuth1(auth: VehicleEntryAuth): Observable<HttpResponse<MessageResponse>> {
-    return this.http.post<MessageResponse>(environment.apiuUrl + "/vehicle/entry/authorization/delete1", auth, { headers: this.myHeaders(), observe: 'response' });
+    return this.http.post<MessageResponse>(`${environment.apiuUrl}/vehicle/entry/authorization/delete/1`, auth, { headers: this.myHeaders(), observe: 'response' });
+  }
+  entryDeleteAuth2(auth: VehicleEntryAuth): Observable<HttpResponse<MessageResponse>> {
+    return this.http.post<MessageResponse>(`${environment.apiuUrl}/vehicle/entry/authorization/delete/2`, auth, { headers: this.myHeaders(), observe: 'response' });
   }
 
-  entryDeleteAuth2(auth: VehicleEntryAuth): Observable<HttpResponse<MessageResponse>> {
-    return this.http.post<MessageResponse>(environment.apiuUrl + "/vehicle/entry/authorization/delete2", auth, { headers: this.myHeaders(), observe: 'response' });
+  updateImage(data: any): Observable<any> {
+    return this.http.post<any>(` ${environment.apiuUrl}/vehicle/entry/update/image`, data, { headers: this.myHeaders() });
   }
   saveImage(data: FormData): Observable<HttpResponse<MessageResponse>> {
     return this.http.post<MessageResponse>(environment.apiuUrl + "/vehicle/entry/save/image", data, { headers: this.myHeaders(), observe: 'response' });

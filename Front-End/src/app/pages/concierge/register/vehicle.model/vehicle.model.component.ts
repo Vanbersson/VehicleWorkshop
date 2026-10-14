@@ -163,7 +163,7 @@ export default class VehicleModelComponent implements OnInit {
     try {
       return await lastValueFrom(this.vehicleModelService.save(mod));
     } catch (error: any) {
-      this.messageService.add({ severity: 'error', summary: 'Erro', detail: error.error.message, icon: 'pi pi-times' });
+      this.messageService.add({ severity: 'error', summary: 'Erro', detail: error.message, icon: 'pi pi-times' });
       return error;
     }
   }
@@ -171,7 +171,7 @@ export default class VehicleModelComponent implements OnInit {
     try {
       return await lastValueFrom(this.vehicleModelService.update(mod));
     } catch (error: any) {
-      this.messageService.add({ severity: 'error', summary: 'Erro', detail: error.error.message, icon: 'pi pi-times' });
+      this.messageService.add({ severity: 'error', summary: 'Erro', detail: error.message, icon: 'pi pi-times' });
       return error;
     }
   }

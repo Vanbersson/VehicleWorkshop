@@ -205,7 +205,7 @@ export default class SalespersonGroupComponent {
     try {
       return await lastValueFrom(this.salespersonGroupService.listAll());
     } catch (error: any) {
-      this.messageService.add({ severity: 'error', summary: 'Erro', detail: error.error.message, icon: 'pi pi-times' });
+      this.messageService.add({ severity: 'error', summary: 'Erro', detail: error.message, icon: 'pi pi-times' });
       return [];
     }
   }
