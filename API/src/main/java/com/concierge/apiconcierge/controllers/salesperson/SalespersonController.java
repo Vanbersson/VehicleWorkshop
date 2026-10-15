@@ -1,6 +1,7 @@
 package com.concierge.apiconcierge.controllers.salesperson;
 
 import com.concierge.apiconcierge.dtos.message.MessageResponseDto;
+import com.concierge.apiconcierge.dtos.salesperson.ResponseSalespersonDto;
 import com.concierge.apiconcierge.dtos.salesperson.SalespersonGroupDto;
 import com.concierge.apiconcierge.dtos.salesperson.SalespersonNewDto;
 import com.concierge.apiconcierge.dtos.salesperson.SalespersonUpdateDto;
@@ -10,13 +11,16 @@ import com.concierge.apiconcierge.models.salesperson.SalespersonGroup;
 import com.concierge.apiconcierge.services.auth.TokenService;
 import com.concierge.apiconcierge.services.salesperson.person.ISalespersonService;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/salesperson")
@@ -29,7 +33,7 @@ public class SalespersonController {
     private ISalespersonService service;
 
     @PostMapping("/save")
-    public ResponseEntity<MessageResponse> save(@RequestBody SalespersonNewDto data, HttpServletRequest request) {
+    public ResponseEntity<MessageResponse> save(@Valid @RequestBody SalespersonNewDto data, HttpServletRequest request) {
         String emailUser = this.getEmail(request);
         Salesperson person = new Salesperson();
         BeanUtils.copyProperties(data, person);
@@ -38,23 +42,40 @@ public class SalespersonController {
     }
 
     @PostMapping("/update")
-    public ResponseEntity<MessageResponse> update(@RequestBody SalespersonUpdateDto data) {
+    public ResponseEntity<MessageResponse> update(@Valid @RequestBody SalespersonUpdateDto data) {
         Salesperson person = new Salesperson();
         BeanUtils.copyProperties(data, person);
         MessageResponse response = this.service.update(person);
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
-    @GetMapping("/all")
-    public ResponseEntity<List<Salesperson>> all(HttpServletRequest request) {
+    @GetMapping("/filter/id/{id}")
+    public ResponseEntity<Salesperson> filterId(@PathVariable(name = "id") Integer id, HttpServletRequest request) {
         String emailUser = this.getEmail(request);
-        List<Salesperson> response = this.service.all(emailUser);
+        Salesperson response = this.service.filterId(id, emailUser);
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
+
+    @GetMapping("/all")
+    public ResponseEntity<List<ResponseSalespersonDto>> all(HttpServletRequest request) {
+        String emailUser = this.getEmail(request);
+        List<ResponseSalespersonDto> response = this.service.all(emailUser);
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
     @GetMapping("/all/enabled")
     public ResponseEntity<List<Salesperson>> allEnabled(HttpServletRequest request) {
         String emailUser = this.getEmail(request);
         List<Salesperson> response = this.service.allEnabled(emailUser);
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    @PostMapping("/save/image")
+    public ResponseEntity<Map<String, String>> saveImage(@RequestParam("file") MultipartFile file,
+                                                         @RequestParam("local") String local,
+                                                         HttpServletRequest request) {
+        String emailUser = this.getEmail(request);
+        Map<String, String> response = this.service.saveImage(file, local, emailUser);
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 

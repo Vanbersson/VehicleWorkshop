@@ -11,5 +11,5 @@ public interface ISalespersonRepository extends JpaRepository<Salesperson, Integ
 
     List<Salesperson> findByCompanyIdAndResaleId(Integer companyId, Integer resaleId);
 
-    Salesperson existsByCompanyIdAndResaleIdAndId(Integer companyId, Integer resaleId, Integer id);
+    Salesperson findByCompanyIdAndResaleIdAndId(Integer companyId, Integer resaleId, Integer id);
 }
