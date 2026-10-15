@@ -71,15 +71,15 @@
             </div>
             <div class="col-span-12 md:col-span-4">
                 <label for="">UFs</label>
-                <p-multiSelect formControlName="ufs" [options]="ufs" optionLabel="label" optionValue="value" [style]="{'text-transform':'uppercase'}" display="chip" fluid />
+                <p-multiSelect formControlName="ufs" [options]="ufs" optionLabel="label" optionValue="value" [style]="{'text-transform':'uppercase'}" [showClear]="true" fluid />
             </div>
             <div class="col-span-12 md:col-span-4">
                 <label for="">Macas</label>
-                <p-multiSelect formControlName="brands" [options]="brands()" optionLabel="name" [style]="{'text-transform':'uppercase'}" display="chip" fluid />
+                <p-multiSelect formControlName="brands" [options]="brands()" optionLabel="name" [style]="{'text-transform':'uppercase'}" [showClear]="true" fluid />
             </div>
             <div class="col-span-12 md:col-span-4">
                 <label for="">Regiões</label>
-                <p-multiSelect formControlName="regions" [options]="regions()" optionLabel="uf" display="chip" fluid >
+                <p-multiSelect formControlName="regions" [options]="regions()" optionLabel="uf" [showClear]="true" fluid >
                     <ng-template #item let-group>
                         <div class="flex items-center gap-2">
                             <span>{{group.uf | uppercase}} - {{group.description | uppercase}}</span>

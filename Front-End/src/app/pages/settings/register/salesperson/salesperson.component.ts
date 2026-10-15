@@ -1,4 +1,4 @@
-import { Component, signal } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpResponse } from '@angular/common/http';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -33,9 +33,7 @@ import { SalespersonTypeEnum } from '@/app/models/crm/salesperson.type.enum';
 import { SalespersonService } from '@/app/services/salesperson/salesperson.service';
 import { LoadingService } from '@/app/services/loading/loading.service';
 import { YesNotEnum } from '@/app/models/yes.not.enum';
-import { StorageService } from '@/app/services/storage/storage.service';
 import { environment } from '@/environments/environment';
-
 
 @Component({
   selector: 'app-salesperson',
@@ -46,45 +44,13 @@ import { environment } from '@/environments/environment';
   styleUrl: './salesperson.component.scss',
   providers: [MessageService]
 })
-export default class SalespersonComponent {
-
-  ufs = [
-    { label: 'AC', value: 'AC' },
-    { label: 'AL', value: 'AL' },
-    { label: 'AP', value: 'AP' },
-    { label: 'AM', value: 'AM' },
-    { label: 'BA', value: 'BA' },
-    { label: 'CE', value: 'CE' },
-    { label: 'DF', value: 'DF' },
-    { label: 'ES', value: 'ES' },
-    { label: 'GO', value: 'GO' },
-    { label: 'MA', value: 'MA' },
-    { label: 'MT', value: 'MT' },
-    { label: 'MS', value: 'MS' },
-    { label: 'MG', value: 'MG' },
-    { label: 'PA', value: 'PA' },
-    { label: 'PB', value: 'PB' },
-    { label: 'PR', value: 'PR' },
-    { label: 'PE', value: 'PE' },
-    { label: 'PI', value: 'PI' },
-    { label: 'RJ', value: 'RJ' },
-    { label: 'RN', value: 'RN' },
-    { label: 'RS', value: 'RS' },
-    { label: 'RO', value: 'RO' },
-    { label: 'RR', value: 'RR' },
-    { label: 'SC', value: 'SC' },
-    { label: 'SP', value: 'SP' },
-    { label: 'SE', value: 'SE' },
-    { label: 'TO', value: 'TO' }
-  ];
-
+export default class SalespersonComponent implements OnInit {
   photoPerson = signal<string>('');
   isNewPhoto: boolean = false;
   private salesperson!: Salesperson;
   private isNewSalesperson: boolean = false;
   enabled = StatusEnabDisabEnum.ENABLED;
   disabled = StatusEnabDisabEnum.DISABLED;
-
   PART = SalesTypeEnum.PART;
   SERVICE = SalesTypeEnum.SERVICE;
   VEHICLE = SalesTypeEnum.VEHICLE;
@@ -92,10 +58,8 @@ export default class SalespersonComponent {
   IN = SalespersonTypeEnum.INTERNAL;
   EX = SalespersonTypeEnum.EXTERNAL;
   BOTH = SalespersonTypeEnum.BOTH;
-
   YES = YesNotEnum.YES;
   NOT = YesNotEnum.NOT;
-
   salespersons = signal<Salesperson[]>([]);
   visible: boolean = false;
 
@@ -107,13 +71,12 @@ export default class SalespersonComponent {
     typeSalesVehicle: new FormControl<string[] | null>(null),
     id: new FormControl<number | null>({ value: null, disabled: true }),
     name: new FormControl<string>('', [Validators.required]),
-    user: new FormControl<User | null>(null, [Validators.required]),
-    cpf: new FormControl<string>('', [Validators.required]),
-
-    dddCellphone: new FormControl<string>('', [Validators.required]),
-    cellphone: new FormControl<string>('', [Validators.required]),
+    user: new FormControl<User | null>(null, Validators.required),
+    cpf: new FormControl<string>('', Validators.required),
+    dddCellphone: new FormControl<string>('', Validators.required),
+    cellphone: new FormControl<string>('', Validators.required),
     limitDiscount: new FormControl<number>(0, [Validators.required, Validators.min(0), Validators.max(100)]),
-    group: new FormControl<SalespersonGroup | null>(null, [Validators.required]),
+    groups: new FormControl<SalespersonGroup[]>([], Validators.required),
 
   });
 
@@ -121,12 +84,14 @@ export default class SalespersonComponent {
   groups = signal<SalespersonGroup[]>([]);
 
   constructor(private messageService: MessageService,
-    private storageService: StorageService,
     private userService: UserService,
     private loadingService: LoadingService,
     private photoService: PhotoService,
     private salespersonService: SalespersonService,
-    private salespersonGroupService: SalespersonGroupService) { this.init(); }
+    private salespersonGroupService: SalespersonGroupService) { }
+  ngOnInit(): void {
+    this.init();
+  }
 
   private async init() {
     this.loadingService.show();
@@ -156,7 +121,6 @@ export default class SalespersonComponent {
     this.photoPerson.set('');
     this.isNewPhoto = false;
     this.salesperson = null as any;
-
   }
 
   newSalesperson() {
@@ -174,28 +138,102 @@ export default class SalespersonComponent {
   }
 
   private async saveNewPerson() {
-
-    const { value } = this.formPerson;
+    const { value, valid } = this.formPerson;
+    if (!valid) {
+      return;
+    }
     this.salesperson = new Salesperson();
-
     this.salesperson.status = value.status!;
     this.salesperson.typeSales = value.typeSales!;
     this.salesperson.typeSalesPart = value.typeSalesPart?.includes(YesNotEnum.YES) ? YesNotEnum.YES : YesNotEnum.NOT;
     this.salesperson.typeSalesService = value.typeSalesService?.includes(YesNotEnum.YES) ? YesNotEnum.YES : YesNotEnum.NOT;
     this.salesperson.typeSalesVehicle = value.typeSalesVehicle?.includes(YesNotEnum.YES) ? YesNotEnum.YES : YesNotEnum.NOT;
-
     this.salesperson.name = value.name!;
     this.salesperson.userId = value.user?.id!;
     this.salesperson.cpf = value.cpf!;
     this.salesperson.dddCellphone = value.dddCellphone!;
     this.salesperson.cellphone = value.cellphone!;
     this.salesperson.limitDiscount = value.limitDiscount!;
-    this.salesperson.groupId = value.group?.id!;
-
-    console.log('salesperson', this.salesperson);
+    this.salesperson.groupIds = value?.groups!.map((g: SalespersonGroup) => g.id).join(',') ?? '';
+    this.loadingService.show();
+    const resultSave = await this.savePerson(this.salesperson);
+    if (resultSave.status == 201 && resultSave.body?.status == StatusSuccessError.succes) {
+      this.messageService.add({ severity: 'success', summary: resultSave.body.header, detail: resultSave.body.message, icon: 'pi pi-check' });
+      this.salesperson = resultSave.body.data;
+      this.isNewSalesperson = false;
+      if (this.isNewPhoto) {
+        this.isNewPhoto = false;
+        this.salesperson.photoUrl = await this.saveImage(this.salesperson.id!, this.photoPerson());
+        await this.updatePerson(this.salesperson);
+      }
+      this.salespersons.set(await this.listAll());
+    }
+    this.loadingService.hide();
+    if (resultSave.status == 201 && resultSave.body?.status == StatusSuccessError.error) {
+      this.messageService.add({ severity: 'info', summary: resultSave.body.header, detail: resultSave.body.message, icon: 'pi pi-info-circle' });
+    }
   }
 
-  private async saveUpdatePerson() { }
+  async edit(id: number) {
+    this.cleanForm();
+    this.loadingService.show();
+    const result = await this.filterIdPerson(id);
+    this.loadingService.hide();
+    if (result.status == 200) {
+      this.salesperson = result.body!;
+      this.isNewSalesperson = false;
+      this.formPerson.patchValue({
+        status: this.salesperson.status,
+        typeSales: this.salesperson.typeSales,
+        typeSalesPart: this.salesperson.typeSalesPart == YesNotEnum.YES ? [YesNotEnum.YES] : null,
+        typeSalesService: this.salesperson.typeSalesService == YesNotEnum.YES ? [YesNotEnum.YES] : null,
+        typeSalesVehicle: this.salesperson.typeSalesVehicle == YesNotEnum.YES ? [YesNotEnum.YES] : null,
+        id: this.salesperson.id,
+        name: this.salesperson.name,
+        user: this.attendantsUser().find(u => u.id == this.salesperson.userId) ?? null,
+        cpf: this.salesperson.cpf,
+        dddCellphone: this.salesperson.dddCellphone,
+        cellphone: this.salesperson.cellphone,
+        limitDiscount: this.salesperson.limitDiscount,
+        groups: this.salesperson.groupIds ? this.groups().filter(g => this.salesperson.groupIds.split(',').includes(g.id!.toString())) : []
+      });
+      this.photoPerson.set(this.salesperson.photoUrl);
+      this.showDialog();
+    }
+  }
+
+  private async saveUpdatePerson() {
+    const { value, valid } = this.formPerson;
+    if (!valid) {
+      return;
+    }
+    this.loadingService.show();
+    if (this.isNewPhoto) {
+      this.isNewPhoto = false;
+      this.salesperson.photoUrl = await this.saveImage(this.salesperson.id!, this.photoPerson());
+    }
+    this.salesperson.status = value.status!;
+    this.salesperson.typeSales = value.typeSales!;
+    this.salesperson.typeSalesPart = value.typeSalesPart?.includes(YesNotEnum.YES) ? YesNotEnum.YES : YesNotEnum.NOT;
+    this.salesperson.typeSalesService = value.typeSalesService?.includes(YesNotEnum.YES) ? YesNotEnum.YES : YesNotEnum.NOT;
+    this.salesperson.typeSalesVehicle = value.typeSalesVehicle?.includes(YesNotEnum.YES) ? YesNotEnum.YES : YesNotEnum.NOT;
+    this.salesperson.name = value.name!;
+    this.salesperson.userId = value.user?.id!;
+    this.salesperson.cpf = value.cpf!;
+    this.salesperson.dddCellphone = value.dddCellphone!;
+    this.salesperson.cellphone = value.cellphone!;
+    this.salesperson.limitDiscount = value.limitDiscount!;
+    this.salesperson.groupIds = value?.groups!.map((g: SalespersonGroup) => g.id).join(',') ?? '';
+    const resultSave = await this.updatePerson(this.salesperson);
+    this.loadingService.hide();
+    if (resultSave.status == 200 && resultSave.body?.status == StatusSuccessError.succes) {
+      this.messageService.add({ severity: 'success', summary: resultSave.body.header, detail: resultSave.body.message, icon: 'pi pi-check' });
+      this.salespersons.set(await this.listAll());
+    }
+    if (resultSave.status == 200 && resultSave.body?.status == StatusSuccessError.error) {
+      this.messageService.add({ severity: 'info', summary: resultSave.body.header, detail: resultSave.body.message, icon: 'pi pi-info-circle' });
+    }
+  }
 
   private async getUsers(): Promise<User[]> {
     const result = await this.filterUserEnabled();
@@ -222,12 +260,9 @@ export default class SalespersonComponent {
     }
   }
 
-  private async saveImage(id: number, name: string, pathImg: string): Promise<string> {
+  private async saveImage(id: number, pathImg: string): Promise<string> {
     try {
-      let path =
-        `${this.storageService.companyId}/` +
-        `${this.storageService.resaleId}/salesperson/` +
-        `${id}/${name}`;
+      let path = `/salesperson/${id}/image.jpeg`;
 
       const { base64, mime } = this.cleanBase64(pathImg);
       const file = this.base64ToFile(base64, mime);
@@ -237,14 +272,13 @@ export default class SalespersonComponent {
       formData.append('local', path);
 
       const resultSave = await this.saveImageSalesperson(formData);
-      if (resultSave.status == 200 && resultSave.body?.status == StatusSuccessError.succes) {
-        return `${environment.apiuUrl}${resultSave.body.data["url"]}`;
+      if (resultSave.status == 200) {
+        return `${environment.apiuUrl}${resultSave.body["url"]}`;
       }
     } catch (error: any) {
-      this.messageService.add({ severity: 'error', summary: 'Erro', detail: error.message, icon: 'pi pi-times' });
+      this.messageService.add({ severity: 'error', summary: 'Erro', detail: error.error.message, icon: 'pi pi-times' });
     }
     return "";
-
   }
   private cleanBase64(base64: string): { base64: string; mime: string } {
     if (!base64.includes(',')) {
@@ -272,7 +306,7 @@ export default class SalespersonComponent {
     try {
       return await lastValueFrom(this.salespersonGroupService.listAllEnabled());
     } catch (error: any) {
-      this.messageService.add({ severity: 'error', summary: 'Erro', detail: error.message, icon: 'pi pi-times' });
+      this.messageService.add({ severity: 'error', summary: 'Erro', detail: error.error.message, icon: 'pi pi-times' });
       return [];
     }
   }
@@ -280,16 +314,16 @@ export default class SalespersonComponent {
     try {
       return await lastValueFrom(this.userService.listAllEnabled());
     } catch (error: any) {
-      this.messageService.add({ severity: 'error', summary: 'Erro', detail: error.message, icon: 'pi pi-times' });
+      this.messageService.add({ severity: 'error', summary: 'Erro', detail: error.error.message, icon: 'pi pi-times' });
       return error;
     }
   }
 
-  private async saveImageSalesperson(data: FormData): Promise<HttpResponse<MessageResponse>> {
+  private async saveImageSalesperson(data: FormData): Promise<HttpResponse<any>> {
     try {
       return await lastValueFrom(this.salespersonService.saveImage(data));
     } catch (error: any) {
-      this.messageService.add({ severity: 'error', summary: 'Erro', detail: error.message, icon: 'pi pi-times' });
+      this.messageService.add({ severity: 'error', summary: 'Erro', detail: error.error.message, icon: 'pi pi-times' });
       return error;
     }
   }
@@ -297,10 +331,34 @@ export default class SalespersonComponent {
     try {
       return await lastValueFrom(this.salespersonService.listAll());
     } catch (error: any) {
-      this.messageService.add({ severity: 'error', summary: 'Erro', detail: error.message, icon: 'pi pi-times' });
+      this.messageService.add({ severity: 'error', summary: 'Erro', detail: error.error.emessage, icon: 'pi pi-times' });
       return [];
     }
   }
+  private async filterIdPerson(id: number): Promise<HttpResponse<Salesperson>> {
+    try {
+      return await lastValueFrom(this.salespersonService.filterId(id));
+    } catch (error: any) {
+      this.messageService.add({ severity: 'error', summary: 'Erro', detail: error.error.message, icon: 'pi pi-times' });
+      return error;
+    }
+  }
 
+  private async savePerson(p: Salesperson): Promise<HttpResponse<MessageResponse>> {
+    try {
+      return await lastValueFrom(this.salespersonService.save(p));
+    } catch (error: any) {
+      this.messageService.add({ severity: 'error', summary: 'Erro', detail: error.error.message, icon: 'pi pi-times' });
+      return error;
+    }
+  }
+  private async updatePerson(p: Salesperson): Promise<HttpResponse<MessageResponse>> {
+    try {
+      return await lastValueFrom(this.salespersonService.update(p));
+    } catch (error: any) {
+      this.messageService.add({ severity: 'error', summary: 'Erro', detail: error.error.message, icon: 'pi pi-times' });
+      return error;
+    }
+  }
 
 }

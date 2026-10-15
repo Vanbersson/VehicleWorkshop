@@ -18,6 +18,6 @@ export class Salesperson {
     typeSalesService: YesNotEnum = YesNotEnum.NOT;
     typeSalesVehicle: YesNotEnum = YesNotEnum.NOT;
     userId: number | null = null;
-    groupId: number | null = null;
+    groupIds: string = '';
     photoUrl: string = '';
 }

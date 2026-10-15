@@ -19,14 +19,17 @@ export class SalespersonService {
     update(person: Salesperson): Observable<HttpResponse<MessageResponse>> {
         return this.http.post<MessageResponse>(`${environment.apiuUrl}/salesperson/update`, person, { headers: this.myHeaders(), observe: 'response' });
     }
+    filterId(id: number): Observable<HttpResponse<Salesperson>> {
+        return this.http.get<Salesperson>(`${environment.apiuUrl}/salesperson/filter/id/${id}`, { headers: this.myHeaders(), observe: 'response' });
+    }
     listAll(): Observable<Salesperson[]> {
         return this.http.get<Salesperson[]>(`${environment.apiuUrl}/salesperson/all`, { headers: this.myHeaders() });
     }
     listAllEnabled(): Observable<Salesperson[]> {
         return this.http.get<Salesperson[]>(`${environment.apiuUrl}/salesperson/all/enabled`, { headers: this.myHeaders() });
     }
-    saveImage(data: FormData): Observable<HttpResponse<MessageResponse>> {
-        return this.http.post<MessageResponse>(`${environment.apiuUrl}/salesperson/save/image`, data, { headers: {'Authorization': `Bearer ${this.storage.token}`}, observe: 'response' });
+    saveImage(data: FormData): Observable<HttpResponse<any>> {
+        return this.http.post<any>(`${environment.apiuUrl}/salesperson/save/image`, data, { headers: { 'Authorization': `Bearer ${this.storage.token}` }, observe: 'response' });
     }
 
     private myHeaders(): HttpHeaders {

@@ -7,17 +7,29 @@
     <p-table [value]="salespersons()" showGridlines>
         <ng-template #header>
             <tr>
-                <th style="width: 10%;">Código</th>
-                <th style="width: 90%;">Vendedor</th>
+                <th pSortableColumn="id" style="width:10%">
+                    Código <p-sortIcon field="id" />
+                </th>
+                <th pSortableColumn="status" style="width:10%">
+                    Status <p-sortIcon field="status" />
+                </th>
+                <th pSortableColumn="name" style="width: 80%;">Vendedor <p-sortIcon field="name" /> </th>
 
                 <th></th>
             </tr>
         </ng-template>
-        <ng-template #body>
+        <ng-template #body let-person>
             <tr>
-                <td>102</td>
-                <td>FERRAMENTA</td>
-                <td><p-button icon="pi pi-pencil" [text]="true" severity="secondary" size="small" /></td>
+                <td>{{person.id}}</td>
+                <td class="gap-2">
+                    <i class="pi " [ngClass]="{
+                        'pi-times-circle text-red-500':person.status == disabled,
+                        'pi-check-circle text-green-500':person.status == enabled}">
+                    </i>
+                    {{person.status | uppercase}}
+                </td>
+                <td>{{person.name | uppercase}}</td>
+                <td><p-button icon="pi pi-pencil" [text]="true" severity="secondary" size="small" (onClick)="edit(person.id)" /></td>
             </tr>
         </ng-template>
 
@@ -123,9 +135,9 @@
                 <small class="block text-sm text-red-500" *ngIf="formPerson.get('limitDiscount')?.invalid">Campo obrigatório</small>
             </div>
             <div class="col-span-12 md:col-span-3">
-                <label for="">Grupo de Vendas</label>
-                <p-multiselect [showClear]="true" [options]="groups()" optionLabel="description" optionValue="id" [style]="{'text-transform':'uppercase'}" formControlName="group" fluid />
-                <small class="block text-sm text-red-500" *ngIf="formPerson.get('group')?.invalid">Campo obrigatório</small>
+                <label for="">Grupos de Venda</label>
+                <p-multiselect [showClear]="true" [options]="groups()" optionLabel="description" [style]="{'text-transform':'uppercase'}" formControlName="groups" fluid />
+                <small class="block text-sm text-red-500" *ngIf="formPerson.get('groups')?.invalid">Campo obrigatório</small>
             </div>
         </div>
     </form>
