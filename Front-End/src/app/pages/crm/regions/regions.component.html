@@ -1,4 +1,89 @@
 <div class="layout-card">
-    
-    <h3>Regions</h3>
+
+    <div class="flex justify-center gap-4">
+        <div class=" flex flex-col  items-center border border-gray-300 rounded-md gap-2 p-2 mb-2">
+            <span class="text-2xl font-semibold">O que você quer ver?</span>
+            <div class="flex gap-2">
+                <div class="flex items-center">
+                    <p-checkbox inputId="salesperson1" [binary]="true"
+                        (onChange)="onCheckboxChangeSalesperson($event)" />
+                    <label for="salesperson1" class="ml-2"> Vendedores </label>
+                </div>
+                <div class="flex items-center">
+                    <p-checkbox inputId="client1" [binary]="true" (onChange)="onCheckboxChangeClient($event)" />
+                    <label for="client1" class="ml-2"> Clientes </label>
+                </div>
+                <div class="flex items-center">
+                    <p-checkbox inputId="agenda1" [binary]="true" (onChange)="onCheckboxChangeAgenda($event)" />
+                    <label for="agenda1" class="ml-2"> Agendas </label>
+                </div>
+                <div class="flex items-center">
+                    <p-checkbox inputId="customer1" [binary]="true" (onChange)="onCheckboxChangeCustomer($event)" />
+                    <label for="customer1" class="ml-2"> Atendimentos </label>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="map-container">
+        <div class="sidebar">
+            <div class="flex justify-center ">
+                <input pInputText class="w-full" placeholder="Pesquisar" [(ngModel)]="inputSearch" (keydown.enter)="searchMap()"  />
+            </div>
+            <div class="flex flex-col items-center w-full border-b border-surface-300 dark:border-surface-700 mb-2 mt-2"></div>
+            @for(item of locationsShow(); track item.id){
+            <div #details class="location-details" [class.active]="selectMap()?.id === item.id" (click)="changeLocation(item)">
+                @if(item.type == SALESPERSON){
+                <div class="flex gap-2 items-center">
+                    <i class="pi pi-car"></i>
+                    <span class="text-lg font-semibold">{{item.name}}</span>
+                </div>
+                <div class="flex gap-2 items-center">
+                    <i class="pi pi-user"></i>
+                    <p>{{item.description}}</p>
+                </div>
+                }
+                @if(item.type == CLIENT){
+                <div class="flex gap-2 items-center">
+                    <i class="pi pi-building"></i>
+                    <span class="text-lg font-semibold">{{item.name}}</span>
+                </div>
+                @if(item.cnpj){
+                <div class="flex">
+                    <p>CNPJ: {{item.cnpj}}</p>
+                </div>
+                }
+                @if(item.cpf){
+                <div class="flex">
+                    <p>CPF: {{item.cpf}}</p>
+                </div>
+                }
+
+                }
+                @if(item.type == AGENDA){
+                <div class="flex gap-2 items-center">
+                    <i class="pi pi-calendar-clock"></i>
+                    <span class="text-lg font-semibold">{{item.name}}</span>
+                </div>
+                <p>{{item.description}}</p>
+                <p>{{item.dateAgenda | date:'dd/MM/yyyy HH:mm'}}</p>
+                }
+            </div>
+            <div class="flex flex-col items-center w-full border-b border-surface-300 dark:border-surface-700"></div>
+            }
+        </div>
+        <google-map [mapId]="mapId" height="650px" width="100%" [center]="center" [zoom]="zoom" [options]="mapOptions"
+            (mapClick)="addAdvancedMarker($event)">
+            @for (item of locationsShow(); track item.id) {
+            <map-advanced-marker 
+            [title]="item.name"
+            [position]="{
+                lat:item.latitude,
+                lng: item.longitude}" 
+                [options]="advancedMarkerOptions" 
+                (mapClick)="changeLocation(item)" />
+            }
+        </google-map>
+    </div>
+
 </div>
