@@ -1,8 +1,211 @@
-<div class="layout-card">
-    <p>visit.schedule works!</p>
-
-    <div class="calendar-container">
-        <p-datepicker [inline]="true" [showWeek]="true" fluid />
+<div class="agenda-page">
+    <p-toast />
+    <header class="agenda-header">
+        <div class="agenda-title">
+            <span class="agenda-icon"><i class="pi pi-calendar" aria-hidden="true"></i></span>
+            <div>
+                <span class="agenda-eyebrow">PLANEJAMENTO COMERCIAL</span>
+                <h1>Agenda de visitas</h1>
+                <p class="text-muted-color">Organize os próximos encontros com seus clientes.</p>
+            </div>
+        </div>
+        <div class="agenda-header-actions">
+            <p-button label="Hoje" icon="pi pi-calendar" severity="secondary" [outlined]="true" (onClick)="goToToday()" [disabled]="saving()" />
+            @if (overdueVisits().length || overdueError()) {
+                <div class="agenda-alert" role="status" aria-live="polite">
+                    <p-button
+                        severity="warn"
+                        icon="pi pi-exclamation-triangle"
+                        [outlined]="true"
+                        [label]="overdueError() ? 'Verificar visitas atrasadas' : overdueVisits().length + (overdueVisits().length === 1 ? ' visita atrasada — ver visita' : ' visitas atrasadas — ver visitas')"
+                        (onClick)="visibleOverdue = true"
+                        [disabled]="saving()"
+                    />
+                </div>
+            }
+        </div>
+    </header>
+    <div class="agenda-grid">
+        <aside class="agenda-panel agenda-calendar">
+            <div class="panel-heading">
+                <div>
+                    <span class="agenda-eyebrow">ESCOLHA UMA DATA</span>
+                    <h2>Sua programação</h2>
+                </div>
+                <i class="pi pi-calendar text-primary" aria-hidden="true"></i>
+            </div>
+            <p-datepicker [ngModel]="selectedDay()" (ngModelChange)="selectDay($event)" [inline]="true" [disabled]="saving()" dateFormat="dd/mm/yy" ariaLabel="Dia da agenda" fluid />
+            <div class="selected-date">
+                <i class="pi pi-calendar-clock" aria-hidden="true"></i>
+                <div>
+                    <span class="text-muted-color">Dia selecionado</span><strong>{{ selectedDay() | date: 'EEEE, dd/MM/yyyy' }}</strong>
+                </div>
+            </div>
+            <p class="calendar-hint text-muted-color">Selecione um dia para consultar as visitas e preencher a data do novo agendamento.</p>
+        </aside>
+        <section class="agenda-panel agenda-form" aria-labelledby="appointmentTitle">
+            <div class="panel-heading">
+                <div>
+                    <span class="agenda-eyebrow">NOVO AGENDAMENTO</span>
+                    <h2 id="appointmentTitle">Agendar visita</h2>
+                    <p class="text-muted-color">Defina quando e com quem será o encontro.</p>
+                </div>
+                <span class="agenda-icon small"><i class="pi pi-calendar-plus" aria-hidden="true"></i></span>
+            </div>
+            <form [formGroup]="form" (ngSubmit)="save()">
+                <fieldset [disabled]="saving()" class="agenda-fields">
+                    <div class="agenda-date-time">
+                        <div>
+                            <label for="agendaDate">Data *</label><p-datepicker inputId="agendaDate" formControlName="date" dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body" fluid />
+                            @if (submitted() && form.controls.date.invalid) {
+                                <small class="field-error">Informe a data.</small>
+                            }
+                        </div>
+                        <div>
+                            <label for="agendaTime">Horário *</label><p-datepicker inputId="agendaTime" formControlName="time" [timeOnly]="true" hourFormat="24" [showIcon]="true" appendTo="body" fluid />
+                            @if (submitted() && form.controls.time.invalid) {
+                                <small class="field-error">Informe o horário.</small>
+                            }
+                        </div>
+                    </div>
+                    <div>
+                        <label for="agendaClient">Cliente *</label>
+                        <div class="client-picker">
+                            <input pInputText id="agendaClient" [value]="form.controls.client.value?.name || ''" readonly placeholder="Selecione pelo filtro" class="w-full" /><app-filterclient
+                                [isDisabled]="saving()"
+                                (outputClient)="selectClient($event)"
+                            />
+                        </div>
+                        @if (submitted() && !form.controls.client.value?.id) {
+                            <small class="field-error">Selecione o cliente pelo filtro.</small>
+                        }
+                    </div>
+                    <div>
+                        <label for="agendaSalesperson">Vendedor responsável *</label>
+                        <p-select
+                            inputId="agendaSalesperson"
+                            [options]="salespersons()"
+                            optionLabel="name"
+                            [filter]="true"
+                            filterBy="name"
+                            [showClear]="true"
+                            [loading]="loadingSalespersons()"
+                            [style]="{ 'text-transform': 'uppercase' }"
+                            formControlName="salesperson"
+                            placeholder="Selecione o vendedor"
+                            appendTo="body"
+                            fluid
+                        />
+                        @if (submitted() && !form.controls.salesperson.value?.id) {
+                            <small class="field-error">Selecione o vendedor que fará a visita.</small>
+                        }
+                        @if (salespersonError()) {
+                            <p class="field-error" role="alert">{{ salespersonError() }}</p>
+                            <p-button label="Carregar vendedores novamente" [text]="true" (onClick)="loadSalespersons()" />
+                        }
+                        @if (!loadingSalespersons() && !salespersonError() && !salespersons().length) {
+                            <small class="field-error">Nenhum vendedor habilitado disponível.</small>
+                        }
+                    </div>
+                    <div><label for="agendaInformation">Observações (opcional)</label><textarea pTextarea id="agendaInformation" formControlName="information" rows="3" fluid></textarea></div>
+                    @if (saveError()) {
+                        <p class="field-error" role="alert">{{ saveError() }}</p>
+                    }
+                    <div class="agenda-form-footer">
+                        <small class="text-muted-color">* Campos obrigatórios</small><p-button type="submit" label="Agendar visita" icon="pi pi-calendar-plus" [loading]="saving()" [disabled]="loadingSalespersons() || !salespersons().length" />
+                    </div>
+                </fieldset>
+            </form>
+        </section>
     </div>
-
+    <section class="agenda-panel agenda-list" aria-labelledby="dayTitle">
+        <div class="agenda-heading">
+            <div class="day-heading">
+                <span class="agenda-icon small"><i class="pi pi-list" aria-hidden="true"></i></span>
+                <div>
+                    <span class="agenda-eyebrow">COMPROMISSOS DO DIA</span>
+                    <h2 id="dayTitle">
+                        {{ selectedDay() | date: 'dd/MM/yyyy' }} <span class="visit-count">{{ loading() ? '…' : dayAppointments().length }}</span>
+                    </h2>
+                </div>
+            </div>
+            <p-button label="Atualizar" icon="pi pi-refresh" [text]="true" (onClick)="loadAppointments()" [disabled]="loading() || saving()" />
+        </div>
+        @if (loadError()) {
+            <p class="field-error" role="alert">{{ loadError() }} Use Atualizar para tentar novamente.</p>
+        }
+        <p-table [value]="dayAppointments()" [loading]="loading()" [rowHover]="true" [paginator]="dayAppointments().length > 10" [rows]="10" [tableStyle]="{ 'min-width': '35rem' }" size="small">
+            <ng-template #header
+                ><tr>
+                    <th>Horário</th>
+                    <th>Cliente</th>
+                    <th>Vendedor</th>
+                </tr></ng-template
+            >
+            <ng-template #body let-visit
+                ><tr>
+                    <td>
+                        <span class="visit-time"><i class="pi pi-clock" aria-hidden="true"></i>{{ visit.dateVisit | date: 'HH:mm' }}</span>
+                    </td>
+                    <td>
+                        <span class="font-semibold">{{ visit.clientName | uppercase }}</span>
+                    </td>
+                    <td>
+                        <span class="salesperson-cell"><i class="pi pi-user text-muted-color" aria-hidden="true"></i>{{ visit.salespersonName | uppercase }}</span>
+                    </td>
+                </tr></ng-template
+            >
+            <ng-template #emptymessage
+                ><tr>
+                    <td colspan="3">
+                        <div class="agenda-empty">
+                            <span class="agenda-icon"><i class="pi" [ngClass]="loadError() ? 'pi-exclamation-circle' : 'pi-calendar'" aria-hidden="true"></i></span
+                            ><strong>{{ loadError() ? 'A agenda está indisponível' : 'Seu dia ainda está livre' }}</strong>
+                            <p class="text-muted-color">{{ loadError() ? 'Atualize a lista para tentar novamente.' : 'Use o formulário acima para agendar a primeira visita deste dia.' }}</p>
+                        </div>
+                    </td>
+                </tr></ng-template
+            >
+        </p-table>
+    </section>
 </div>
+
+<p-dialog header="Visitas atrasadas" [(visible)]="visibleOverdue" [modal]="true" [draggable]="false" [style]="{ width: '65rem', maxWidth: '95vw' }">
+    <div class="agenda-heading">
+        <div>
+            <p class="font-semibold">
+                <span class="overdue-count">{{ overdueVisits().length }}</span> {{ overdueVisits().length === 1 ? 'visita aguardando atendimento' : 'visitas aguardando atendimento' }}
+            </p>
+            <p class="text-muted-color">Agendamentos pendentes com data e horário já vencidos, incluindo dias anteriores. Atualização a cada minuto.</p>
+        </div>
+        <p-button label="Atualizar atrasadas" icon="pi pi-refresh" [text]="true" (onClick)="loadOverdueAppointments()" [disabled]="loadingOverdue() || saving()" />
+    </div>
+    @if (overdueError()) {
+        <p class="field-error" role="alert">{{ overdueError() }} Use Atualizar atrasadas para tentar novamente.</p>
+    }
+    <p-table [value]="overdueVisits()" [loading]="loadingOverdue()" [paginator]="overdueVisits().length > 10" [rows]="10" [tableStyle]="{ 'min-width': '45rem' }" size="small">
+        <ng-template #header
+            ><tr>
+                <th>Data e horário previstos</th>
+                <th>Cliente</th>
+                <th>Vendedor</th>
+                <th>Atraso</th>
+            </tr></ng-template
+        >
+        <ng-template #body let-visit
+            ><tr>
+                <td>{{ visit.dateVisit | date: 'dd/MM/yyyy HH:mm' }}</td>
+                <td>{{ visit.clientName | uppercase }}</td>
+                <td>{{ visit.salespersonName | uppercase }}</td>
+                <td class="text-orange-600 font-semibold">{{ delayLabel(visit.dateVisit) }}</td>
+            </tr></ng-template
+        >
+        <ng-template #emptymessage
+            ><tr>
+                <td colspan="4">{{ overdueError() ? 'Não foi possível consultar as visitas atrasadas.' : 'Nenhuma visita atrasada.' }}</td>
+            </tr></ng-template
+        >
+    </p-table>
+
+    <ng-template #footer><p-button label="Fechar" severity="secondary" (onClick)="visibleOverdue = false" /></ng-template>
+</p-dialog>

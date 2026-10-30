@@ -217,7 +217,7 @@ export default class SalespersonComponent implements OnInit {
     this.salesperson.typeSalesPart = value.typeSalesPart?.includes(YesNotEnum.YES) ? YesNotEnum.YES : YesNotEnum.NOT;
     this.salesperson.typeSalesService = value.typeSalesService?.includes(YesNotEnum.YES) ? YesNotEnum.YES : YesNotEnum.NOT;
     this.salesperson.typeSalesVehicle = value.typeSalesVehicle?.includes(YesNotEnum.YES) ? YesNotEnum.YES : YesNotEnum.NOT;
-    this.salesperson.name = value.name!;
+    this.salesperson.name = value.name?.trim().toLocaleLowerCase()!;
     this.salesperson.userId = value.user?.id!;
     this.salesperson.cpf = value.cpf!;
     this.salesperson.dddCellphone = value.dddCellphone!;

@@ -1,5 +1,6 @@
 package com.concierge.apiconcierge.controllers.crm;
 
+import com.concierge.apiconcierge.dtos.crm.agenda.SalespersonVisitAgendaDayDto;
 import com.concierge.apiconcierge.dtos.crm.agenda.SalespersonVisitAgendaNewDto;
 import com.concierge.apiconcierge.dtos.crm.agenda.SalespersonVisitAgendaResponseDto;
 import com.concierge.apiconcierge.dtos.crm.agenda.SalespersonVisitAgendaUpdateDto;
@@ -18,6 +19,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Date;
 import java.util.List;
 
 @RestController
@@ -75,11 +77,16 @@ public class SalespersonVisitController {
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
-    @GetMapping("/all/agenda")
-    public ResponseEntity<List<SalespersonVisitAgendaResponseDto>> listAllAgenda(HttpServletRequest request) {
+    @PostMapping("/agenda/day")
+    public ResponseEntity<List<SalespersonVisitAgendaResponseDto>> listAllAgenda(@RequestBody SalespersonVisitAgendaDayDto data, HttpServletRequest request) {
         String emailUser = this.getEmail(request);
-        List<SalespersonVisitAgendaResponseDto> response = this.service.listAllAgenda(emailUser);
+        List<SalespersonVisitAgendaResponseDto> response = this.service.listAllAgenda(data.day(), emailUser);
         return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    @GetMapping("/agenda/overdue")
+    public ResponseEntity<List<SalespersonVisitAgendaResponseDto>> listOverdueAgenda(HttpServletRequest request) {
+        return ResponseEntity.ok(this.service.listOverdueAgenda(this.getEmail(request)));
     }
 
     private String getEmail(HttpServletRequest request) {

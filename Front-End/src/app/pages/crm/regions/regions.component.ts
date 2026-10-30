@@ -263,7 +263,7 @@ export default class RegionsComponent {
     this.updateLocationsShow();
   }
   private async allAgenda() {
-    await this.listAllAgenda();
+   // await this.listAllAgenda();
   }
 
   onCheckboxChangeCustomer(event: CheckboxChangeEvent): void {
@@ -287,13 +287,13 @@ export default class RegionsComponent {
     ));
   }
 
-  private async listAllAgenda(): Promise<Visit[]> {
+ /*  private async listAllAgenda(): Promise<Visit[]> {
     try {
       return await lastValueFrom(this.visitService.listAllAgenda());
     } catch (error: any) {
       this.messageService.add({ severity: 'error', summary: 'Erro', detail: error.error.message, icon: 'pi pi-times' });
       return [];
     }
-  }
+  } */
 
 }

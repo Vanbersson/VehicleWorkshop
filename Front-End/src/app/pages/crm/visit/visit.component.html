@@ -1,53 +1,169 @@
-<div class="layout-card">
+<div class="visits-page">
     <p-toast />
-    <div class="layout-card-title">
-        <span>Visitas</span>
-        <p-button icon="pi pi-plus" [outlined]="true" label="Registrar Visita" routerLink="/crm/visit/maintenance" />
-    </div>
-
-    <p-table #tableFilter [value]="visits()" showGridlines
-        [globalFilterFields]="['id','status','salespersonName','clientName']"
-        size="small" [tableStyle]="{ 'min-width': '50rem' }">
-        <ng-template pTemplate="caption">
-            <div class="flex">
-                <p-iconField iconPosition="left">
-                    <p-inputIcon>
-                        <i class="pi pi-search"></i>
-                    </p-inputIcon>
-                    <input pInputText type="text" (input)="tableFilter.filterGlobal($any($event.target).value, 'contains')" placeholder="Pesquisar" />
-                </p-iconField>
+    <header class="visits-header">
+        <div class="visits-title">
+            <span class="visits-icon"><i class="pi pi-address-book" aria-hidden="true"></i></span>
+            <div>
+                <span class="visits-eyebrow">RELACIONAMENTO COM O CLIENTE</span>
+                <h1>Visitas</h1>
+                <p class="text-muted-color">Acompanhe os atendimentos e dê continuidade a cada oportunidade.</p>
             </div>
-        </ng-template>
-        <ng-template #header>
-            <tr>
-                <th pSortableColumn="id" style="width:10%">Código<p-sortIcon field="id" /></th>
-                <th pSortableColumn="status" style="width:10%">Status<p-sortIcon field="status"/></th>
-                <th pSortableColumn="salespersonName" style="width:20%">Vendedor<p-sortIcon field="salespersonName" /></th>
-                <th pSortableColumn="clientName" style="width:40%">Cliente<p-sortIcon field="clientName"/></th>
-                <th pSortableColumn="dateRegister" style="width:10%">Registrado<p-sortIcon field="dateRegister" /></th>
-                <th pSortableColumn="dateVisit" style="width:10%">Visitado<p-sortIcon field="dateVisit"/></th>
-                <th></th>
-            </tr>
-        </ng-template>
-        <ng-template #body let-visit>
-            <tr>
-                <td>{{visit.id}}</td>
-                <td class="items-center gap-2">
-                    <i class="pi " [ngClass]="{
-                        'pi-calendar text-blue-500':visit.status == AGENDA,
-                        'pi-check-circle text-green-500':visit.status == OPEN}">
-                    </i> {{visit.status | uppercase}}</td>
-                <td>{{visit.salespersonName| uppercase}}</td>
-                <td>{{visit.clientName| uppercase}}</td>
-                <td>{{visit.dateRegister| date:'dd/MM/yy HH:mm'}}</td>
-                <td>{{visit.dateVisit | date:'dd/MM/yy HH:mm'}}</td>
-                <td>
-                    <p-button icon="pi pi-pencil" [text]="true" severity="secondary" size="small" (onClick)="completeScheduling(visit.id)" />
-                </td>
-            </tr>
-        </ng-template>
-    </p-table>
+        </div>
+        <div class="header-actions">
+            <p-button label="Agenda" icon="pi pi-calendar" severity="secondary" [outlined]="true" routerLink="/crm/visit/schedule" /><p-button icon="pi pi-plus" label="Registrar visita" routerLink="/crm/visit/maintenance" />
+        </div>
+    </header>
 
+    <section class="visits-panel" aria-labelledby="visitsListTitle">
+        <div class="list-heading">
+            <div>
+                <span class="visits-eyebrow">HISTÓRICO DE ATENDIMENTOS</span>
+                <h2 id="visitsListTitle">
+                    Visitas registradas <span class="record-count">{{ loading() ? '…' : visits().length }}</span>
+                </h2>
+            </div>
+            <p-button icon="pi pi-refresh" label="Atualizar" [text]="true" severity="secondary" (onClick)="loadVisits()" [loading]="loading()" />
+        </div>
 
+        @if (loadError()) {
+            <div class="list-error" role="alert">
+                <i class="pi pi-exclamation-circle" aria-hidden="true"></i><span>{{ loadError() }}</span>
+            </div>
+        }
 
+        <p-table
+            #tableFilter
+            [value]="visits()"
+            [loading]="loading()"
+            [rowHover]="true"
+            [paginator]="true"
+            [rows]="10"
+            [rowsPerPageOptions]="[10, 25, 50]"
+            [showCurrentPageReport]="true"
+            currentPageReportTemplate="{first}–{last} de {totalRecords} visitas"
+            [globalFilterFields]="['id', 'salespersonName', 'clientName']"
+            sortField="id"
+            [sortOrder]="-1"
+            dataKey="id"
+            size="small"
+            [tableStyle]="{ 'min-width': '60rem' }"
+        >
+            <ng-template #caption>
+                <div class="list-toolbar">
+                    <p-iconfield iconPosition="left" class="visit-search"
+                        ><p-inputicon><i class="pi pi-search" aria-hidden="true"></i></p-inputicon
+                        ><input
+                            #searchInput
+                            pInputText
+                            type="search"
+                            aria-label="Pesquisar visitas por cliente, vendedor ou código"
+                            (input)="tableFilter.filterGlobal(searchInput.value, 'contains')"
+                            placeholder="Buscar cliente, vendedor ou código"
+                            class="w-full"
+                    /></p-iconfield>
+                    <div class="list-filters">
+                        <p-select
+                            [(ngModel)]="selectedStatus"
+                            [options]="statusOptions"
+                            optionLabel="label"
+                            optionValue="value"
+                            placeholder="Todos os status"
+                            ariaLabel="Filtrar visitas por status"
+                            [showClear]="true"
+                            (onChange)="tableFilter.filter(selectedStatus, 'status', 'equals')"
+                            appendTo="body"
+                            class="status-filter"
+                        /><p-button label="Limpar filtros" icon="pi pi-filter-slash" severity="secondary" [text]="true" (onClick)="clearFilters(tableFilter, searchInput)" />
+                    </div>
+                </div>
+            </ng-template>
+            <ng-template #header
+                ><tr>
+                    <th pSortableColumn="id">Código <p-sortIcon field="id" /></th>
+                    <th pSortableColumn="clientName">Cliente <p-sortIcon field="clientName" /></th>
+                    <th pSortableColumn="status">Status <p-sortIcon field="status" /></th>
+                    <th pSortableColumn="salespersonName">Vendedor <p-sortIcon field="salespersonName" /></th>
+                    <th pSortableColumn="dateRegister">Registro <p-sortIcon field="dateRegister" /></th>
+                    <th pSortableColumn="agendaDate">Agendamento <p-sortIcon field="agendaDate" /></th>
+                    <th class="text-right">Ação</th>
+                </tr></ng-template
+            >
+            <ng-template #body let-visit
+                ><tr>
+                    <td>
+                        <span class="visit-code">#{{ visit.id }}</span>
+                    </td>
+                    <td>
+                        <span class="client-name">{{ visit.clientName | uppercase }}</span>
+                    </td>
+                    <td>
+                        <p-tag
+                            [value]="visit.status === AGENDA ? 'Agendada' : visit.status === OPEN ? 'Em andamento' : visit.status === CLOSE ? 'Concluída' : visit.status"
+                            [severity]="visit.status === AGENDA ? 'info' : visit.status === OPEN ? 'warn' : visit.status === CLOSE ? 'success' : 'secondary'"
+                            [icon]="visit.status === AGENDA ? 'pi pi-calendar' : visit.status === OPEN ? 'pi pi-clock' : visit.status === CLOSE ? 'pi pi-check-circle' : 'pi pi-info-circle'"
+                            [rounded]="true"
+                        />
+                    </td>
+                    <td>
+                        <div class="salesperson">
+                            <span class="person-avatar" aria-hidden="true">{{ visit.salespersonName?.slice(0, 1) | uppercase }}</span
+                            ><span>{{ visit.salespersonName | uppercase }}</span>
+                        </div>
+                    </td>
+                    <td>
+                        @if (visit.dateRegister) {
+                            <div class="visit-date">
+                                <span>{{ visit.dateRegister | date: 'dd/MM/yyyy' }}</span
+                                ><small class="text-muted-color">{{ visit.dateRegister | date: 'HH:mm' }}</small>
+                            </div>
+                        } @else {
+                            <span class="text-muted-color">Não informado</span>
+                        }
+                    </td>
+                    <td>
+                        @if (visit.agendaDate) {
+                            <div class="visit-date">
+                                <span>{{ visit.agendaDate | date: 'dd/MM/yyyy' }}</span
+                                ><small class="text-muted-color">{{ visit.agendaDate | date: 'HH:mm' }}</small>
+                            </div>
+                        } @else {
+                            <span class="pending-date text-muted-color">Sem agendamento</span>
+                        }
+                    </td>
+                    <td class="text-right">
+                        <p-button
+                            label="Abrir"
+                            icon="pi pi-arrow-up-right"
+                            [text]="true"
+                            size="small"
+                            [ariaLabel]="'Abrir visita ' + visit.id + ' de ' + visit.clientName"
+                            [loading]="openingId() === visit.id"
+                            [disabled]="openingId() !== null"
+                            (onClick)="completeScheduling(visit.id)"
+                        />
+                    </td></tr
+            ></ng-template>
+            <ng-template #emptymessage
+                ><tr>
+                    <td colspan="7">
+                        <div class="list-empty">
+                            <span class="visits-icon"><i class="pi" [ngClass]="loadError() ? 'pi-exclamation-circle' : visits().length ? 'pi-search' : 'pi-address-book'" aria-hidden="true"></i></span>
+                            <h3>{{ loadError() ? 'Não foi possível carregar as visitas' : visits().length ? 'Nenhuma visita encontrada' : 'Seu histórico começa aqui' }}</h3>
+                            <p class="text-muted-color">
+                                {{
+                                    loadError()
+                                        ? 'Clique em Atualizar para tentar novamente.'
+                                        : visits().length
+                                          ? 'Experimente outro termo ou limpe os filtros para visualizar os registros.'
+                                          : 'Registre um atendimento para acompanhar suas visitas nesta lista.'
+                                }}
+                            </p>
+                            @if (!visits().length && !loadError()) {
+                                <p-button label="Registrar primeira visita" icon="pi pi-plus" [outlined]="true" routerLink="/crm/visit/maintenance" />
+                            }
+                        </div>
+                    </td></tr
+            ></ng-template>
+        </p-table>
+    </section>
 </div>

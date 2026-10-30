@@ -16,5 +16,7 @@ public record SalespersonVisitAgendaNewDto(
         Integer clientId,
         @NotBlank(message = "Nome cliente é obrigatório")
         String clientName,
+        String clientCNPJ,
+        String clientCPF,
         String informationAgenda) {
 }

@@ -78,9 +78,7 @@ public class SalespersonVisit {
 
     @Column(name = "products_info")
     private String productsInfo;
-
-
-
+    
     @Column(name = "agenda_info")
     private String agendaInfo;
 

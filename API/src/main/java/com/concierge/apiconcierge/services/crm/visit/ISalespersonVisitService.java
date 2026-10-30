@@ -7,6 +7,7 @@ import com.concierge.apiconcierge.dtos.crm.visit.SalespersonVisitResponseDto;
 import com.concierge.apiconcierge.models.crm.visit.SalespersonVisit;
 import com.concierge.apiconcierge.models.message.MessageResponse;
 
+import java.util.Date;
 import java.util.List;
 
 public interface ISalespersonVisitService {
@@ -23,6 +24,9 @@ public interface ISalespersonVisitService {
 
     List<SalespersonVisitResponseDto> listAll(String emailUser);
 
-    List<SalespersonVisitAgendaResponseDto> listAllAgenda(String emailUser);
+    List<SalespersonVisitAgendaResponseDto> listAllAgenda(String day, String emailUser);
+
+    List<SalespersonVisitAgendaResponseDto> listOverdueAgenda(String emailUser);
+
 
 }

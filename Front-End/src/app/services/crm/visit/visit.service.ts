@@ -1,15 +1,16 @@
 import { HttpClient, HttpHeaders, HttpResponse } from '@angular/common/http';
-import { inject, Injectable } from '@angular/core'
+import { inject, Injectable } from '@angular/core';
 import { StorageService } from '../../storage/storage.service';
 import { Observable } from 'rxjs';
 import { Visit } from '@/app/models/crm/visit/visit';
+import { VisitAgenda, VisitAgendaNew, VisitAgendaUpdate } from '@/app/models/crm/visit/visit.agenda';
+import { MessageResponse } from '@/app/models/message-response';
 import { environment } from '@/environments/environment';
 
 @Injectable({
     providedIn: 'root'
 })
 export class VisitService {
-
     storage = inject(StorageService);
     http = inject(HttpClient);
 
@@ -28,15 +29,27 @@ export class VisitService {
         return this.http.get<Visit[]>(`${environment.apiuUrl}/salesperson/visit/all`, { headers: this.myHeaders() });
     }
 
-    listAllAgenda(): Observable<Visit[]> {
-        return this.http.get<Visit[]>(`${environment.apiuUrl}/salesperson/visit/all/agenda`, { headers: this.myHeaders() });
+    //Agenda
+    agendaNew(p: VisitAgendaNew): Observable<HttpResponse<MessageResponse>> {
+        return this.http.post<MessageResponse>(`${environment.apiuUrl}/salesperson/visit/agenda/new`, p, { headers: this.myHeaders(), observe: 'response' });
+    }
+
+    agendaUpdate(p: VisitAgendaUpdate): Observable<HttpResponse<MessageResponse>> {
+        return this.http.post<MessageResponse>(`${environment.apiuUrl}/salesperson/visit/agenda/update`, p, { headers: this.myHeaders(), observe: 'response' });
+    }
+
+    listAllAgenda(day: string): Observable<VisitAgenda[]> {
+        return this.http.post<VisitAgenda[]>(`${environment.apiuUrl}/salesperson/visit/agenda/day`, { day: day }, { headers: this.myHeaders() });
+    }
+
+    listOverdueAgenda(): Observable<VisitAgenda[]> {
+        return this.http.get<VisitAgenda[]>(`${environment.apiuUrl}/salesperson/visit/agenda/overdue`, { headers: this.myHeaders() });
     }
 
     private myHeaders(): HttpHeaders {
         const httpOptions = new HttpHeaders({
-            'Authorization': 'Bearer ' + this.storage.token,
+            Authorization: 'Bearer ' + this.storage.token
         });
         return httpOptions;
     }
-
 }

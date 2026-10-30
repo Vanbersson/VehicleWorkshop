@@ -10,5 +10,6 @@ public record SalespersonVisitResponseDto(
         StatusVisitEnum status,
         Date dateRegister,
         Date dateVisit,
+        Date agendaDate,
         String clientName) {
 }

@@ -1,9 +1,8 @@
-import { Component, Input, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule, DatePipe, Location } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { FormControl, FormGroup, ReactiveFormsModule, FormsModule, Validators } from '@angular/forms';
 
-import { StepperModule } from 'primeng/stepper';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
@@ -16,6 +15,7 @@ import { TextareaModule } from 'primeng/textarea';
 import { SelectChangeEvent, SelectModule } from 'primeng/select';
 import { DatePickerModule } from 'primeng/datepicker';
 import { DialogModule } from 'primeng/dialog';
+import { StepperModule } from 'primeng/stepper';
 
 import { FilterClientComponent } from '@/app/components/filter.client/filter.client.component';
 import { ClientCompany } from '@/app/models/client.company';
@@ -35,489 +35,352 @@ import { VisitService } from '@/app/services/crm/visit/visit.service';
 import { StatusVisitEnum } from '@/app/models/crm/visit/status.visit.enum';
 
 interface IReazonVisit {
-  id: number;
-  description: string;
+    id: number;
+    description: string;
 }
 
 interface IProductsInterest {
-  id: number;
-  description: string;
+    id: number;
+    description: string;
 }
 
 @Component({
-  selector: 'app-visit-maintenance',
-  standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, FilterClientComponent, SelectModule, DatePickerModule, DialogModule,
-    InputTextModule, RadioButtonModule, TextareaModule, StepperModule, ToastModule, ButtonModule, RouterModule, InputMaskModule, InputNumberModule, CheckboxModule],
-  templateUrl: './visit.maintenance.component.html',
-  styleUrl: './visit.maintenance.component.scss',
-  providers: [MessageService]
+    selector: 'app-visit-maintenance',
+    standalone: true,
+    imports: [
+        CommonModule,
+        ReactiveFormsModule,
+        FormsModule,
+        FilterClientComponent,
+        SelectModule,
+        DatePickerModule,
+        DialogModule,
+        StepperModule,
+        InputTextModule,
+        RadioButtonModule,
+        TextareaModule,
+        ToastModule,
+        ButtonModule,
+        RouterModule,
+        InputMaskModule,
+        InputNumberModule,
+        CheckboxModule
+    ],
+    templateUrl: './visit.maintenance.component.html',
+    styleUrl: './visit.maintenance.component.scss',
+    providers: [MessageService]
 })
 export default class VisitMaintenanceComponent implements OnInit {
-  private visit!: Visit;
-  private isSaveStep1: boolean = false;
-  private isSaveStep2: boolean = false;
-  private isSaveStep3: boolean = false;
-  private isSaveStep4: boolean = false;
-  private user!: User;
-  activeStepper = signal<number>(1);
-  visibleSalesperson: boolean = false;
-  selectClient = signal<ClientCompany | null>(null);
-  INPERSON = ContactTypeEnum.IN_PERSON;
-  PHONE = ContactTypeEnum.PHONE;
-  CELLPHONE = ContactTypeEnum.CELLPHONE;
-  EMAIL = ContactTypeEnum.EMAIL;
-  formVisit = new FormGroup({
-    clientNotExists: new FormControl<boolean>(false),
-    clientId: new FormControl<number | null>(null),
-    clientName: new FormControl<string>('', Validators.required),
-    clientCNPJ: new FormControl<string>(''),
-    clientCPF: new FormControl<string>(''),
-    contactType: new FormControl<ContactTypeEnum>(ContactTypeEnum.IN_PERSON),
-    contact: new FormControl<string>(''),
-    reasonVisit: new FormControl<IReazonVisit[]>([], Validators.required),
-    reasonInfoChecked: new FormControl<boolean>(false),
-    reasonInfo: new FormControl<string>(''),
-    products: new FormControl<IProductsInterest[]>([], Validators.required),
-    productsInfoChecked: new FormControl<boolean>(false),
-    productsInfo: new FormControl<string>(''),
-    salesperson: new FormControl<Salesperson | null>(null, Validators.required),
-    salespersonInfo: new FormControl<string>(''),
-    dateVisit: new FormControl<Date>(new Date(), Validators.required),
-    timeVisit: new FormControl<Date>(new Date(), Validators.required)
-  });
-  reasonVisits = signal<IReazonVisit[]>([]);
-  products = signal<IProductsInterest[]>([]);
-  salespersons = signal<Salesperson[]>([]);
-  salespersonImage = signal<string>('');
-  visibleDateVisit: boolean = false;
-  weekDays: Date[] = [];
+    private visit: Visit | null = null;
+    private previousContactType = ContactTypeEnum.IN_PERSON;
+    saving = signal(false);
+    initializing = signal(true);
+    saveStatus = signal('');
+    stepError = signal('');
+    readonly stepLabels = ['Cliente', 'Contato', 'Motivo', 'Produtos', 'Conclusão'];
+    readonly stepIcons = ['pi-building', 'pi-phone', 'pi-clipboard', 'pi-box', 'pi-check'];
+    activeStepper = signal<number>(1);
+    visibleSalesperson: boolean = false;
+    selectClient = signal<ClientCompany | null>(null);
+    INPERSON = ContactTypeEnum.IN_PERSON;
+    PHONE = ContactTypeEnum.PHONE;
+    CELLPHONE = ContactTypeEnum.CELLPHONE;
+    EMAIL = ContactTypeEnum.EMAIL;
+    FEIRAS_EVENTOS = ContactTypeEnum.FEIRAS_EVENTOS;
+    formVisit = new FormGroup({
+        clientNotExists: new FormControl<boolean>(false),
+        clientId: new FormControl<number | null>(null),
+        clientName: new FormControl<string>('', Validators.required),
+        clientCNPJ: new FormControl<string>(''),
+        clientCPF: new FormControl<string>(''),
+        contactType: new FormControl<ContactTypeEnum>(ContactTypeEnum.IN_PERSON),
+        contact: new FormControl<string>(''),
+        reasonVisit: new FormControl<IReazonVisit[]>([]),
+        reasonInfoChecked: new FormControl<boolean>(false),
+        reasonInfo: new FormControl<string>(''),
+        products: new FormControl<IProductsInterest[]>([]),
+        productsInfoChecked: new FormControl<boolean>(false),
+        productsInfo: new FormControl<string>(''),
+        salesperson: new FormControl<Salesperson | null>(null, Validators.required),
+        salespersonInfo: new FormControl<string>(''),
+        dateVisit: new FormControl<Date>(new Date(), Validators.required),
+        timeVisit: new FormControl<Date>(new Date(), Validators.required)
+    });
+    reasonVisits = signal<IReazonVisit[]>([]);
+    products = signal<IProductsInterest[]>([]);
+    salespersons = signal<Salesperson[]>([]);
+    salespersonImage = signal<string>('');
+    visibleDateVisit: boolean = false;
 
-  constructor(
-    private visitService: VisitService,
-    private loadingService: LoadingService,
-    private userService: UserService,
-    private salespersonService: SalespersonService,
-    private messageService: MessageService,
-    private location: Location) { }
+    constructor(
+        private router: Router,
+        private visitService: VisitService,
+        private loadingService: LoadingService,
+        private userService: UserService,
+        private salespersonService: SalespersonService,
+        private messageService: MessageService,
+        private location: Location
+    ) {}
 
-  ngOnInit(): void {
+    ngOnInit(): void {
+        const state = this.location.getState() as { visit?: Visit };
+        this.visit = state?.visit ?? null;
 
-    const state = this.location.getState() as { visit?: Visit };
-    this.visit = state?.visit! ?? null;
+        this.reasonVisits.set([
+            { id: 1, description: 'Implemento Librelato' },
+            { id: 2, description: 'Consorcio Nacional Librelato' },
+            { id: 3, description: 'Sistema de telemetria (Sigaway)' },
+            { id: 4, description: 'Peças e pneus' },
+            { id: 5, description: 'Oficina: Serviços mecânicos, hidráulicos, pneumáticos' },
+            { id: 6, description: 'Reforma ou corretiva (Pintura, desempeno chassis, jateamento, solda)' },
+            { id: 7, description: 'Plano manutenção preventiva' }
+        ]);
+        this.products.set([
+            { id: 1, description: 'Consórcio' },
+            { id: 2, description: 'Serviços e Peças' },
+            { id: 3, description: 'Graneleiro' },
+            { id: 4, description: 'Porta Container' },
+            { id: 5, description: 'Bau lonado / sider' },
+            { id: 6, description: 'Bau Aluminio' },
+            { id: 7, description: 'Tanque' },
+            { id: 8, description: 'Carrega tudo' },
+            { id: 9, description: 'Frigorifico' }
+        ]);
+        this.init();
+    }
 
-
-
-    this.reasonVisits.set([
-      { id: 1, description: 'Implemento Librelato' },
-      { id: 2, description: 'Consorcio Nacional Librelato' },
-      { id: 3, description: 'Sistema de telemetria (Sigaway)' },
-      { id: 4, description: 'Peças e pneus' },
-      { id: 5, description: 'Oficina: Serviços mecânicos, hidráulicos, pneumáticos' },
-      { id: 6, description: 'Reforma ou corretiva (Pintura, desempeno chassis, jateamento, solda)' },
-      { id: 7, description: 'Plano manutenção preventiva' }
-    ]);
-    this.products.set([
-      { id: 1, description: 'Consórcio' },
-      { id: 2, description: 'Serviços e Peças' },
-      { id: 3, description: 'Graneleiro' },
-      { id: 4, description: 'Porta Container' },
-      { id: 5, description: 'Bau lonado / sider' },
-      { id: 6, description: 'Bau Aluminio' },
-      { id: 7, description: 'Tanque' },
-      { id: 8, description: 'Carrega tudo' },
-      { id: 9, description: 'Frigorifico' }
-    ]);
-    this.init();
-  }
-
-  onChangeStep(e: any) {
-    this.activeStepper.set(e);
-  }
-
-  private async init() {
-    //Editar visita
-    if (this.visit) {
-      this.edit();
-    } else {
-      this.loadingService.show();
-      let types: ISalespersonType = { typeSalesPart: YesNotEnum.NOT, typeSalesService: YesNotEnum.NOT, typeSalesVehicle: YesNotEnum.YES };
-      this.salespersons.set(await this.filterTypeSalesperson(types));
-      const resultUser = await this.getUser();
-      if (resultUser.status === 200) {
-        this.user = resultUser.body!;
-        const resultFind = this.salespersons().find(p => p.userId === this.user.id);
-        if (resultFind) {
-          this.salespersonImage.set(resultFind.photoUrl);
-          this.formVisit.get('salesperson')?.setValue(resultFind);
+    private async init(): Promise<void> {
+        this.loadingService.show();
+        try {
+            const types: ISalespersonType = { typeSalesPart: YesNotEnum.NOT, typeSalesService: YesNotEnum.NOT, typeSalesVehicle: YesNotEnum.YES };
+            this.salespersons.set(await this.filterTypeSalesperson(types));
+            if (this.visit) {
+                const v = this.visit;
+                this.previousContactType = v.contactType;
+                const salesperson = this.salespersons().find((p) => p.id === v.salespersonId) ?? null;
+                const date = v.dateVisit ? new Date(v.dateVisit) : new Date();
+                this.formVisit.patchValue({
+                    clientNotExists: v.clientId == null,
+                    clientId: v.clientId,
+                    clientName: v.clientName,
+                    clientCNPJ: v.clientCNPJ,
+                    clientCPF: v.clientCPF,
+                    salesperson,
+                    salespersonInfo: v.salespersonInfo,
+                    contactType: v?.contactType ?? ContactTypeEnum.IN_PERSON,
+                    contact: v.contact,
+                    reasonVisit: this.reasonVisits().filter((item) => (v.reasonVisit ?? '').split(',').includes(String(item.id))),
+                    reasonInfoChecked: !!v.reasonVisitInfo,
+                    reasonInfo: v.reasonVisitInfo,
+                    products: this.products().filter((item) => (v.products ?? '').split(',').includes(String(item.id))),
+                    productsInfoChecked: !!v.productsInfo,
+                    productsInfo: v.productsInfo,
+                    dateVisit: Number.isNaN(date.getTime()) ? new Date() : date,
+                    timeVisit: Number.isNaN(date.getTime()) ? new Date() : date
+                });
+                if (v.clientId != null) this.selectClient.set(Object.assign(new ClientCompany(), { id: v.clientId, name: v.clientName, cnpj: v.clientCNPJ, cpf: v.clientCPF }));
+                this.salespersonImage.set(salesperson?.photoUrl ?? '');
+            } else {
+                const result = await this.getUser();
+                const salesperson = this.salespersons().find((p) => p.userId === result.body?.id);
+                if (salesperson) {
+                    this.formVisit.controls.salesperson.setValue(salesperson);
+                    this.salespersonImage.set(salesperson.photoUrl);
+                }
+            }
+        } finally {
+            this.initializing.set(false);
+            this.loadingService.hide();
         }
-      }
-      this.loadingService.hide();
-    }
-  }
-
-  private async edit() {
-    let types: ISalespersonType = { typeSalesPart: YesNotEnum.NOT, typeSalesService: YesNotEnum.NOT, typeSalesVehicle: YesNotEnum.YES };
-    this.salespersons.set(await this.filterTypeSalesperson(types));
-    const salesperson = this.salespersons().find(p => p.id === this.visit.salespersonId);
-    this.salespersonImage.set(salesperson?.photoUrl ?? '');
-
-    this.formVisit.patchValue({
-      clientId: this.visit.clientId ,
-      clientName: this.visit.clientName,
-      clientCNPJ: this.visit.clientCNPJ,
-      clientCPF: this.visit.clientCPF,
-
-      
-
-      salesperson: salesperson ?? null,
-      salespersonInfo: this.visit.salespersonInfo,
-    });
-
-
-    
-
-    if(this.visit.clientId == null){
-       this.formVisit.get('clientNotExists')?.setValue(true);
-
     }
 
-    this.isSaveStep1 = true;
+    async goToStep(target: number): Promise<void> {
+        if (this.saving() || this.initializing() || target === this.activeStepper()) return;
+        const through = target > this.activeStepper() ? target - 1 : this.activeStepper() - 1;
+        if (!this.validateSteps(through)) return;
+        if (await this.persist()) {
+            this.stepError.set('');
+            this.activeStepper.set(target);
+        }
+    }
 
-  }
-
-  //STEP CLIENT
-  onChangecheckBoxClient(event: CheckboxChangeEvent) {
-    //Limpa os dados do cliente
-    this.selectClient.set(null);
-    this.formVisit.patchValue({
-      clientId: null,
-      clientName: '',
-      clientCNPJ: '',
-      clientCPF: ''
-    });
-  }
-
-  onSelectClient(client: ClientCompany | null) {
-    this.selectClient.set(client);
-    this.formVisit.patchValue({
-      clientId: client?.id,
-      clientName: client?.name,
-      clientCNPJ: client?.cnpj ?? '',
-      clientCPF: client?.cpf ?? ''
-    });
-  }
-
-  fisrtStepper() {
-    this.activeStepper.set(1);
-  }
-
-  private fisrtStepperValid(): boolean {
-    //Cliente sem cadastro
-    if (this.formVisit.get('clientNotExists')?.value === true) {
-      //Nome Obrigatório 
-      if (this.formVisit.get('clientName')?.value?.trim() === '') {
-        this.messageService.add({ severity: 'info', summary: 'Atenção', detail: 'Cliente não informado.', icon: 'pi pi-info-circle' });
+    private validateSteps(through: number): boolean {
+        const v = this.formVisit.getRawValue();
+        const failures: [number, boolean, string][] = [
+            [1, !v.clientName?.trim() || (!v.clientNotExists && (!v.clientId || this.selectClient()?.id !== v.clientId)), 'Selecione um cliente pelo filtro ou informe o nome do cliente sem cadastro.'],
+            [1, !v.salesperson, 'Selecione o vendedor.'],
+            [2, !this.contactValid(), 'Informe um e-mail válido ou o número completo com DDD.'],
+            [3, !v.reasonVisit?.length && !v.reasonInfoChecked, 'Selecione um motivo ou marque Outro e descreva.'],
+            [3, !!v.reasonInfoChecked && !v.reasonInfo?.trim(), 'Descreva o outro motivo da visita.'],
+            [4, !v.products?.length && !v.productsInfoChecked, 'Selecione um produto ou marque Outro e descreva.'],
+            [4, !!v.productsInfoChecked && !v.productsInfo?.trim(), 'Descreva o outro produto de interesse.'],
+            [5, !this.contactValid(), 'Informe onde foi a feira ou evento.']
+        ];
+        const failure = failures.find(([step, invalid]) => step <= through && invalid);
+        if (!failure) {
+            this.stepError.set('');
+            return true;
+        }
+        this.formVisit.markAllAsTouched();
+        this.activeStepper.set(failure[0]);
+        this.stepError.set(failure[2]);
+        this.messageService.add({ severity: 'warn', summary: 'Verifique o preenchimento', detail: failure[2] });
         return false;
-      }
-    } else {
-      if (!this.selectClient()) {
-        this.messageService.add({ severity: 'info', summary: 'Atenção', detail: 'Cliente não informado.', icon: 'pi pi-info-circle' });
-        return false;
-      }
-    }
-    if (this.formVisit.get('salesperson')?.value == null) {
-      this.messageService.add({ severity: 'info', summary: 'Atenção', detail: 'Vendedor não informado.', icon: 'pi pi-info-circle' });
-      return false;
-    }
-    return true;
-  }
-  //STEP CLIENT END
-  changeContactType() {
-    this.formVisit.get('contact')?.setValue('');
-  }
-
-  async stepperLocation() {
-    //Valid Client
-    if (!this.fisrtStepperValid()) {
-      return;
-    }
-    if (this.isSaveStep1 === false) {
-      const result = await this.saveNew();
-      if (result === true) {
-        this.activeStepper.set(2);
-      }
-    } else {
-      this.activeStepper.set(2);
-    }
-  }
-
-  async stepperReasonVisit() {
-    //Valid Client
-    if (!this.fisrtStepperValid()) {
-      return;
-    }
-    if (this.isSaveStep2 === false) {
-      const result = await this.saveUpdate();
-      if (result === true) {
-        this.isSaveStep2 = true;
-        this.activeStepper.set(3);
-      }
-    } else {
-      this.activeStepper.set(3);
-    }
-  }
-
-  private stepperReasonVisitValid(): boolean {
-    const { value } = this.formVisit;
-    if (value.reasonVisit?.length === 0 && value.reasonInfoChecked === false) {
-      this.messageService.add({ severity: 'info', summary: 'Atenção', detail: 'Motivo não marcado.', icon: 'pi pi-info-circle' });
-      return false;
-    }
-    if (value.reasonInfoChecked === true && value.reasonInfo === '') {
-      this.messageService.add({ severity: 'info', summary: 'Atenção', detail: 'Motivo (OUTRO) marcado, descrição não informada.', icon: 'pi pi-info-circle' });
-      return false;
-    }
-    return true;
-  }
-
-  async stepperProduct() {
-    //Valida motivo da visita
-    if (!this.stepperReasonVisitValid()) {
-      return;
-    }
-    if (this.isSaveStep3 === false) {
-      const result = await this.saveUpdate();
-      if (result === true) {
-        this.isSaveStep3 = true;
-        this.activeStepper.set(4);
-      }
-    } else {
-      this.activeStepper.set(4);
-    }
-  }
-
-  private stepperProductValid(): boolean {
-    const { value } = this.formVisit;
-    if (value.products?.length === 0 && value.productsInfoChecked === false) {
-      this.messageService.add({ severity: 'info', summary: 'Atenção', detail: 'Produto não marcado.', icon: 'pi pi-info-circle' });
-      return false;
-    }
-    if (value.productsInfoChecked === true && value.productsInfo === '') {
-      this.messageService.add({ severity: 'info', summary: 'Atenção', detail: 'Produto (OUTRO) marcado, descrição não informada.', icon: 'pi pi-info-circle' });
-      return false;
-    }
-    return true;
-  }
-
-  async stepperInformation() {
-    if (!this.stepperProductValid()) {
-      return;
-    } if (this.isSaveStep4 === false) {
-      const result = await this.saveUpdate();
-      if (result === true) {
-        this.isSaveStep4 = true;
-        this.activeStepper.set(5);
-      }
-    } else {
-      this.activeStepper.set(5);
     }
 
-  }
-
-  onChangeSalesperson(event: SelectChangeEvent) {
-    if (event.value) {
-      const p: Salesperson = event.value;
-      this.formVisit.get('salesperson')?.setValue(p);
-      this.salespersonImage.set(p.photoUrl);
-    } else {
-      this.formVisit.get('salesperson')?.setValue(null);
-      this.salespersonImage.set('');
-    }
-  }
-
-  private async saveNew(): Promise<boolean> {
-    const { value } = this.formVisit;
-    this.visit = new Visit();
-    this.visit.clientId = value?.clientId ?? null;
-    this.visit.clientName = value.clientName!;
-    this.visit.clientCNPJ = value?.clientCNPJ ?? '';
-    this.visit.clientCPF = value?.clientCPF ?? '';
-    this.visit.salespersonId = value.salesperson?.id ?? null;
-    this.visit.salespersonName = value.salesperson?.name ?? '';
-    this.loadingService.show();
-    const result = await this.registerNew(this.visit);
-    this.loadingService.hide();
-    if (result.status === 201) {
-      this.isSaveStep1 = true;
-      this.visit = result.body!;
-      return true;
-    }
-    return false;
-  }
-  private async saveUpdate(): Promise<boolean> {
-    const { value, } = this.formVisit;
-    this.visit.clientId = value?.clientId ?? null;
-    this.visit.clientName = value.clientName!;
-    this.visit.clientCNPJ = value?.clientCNPJ ?? '';
-    this.visit.clientCPF = value?.clientCPF ?? '';
-    this.visit.contactType = value.contactType!;
-    this.visit.contact = value?.contact ?? '';
-    this.visit.reasonVisit = value?.reasonVisit!.map((r: IReazonVisit) => r.id).join(',') ?? '';
-    this.visit.reasonVisitInfo = value.reasonInfoChecked ? value.reasonInfo! : '';
-    this.visit.products = value?.products!.map((p: IProductsInterest) => p.id).join(',') ?? '';
-    this.visit.productsInfo = value.productsInfoChecked ? value.productsInfo! : '';
-    this.visit.salespersonId = value.salesperson?.id ?? null;
-    this.visit.salespersonName = value.salesperson?.name ?? '';
-    this.visit.salespersonInfo = value?.salespersonInfo ?? '';
-    this.loadingService.show();
-    const result = await this.registerUpdate(this.visit);
-    this.loadingService.hide();
-    if (result.status === 200) {
-      return true;
-    }
-    return false;
-  }
-  async saveComplete() {
-    const { value, valid } = this.formVisit;
-    if (!valid) return;
-    this.visit.status = StatusVisitEnum.CLOSE;
-    this.visit.clientId = value?.clientId ?? null;
-    this.visit.clientName = value.clientName!;
-    this.visit.clientCNPJ = value?.clientCNPJ ?? '';
-    this.visit.clientCPF = value?.clientCPF ?? '';
-    this.visit.contactType = value.contactType!;
-    this.visit.contact = value?.contact ?? '';
-    this.visit.reasonVisit = value?.reasonVisit!.map((r: IReazonVisit) => r.id).join(',') ?? '';
-    this.visit.reasonVisitInfo = value.reasonInfoChecked ? value.reasonInfo! : '';
-    this.visit.products = value?.products!.map((p: IProductsInterest) => p.id).join(',') ?? '';
-    this.visit.productsInfo = value.productsInfoChecked ? value.productsInfo! : '';
-    this.visit.salespersonId = value.salesperson?.id ?? null;
-    this.visit.salespersonName = value.salesperson?.name ?? '';
-    this.visit.salespersonInfo = value?.salespersonInfo ?? '';
-    const dateVisit = value.dateVisit;
-    const timeVisit = value.timeVisit;
-    if (!(dateVisit instanceof Date) || !(timeVisit instanceof Date)) {
-      return;
-    }
-    this.visit.dateVisit = this.formatDateTime(new Date(
-      dateVisit.getFullYear(),
-      dateVisit.getMonth(),
-      dateVisit.getDate(),
-      timeVisit.getHours(),
-      timeVisit.getMinutes(),
-      0,
-      0
-    ));
-    this.loadingService.show();
-    const result = await this.registerUpdate(this.visit);
-    this.loadingService.hide();
-    if (result.status === 200) {
-      this.messageService.add({ severity: 'success', summary: 'Visita', detail: 'Registrada com sucesso', icon: 'pi pi-check' });
-      this.visibleDateVisit = false;
+    private contactValid(): boolean {
+        const { contactType, contact } = this.formVisit.getRawValue();
+        if (contactType === this.INPERSON) return true;
+        if (contactType === this.EMAIL) return !!contact?.trim() && !Validators.email(new FormControl(contact.trim()));
+        if (contactType === this.FEIRAS_EVENTOS) return !!contact?.trim();
+        return (contact ?? '').replace(/\D/g, '').length === (contactType === this.PHONE ? 10 : 11);
     }
 
-  }
-
-  formatDateTime(date: Date): string {
-    const datePipe = new DatePipe('en-US');
-    // Obtém o fuso horário local no formato ±hh:mm
-    const tzOffset = -date.getTimezoneOffset();
-    const sign = tzOffset >= 0 ? '+' : '-';
-    const hours = Math.floor(Math.abs(tzOffset) / 60).toString().padStart(2, '0');
-    const minutes = (Math.abs(tzOffset) % 60).toString().padStart(2, '0');
-    const timezone = `${sign}${hours}:${minutes}`;
-    // Formata a data e adiciona o fuso horário
-    return datePipe.transform(date, "yyyy-MM-dd'T'HH:mm:ss.SSS") + timezone;
-  }
-
-  private async filterTypeSalesperson(types: ISalespersonType): Promise<Salesperson[]> {
-    try {
-      return await lastValueFrom(this.salespersonService.filterType(types));
-    } catch (error: any) {
-      this.messageService.add({ severity: 'error', summary: 'Erro', detail: error.error.emessage, icon: 'pi pi-times' });
-      return [];
+    selectionSummary(kind: 'reason' | 'products'): string {
+        const v = this.formVisit.getRawValue();
+        const items = kind === 'reason' ? v.reasonVisit : v.products;
+        const other = kind === 'reason' ? (v.reasonInfoChecked ? v.reasonInfo : '') : v.productsInfoChecked ? v.productsInfo : '';
+        return [...(items ?? []).map((item) => item.description), ...(other?.trim() ? [other.trim()] : [])].join(', ');
     }
-  }
 
-  private async getUser(): Promise<HttpResponse<User>> {
-    try {
-      return await lastValueFrom(this.userService.getUser());
-    } catch (error: any) {
-      this.messageService.add({ severity: 'error', summary: 'Erro', detail: error.error.emessage, icon: 'pi pi-times' });
-      return error;
+    //STEP CLIENT
+    onChangecheckBoxClient(event: CheckboxChangeEvent) {
+        //Limpa os dados do cliente
+        this.selectClient.set(null);
+        this.formVisit.patchValue({
+            clientId: null,
+            clientName: '',
+            clientCNPJ: '',
+            clientCPF: ''
+        });
     }
-  }
 
-  private async registerNew(v: Visit): Promise<HttpResponse<Visit>> {
-    try {
-      return await lastValueFrom(this.visitService.registerNew(v));
-    } catch (error: any) {
-      this.messageService.add({ severity: 'error', summary: 'Erro', detail: error.error.emessage, icon: 'pi pi-times' });
-      return error;
+    onSelectClient(client: ClientCompany | null) {
+        this.formVisit.markAsDirty();
+        this.selectClient.set(client);
+        this.formVisit.patchValue({
+            clientId: client?.id ?? null,
+            clientName: client?.name ?? '',
+            clientCNPJ: client?.cnpj ?? '',
+            clientCPF: client?.cpf ?? ''
+        });
     }
-  }
 
-  private async registerUpdate(v: Visit): Promise<HttpResponse<Visit>> {
-    try {
-      return await lastValueFrom(this.visitService.registerUpdate(v));
-    } catch (error: any) {
-      this.messageService.add({ severity: 'error', summary: 'Erro', detail: error.error.emessage, icon: 'pi pi-times' });
-      return error;
+    changeContactType(): void {
+        const type = this.formVisit.controls.contactType.value;
+        if (type === this.previousContactType) return;
+        this.previousContactType = type ?? this.INPERSON;
+        this.formVisit.controls.contact.setValue('');
+        this.stepError.set('');
     }
-  }
 
-  openDateVisit(): void {
-    const { valid } = this.formVisit;
-    if (!valid) return;
-    const now = new Date();
-    // Semana de domingo a sábado.
-    const start = new Date(
-      now.getFullYear(),
-      now.getMonth(),
-      now.getDate() - now.getDay()
-    );
+    onChangeSalesperson(event: SelectChangeEvent) {
+        if (event.value) {
+            const p: Salesperson = event.value;
+            this.formVisit.get('salesperson')?.setValue(p);
+            this.salespersonImage.set(p.photoUrl);
+        } else {
+            this.formVisit.get('salesperson')?.setValue(null);
+            this.salespersonImage.set('');
+        }
+    }
 
-    this.weekDays = Array.from({ length: 7 }, (_, index) =>
-      new Date(start.getFullYear(), start.getMonth(), start.getDate() + index)
-    );
+    private async persist(complete = false): Promise<boolean> {
+        if (this.saving() || this.initializing()) return false;
+        this.saving.set(true);
+        this.saveStatus.set('Salvando…');
+        const v = this.formVisit.getRawValue();
+        const payload = Object.assign(new Visit(), this.visit, {
+            clientId: v.clientNotExists ? null : v.clientId,
+            clientName: v.clientName?.trim().toLocaleLowerCase() ?? '',
+            clientCNPJ: v.clientCNPJ ?? '',
+            clientCPF: v.clientCPF ?? '',
+            salespersonId: v.salesperson?.id ?? null,
+            salespersonName: v.salesperson?.name.trim().toLocaleLowerCase() ?? '',
+            salespersonInfo: v.salespersonInfo?.trim().toLocaleLowerCase() ?? '',
+            contactType: v.contactType ?? this.INPERSON,
+            contact: v.contact?.trim() ?? '',
+            reasonVisit: (v.reasonVisit ?? []).map((item) => item.id).join(','),
+            reasonVisitInfo: v.reasonInfoChecked ? (v.reasonInfo?.trim().toLocaleLowerCase() ?? '') : '',
+            products: (v.products ?? []).map((item) => item.id).join(','),
+            productsInfo: v.productsInfoChecked ? (v.productsInfo?.trim().toLocaleLowerCase() ?? '') : ''
+        });
+        if (complete) {
+            const date = v.dateVisit;
+            const time = v.timeVisit;
+            if (!(date instanceof Date) || Number.isNaN(date.getTime()) || !(time instanceof Date) || Number.isNaN(time.getTime())) {
+                this.stepError.set('Informe uma data e um horário válidos.');
+                this.saveStatus.set('Data ou horário inválido');
+                this.saving.set(false);
+                return false;
+            }
+            payload.status = StatusVisitEnum.CLOSE;
+            payload.dateVisit = this.formatDateTime(new Date(date.getFullYear(), date.getMonth(), date.getDate(), time.getHours(), time.getMinutes()));
+        }
+        try {
+            this.loadingService.show();
+            const result = await lastValueFrom(this.visit?.id ? this.visitService.registerUpdate(payload) : this.visitService.registerNew(payload));
+            this.loadingService.hide();
+            if (!result.body?.id) throw new Error('O servidor não retornou o registro salvo.');
+            this.visit = result.body;
+            this.formVisit.markAsPristine();
+            this.saveStatus.set(complete ? 'Visita concluída' : 'Alterações salvas');
+            return true;
+        } catch (error: unknown) {
+            this.saveStatus.set('Não foi possível salvar. Tente novamente.');
+            const detail = error instanceof Error ? error.message : 'Verifique sua conexão e tente novamente.';
+            this.messageService.add({ severity: 'error', summary: 'Erro ao salvar visita', detail });
+            return false;
+        } finally {
+            this.saving.set(false);
+        }
+    }
 
-    this.formVisit.patchValue({
-      dateVisit: new Date(now.getFullYear(), now.getMonth(), now.getDate()),
-      timeVisit: new Date(now)
-    });
+    async saveComplete(): Promise<void> {
+        if (!this.validateSteps(4)) {
+            this.visibleDateVisit = false;
+            return;
+        }
+        if (await this.persist(true)) {
+            this.visibleDateVisit = false;
+            await this.router.navigate(['/crm/visit']);
+        }
+    }
 
-    this.visibleDateVisit = true;
-  }
+    formatDateTime(date: Date): string {
+        const datePipe = new DatePipe('en-US');
+        // Obtém o fuso horário local no formato ±hh:mm
+        const tzOffset = -date.getTimezoneOffset();
+        const sign = tzOffset >= 0 ? '+' : '-';
+        const hours = Math.floor(Math.abs(tzOffset) / 60)
+            .toString()
+            .padStart(2, '0');
+        const minutes = (Math.abs(tzOffset) % 60).toString().padStart(2, '0');
+        const timezone = `${sign}${hours}:${minutes}`;
+        // Formata a data e adiciona o fuso horário
+        return datePipe.transform(date, "yyyy-MM-dd'T'HH:mm:ss.SSS") + timezone;
+    }
 
-  selectVisitDate(date: Date): void {
-    const control = this.formVisit.get('dateVisit');
+    private async filterTypeSalesperson(types: ISalespersonType): Promise<Salesperson[]> {
+        try {
+            return await lastValueFrom(this.salespersonService.filterType(types));
+        } catch (error: any) {
+            this.messageService.add({ severity: 'error', summary: 'Erro', detail: error?.error?.emessage ?? 'Não foi possível carregar os dados. Tente novamente.', icon: 'pi pi-times' });
+            return [];
+        }
+    }
 
-    control?.setValue(date);
-    control?.markAsDirty();
-  }
+    private async getUser(): Promise<HttpResponse<User>> {
+        try {
+            return await lastValueFrom(this.userService.getUser());
+        } catch (error: any) {
+            this.messageService.add({ severity: 'error', summary: 'Erro', detail: error?.error?.emessage ?? 'Não foi possível carregar os dados. Tente novamente.', icon: 'pi pi-times' });
+            return error;
+        }
+    }
 
-  isSelectedDate(date: Date): boolean {
-    const selected = this.formVisit.get('dateVisit')?.value;
-
-    return selected instanceof Date &&
-      selected.getFullYear() === date.getFullYear() &&
-      selected.getMonth() === date.getMonth() &&
-      selected.getDate() === date.getDate();
-  }
-
-  changeWeek(direction: number): void {
-    if (!this.weekDays.length) return;
-
-    const firstDay = this.weekDays[0];
-
-    this.weekDays = Array.from({ length: 7 }, (_, index) =>
-      new Date(
-        firstDay.getFullYear(),
-        firstDay.getMonth(),
-        firstDay.getDate() + direction * 7 + index
-      )
-    );
-  }
-
+    openDateVisit(): void {
+        if (this.saving() || this.initializing() || !this.validateSteps(4)) return;
+        this.visibleDateVisit = true;
+    }
 }

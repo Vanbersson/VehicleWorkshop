@@ -41,5 +41,7 @@ public record SalespersonVisitRegisterUpdateDto(
         String reasonVisit,
         String reasonVisitInfo,
         String products,
-        String productsInfo) {
+        String productsInfo,
+        String agendaInfo,
+        Date agendaDate) {
 }

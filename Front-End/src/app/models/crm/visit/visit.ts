@@ -11,11 +11,11 @@ export class Visit {
     userIdRegister: number | null = null;
     userNameRegister: string = '';
     dateVisit: string | Date | null = '';
-    
+
     salespersonId: number | null = null;
     salespersonName: string = '';
     salespersonInfo: string = '';
-    
+
     contactType: ContactTypeEnum = ContactTypeEnum.IN_PERSON;
     contact: string = '';
 
@@ -32,5 +32,7 @@ export class Visit {
     products: string = '';
     productsInfo: string = '';
 
-    
+    agendaDate: Date | string = '';
+    agendaInfo: string = '';
+
 }
