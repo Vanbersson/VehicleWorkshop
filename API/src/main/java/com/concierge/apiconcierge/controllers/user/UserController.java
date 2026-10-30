@@ -2,6 +2,7 @@ package com.concierge.apiconcierge.controllers.user;
 
 import com.concierge.apiconcierge.dtos.message.MessageResponseDto;
 import com.concierge.apiconcierge.dtos.user.UserDto;
+import com.concierge.apiconcierge.dtos.user.UserResponseDto;
 import com.concierge.apiconcierge.models.message.MessageResponse;
 import com.concierge.apiconcierge.models.user.User;
 import com.concierge.apiconcierge.services.auth.TokenService;
@@ -58,6 +59,13 @@ public class UserController {
         } catch (Exception ex) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new MessageResponseDto(ex.getMessage()));
         }
+    }
+
+    @GetMapping
+    public ResponseEntity<UserResponseDto> getUser(HttpServletRequest request) {
+        String emailUser = this.getEmail(request);
+        UserResponseDto response = this.service.getUser(emailUser);
+        return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
     @GetMapping("/{companyId}/{resaleId}/all")

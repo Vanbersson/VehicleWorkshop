@@ -28,6 +28,9 @@ export class UserService {
     updatePassword(data: FormData): Observable<HttpResponse<MessageResponse>> {
         return this.http.post<MessageResponse>(environment.apiuUrl + "/user/update/password", data, { headers: this.myHeaders(), observe: 'response' });
     }
+    getUser(): Observable<HttpResponse<User>> {
+        return this.http.get<User>(`${environment.apiuUrl}/user`, { headers: this.myHeaders(), observe: 'response' });
+    }
     listAll(): Observable<HttpResponse<MessageResponse>> {
         return this.http.get<MessageResponse>(environment.apiuUrl + "/user/" + this.companyResale + "/all", { headers: this.myHeaders(), observe: 'response' });
     }

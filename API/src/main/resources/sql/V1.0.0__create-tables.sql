@@ -561,6 +561,41 @@ FOREIGN KEY(resale_id) REFERENCES tb_resale(id),
 FOREIGN KEY(user_id) REFERENCES tb_user(id),
 primary key(id)
 );
+
+-- PODE SER AGENDADO UMA VISITA
+-- PODE SER REGISTRADO UMA VISITA
+CREATE TABLE IF NOT EXISTS tb_salesperson_visit(
+company_id int not null,
+resale_id int not null,
+id int not null AUTO_INCREMENT,
+status tinyint not null,
+date_register datetime not null,
+user_id_register int not null,
+user_name_register varchar(100) not null,
+date_visit datetime,
+salesperson_id int not null,
+salesperson_name varchar(100) not null,
+salesperson_info varchar(255),
+contact_type tinyint,
+contact varchar(50),
+client_id int,
+client_name varchar(100),
+client_CNPJ varchar(100),
+client_CPF varchar(100),
+latitude varchar(100),
+longitude varchar(100),
+reason_visit varchar(255),
+reason_visit_info varchar(255),
+products varchar(255),
+products_info varchar(255),
+agenda_info varchar(255),
+agenda_date datetime,
+FOREIGN KEY(company_id) REFERENCES tb_company(id),
+FOREIGN KEY(resale_id) REFERENCES tb_resale(id),
+FOREIGN KEY(salesperson_id) REFERENCES tb_salesperson(id),
+FOREIGN KEY(client_id) REFERENCES tb_client_company(id),
+primary key(id)
+);
 -- FIM MENU CRM
 
 CREATE TABLE IF NOT EXISTS tb_vehicle_entry(

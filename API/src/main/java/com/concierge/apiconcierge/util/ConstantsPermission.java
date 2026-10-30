@@ -11,6 +11,8 @@ public class ConstantsPermission {
     public static final Integer DEL_AUTH_EXIT_VEHICLE_WITHOUT_O_S = 107;
     public static final Integer AUTH_ENTRY_VEHICLE = 108;
 
+
+
     public static final Integer CONCIERGE_VEHICLE_ENTRY_NOTIFICATIONS = 153;
     public static final Integer CONCIERGE_VEHICLE_EXIT_NOTIFICATIONS = 154;
 
@@ -21,5 +23,9 @@ public class ConstantsPermission {
 
     //WORKSHOP
     public static final Integer EDIT_QTD_MATERIAL = 300;
+
+    //CRM
+    public static final Integer  LIST_VISIT_ALL_SALESPERSON = 400;
+    public static final Integer  LIST_AGENDA_ALL_SALESPERSON = 401;
 
 }

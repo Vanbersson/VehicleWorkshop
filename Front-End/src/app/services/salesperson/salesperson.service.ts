@@ -5,6 +5,7 @@ import { Observable } from 'rxjs';
 import { environment } from '@/environments/environment';
 import { Salesperson } from '@/app/models/crm/salesperson';
 import { MessageResponse } from '@/app/models/message-response';
+import { ISalespersonType } from '@/app/interfaces/salesperson/i.salesperson.type';
 
 @Injectable({
     providedIn: 'root'
@@ -25,9 +26,11 @@ export class SalespersonService {
     listAll(): Observable<Salesperson[]> {
         return this.http.get<Salesperson[]>(`${environment.apiuUrl}/salesperson/all`, { headers: this.myHeaders() });
     }
-    listAllEnabled(): Observable<Salesperson[]> {
-        return this.http.get<Salesperson[]>(`${environment.apiuUrl}/salesperson/all/enabled`, { headers: this.myHeaders() });
-    }
+
+    filterType(types: ISalespersonType): Observable<Salesperson[]> {
+        return this.http.post<Salesperson[]>(`${environment.apiuUrl}/salesperson/types`, types, { headers: this.myHeaders() });
+     }
+
     saveImage(data: FormData): Observable<HttpResponse<any>> {
         return this.http.post<any>(`${environment.apiuUrl}/salesperson/save/image`, data, { headers: { 'Authorization': `Bearer ${this.storage.token}` }, observe: 'response' });
     }

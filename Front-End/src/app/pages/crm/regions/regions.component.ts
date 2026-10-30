@@ -2,11 +2,16 @@ import { Component, signal, viewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { GoogleMap, MapAdvancedMarker } from '@angular/google-maps';
 import { FormsModule } from '@angular/forms';
+import { lastValueFrom } from 'rxjs';
 
 import { ToastModule } from 'primeng/toast';
 import { InputTextModule } from 'primeng/inputtext';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxChangeEvent, CheckboxModule } from 'primeng/checkbox';
+import { MessageService } from 'primeng/api';
+
+import { VisitService } from '@/app/services/crm/visit/visit.service';
+import { Visit } from '@/app/models/crm/visit/visit';
 
 export enum MapLocationType {
   SALESPERSON = 'SALESPERSON',
@@ -17,12 +22,17 @@ export enum MapLocationType {
 
 export interface MapLocation {
   id: number;
+  salespersonName?: string;
+  clientName?:string;
+  latitude: number;
+  longitude: number;
+  
+
   name: string;
   cnpj?: string;
   cpf?: string;
   type: MapLocationType;
-  latitude: number;
-  longitude: number;
+  
   description?: string;
   dateAgenda?: string;
 }
@@ -35,6 +45,7 @@ export interface MapLocation {
   ],
   templateUrl: './regions.component.html',
   styleUrl: './regions.component.scss',
+  providers: [MessageService]
 })
 export default class RegionsComponent {
   inputSearch: String = '';
@@ -193,6 +204,9 @@ export default class RegionsComponent {
     ]
   };
 
+  constructor(private visitService: VisitService,
+    private messageService: MessageService) { }
+
   addAdvancedMarker(event: google.maps.MapMouseEvent) {
     this.advancedMarkerPositions.push(event?.latLng!.toJSON());
   }
@@ -243,8 +257,13 @@ export default class RegionsComponent {
   }
 
   onCheckboxChangeAgenda(event: CheckboxChangeEvent): void {
+    this.allAgenda();
+
     this.showAgenda = event.checked;
     this.updateLocationsShow();
+  }
+  private async allAgenda() {
+    await this.listAllAgenda();
   }
 
   onCheckboxChangeCustomer(event: CheckboxChangeEvent): void {
@@ -266,6 +285,15 @@ export default class RegionsComponent {
       location.cpf?.includes(value) ||
       location.description?.toLowerCase().includes(value)
     ));
+  }
+
+  private async listAllAgenda(): Promise<Visit[]> {
+    try {
+      return await lastValueFrom(this.visitService.listAllAgenda());
+    } catch (error: any) {
+      this.messageService.add({ severity: 'error', summary: 'Erro', detail: error.error.message, icon: 'pi pi-times' });
+      return [];
+    }
   }
 
 }

@@ -202,6 +202,7 @@ export default class UserComponent implements OnInit {
         key: '5_0', label: 'CRM', children: [
           { key: '5_1', label: 'Regiões' },
           { key: '5_2', label: 'Agenda de visitas' },
+          { key: '5_5', label: 'Visitas' },
           { key: '5_3', label: 'Atendimento' },
           { key: '5_4', label: 'Relatório' },
           {

@@ -1,0 +1,53 @@
+<div class="layout-card">
+    <p-toast />
+    <div class="layout-card-title">
+        <span>Visitas</span>
+        <p-button icon="pi pi-plus" [outlined]="true" label="Registrar Visita" routerLink="/crm/visit/maintenance" />
+    </div>
+
+    <p-table #tableFilter [value]="visits()" showGridlines
+        [globalFilterFields]="['id','status','salespersonName','clientName']"
+        size="small" [tableStyle]="{ 'min-width': '50rem' }">
+        <ng-template pTemplate="caption">
+            <div class="flex">
+                <p-iconField iconPosition="left">
+                    <p-inputIcon>
+                        <i class="pi pi-search"></i>
+                    </p-inputIcon>
+                    <input pInputText type="text" (input)="tableFilter.filterGlobal($any($event.target).value, 'contains')" placeholder="Pesquisar" />
+                </p-iconField>
+            </div>
+        </ng-template>
+        <ng-template #header>
+            <tr>
+                <th pSortableColumn="id" style="width:10%">Código<p-sortIcon field="id" /></th>
+                <th pSortableColumn="status" style="width:10%">Status<p-sortIcon field="status"/></th>
+                <th pSortableColumn="salespersonName" style="width:20%">Vendedor<p-sortIcon field="salespersonName" /></th>
+                <th pSortableColumn="clientName" style="width:40%">Cliente<p-sortIcon field="clientName"/></th>
+                <th pSortableColumn="dateRegister" style="width:10%">Registrado<p-sortIcon field="dateRegister" /></th>
+                <th pSortableColumn="dateVisit" style="width:10%">Visitado<p-sortIcon field="dateVisit"/></th>
+                <th></th>
+            </tr>
+        </ng-template>
+        <ng-template #body let-visit>
+            <tr>
+                <td>{{visit.id}}</td>
+                <td class="items-center gap-2">
+                    <i class="pi " [ngClass]="{
+                        'pi-calendar text-blue-500':visit.status == AGENDA,
+                        'pi-check-circle text-green-500':visit.status == OPEN}">
+                    </i> {{visit.status | uppercase}}</td>
+                <td>{{visit.salespersonName| uppercase}}</td>
+                <td>{{visit.clientName| uppercase}}</td>
+                <td>{{visit.dateRegister| date:'dd/MM/yy HH:mm'}}</td>
+                <td>{{visit.dateVisit | date:'dd/MM/yy HH:mm'}}</td>
+                <td>
+                    <p-button icon="pi pi-pencil" [text]="true" severity="secondary" size="small" (onClick)="completeScheduling(visit.id)" />
+                </td>
+            </tr>
+        </ng-template>
+    </p-table>
+
+
+
+</div>

@@ -148,6 +148,7 @@ export class AppMenu {
                 items: [
                     { key: '5_1', visible: false, label: 'Regiões', icon: 'pi pi-map', routerLink: ['crm/regions'] },
                     { key: '5_2', visible: false, label: 'Agenda de visitas', icon: 'pi pi-address-book', routerLink: ['crm/visit/schedule'] },
+                    { key: '5_5', visible: false, label: 'Visitas', icon: 'pi pi-check-circle', routerLink: ['crm/visit'] },
                     { key: '5_3', visible: false, label: 'Atendimento', icon: 'pi pi-th-large', routerLink: ['crm/new/customer'] },
                     { key: '5_4', visible: false, label: 'Relatório', icon: 'pi pi-clipboard', routerLink: ['crm/report'] },
                     {

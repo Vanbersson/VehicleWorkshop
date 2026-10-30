@@ -1,6 +1,8 @@
 package com.concierge.apiconcierge.services.user;
 
 import com.concierge.apiconcierge.config.security.WebSecurityConfig;
+import com.concierge.apiconcierge.dtos.user.UserResponseDto;
+import com.concierge.apiconcierge.exceptions.BusinessException;
 import com.concierge.apiconcierge.exceptions.user.UserException;
 import com.concierge.apiconcierge.models.message.MessageResponse;
 import com.concierge.apiconcierge.models.enums.StatusEnableDisable;
@@ -97,6 +99,26 @@ public class UserService implements IUserService {
         } catch (Exception ex) {
             throw new UserException(ex.getMessage());
         }
+    }
+
+    @Override
+    public UserResponseDto getUser(String emailUser) {
+        User userResult = this.repository.loginEmail(emailUser);
+        if (userResult.getStatus() == StatusEnableDisable.Desabilitado) {
+            throw new BusinessException("Usuário Bloqueado.");
+        }
+        return new UserResponseDto(
+                userResult.getCompanyId(),
+                userResult.getResaleId(),
+                userResult.getId(),
+                userResult.getName(),
+                userResult.getEmail(),
+                userResult.getCellphone(),
+                userResult.getLimitDiscount(),
+                userResult.getRoleId(),
+                userResult.getRoleDesc(),
+                userResult.getRoleFunc()
+        );
     }
 
     @SneakyThrows

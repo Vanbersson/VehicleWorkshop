@@ -1,0 +1,439 @@
+<div class="layout-card">
+    <p-toast />
+    <div class="layout-card-title">
+        <span>Registre sua visita</span>
+        <p-button icon="pi pi-sign-out" [text]="true" label="Voltar" routerLink="/crm/visit" />
+    </div>
+    @if(formVisit.get('salesperson')?.value){
+    <div class="flex items-center gap-2 mb-2">
+        <span class="text-sm font-bold">Vendedor: {{formVisit.get('salesperson')?.value?.name ?? '' | uppercase}}</span>
+        <p-button icon="pi pi-pencil" [text]="true" (onClick)="visibleSalesperson = true"/>
+    </div>
+    }@else {
+        <div class="mb-2">
+            <p-button icon="pi pi-plus" label="Vendedor" (onClick)="visibleSalesperson = true" size="small"/>
+        </div>
+    }
+    <p-stepper [value]="activeStepper()" (valueChange)="onChangeStep($event)" class="basis-[40rem]">
+        <p-step-list>
+            <p-step [value]="1" class="flex flex-row flex-auto gap-2">
+                <ng-template #content let-activateCallback="activateCallback" let-value="value">
+                    <button class="bg-transparent border-0 inline-flex flex-col gap-2" (click)="activateCallback()">
+                        <span class="rounded-full border-2 w-12 h-12 inline-flex items-center justify-center" [ngClass]="{
+                                        'bg-primary text-primary-contrast border-primary': value <= activeStepper(),
+                                        'border-surface': value > activeStepper()
+                                    }">
+                            <i class="pi pi-building"></i>
+                        </span>
+                    </button>
+                </ng-template>
+            </p-step>
+            <p-step [value]="2" class="flex flex-row flex-auto gap-2">
+                <ng-template #content let-activateCallback="activateCallback" let-value="value">
+                    <button class="bg-transparent border-0 inline-flex flex-col gap-2" (click)="stepperLocation()">
+                        <span class="rounded-full border-2 w-12 h-12 inline-flex items-center justify-center" [ngClass]="{
+                                        'bg-primary text-primary-contrast border-primary': value <= activeStepper(),
+                                        'border-surface': value > activeStepper()
+                                    }">
+                            <i class="pi pi-map-marker"></i>
+                        </span>
+                    </button>
+                </ng-template>
+            </p-step>
+            <p-step [value]="3" class="flex flex-row flex-auto gap-2">
+                <ng-template #content let-activateCallback="activateCallback" let-value="value">
+                    <button class="bg-transparent border-0 inline-flex flex-col gap-2" (click)="stepperReasonVisit()">
+                        <span class="rounded-full border-2 w-12 h-12 inline-flex items-center justify-center" [ngClass]="{
+                                        'bg-primary text-primary-contrast border-primary': value <= activeStepper(),
+                                        'border-surface': value > activeStepper()
+                                    }">
+                            <i class="pi pi-clipboard"></i>
+                        </span>
+                    </button>
+                </ng-template>
+            </p-step>
+            <p-step [value]="4" class="flex flex-row flex-auto gap-2">
+                <ng-template #content let-activateCallback="activateCallback" let-value="value">
+                    <button class="bg-transparent border-0 inline-flex flex-col gap-2" (click)="stepperProduct()">
+                        <span class="rounded-full border-2 w-12 h-12 inline-flex items-center justify-center" [ngClass]="{
+                                        'bg-primary text-primary-contrast border-primary': value <= activeStepper(),
+                                        'border-surface': value > activeStepper()
+                                    }">
+                            <i class="pi pi-car"></i>
+                        </span>
+                    </button>
+                </ng-template>
+            </p-step>
+            <p-step [value]="5" class="flex flex-row flex-auto gap-2">
+                <ng-template #content let-activateCallback="activateCallback" let-value="value">
+                    <button class="bg-transparent border-0 inline-flex flex-col gap-2" (click)="stepperInformation()">
+                        <span class="rounded-full border-2 w-12 h-12 inline-flex items-center justify-center" [ngClass]="{
+                                        'bg-primary text-primary-contrast border-primary': value <= activeStepper(),
+                                        'border-surface': value > activeStepper()
+                                    }">
+                            <i class="pi pi-check"></i>
+                        </span>
+                    </button>
+                </ng-template>
+            </p-step>
+        </p-step-list>
+        <p-step-panels>
+            <p-step-panel [value]="1">
+                <ng-template #content let-activateCallback="activateCallback">
+                    <form [formGroup]="formVisit" class="layout-step">
+                        <div class="flex flex-col items-center gap-4 mb-8 mt-2">
+                            <div class="bg-primary rounded-full w-24 h-24 flex items-center justify-center">
+                                <i class="pi pi-question !text-5xl text-white"></i>
+                            </div>
+                            <span class="text-2xl font-semibold">Qual cliente você visitou?</span>
+                        </div>
+                              
+                        <div class="grid grid-cols-12 gap-4">
+                            <!-- Empresa sem cadastro -->
+                            <div class="col-span-12 flex items-center gap-2">
+                                <p-checkbox inputId="checkId" [binary]="true" (onChange)="onChangecheckBoxClient($event)" formControlName="clientNotExists"></p-checkbox>
+                                <label
+                                    for="checkId"
+                                    class="text-lg font-medium">
+                                    Cliente sem cadastro!
+                                </label>
+                            </div>
+                            @if(formVisit.get('clientNotExists')?.value === true){
+                                <div class="col-span-12 flex flex-col">
+                                    <label for="">Nome</label>
+                                    <input pInputText style="text-transform: uppercase;" formControlName="clientName"/>
+                                </div>                                
+                            }@else {
+                                <!-- Código -->
+                                <div class="col-span-12 md:col-span-2">
+                                    <label for="clientId">Código</label>
+                                    <p-inputNumber
+                                        inputId="clientId"
+                                        formControlName="clientId"
+                                        [useGrouping]="false"
+                                        fluid>
+                                    </p-inputNumber>
+                                </div>
+                                <!-- Empresa -->
+                                <div class="col-span-10 md:col-span-8">
+                                    <label for="clientNameId">Nome</label>
+                                    <input
+                                        pInputText
+                                        id="clientNameId"
+                                        formControlName="clientName"
+                                        class="w-full"
+                                        style="text-transform: uppercase;"/>
+                                </div>
+                                <!-- Filtro -->
+                                <div class="flex flex-col col-span-2">
+                                    <label>Filtro</label>
+                                    <app-filterclient (outputClient)="onSelectClient($event)"></app-filterclient> 
+                                </div>
+                                
+                            }
+                            <!-- CNPJ -->
+                                <div class="col-span-12 md:col-span-2">
+                                    <label for="clientCNPJId">CNPJ</label>
+                                    <p-inputMask
+                                        id="clientCNPJId"
+                                        mask="99.999.999/9999-99"
+                                        unmask="true"
+                                        formControlName="clientCNPJ"
+                                        fluid>
+                                    </p-inputMask>
+                                </div>
+                                <!-- CPF -->
+                                <div class="col-span-12 md:col-span-2">
+                                    <label for="clientCPFId">CPF</label>
+                                    <p-inputMask
+                                        id="clientCPFId"
+                                        mask="999.999.999-99"
+                                        unmask="true"
+                                        formControlName="clientCPF"
+                                        fluid>
+                                    </p-inputMask>
+                                </div>
+                            
+                        </div>
+                    </form>
+                    <div class="flex flex-col items-center w-full border-b border-surface-200 dark:border-surface-700 mt-2 mb-2"></div>
+                    <div class="flex justify-end">
+                        <p-button (onClick)="stepperLocation()" label="Avançar" icon="pi pi-arrow-right" iconPos="right" />
+                    </div>
+                </ng-template>
+            </p-step-panel>
+            <p-step-panel [value]="2">
+                <ng-template #content let-activateCallback="activateCallback">
+                    <form [formGroup]="formVisit" class="layout-step">
+                        <div class="flex justify-center gap-4">
+                            <div class=" flex flex-col items-center border border-gray-300 rounded-md gap-4 p-2 mb-2">
+                                <div class="bg-primary rounded-full w-24 h-24 flex items-center justify-center">
+                                    <i class="pi pi-question !text-5xl text-white"></i>
+                                </div>
+                                <span class="text-2xl font-semibold">Como você entrou em contato com o cliente?</span>
+                                <div class="flex flex-wrap gap-2">
+                                    <div class="flex items-center">
+                                        <p-radiobutton inputId="inpersonId" name="contactType" [value]="INPERSON" (onClick)="changeContactType()" formControlName="contactType"/>
+                                        <label for="inpersonId" class="ml-2"> Presencial </label>
+                                    </div>
+                                        <div class="flex items-center">
+                                        <p-radiobutton inputId="phoneId"  name="contactType" [value]="PHONE" (onClick)="changeContactType()" formControlName="contactType"/>
+                                        <label for="phoneId" class="ml-2"> Telefone </label>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <p-radiobutton inputId="celularId" name="contactType" [value]="CELLPHONE" (onClick)="changeContactType()" formControlName="contactType"/>
+                                        <label for="celularId" class="ml-2"> Celular </label>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <p-radiobutton inputId="emailId" name="contactType" [value]="EMAIL" (onClick)="changeContactType()" formControlName="contactType"/>
+                                        <label for="emailId" class="ml-2"> E-mail </label>
+                                    </div>
+                                    
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex justify-center gap-4">
+                                @if (formVisit.get('contactType')?.value === INPERSON){
+                                <!-- <div class="flex flex-col items-center mt-8 gap-2">
+                                    <span class="text-2xl font-semibold">Você está perto do cliente?</span>
+                                    <p>Por favor confirme a localização</p>
+                                    <p-button icon="pi pi-map-marker" [rounded]="true" size="large" />
+                                </div> -->
+                                }
+                                @if (formVisit.get('contactType')?.value === PHONE){
+                                <div class="flex flex-col w-60 mt-8" >
+                                    <label for="">Informe o telefone de contato</label>
+                                    <p-inputMask
+                                        mask="(99) 9999-9999"
+                                        unmask="true"
+                                        formControlName="contact"
+                                        fluid>
+                                    </p-inputMask>
+                                </div>
+                                }
+                            @if (formVisit.get('contactType')?.value === EMAIL) {
+                                <div class="flex flex-col w-100 mt-8">
+                                    <label for="">Informe o e-mail de contato</label>
+                                    <input pInputText formControlName="contact"/>
+                                </div>
+                            }
+                                @if (formVisit.get('contactType')?.value === CELLPHONE){
+                                <div class="flex flex-col w-60 mt-8">
+                                    <label for="">Informe o celular de contato</label>
+                                    <p-inputMask
+                                        mask="(99) 9 9999-9999"
+                                        unmask="true"
+                                        formControlName="contact"
+                                        fluid>
+                                    </p-inputMask>
+                                </div>
+                                }
+                            
+                        </div>
+                    </form> 
+                    <div class="flex flex-col items-center w-full border-b border-surface-200 dark:border-surface-700 mt-2 mb-2"></div>
+                    <div class="flex justify-between">
+                        <p-button (onClick)="activateCallback(1)" label="Voltar" severity="secondary" icon="pi pi-arrow-left" />
+                        <p-button (onClick)="stepperReasonVisit()" label="Avançar" icon="pi pi-arrow-right"  iconPos="right" />
+                    </div>
+                </ng-template>
+            </p-step-panel>
+            <p-step-panel [value]="3">
+                <ng-template #content let-activateCallback="activateCallback">
+                   <form [formGroup]="formVisit" class="layout-step">
+                        <div class="flex justify-center gap-4">
+                            <div class=" flex flex-col  items-center border border-gray-300 rounded-md gap-4 p-2 mb-2">
+                                <div class="bg-primary rounded-full w-24 h-24 flex items-center justify-center">
+                                    <i class="pi pi-question !text-5xl text-white"></i>
+                                </div>
+                                <span class="text-2xl font-semibold">Motivo da visita?</span>
+                                <div class="flex flex-col gap-2">
+                                    @for (item of reasonVisits(); track item.id) {
+                                       <div class="flex items-center">
+                                        <p-checkbox [inputId]="'reason-'+item.id" [value]="item" formControlName="reasonVisit" />
+                                        <label [for]="'reason-'+item.id" class="ml-2 text-sm"> {{item.description | uppercase}} </label>
+                                    </div> 
+                                    }
+                                    <div class="flex flex-col gap-2">
+                                        <div>
+                                            <p-checkbox inputId="reason8" [binary]="true" formControlName="reasonInfoChecked"/>
+                                            <label for="reason8" class="ml-2 text-sm"> OUTRO:  </label>
+                                        </div>
+                                        <textarea rows="5" cols="30" pTextarea fluid formControlName="reasonInfo"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form> 
+                    <div class="flex flex-col items-center w-full border-b border-surface-200 dark:border-surface-700 mt-2 mb-2"></div>
+                    <div class="flex justify-between">
+                        <p-button (onClick)="activateCallback(2)" label="Voltar" severity="secondary" icon="pi pi-arrow-left" />
+                        <p-button (onClick)="stepperProduct()" label="Avançar" icon="pi pi-arrow-right"  iconPos="right" />
+                    </div>
+                </ng-template>
+            </p-step-panel>
+            <p-step-panel [value]="4">
+                <ng-template #content let-activateCallback="activateCallback">
+                    <form [formGroup]="formVisit" class="layout-step">
+                        <div class="flex justify-center gap-4">
+                            <div class=" flex flex-col  items-center border border-gray-300 rounded-md gap-4 p-2 mb-2">
+                                <div class="bg-primary rounded-full w-24 h-24 flex items-center justify-center">
+                                    <i class="pi pi-question !text-5xl text-white"></i>
+                                </div>
+                                <span class="text-2xl font-semibold">Produtos de interesse</span>
+                                <div class="flex flex-col gap-2">
+                                    @for(item of products(); track item.id){
+                                        <div class="flex items-center">
+                                            <p-checkbox [inputId]="'prod-'+item.id" [value]="item" formControlName="products"/>
+                                            <label [for]="'prod-'+item.id" class="ml-2 text-sm">{{item.description | uppercase}}  </label>
+                                        </div>
+                                    }
+                                    <div class="flex flex-col gap-2  w-100">
+                                        <div>
+                                            <p-checkbox inputId="prod12" [binary]="true" formControlName="productsInfoChecked"/>
+                                            <label for="prod12" class="ml-2 text-sm"> OUTRO: </label>
+                                        </div>
+                                        <textarea rows="4" cols="30" pTextarea fluid formControlName="productsInfo"></textarea>
+                                    </div>
+                                   
+                                </div>
+                            </div>
+                        </div>
+                    </form> 
+                    <div class="flex flex-col items-center w-full border-b border-surface-200 dark:border-surface-700 mt-2 mb-2"></div>
+                    <div class="flex justify-between">
+                        <p-button (onClick)="activateCallback(3)" label="Voltar" severity="secondary" icon="pi pi-arrow-left" />
+                        <p-button (onClick)="stepperInformation()" label="Avançar" icon="pi pi-arrow-right"  iconPos="right" />
+                    </div>
+                </ng-template>
+            </p-step-panel>
+            <p-step-panel [value]="5">
+                <ng-template #content let-activateCallback="activateCallback">
+                    <form [formGroup]="formVisit" class="layout-step">
+                        <div class="flex justify-center gap-4">
+                            <div class=" flex flex-col items-center border border-gray-300 rounded-md gap-4 p-2 mb-2">                     
+                                @if(salespersonImage()){
+                                    <div class="flex items-center justify-center w-80 mt-6">
+                                        <img class="layout-tab-img" [src]="salespersonImage()" style="vertical-align: middle" />
+                                    </div>
+                                }@else {
+                                    <div class="bg-primary rounded-full w-24 h-24 flex items-center justify-center mt-6">
+                                        <i class="pi pi-info !text-5xl text-white"></i>
+                                    </div>
+                                }
+                                <div class="w-100">
+                                    <label for="">Vendedor</label>
+                                    <p-select [showClear]="true" [options]="salespersons()"
+                                        optionLabel="name" 
+                                        [style]="{'text-transform':'uppercase'}" 
+                                        formControlName="salesperson" fluid  (onChange)="onChangeSalesperson($event)"/>
+                                        <small class="block text-sm text-red-500" *ngIf="formVisit.get('salesperson')?.invalid">Campo obrigatório</small>
+                                </div>
+                                <span class="text-2xl font-semibold">Informações adicionais</span>
+                                <div class="flex flex-col gap-2">
+                                    <div class="flex flex-col gap-2 w-100">
+                                        <textarea rows="5" cols="30" pTextarea fluid formControlName="salespersonInfo"></textarea>
+                                    </div>
+                                   
+                                </div>
+                            </div>
+                        </div>
+                    </form> 
+                    <div class="flex flex-col items-center w-full border-b border-surface-200 dark:border-surface-700 mt-2 mb-2"></div>
+                    <div class="flex justify-between">
+                        <p-button (onClick)="activateCallback(4)" label="Voltar" severity="secondary" icon="pi pi-arrow-left" />
+                        <p-button (onClick)="openDateVisit()" label="Concluir" icon="pi pi-check" />
+                    </div>
+                </ng-template>
+            </p-step-panel>
+        </p-step-panels>
+    </p-stepper>
+</div>
+
+<p-dialog header="Data e Horário da visita"
+    [modal]="true"
+    [(visible)]="visibleDateVisit"
+    [style]="{ width: '32rem' }">
+    <form [formGroup]="formVisit" style="height: 20rem;">
+        <div class="mb-6">
+            <label class="font-bold block mb-3">
+                Data — {{ formVisit.get('dateVisit')?.value | date:'dd/MM/yyyy' }}
+            </label>
+            <div class="flex justify-center gap-2">
+                <div class="flex items-center">
+                    <p-button icon="pi pi-angle-left" [text]="true"  (onClick)="changeWeek(-1)"></p-button>
+                </div>
+                <div class="grid grid-cols-7 gap-1 flex-1 min-w-0">
+                    @for (day of weekDays; track day.getTime()) {
+                        <button
+                            type="button"
+                            class="flex flex-col items-center gap-2 rounded-lg border py-3 cursor-pointer"
+                            [class.bg-primary]="isSelectedDate(day)"
+                            [class.text-white]="isSelectedDate(day)"
+                            [class.border-primary]="isSelectedDate(day)"
+                            [attr.aria-pressed]="isSelectedDate(day)"
+                            (click)="selectVisitDate(day)">
+
+                            <span class="text-xs">
+                                {{ day | date:'EEE' }}
+                            </span>
+
+                            <span class="text-lg font-bold">
+                                {{ day | date:'dd' }}
+                            </span>
+                        </button>
+                    }                  
+                </div>
+                <div class="flex items-center">
+                    <p-button icon="pi pi-angle-right" [text]="true" (onClick)="changeWeek(1)"></p-button>
+                </div>
+            </div>
+        </div>
+        <div class="mb-4">
+            <label for="timeVisit" class="font-bold block mb-2">Horário</label>
+            <p-datepicker
+                inputId="timeVisit"
+                formControlName="timeVisit"
+                [timeOnly]="true"
+                [showIcon]="true"
+                iconDisplay="input"
+                hourFormat="24"
+                [fluid]="true">
+                <ng-template #inputicon let-clickCallBack="clickCallBack">
+                    <i class="pi pi-clock" (click)="clickCallBack($event)"></i>
+                </ng-template>
+            </p-datepicker>
+        </div>
+    </form>
+    <ng-template #footer>
+        <p-button label="Confirmar" icon="pi pi-check" (onClick)="saveComplete()" />
+    </ng-template>
+</p-dialog>
+
+<p-dialog header="Selecione o vendedor"
+    [modal]="true"
+    [(visible)]="visibleSalesperson"
+    [style]="{ width: '28rem' }">
+    <form [formGroup]="formVisit" style="height: 400px;">
+        <div class="flex justify-center gap-4">
+            <div class=" flex flex-col items-center border border-gray-300 rounded-md gap-4 p-2 mb-2">                     
+                @if(salespersonImage()){
+                    <div class="flex items-center justify-center w-80 mt-6">
+                        <img class="layout-tab-img" [src]="salespersonImage()" style="vertical-align: middle" />
+                    </div>
+                }@else {
+                    <div class="bg-primary rounded-full w-24 h-24 flex items-center justify-center mt-6">
+                        <i class="pi pi-info !text-5xl text-white"></i>
+                    </div>
+                }
+                <div class="w-90 mt-6 mb-60 ">
+                    <p-select [options]="salespersons()"
+                        optionLabel="name" 
+                        [style]="{'text-transform':'uppercase'}" 
+                        formControlName="salesperson" fluid (onChange)="onChangeSalesperson($event)"/>
+                </div>                
+            </div>
+        </div>
+    </form> 
+</p-dialog>
+

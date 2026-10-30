@@ -54,7 +54,9 @@ VALUES
 (152,'Visualizar orçamento','Portaria'),
 (153,'Receber notificações de entrada veículo','Portaria'),
 (154,'Receber notificações de saída veículo','Portaria'),
-(300,'Alterar quantidade material','Oficina');
+(300,'Alterar quantidade material','Oficina'),
+(400,'Lista as visitas de todos os vendedores','CRM'),
+(401,'Lista as agendas de todos os vendedores','CRM');
 
 INSERT INTO `tb_menu`
 (`id`, `description`)
@@ -112,6 +114,7 @@ VALUES
 ('5_2','Agenda de visitas'),
 ('5_3','Atendimento'),
 ('5_4','Relatório'),
+('5_5','Visitas'),
 ('5_99','Cadastros'),
 ('5_99_0','Tipo Atendimento'),
 
@@ -124,7 +127,6 @@ VALUES
 ('100_3','Oficina'),
 ('100_3_0','Controle de equipamentos'),
 ('100_3_1','Requisições'),
-
 
 ('999_0','Configuração'),
 ('999_2','Cadastros'),

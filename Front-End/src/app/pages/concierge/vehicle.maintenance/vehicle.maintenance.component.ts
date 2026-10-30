@@ -64,6 +64,7 @@ import { PermissionUserService } from '@/app/services/permission/permission.user
 
 @Component({
   selector: 'app-vehicle-maintenance',
+  standalone: true,
   imports: [CommonModule, FilterClientComponent, FilterDriverComponent, RouterModule, TagModule,
     TabsModule, FormsModule, IconFieldModule, SelectModule,
     CheckboxModule, ConfirmDialogModule, InputIconModule, ImageModule,
@@ -952,7 +953,7 @@ export default class VehicleMaintenanceComponent implements OnInit, DoCheck {
     this.driverExitPhotoDoc1 = '';
     this.driverExitPhotoDoc2 = '';
   }
-  
+
   //Budget
   public async confirmGerarOrcamento() {
     if (this.formVehicle.value.numServiceOrder == "" || this.formVehicle.value.numServiceOrder == null) {

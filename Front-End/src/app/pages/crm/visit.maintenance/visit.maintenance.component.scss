@@ -1,0 +1,28 @@
+:host {
+    .layout-card-title {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+
+        span {
+            display: flex;
+            align-items: center;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--color-grey-800);
+        }
+    }
+
+    .layout-step {
+        min-height: 39rem;
+    }
+
+    .layout-tab-img {
+        width: 84px;
+        height: 84px;
+        background-color: var(--color-grey-200);
+        border-radius: 100%;
+        object-fit: cover;
+    }
+}

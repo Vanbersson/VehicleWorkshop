@@ -1,6 +1,7 @@
 package com.concierge.apiconcierge.services.salesperson.person;
 
 import com.concierge.apiconcierge.dtos.salesperson.ResponseSalespersonDto;
+import com.concierge.apiconcierge.dtos.salesperson.SalespersonTypeDto;
 import com.concierge.apiconcierge.models.message.MessageResponse;
 import com.concierge.apiconcierge.models.salesperson.Salesperson;
 import org.springframework.web.multipart.MultipartFile;
@@ -17,7 +18,7 @@ public interface ISalespersonService {
 
     List<ResponseSalespersonDto> all(String emailUser);
 
-    List<Salesperson> allEnabled(String emailUser);
+    List<Salesperson> filterType(SalespersonTypeDto type, String emailUser);
 
     Map<String, String> saveImage(MultipartFile file, String local, String emailUser);
 }

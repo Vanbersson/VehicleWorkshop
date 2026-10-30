@@ -1,13 +1,11 @@
 package com.concierge.apiconcierge.controllers.salesperson;
 
-import com.concierge.apiconcierge.dtos.message.MessageResponseDto;
 import com.concierge.apiconcierge.dtos.salesperson.ResponseSalespersonDto;
-import com.concierge.apiconcierge.dtos.salesperson.SalespersonGroupDto;
 import com.concierge.apiconcierge.dtos.salesperson.SalespersonNewDto;
+import com.concierge.apiconcierge.dtos.salesperson.SalespersonTypeDto;
 import com.concierge.apiconcierge.dtos.salesperson.SalespersonUpdateDto;
 import com.concierge.apiconcierge.models.message.MessageResponse;
 import com.concierge.apiconcierge.models.salesperson.Salesperson;
-import com.concierge.apiconcierge.models.salesperson.SalespersonGroup;
 import com.concierge.apiconcierge.services.auth.TokenService;
 import com.concierge.apiconcierge.services.salesperson.person.ISalespersonService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -63,10 +61,10 @@ public class SalespersonController {
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
-    @GetMapping("/all/enabled")
-    public ResponseEntity<List<Salesperson>> allEnabled(HttpServletRequest request) {
+    @PostMapping("/types")
+    public ResponseEntity<List<Salesperson>> filterType(@RequestBody SalespersonTypeDto data, HttpServletRequest request) {
         String emailUser = this.getEmail(request);
-        List<Salesperson> response = this.service.allEnabled(emailUser);
+        List<Salesperson> response = this.service.filterType(data,emailUser);
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 

@@ -80,7 +80,7 @@ export const appRoutes: Routes = [
                         path: 'register', children: [
                             { path: 'category', title: 'Categoria', loadComponent: () => import('./app/pages/invoicing/register/category/category.component') },
                             { path: 'payment', title: 'Pagamento', loadComponent: () => import('./app/pages/invoicing/register/type-payment/type-payment.component') },
-                             { path: 'region', title: 'Região', loadComponent: () => import('./app/pages/invoicing/register/region/region.component') },
+                            { path: 'region', title: 'Região', loadComponent: () => import('./app/pages/invoicing/register/region/region.component') },
                         ]
                     }
                 ]
@@ -89,13 +89,15 @@ export const appRoutes: Routes = [
                 path: 'crm',
                 children: [
                     { path: 'regions', title: 'Regiões', loadComponent: () => import('./app/pages/crm/regions/regions.component') },
-                    { path: 'visit/schedule', title: 'Regiões', loadComponent: () => import('./app/pages/crm/visit.schedule/visit.schedule.component') },
+                    { path: 'visit/schedule', title: 'Agenda', loadComponent: () => import('./app/pages/crm/visit.schedule/visit.schedule.component') },
+                    { path: 'visit', title: 'Visita', loadComponent: () => import('./app/pages/crm/visit/visit.component') },
+                    { path: 'visit/maintenance', title: 'Registrar visita', loadComponent: () => import('./app/pages/crm/visit.maintenance/visit.maintenance.component') },
                     { path: 'new/customer', title: 'Atendimento', loadComponent: () => import('./app/pages/crm/new.customer/new.customer.component') },
-                     { path: 'report', title: 'Relatório', loadComponent: () => import('./app/pages/crm/report/report.component') },
+                    { path: 'report', title: 'Relatório', loadComponent: () => import('./app/pages/crm/report/report.component') },
                     {
                         path: 'register', children: [
                             { path: 'type/customer', title: 'Tipo Atendimento', loadComponent: () => import('./app/pages/crm/register/type.customer/type.customer.component') },
-                           
+
                         ]
                     }
                 ]

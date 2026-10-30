@@ -1,5 +1,6 @@
 package com.concierge.apiconcierge.services.user;
 
+import com.concierge.apiconcierge.dtos.user.UserResponseDto;
 import com.concierge.apiconcierge.models.message.MessageResponse;
 import com.concierge.apiconcierge.models.user.User;
 import org.springframework.web.multipart.MultipartFile;
@@ -11,6 +12,8 @@ public interface IUserService {
     MessageResponse update(User user);
 
     MessageResponse updatePass(Integer companyId, Integer resaleId, Integer id, String pass);
+
+    UserResponseDto getUser(String emailUser);
 
     MessageResponse listAll(Integer companyId, Integer resaleId);
 

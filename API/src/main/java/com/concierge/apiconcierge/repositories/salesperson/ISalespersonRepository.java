@@ -9,6 +9,8 @@ import java.util.List;
 @Repository
 public interface ISalespersonRepository extends JpaRepository<Salesperson, Integer> {
 
+    Salesperson findByCompanyIdAndResaleIdAndUserId(Integer companyId, Integer resaleId,Integer userId);
+
     List<Salesperson> findByCompanyIdAndResaleId(Integer companyId, Integer resaleId);
 
     Salesperson findByCompanyIdAndResaleIdAndId(Integer companyId, Integer resaleId, Integer id);
