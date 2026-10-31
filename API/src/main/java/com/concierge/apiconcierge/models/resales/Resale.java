@@ -33,6 +33,9 @@ public class Resale implements Serializable {
 
     private String cnpj;
 
+    @Column(name = "ie", length = 30)
+    private String ie;
+
     private String email;
 
     private String cellphone;

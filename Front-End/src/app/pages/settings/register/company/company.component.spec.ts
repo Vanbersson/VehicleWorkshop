@@ -62,12 +62,12 @@ describe('Company and resale registration', () => {
     });
     it('updates a resale with the selected company and existing resale code', async () => {
         await component.selectCompany(company);
-        const resale: Resale = { ...company, id: 8, companyId: 1, name: 'Unidade' };
+        const resale: Resale = { ...company, id: 8, companyId: 1, name: 'Unidade', ie: '123456789' };
         component.open('resale', resale);
         component.form.controls.name.setValue('Unidade atualizada');
         service.saveResale.and.returnValue(of({ ...resale, name: 'Unidade atualizada' }));
         await component.save();
-        expect(service.saveResale).toHaveBeenCalledWith(jasmine.objectContaining({ id: 8, companyId: 1, name: 'Unidade atualizada' }));
+        expect(service.saveResale).toHaveBeenCalledWith(jasmine.objectContaining({ id: 8, companyId: 1, name: 'Unidade atualizada', ie: '123456789' }));
         expect(service.saveCompany).not.toHaveBeenCalled();
     });
     it('rejects invalid forms and prevents a resale without a company', async () => {

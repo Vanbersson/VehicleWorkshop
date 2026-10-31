@@ -13,6 +13,9 @@ import java.util.Map;
 
 public interface IVehicleEntryService {
 
+    java.util.List<VehicleEntry> history(Integer companyId, Integer resaleId, Integer id, String userEmail);
+
+
     MessageResponse save(VehicleEntry vehicle, String userEmail);
 
     MessageResponse update(VehicleEntry vehicle, String userEmail);

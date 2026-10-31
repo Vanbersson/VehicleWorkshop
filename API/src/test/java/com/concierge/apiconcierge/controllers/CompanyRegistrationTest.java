@@ -19,7 +19,7 @@ class CompanyRegistrationTest {
  @Mock ResaleRepository resaleRepository;
  @Mock CompanyRepository companyRepository;
  @InjectMocks ResaleController controller;
- private ResaleDto data(Integer id) { return new ResaleDto(1, id, StatusEnableDisable.Habilitado, "Unidade", "12345678000190", "", "", "", "01001000", "SP", "Cidade", "Centro", "Rua", "1", ""); }
+ private ResaleDto data(Integer id) { return new ResaleDto(1, id, StatusEnableDisable.Habilitado, "Unidade", "12345678000190", "", "", "", "01001000", "SP", "Cidade", "Centro", "Rua", "1", "", "123456789"); }
  @Test void updateRouteAcceptsCompanyFromBodyWithoutPathVariable() throws Exception {
   Resale resale = new Resale(); resale.setId(8); resale.setCompanyId(1);
   when(resaleRepository.findByCompanyIdAndId(1, 8)).thenReturn(resale);
@@ -27,7 +27,7 @@ class CompanyRegistrationTest {
   var mvc = MockMvcBuilders.standaloneSetup(controller).build();
   mvc.perform(post("/resale/update").contentType(MediaType.APPLICATION_JSON).content(new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(data(8)))).andExpect(status().isOk());
   verify(resaleRepository).save(resale);
-  assertEquals("Unidade", resale.getName()); assertEquals(1, resale.getCompanyId());
+  assertEquals("123456789", resale.getIe()); assertEquals("Unidade", resale.getName()); assertEquals(1, resale.getCompanyId());
  }
  @Test void cannotCreateResaleWithMissingCompany() {
   assertEquals(404, controller.saveResale(data(null)).getStatusCode().value());

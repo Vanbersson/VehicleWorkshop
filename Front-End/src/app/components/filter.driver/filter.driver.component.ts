@@ -52,6 +52,8 @@ import { MessageResponse } from '@/app/models/message-response';
 export class FilterDriverComponent {
     @Output() public outputDriver = new EventEmitter<Driver>();
     @Input() isDisabled: boolean = false;
+    @Input() buttonLabel = '';
+    @Input() highlighted = false;
 
     readonly loading = signal(false);
     readonly searched = signal(false);

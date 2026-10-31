@@ -48,6 +48,7 @@ export default class CompanyComponent implements OnInit {
         status: new FormControl(StatusEnabDisabEnum.ENABLED, { nonNullable: true, validators: [Validators.required] }),
         name: requiredText(),
         cnpj: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.pattern(/^\d{14}$/)] }),
+        ie: new FormControl('', { nonNullable: true, validators: [Validators.maxLength(30)] }),
         email: new FormControl('', { nonNullable: true, validators: [Validators.email, Validators.maxLength(255)] }),
         cellphone: new FormControl('', { nonNullable: true, validators: [Validators.maxLength(20)] }),
         phone: new FormControl('', { nonNullable: true, validators: [Validators.maxLength(20)] }),
@@ -107,7 +108,7 @@ export default class CompanyComponent implements OnInit {
         if (kind === 'company' && !item && (this.companies().length > 0 || this.loadError())) return;
         this.dialogKind = kind;
         this.editingId = item?.id;
-        this.form.reset({ status: this.enabled, name: '', cnpj: '', email: '', cellphone: '', phone: '', zipCode: '', state: '', city: '', neighborhood: '', address: '', addressNumber: '', addressComplement: '' });
+        this.form.reset({ status: this.enabled, name: '', cnpj: '', ie: '', email: '', cellphone: '', phone: '', zipCode: '', state: '', city: '', neighborhood: '', address: '', addressNumber: '', addressComplement: '' });
         if (item) this.form.patchValue({ ...item, cnpj: item.cnpj?.replace(/\D/g, '') ?? '', zipCode: item.zipCode?.replace(/\D/g, '') ?? '' });
         this.saveError.set('');
         this.dialogVisible = true;
@@ -132,8 +133,9 @@ export default class CompanyComponent implements OnInit {
         }
         this.saving.set(true);
         try {
-            if (this.dialogKind === 'company') await lastValueFrom(this.service.saveCompany(data));
-            else await lastValueFrom(this.service.saveResale({ ...data, companyId: company!.id }));
+            const { ie, ...companyData } = data;
+            if (this.dialogKind === 'company') await lastValueFrom(this.service.saveCompany(companyData));
+            else await lastValueFrom(this.service.saveResale({ ...companyData, ie, companyId: company!.id }));
         } catch (error: unknown) {
             this.saveError.set(this.errorMessage(error, 'Não foi possível salvar o cadastro.'));
             this.saving.set(false);

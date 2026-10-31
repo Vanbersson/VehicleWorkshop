@@ -1,195 +1,37 @@
-:host {
-    .layout-card-title {
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 1rem;
-
-        span {
-            display: flex;
-            align-items: center;
-            font-size: 1.25rem;
-            font-weight: 700;
-            color: var(--color-grey-800);
-        }
-    }
-
-    .layout-button-alert {
-        height: 42px;
-
-        >p-badge {
-            position: absolute;
-            right: 50px;
-        }
-    }
-
-    .checkboxDisable {
-        position: absolute;
-        width: 24px;
-        height: 24px;
-    }
-
-    .layout-card-step {
-        min-height: 37rem;
-
-        span {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: var(--color-grey-700);
-        }
-    }
-
-    .layout-button-action {
-        display: flex;
-        width: 100%;
-        gap: 8px;
-    }
-
-    .layout-photo-person {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        width: 80px;
-        height: 80px;
-        background-color: var(--color-grey-300);
-        border-radius: 100%;
-
-        .layout-photo-person-label {
-            display: flex;
-            align-items: center;
-            width: 80px;
-            height: 80px;
-        }
-
-    }
-
-    .layout-file {
-        display: flex;
-        flex-direction: column;
-        background-color: var(--color-grey-300);
-        justify-content: center;
-        align-items: center;
-        border-radius: 6px;
-
-        .layout-file-img {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            width: 80px;
-            height: 80px;
-
-            ::ng-deep {
-                .p-image-preview {
-                    width: 80px;
-                    height: 80px;
-                    object-fit: cover;
-                    display: flex;
-                    justify-content: center;
-                }
-            }
-        }
-
-        label {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            width: 100px;
-            padding: 10px 0;
-            border-radius: 0 0 6px 6px;
-            background: var(--color-primary);
-            color: #FFF;
-            cursor: pointer;
-
-            span {
-                display: flex;
-            }
-        }
-
-        button {
-            display: flex;
-            justify-content: center;
-            gap: 6px;
-            width: 100px;
-            padding: 10px 0;
-            border-radius: 0 0 6px 6px;
-
-            span {
-                display: flex;
-                color: #FFF;
-                font-size: 14px;
-                font-weight: 400;
-            }
-        }
-    }
-
-    ::ng-deep {
-        .p-button.p-button-icon-only {
-            padding: 0.5rem 0;
-            margin-right: 15px;
-        }
-
-        .p-image-preview-container>img {
-            width: 80px;
-            height: 77px;
-        }
-    }
-
-
-
-    @media (max-width: 991px) {
-
-        .layout-card-driver {
-            height: 42rem;
-        }
-
-        .layout-card-vehicle {
-            height: 124rem;
-        }
-
-        ::ng-deep {
-            .p-image-preview-container>img {
-                width: 62px;
-                height: 62px;
-                object-fit: cover;
-                border-radius: 6px 6px 0 0;
-            }
-        }
-
-        .layout-file {
-
-            .layout-file-img {
-                width: 62px;
-                height: 62px;
-
-                ::ng-deep {
-                    .p-image-preview {
-                        width: 62px;
-                        height: 62px;
-                    }
-                }
-
-            }
-
-            label {
-                padding: 5px 0px;
-                width: 62px;
-                height: 38px;
-                border-radius: 0 0 6px 6px;
-                cursor: pointer;
-
-                span {
-                    display: none;
-                }
-            }
-
-            button {
-                width: 62px;
-                border-radius: 0 0 6px 6px;
-
-                span {
-                    display: none;
-                }
-            }
-        }
-    }
-
-}
+﻿:host { display:block; }
+.entry-page { max-width:95rem; margin:0 auto; }
+.entry-header, .entry-title, .section-heading, .selection-bar, .step-actions { display:flex; align-items:center; gap:1rem; }
+.entry-header, .selection-bar, .step-actions { justify-content:space-between; flex-wrap:wrap; }
+.entry-header { margin-bottom:1.75rem; }
+.entry-icon { display:inline-flex; align-items:center; justify-content:center; width:3.25rem; height:3.25rem; flex-shrink:0; border-radius:1rem; background:color-mix(in srgb,var(--p-primary-color) 10%,transparent); color:var(--p-primary-color); font-size:1.3rem; }
+.entry-eyebrow { color:var(--text-color-secondary); font-size:.65rem; font-weight:700; letter-spacing:.1em; }
+h1 { font-size:clamp(1.5rem,2.5vw,2rem); font-weight:700; margin:.25rem 0 .4rem; letter-spacing:-.035em; }
+.entry-header p { margin:0; color:var(--text-color-secondary); line-height:1.6; }
+.entry-panel { padding:1.5rem; border:1px solid var(--surface-border); border-radius:1.25rem; background:var(--surface-card); }
+.entry-steps { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:.75rem; margin-bottom:1rem; }
+.entry-steps button { display:flex; align-items:center; justify-content:center; gap:.65rem; padding:1rem; border:1px solid var(--surface-border); border-radius:.85rem; background:var(--surface-card); color:var(--text-color-secondary); cursor:pointer; }
+.entry-steps button.active { border-color:var(--p-primary-color); color:var(--p-primary-color); font-weight:650; }
+.entry-steps button > span { display:inline-flex; align-items:center; justify-content:center; width:1.6rem; height:1.6rem; border-radius:50%; background:var(--surface-ground); font-size:.8rem; }
+.entry-steps button:focus-visible { outline:2px solid var(--p-primary-color); outline-offset:2px; }
+.section-heading { padding-bottom:1rem; margin:1.5rem 0 1rem; border-bottom:1px solid var(--surface-border); }
+form > .section-heading:first-child { margin-top:0; }
+.section-heading > i { color:var(--p-primary-color); font-size:1.3rem; }
+h2 { font-size:1.15rem; font-weight:650; margin:0; }
+.section-heading p { color:var(--text-color-secondary); font-size:.85rem; margin:.4rem 0 0; }
+.selection-bar { padding:1rem; border-radius:.75rem; background:var(--surface-ground); margin-bottom:1.25rem; font-size:.85rem; }
+.fields-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:1rem; }
+.field { display:flex; flex-direction:column; gap:.5rem; min-width:0; }
+.field > label, legend { font-size:.85rem; font-weight:600; }
+.field small, .photo-card small { color:var(--text-color-secondary); font-size:.75rem; }
+.field .field-error { color:var(--p-red-600); }
+.choice-box { padding:1rem; margin:0; border:1px solid var(--surface-border); border-radius:.75rem; }
+legend { padding:0 .3rem; }
+.photo-grid, .driver-media { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:1rem; margin-top:1.25rem; }
+.driver-media { grid-template-columns:repeat(3,minmax(0,1fr)); }
+.photo-card { text-align:center; background:var(--surface-ground); border:1px solid var(--surface-border); border-radius:.85rem; padding:.75rem; }
+h3 { font-size:.85rem; font-weight:600; margin:0 0 .5rem; }
+.photo-preview { display:flex; justify-content:center; align-items:center; height:100px; color:var(--text-color-secondary); font-size:1.75rem; }
+.step-actions { margin-top:1.5rem; padding-top:1rem; border-top:1px solid var(--surface-border); }
+.step-actions > span { font-size:.8rem; color:var(--text-color-secondary); }
+.entry-state { display:flex; flex-direction:column; align-items:center; text-align:center; gap:1rem; padding:3rem 1rem; }
+@media(max-width:640px) { .entry-panel { padding:1rem; } .fields-grid { grid-template-columns:1fr; } .photo-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } .driver-media { grid-template-columns:1fr; } .entry-title > .entry-icon { display:none; } .entry-steps button { padding:.75rem .25rem; gap:.4rem; font-size:.8rem; } .entry-steps button > i { display:none; } }

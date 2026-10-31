@@ -45,6 +45,25 @@ import static com.concierge.apiconcierge.util.ConstantsPermission.*;
 @Service
 public class VehicleEntryService implements IVehicleEntryService {
 
+    @Override
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
+    public List<VehicleEntry> history(Integer companyId, Integer resaleId, Integer id, String userEmail) {
+        User user = userRepository.loginEmail(userEmail);
+        if (user == null || user.getStatus() == com.concierge.apiconcierge.models.enums.StatusEnableDisable.Desabilitado
+                || !Objects.equals(user.getCompanyId(), companyId) || !Objects.equals(user.getResaleId(), resaleId)) {
+            throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.FORBIDDEN, "Acesso negado.");
+        }
+        if (user.getRoleFunc() != UserRoleEnum.ADMIN && permissionUser.findPermissionId(companyId, resaleId, user.getId(), EDIT_ENTRY_VEHICLE) == null) {
+            throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.FORBIDDEN, "Sem permissao para consultar o historico do veiculo.");
+        }
+        VehicleEntry current = repository.filterId(companyId, resaleId, id);
+        if (current == null) throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.NOT_FOUND, "Veiculo nao encontrado.");
+        String plate = current.getVehiclePlate() == null ? "" : current.getVehiclePlate().replaceAll("[^a-zA-Z0-9]", "").toUpperCase(Locale.ROOT);
+        if (current.getVehicleNew() == YesNot.yes || !plate.matches("[A-Z]{3}[0-9][A-Z0-9][0-9]{2}")) return List.of(current);
+        return repository.historyByPlate(companyId, resaleId, plate);
+    }
+
+
     @Value("${local.image.upload}")
     private String UPLOAD_DIR;
 

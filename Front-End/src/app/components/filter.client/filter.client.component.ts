@@ -32,6 +32,8 @@ import { MessageResponse } from '@/app/models/message-response';
 export class FilterClientComponent {
     @Output() public outputClient = new EventEmitter<ClientCompany>();
     @Input() isDisabled: boolean = false;
+    @Input() buttonLabel = '';
+    @Input() highlighted = false;
 
     readonly loading = signal(false);
     readonly searched = signal(false);

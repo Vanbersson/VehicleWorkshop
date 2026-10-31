@@ -1,4 +1,14 @@
-﻿<p-button type="button" icon="pi pi-search" severity="secondary" [outlined]="true" ariaLabel="Pesquisar e selecionar cliente" title="Pesquisar cliente" (onClick)="showDialogFilterClientCompany()" [disabled]="isDisabled" />
+﻿<p-button
+    type="button"
+    icon="pi pi-search"
+    [label]="buttonLabel"
+    [severity]="highlighted ? undefined : 'secondary'"
+    [outlined]="!highlighted"
+    ariaLabel="Pesquisar e selecionar cliente"
+    title="Pesquisar cliente"
+    (onClick)="showDialogFilterClientCompany()"
+    [disabled]="isDisabled"
+/>
 <p-dialog [(visible)]="dialogVisibleClientCompany" [modal]="true" [maximizable]="true" [style]="{ width: '70rem', maxWidth: '96vw' }" [draggable]="false" [resizable]="false" (onHide)="hideDialogFilterClientCompany()">
     <ng-template #header
         ><div class="filter-heading">

@@ -1,51 +1,135 @@
-<div class="layout-card">
-     <!-- Toast -->
+﻿<div class="orders-page">
     <p-toast />
-    <div class="layout-card-title">
-        <span>Pedidos de Compra</span>
-        <p-button icon="pi pi-plus" [outlined]="true" label="Novo" (onClick)="newPurchaseOrder()" />
-    </div>
-    <p-table #tableFilter dataKey="id" [value]="purchaseOrders()" showGridlines [rowHover]="true" [showCurrentPageReport]="true"
-        [tableStyle]="{ 'min-width': '50rem' }"
-        [globalFilterFields]="['id','statusDelivery','nfNum', 'clientCompanyName', 'responsibleName', 'type','dateDelivery']"
-        [paginator]="true" [rows]="15" [rowsPerPageOptions]="[15, 25, 50]" size="small">
-        <ng-template pTemplate="caption">
-            <div class="flex">
-                <p-iconField iconPosition="left">
-                    <p-inputIcon>
-                        <i class="pi pi-search"></i>
-                    </p-inputIcon>
-                    <input pInputText type="text" (input)="tableFilter.filterGlobal($any($event.target).value, 'contains')" placeholder="Pesquisar" />
-                </p-iconField>
+    <header class="orders-header">
+        <div class="orders-title">
+            <span class="orders-icon"><i class="pi pi-shopping-cart" aria-hidden="true"></i></span>
+            <div>
+                <span class="orders-eyebrow">PEÇAS · COMPRAS</span>
+                <h1>Pedidos de compra</h1>
+                <p class="text-muted-color">Consulte os pedidos em aberto, acompanhe as entregas e gerencie seus fornecedores.</p>
             </div>
-        </ng-template>
-        <ng-template pTemplate="header">
-            <tr>
-                <th pSortableColumn="id" style="width:10%;">Pedido<p-sortIcon field="id"></p-sortIcon></th>
-                <th pSortableColumn="statusDelivery" style="width:10%;">Entrega<p-sortIcon field="statusDelivery"></p-sortIcon></th>
-                <th pSortableColumn="dateDelivery" style="width:10%;">Prazo entrega<p-sortIcon field="dateDelivery"></p-sortIcon></th>
-                <th pSortableColumn="nfNum" style="width:10%;">Nota<p-sortIcon field="nfNum"></p-sortIcon></th>
-                <th pSortableColumn="clientCompanyName" style="width:30%;">Fornecedor<p-sortIcon field="clientCompanyName"></p-sortIcon></th>
-                <th pSortableColumn="responsibleName" style="width:15%;">Responsavel<p-sortIcon field="responsibleName"></p-sortIcon></th>
-                <th pSortableColumn="type" style="width:15%;">Tipo<p-sortIcon field="type"></p-sortIcon></th>
-                <th></th>
-            </tr>
-        </ng-template>
-        <ng-template pTemplate="body" let-purchase>
-            <tr>
-                <td>{{purchase.id}}</td>
-                <td><p-tag [value]="purchase.statusDelivery" [severity]="getStatusSeverity(purchase.statusDelivery)" /></td>
-                <td>{{purchase.dateDelivery | date: 'dd/MM/yyyy'}}</td>
-                @if(purchase.nfNum != 0){
-                <td>{{purchase.nfNum}}</td>
-                }@else {
-                <td></td>
-                }
-                <td>{{ abreviaNome(purchase.clientCompanyName) | uppercase}}</td>
-                <td>{{purchase.responsibleUserName | uppercase}}</td>
-                <td>{{purchase.type | uppercase}}</td>
-                <td><p-button icon="pi pi-pencil" [text]="true" severity="secondary" size="small" (onClick)="edit(purchase.id)" /></td>
-            </tr>
-        </ng-template>
-    </p-table>
+        </div>
+        <div class="header-actions"><p-button icon="pi pi-plus" label="Novo pedido" (onClick)="newPurchaseOrder()" /></div>
+    </header>
+    <section class="orders-panel" aria-labelledby="orders-list-title">
+        <div class="list-heading">
+            <div>
+                <span class="orders-eyebrow">CONTROLE DE COMPRAS</span>
+                <h2 id="orders-list-title">
+                    Pedidos em aberto <span class="record-count">{{ loading() ? '…' : purchaseOrders().length }}</span>
+                </h2>
+            </div>
+            <p-button icon="pi pi-refresh" label="Atualizar" severity="secondary" [text]="true" [loading]="loading()" (onClick)="loadPurchaseOrders()" />
+        </div>
+        @if (loadError()) {
+            <div class="list-error" role="alert">
+                <i class="pi pi-exclamation-circle" aria-hidden="true"></i><span>{{ loadError() }}</span>
+            </div>
+        }
+        <p-table
+            #tableFilter
+            dataKey="id"
+            [value]="purchaseOrders()"
+            [loading]="loading()"
+            [rowHover]="true"
+            [showCurrentPageReport]="true"
+            currentPageReportTemplate="{first}–{last} de {totalRecords} pedidos"
+            [tableStyle]="{ 'min-width': '64rem' }"
+            [globalFilterFields]="['id', 'statusDelivery', 'nfNum', 'clientCompanyName', 'responsibleUserName', 'type', 'dateDelivery']"
+            [paginator]="true"
+            [rows]="15"
+            [rowsPerPageOptions]="[15, 25, 50]"
+            sortField="id"
+            [sortOrder]="-1"
+            size="small"
+        >
+            <ng-template #caption
+                ><div class="list-toolbar">
+                    <p-iconfield iconPosition="left" class="order-search"
+                        ><p-inputicon><i class="pi pi-search" aria-hidden="true"></i></p-inputicon
+                        ><input
+                            #searchInput
+                            pInputText
+                            type="search"
+                            class="w-full"
+                            aria-label="Pesquisar pedido, fornecedor, responsável ou nota fiscal"
+                            placeholder="Buscar pedido, fornecedor ou nota fiscal"
+                            (input)="tableFilter.filterGlobal(searchInput.value, 'contains')"
+                    /></p-iconfield>
+                    <div class="list-filters">
+                        <p-select
+                            [(ngModel)]="selectedDelivery"
+                            [options]="deliveryOptions"
+                            optionLabel="label"
+                            optionValue="value"
+                            placeholder="Todos os prazos"
+                            ariaLabel="Filtrar prazo de entrega"
+                            [showClear]="true"
+                            appendTo="body"
+                            class="status-filter"
+                            (onChange)="tableFilter.filter(selectedDelivery, 'statusDelivery', 'equals')"
+                        /><p-select
+                            [(ngModel)]="selectedType"
+                            [options]="typeOptions"
+                            optionLabel="label"
+                            optionValue="value"
+                            placeholder="Todos os tipos"
+                            ariaLabel="Filtrar tipo de pedido"
+                            [showClear]="true"
+                            appendTo="body"
+                            class="status-filter"
+                            (onChange)="tableFilter.filter(selectedType, 'type', 'equals')"
+                        /><p-button icon="pi pi-filter-slash" label="Limpar filtros" severity="secondary" [text]="true" (onClick)="clearFilters(tableFilter, searchInput)" />
+                    </div></div
+            ></ng-template>
+            <ng-template #header
+                ><tr>
+                    <th pSortableColumn="id">Pedido <p-sortIcon field="id" /></th>
+                    <th pSortableColumn="statusDelivery">Entrega <p-sortIcon field="statusDelivery" /></th>
+                    <th pSortableColumn="dateDelivery">Prazo de entrega <p-sortIcon field="dateDelivery" /></th>
+                    <th pSortableColumn="nfNum">Nota fiscal <p-sortIcon field="nfNum" /></th>
+                    <th pSortableColumn="clientCompanyName">Fornecedor <p-sortIcon field="clientCompanyName" /></th>
+                    <th pSortableColumn="responsibleUserName">Responsável <p-sortIcon field="responsibleUserName" /></th>
+                    <th pSortableColumn="type">Tipo <p-sortIcon field="type" /></th>
+                    <th class="text-right">Ação</th>
+                </tr></ng-template
+            >
+            <ng-template #body let-purchase
+                ><tr>
+                    <td>
+                        <span class="order-code">#{{ purchase.id }}</span>
+                    </td>
+                    <td><p-tag [value]="purchase.statusDelivery || 'Sem prazo'" [severity]="getStatusSeverity(purchase.statusDelivery)" [rounded]="true" /></td>
+                    <td class="whitespace-nowrap">{{ (purchase.dateDelivery | date: 'dd/MM/yyyy') || 'Não informado' }}</td>
+                    <td>{{ purchase.nfNum || '—' }}</td>
+                    <td>
+                        <span class="order-name">{{ (purchase.clientCompanyName | uppercase) || 'Não informado' }}</span>
+                    </td>
+                    <td>{{ (purchase.responsibleUserName | uppercase) || 'Não informado' }}</td>
+                    <td><p-tag [value]="purchase.type" severity="secondary" [rounded]="true" /></td>
+                    <td class="text-right"><p-button label="Editar" icon="pi pi-pencil" [text]="true" size="small" [ariaLabel]="'Editar pedido de compra ' + purchase.id" (onClick)="edit(purchase.id)" /></td></tr
+            ></ng-template>
+            <ng-template #emptymessage
+                ><tr>
+                    <td colspan="8">
+                        <div class="list-empty">
+                            <span class="orders-icon"><i class="pi" [ngClass]="loadError() ? 'pi-exclamation-circle' : purchaseOrders().length ? 'pi-search' : 'pi-shopping-cart'" aria-hidden="true"></i></span>
+                            <h3>{{ loadError() ? 'Não foi possível carregar os pedidos' : purchaseOrders().length ? 'Nenhum pedido encontrado' : 'Nenhum pedido de compra em aberto' }}</h3>
+                            <p class="text-muted-color">
+                                {{
+                                    loadError()
+                                        ? 'Clique em Atualizar para tentar novamente.'
+                                        : purchaseOrders().length
+                                          ? 'Experimente outro termo ou limpe os filtros para visualizar os pedidos.'
+                                          : 'Crie um pedido para organizar suas compras e acompanhar a entrega.'
+                                }}
+                            </p>
+                            @if (!loadError() && !purchaseOrders().length) {
+                                <p-button label="Criar pedido de compra" icon="pi pi-plus" [outlined]="true" (onClick)="newPurchaseOrder()" />
+                            }
+                        </div>
+                    </td></tr
+            ></ng-template>
+        </p-table>
+    </section>
 </div>

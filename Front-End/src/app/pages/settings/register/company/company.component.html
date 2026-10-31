@@ -130,6 +130,12 @@
                 </div>
                 <div><label for="companyStatus">Status *</label><p-select inputId="companyStatus" formControlName="status" [options]="statuses" optionLabel="label" optionValue="value" appendTo="body" fluid /></div>
                 <div><label for="companyCnpj">CNPJ *</label><p-inputmask inputId="companyCnpj" mask="99.999.999/9999-99" formControlName="cnpj" [unmask]="true" [invalid]="form.controls.cnpj.touched && form.controls.cnpj.invalid" fluid /></div>
+                @if (dialogKind === 'resale') {
+                    <div>
+                        <label for="resaleIe">Inscrição estadual</label
+                        ><input pInputText id="resaleIe" formControlName="ie" maxlength="30" placeholder="Número ou ISENTO" class="w-full" [invalid]="form.controls.ie.touched && form.controls.ie.invalid" />
+                    </div>
+                }
                 <div class="md:col-span-2">
                     <label for="companyEmail">E-mail</label><input pInputText id="companyEmail" formControlName="email" type="email" maxlength="255" class="w-full" [invalid]="form.controls.email.touched && form.controls.email.invalid" />
                 </div>

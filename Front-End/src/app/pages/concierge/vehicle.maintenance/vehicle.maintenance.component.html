@@ -37,6 +37,7 @@
                         [rounded]="true"
                     />
                 </div>
+                <p-button type="button" label="Linha do tempo" icon="pi pi-history" [outlined]="true" severity="secondary" [disabled]="saving() || authorizing()" (onClick)="showHistory()" />
                 @if (isVehicleTogether()) {
                     <p-button type="button" icon="pi pi-link" label="Veículos que entraram juntos" severity="secondary" [outlined]="true" size="small" (onClick)="showVehicleTogether()" />
                 }
@@ -869,7 +870,10 @@
             </p-tabs>
         </section>
         <footer class="maintenance-actions">
-            <p-button icon="pi pi-share-alt" label="Compartilhar" severity="secondary" [outlined]="true" (onClick)="shareWhatsapp()" />
+            <div class="flex gap-2 flex-wrap">
+                <p-button icon="pi pi-share-alt" label="Compartilhar" severity="secondary" [outlined]="true" (onClick)="shareWhatsapp()" />
+                <p-button type="button" label="Imprimir" icon="pi pi-print" severity="secondary" [outlined]="true" [loading]="printing()" [disabled]="saving() || authorizing()" (onClick)="printVehicle()" />
+            </div>
             <div class="flex gap-2 flex-wrap">
                 @if (!vehicleExit) {
                     <p-button icon="pi pi-car" label="Liberar saída" severity="secondary" [outlined]="true" [loading]="authorizing()" [disabled]="saving()" (onClick)="authExit()" /><p-button
@@ -1004,4 +1008,110 @@
         >
     </section>
     <ng-template #footer><p-button type="button" label="Fechar" icon="pi pi-times" severity="secondary" [text]="true" (onClick)="visibleVehiclePlateTogether = false" /></ng-template
+></p-dialog>
+
+<p-dialog [(visible)]="timelineVisible" [modal]="true" [draggable]="false" [style]="{ width: '58rem', maxWidth: '96vw' }" (onHide)="closeHistory()"
+    ><ng-template #header
+        ><div class="maintenance-title">
+            <span class="maintenance-icon"><i class="pi pi-history" aria-hidden="true"></i></span>
+            <div>
+                <span class="maintenance-eyebrow">HISTÓRICO DO VEÍCULO</span>
+                <h2 class="text-lg font-semibold m-0 mt-1">Linha do tempo</h2>
+                <p class="text-sm text-muted-color m-0 mt-1">Passagens pela placa na empresa e revenda deste atendimento.</p>
+            </div>
+        </div></ng-template
+    >
+    @if (historyLimited()) {
+        <div class="readonly-note"><i class="pi pi-info-circle" aria-hidden="true"></i>Sem placa válida, não é possível identificar outras passagens com segurança. Exibindo somente este atendimento.</div>
+    }
+    <div class="flex items-center justify-between flex-wrap gap-3 mb-4">
+        <span class="text-sm text-muted-color">{{ historyLoading() ? 'Consultando passagens...' : historyPassages().length + ' passagem(ns) encontrada(s)' }}</span
+        ><p-button type="button" label="Atualizar" icon="pi pi-refresh" [text]="true" severity="secondary" [loading]="historyLoading()" (onClick)="showHistory()" />
+    </div>
+    @if (historyLoading()) {
+        <div class="maintenance-state" role="status">
+            <i class="pi pi-spin pi-spinner" aria-hidden="true"></i>
+            <p>Carregando linha do tempo...</p>
+        </div>
+    } @else if (historyError()) {
+        <div class="maintenance-state" role="alert">
+            <i class="pi pi-exclamation-circle" aria-hidden="true"></i>
+            <p>{{ historyError() }}</p>
+            <p-button type="button" label="Tentar novamente" (onClick)="showHistory()" />
+        </div>
+    } @else {
+        <div class="flex flex-col gap-5">
+            @for (passage of historyPassages(); track passage.id) {
+                <article class="border border-surface rounded-xl p-4 sm:p-5">
+                    <div class="flex items-start justify-between flex-wrap gap-3 mb-4">
+                        <div>
+                            <span class="maintenance-eyebrow">ATENDIMENTO #{{ passage.id }}</span>
+                            <h3 class="text-base font-semibold mt-1 mb-1">{{ passage.vehiclePlate ? (passage.vehiclePlate | uppercase) : 'Sem placa' }} · {{ passage.modelDescription | uppercase }}</h3>
+                            <p class="text-sm text-muted-color m-0">Entrada: {{ (historyDate(passage.entryDate) | date: 'dd/MM/yyyy HH:mm') || 'Data não informada' }}</p>
+                        </div>
+                        <div class="flex gap-2 flex-wrap">
+                            <p-tag [value]="passage.status === 'Exited' ? 'Saída registrada' : 'Em atendimento'" [severity]="passage.status === 'Exited' ? 'secondary' : 'info'" [rounded]="true" />
+                            @if (passage.id === vehicleEntry.id) {
+                                <p-tag value="Atual" severity="success" [rounded]="true" />
+                            }
+                        </div>
+                    </div>
+                    <dl class="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 rounded-lg bg-surface-50 dark:bg-surface-900 mb-5 text-sm">
+                        <div>
+                            <dt class="text-muted-color">Proprietário</dt>
+                            <dd class="m-0 font-medium">{{ passage.clientCompanyName || 'Não informado' }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-muted-color">Consultor</dt>
+                            <dd class="m-0 font-medium">{{ passage.attendantUserName || 'Não informado' }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-muted-color">Motorista de entrada</dt>
+                            <dd class="m-0">{{ passage.driverEntryName || 'Não informado' }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-muted-color">Motorista de saída</dt>
+                            <dd class="m-0">{{ passage.driverExitName || 'Não informado' }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-muted-color">Número da O.S.</dt>
+                            <dd class="m-0">{{ passage.numServiceOrder || '—' }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-muted-color">Quilometragem (entrada / saída)</dt>
+                            <dd class="m-0">{{ passage.vehicleKmEntry || '—' }} / {{ passage.vehicleKmExit || '—' }}</dd>
+                        </div>
+                    </dl>
+                    <p-timeline [value]="historyEvents(passage)" class="vehicle-history-events"
+                        ><ng-template #marker let-event
+                            ><span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-primary text-primary-contrast"><i class="pi" [ngClass]="event.icon" aria-hidden="true"></i></span></ng-template
+                        ><ng-template #content let-event
+                            ><div class="pb-5 pl-2">
+                                <h4 class="text-sm font-semibold m-0">{{ event.label }}</h4>
+                                <p class="text-xs text-muted-color mt-1 mb-1">{{ (event.date | date: 'dd/MM/yyyy HH:mm') || 'Data não informada' }} · {{ event.user || 'Responsável não informado' }}</p>
+                                @if (event.notes) {
+                                    <p class="text-sm m-0 whitespace-pre-wrap wrap-anywhere">{{ event.notes }}</p>
+                                }
+                            </div></ng-template
+                        ></p-timeline
+                    >
+                    @if (passage.attendantInformation) {
+                        <div class="border-t border-surface pt-3 mb-3">
+                            <h4 class="text-sm font-semibold mt-0 mb-1">Observações do consultor</h4>
+                            <p class="text-sm text-muted-color m-0 whitespace-pre-wrap wrap-anywhere">{{ passage.attendantInformation }}</p>
+                        </div>
+                    }
+                    <div class="flex justify-end">
+                        <p-button type="button" label="Ver atendimento" icon="pi pi-eye" [text]="true" [disabled]="passage.id === vehicleEntry.id || saving() || authorizing()" (onClick)="openHistoryAttendance(passage)" />
+                    </div>
+                </article>
+            } @empty {
+                <div class="maintenance-state">
+                    <i class="pi pi-history" aria-hidden="true"></i>
+                    <p>Nenhuma passagem encontrada.</p>
+                </div>
+            }
+        </div>
+    }
+    <ng-template #footer><p-button type="button" label="Fechar" severity="secondary" [text]="true" (onClick)="closeHistory()" /></ng-template
 ></p-dialog>

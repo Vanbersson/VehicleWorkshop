@@ -13,6 +13,11 @@ import java.util.List;
 
 @Repository
 public interface IVehicleEntryRepository extends JpaRepository<VehicleEntry, Integer> {
+
+    @Query(value = "SELECT * FROM tb_vehicle_entry WHERE company_id=?1 AND resale_id=?2 " +
+            "AND UPPER(REPLACE(REPLACE(TRIM(vehicle_plate), '-', ''), ' ', ''))=?3 ORDER BY entry_date DESC, id DESC", nativeQuery = true)
+    List<VehicleEntry> historyByPlate(Integer companyId, Integer resaleId, String plate);
+
     @Query(value = "SELECT * FROM `tb_vehicle_entry` WHERE company_id=?1 AND resale_id=?2 AND id=?3",
             nativeQuery = true)
     VehicleEntry filterId(Integer companyId, Integer resaleId, Integer id);

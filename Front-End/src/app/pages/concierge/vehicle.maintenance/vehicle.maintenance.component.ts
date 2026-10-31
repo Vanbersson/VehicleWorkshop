@@ -7,6 +7,8 @@ import { environment } from '../../../../environments/environment';
 import { lastValueFrom } from 'rxjs';
 import { HttpResponse } from '@angular/common/http';
 //PrimeNg
+import { VehiclePrintService, VehiclePrintData } from '@/app/services/vehicle/vehicle.print.service';
+import { TimelineModule } from 'primeng/timeline';
 import { TabsModule } from 'primeng/tabs';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { TextareaModule } from 'primeng/textarea';
@@ -72,6 +74,7 @@ import { PermissionUserService } from '@/app/services/permission/permission.user
         FilterDriverComponent,
         RouterModule,
         TagModule,
+        TimelineModule,
         TabsModule,
         FormsModule,
         IconFieldModule,
@@ -100,6 +103,119 @@ import { PermissionUserService } from '@/app/services/permission/permission.user
 })
 export default class VehicleMaintenanceComponent implements OnInit, DoCheck {
     vehicleEntry!: VehicleEntry;
+    private readonly vehiclePrinter = inject(VehiclePrintService);
+    readonly printing = signal(false);
+    async printVehicle(): Promise<void> {
+        if (!this.ready() || this.printing() || this.saving() || this.authorizing()) return;
+        this.printing.set(true);
+        try {
+            if (this.storageService.roleFunc === StatusRoleFuncEnum.USER && !(await this.searchPermission(100))) return;
+            const values = this.formVehicle.getRawValue();
+            const vehicle = Object.assign(new VehicleEntry(), this.vehicleEntry, {
+                vehiclePlate: values.vehiclePlate ?? '',
+                vehicleFleet: values.vehicleFleet ?? '',
+                vehicleColor: values.vehicleColor?.color ?? null,
+                modelId: values.modelVehicle?.id ?? this.vehicleEntry.modelId,
+                modelDescription: values.modelVehicle?.description ?? this.vehicleEntry.modelDescription,
+                entryDate: values.entryDate ?? this.vehicleEntry.entryDate,
+                exitDate: values.exitDate ?? this.vehicleEntry.exitDate,
+                exitDatePrevision: values.exitDatePrevision ?? '',
+                vehicleKmEntry: values.kmEntry ?? '',
+                vehicleKmExit: values.kmExit ?? '',
+                attendantUserId: values.attendant?.id ?? null,
+                attendantUserName: values.attendant?.name ?? '',
+                vehicleNew: values.vehicleNew ?? this.vehicleEntry.vehicleNew,
+                vehicleServiceOrder: values.vehicleServiceOrder ?? this.vehicleEntry.vehicleServiceOrder,
+                numServiceOrder: values.numServiceOrder ?? '',
+                numNfe: values.numNfe ?? '',
+                numNfse: values.numNfse ?? '',
+                attendantInformation: values.information ?? '',
+                clientCompanyId: this.clientCompany?.id ?? null,
+                clientCompanyName: this.clientCompany?.name ?? '',
+                driverEntryId: this.driverEntry?.id ?? null,
+                driverEntryName: this.driverEntry?.name ?? '',
+                driverExitId: this.driverExit?.id ?? null,
+                driverExitName: this.driverExit?.name ?? '',
+                attendantPhoto1Url: this.photoVehicle1(),
+                attendantPhoto2Url: this.photoVehicle2(),
+                attendantPhoto3Url: this.photoVehicle3(),
+                attendantPhoto4Url: this.photoVehicle4()
+            });
+            const data: VehiclePrintData = {
+                vehicle,
+                client: this.clientCompany?.id != null ? { ...this.clientCompany } : null,
+                driverEntry: this.driverEntry ? { ...this.driverEntry } : null,
+                driverExit: this.driverExit ? { ...this.driverExit } : null
+            };
+            await this.vehiclePrinter.print(data, (message) => this.messageService.add({ severity: 'warn', summary: 'Impressão de imagens', detail: message, life: 8000 }));
+        } catch (error: unknown) {
+            this.messageService.add({ severity: 'error', summary: 'Imprimir veículo', detail: error instanceof Error ? error.message : 'Não foi possível preparar a impressão. Tente novamente.' });
+        } finally {
+            this.printing.set(false);
+        }
+    }
+    timelineVisible = false;
+    readonly historyLoading = signal(false);
+    readonly historyError = signal('');
+    readonly historyPassages = signal<VehicleEntry[]>([]);
+    readonly historyLimited = signal(false);
+    private historyVersion = 0;
+
+    async showHistory(): Promise<void> {
+        if (!this.ready() || this.historyLoading()) return;
+        this.timelineVisible = true;
+        this.historyLoading.set(true);
+        this.historyError.set('');
+        this.historyPassages.set([]);
+        const id = this.vehicleEntry.id!;
+        const version = ++this.historyVersion;
+        const plate = (this.vehicleEntry.vehiclePlate || '').replace(/[^a-z0-9]/gi, '');
+        this.historyLimited.set(this.vehicleEntry.vehicleNew === YesNotEnum.YES || !/^[A-Z]{3}[0-9][A-Z0-9][0-9]{2}$/i.test(plate));
+        try {
+            const data = await lastValueFrom(this.vehicleService.history(id));
+            if (version !== this.historyVersion) return;
+            this.historyPassages.set([...data].sort((a, b) => (this.historyDate(b.entryDate)?.getTime() ?? 0) - (this.historyDate(a.entryDate)?.getTime() ?? 0) || (b.id ?? 0) - (a.id ?? 0)));
+        } catch {
+            if (version === this.historyVersion) this.historyError.set('Não foi possível carregar a linha do tempo. Tente novamente.');
+        } finally {
+            if (version === this.historyVersion) this.historyLoading.set(false);
+        }
+    }
+    closeHistory(): void {
+        this.timelineVisible = false;
+        ++this.historyVersion;
+        this.historyLoading.set(false);
+    }
+    historyDate(value: Date | string | null | undefined): Date | null {
+        if (!value) return null;
+        const date = value instanceof Date ? value : new Date(value);
+        return Number.isNaN(date.getTime()) ? null : date;
+    }
+    historyEvents(vehicle: VehicleEntry): { label: string; date: Date | null; user: string; notes: string; icon: string }[] {
+        const events = [{ label: 'Entrada registrada', date: this.historyDate(vehicle.entryDate), user: vehicle.entryUserName, notes: vehicle.entryInformation, icon: 'pi-sign-in' }];
+        if (this.historyDate(vehicle.auth1ExitDate)) events.push({ label: '1ª autorização de saída', date: this.historyDate(vehicle.auth1ExitDate), user: vehicle.auth1ExitUserName, notes: '', icon: 'pi-check-circle' });
+        if (this.historyDate(vehicle.auth2ExitDate)) events.push({ label: '2ª autorização de saída', date: this.historyDate(vehicle.auth2ExitDate), user: vehicle.auth2ExitUserName, notes: '', icon: 'pi-check-circle' });
+        if (this.historyDate(vehicle.exitDate)) events.push({ label: 'Saída registrada', date: this.historyDate(vehicle.exitDate), user: vehicle.exitUserName, notes: vehicle.exitInformation, icon: 'pi-sign-out' });
+        return events.sort((a, b) => (a.date?.getTime() ?? 0) - (b.date?.getTime() ?? 0));
+    }
+    async openHistoryAttendance(vehicle: VehicleEntry): Promise<void> {
+        if (vehicle.id == null || vehicle.id === this.vehicleEntry.id || this.saving() || this.authorizing()) return;
+        if (this.storageService.roleFunc === StatusRoleFuncEnum.USER && !(await this.searchPermission(100))) return;
+        const navigate = () => {
+            this.closeHistory();
+            this.changerVehicle(vehicle.id!);
+        };
+        if (this.formVehicle.dirty) {
+            this.confirmationService.confirm({
+                header: 'Alterações não salvas',
+                message: 'Ao abrir outra passagem, as alterações ainda não salvas serão descartadas.',
+                acceptLabel: 'Abrir passagem',
+                rejectLabel: 'Continuar editando',
+                defaultFocus: 'reject',
+                accept: navigate
+            });
+        } else navigate();
+    }
     private readonly destroyRef = inject(DestroyRef);
     readonly loading = signal(false);
     readonly saving = signal(false);
@@ -362,6 +478,8 @@ export default class VehicleMaintenanceComponent implements OnInit, DoCheck {
         }
     }
     private resetRelatedData(): void {
+        this.closeHistory();
+        this.historyPassages.set([]);
         this.clientCompany = null!;
         this.driverEntry = null!;
         this.driverExit = null!;

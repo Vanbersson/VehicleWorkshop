@@ -24,6 +24,13 @@ import org.springframework.web.multipart.MultipartFile;
 @RequestMapping("/vehicle/entry")
 public class VehicleEntryController {
 
+    @GetMapping("/{companyId}/{resaleId}/history/{id}")
+    public ResponseEntity<java.util.List<VehicleEntry>> history(@PathVariable Integer companyId,
+            @PathVariable Integer resaleId, @PathVariable Integer id, HttpServletRequest request) {
+        return ResponseEntity.ok(service.history(companyId, resaleId, id, getEmail(request)));
+    }
+
+
     @Autowired
     private IVehicleEntryService service;
     @Autowired

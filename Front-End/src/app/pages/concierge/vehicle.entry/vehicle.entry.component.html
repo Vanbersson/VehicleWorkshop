@@ -1,488 +1,520 @@
-<div class="layout-card">
-    <!-- Info -->
+<div class="entry-page">
     <p-toast />
-    <div class="layout-card-title">
-        <span>Entrada de veículos</span>
-        <div class="layout-button-alert">
-            @if (listVehicleEntry.length > 0) {
-            <p-button [label]="listVehicleEntry.length.toString()" [rounded]="true" severity="warn" [outlined]="true" size="large" (onClick)="showDialogVehicle()" />
-            }
+    <header class="entry-header">
+        <div class="entry-title">
+            <span class="entry-icon"><i class="pi pi-sign-in" aria-hidden="true"></i></span>
+            <div>
+                <span class="entry-eyebrow">PORTARIA · NOVO ATENDIMENTO</span>
+                <h1>Entrada de veículos</h1>
+                <p>Informe o proprietário, selecione o motorista e adicione os veículos da entrada.</p>
+            </div>
         </div>
-    </div>
-    <p-stepper [(value)]="activeStepper" class="basis-[40rem]">
-        <p-step-list>
-            <p-step [value]="1" class="flex flex-row flex-auto gap-2">
-                <ng-template #content let-activateCallback="activateCallback" let-value="value">
-                    <button class="bg-transparent border-0 inline-flex flex-col gap-2" (click)="activateCallback()">
-                        <span class="rounded-full border-2 w-12 h-12 inline-flex items-center justify-center" [ngClass]="{
-                                        'bg-primary text-primary-contrast border-primary': value <= activeStepper,
-                                        'border-surface': value > activeStepper
-                                    }">
-                            <i class="pi pi-building"></i>
-                        </span>
-                    </button>
-                </ng-template>
-            </p-step>
-            <p-step [value]="2" class="flex flex-row flex-auto gap-2">
-                <ng-template #content let-activateCallback="activateCallback" let-value="value">
-                    <button class="bg-transparent border-0 inline-flex flex-col gap-2" (click)="nextStepperClientCompany()">
-                        <span class="rounded-full border-2 w-12 h-12 inline-flex items-center justify-center" [ngClass]="{
-                                        'bg-primary text-primary-contrast border-primary': value <= activeStepper,
-                                        'border-surface': value > activeStepper
-                                    }">
-                            <i class="pi pi-fw pi-id-card"></i>
-                        </span>
-                    </button>
-                </ng-template>
-            </p-step>
-            <p-step [value]="3" class="flex flex-row flex-auto gap-2">
-                <ng-template #content let-activateCallback="activateCallback" let-value="value">
-                    <button class="bg-transparent border-0 inline-flex flex-col gap-2" (click)="nextSterpperDriver()">
-                        <span class="rounded-full border-2 w-12 h-12 inline-flex items-center justify-center" [ngClass]="{
-                                        'bg-primary text-primary-contrast border-primary': value <= activeStepper,
-                                        'border-surface': value > activeStepper
-                                    }">
-                            <i class="pi pi-car"></i>
-                        </span>
-                    </button>
-                </ng-template>
-            </p-step>
-        </p-step-list>
-        <p-step-panels>
-            <p-step-panel [value]="1">
-                <ng-template #content let-activateCallback="activateCallback">
-                    <form [formGroup]="formClientCompany" class="layout-card-step">
-                        <span>Vamos fazer a entrada de um novo veículo</span>
-                        <p>
-                            Por favor selecione a empresa em que esse veículo pertence.
-                        </p>
-                        <div class="grid grid-cols-12 gap-4">
-                            <!-- Empresa sem cadastro -->
-                            <div class="col-span-12 flex items-center gap-2">
-                                <p-checkbox
-                                    inputId="ClientCompanyNotId"
-                                    binary="true"
-                                    formControlName="clientCompanyNot"
-                                    (onChange)="validationClientCompany()">
-                                </p-checkbox>
-                                <label
-                                    for="ClientCompanyNotId"
-                                    class="text-primary font-medium">
-                                    Empresa sem cadastro!
-                                </label>
-                            </div>
-                            <!-- Código -->
-                            <div class="col-span-12 md:col-span-2">
-                                <label for="clientCompanyId">Código</label>
-                                <p-inputNumber
-                                    inputId="clientCompanyId"
-                                    formControlName="clientCompanyId"
-                                    [useGrouping]="false"
-                                    fluid>
-                                </p-inputNumber>
-                            </div>
-                            <!-- Empresa -->
-                            <div class="col-span-10 md:col-span-8">
-                                <label for="clientCompanyName">Empresa</label>
-                                <input
-                                    pInputText
-                                    id="clientCompanyName"
-                                    formControlName="clientCompanyName"
-                                    class="w-full"
-                                    style="text-transform: uppercase;">
-                            </div>
-                            <!-- Filtro -->
-                            <div class="flex flex-col col-span-2">
-                                <label>Filtro</label>
-                                <app-filterclient (outputClient)="selectClientCompany.set($event)">
-                                </app-filterclient>
-                            </div>
-                            <!-- CNPJ -->
-                            <div class="col-span-12 md:col-span-2">
-                                <label for="clientCompanyCnpj">CNPJ</label>
-                                <p-inputMask
-                                    id="clientCompanyCnpj"
-                                    mask="99.999.999/9999-99"
-                                    formControlName="clientCompanyCnpj"
-                                    fluid>
-                                </p-inputMask>
-                            </div>
-                            <!-- CPF -->
-                            <div class="col-span-12 md:col-span-2">
-                                <label for="clientCompanyCpf">CPF</label>
-                                <p-inputMask
-                                    id="clientCompanyCpf"
-                                    mask="999.999.999-99"
-                                    formControlName="clientCompanyCpf"
-                                    fluid>
-                                </p-inputMask>
-                            </div>
-                            <!-- RG -->
-                            <div class="col-span-12 md:col-span-2">
-                                <label for="clientCompanyRg">RG</label>
-                                <p-inputNumber
-                                    inputId="clientCompanyRg"
-                                    formControlName="clientCompanyRg"
-                                    [useGrouping]="false"
-                                    fluid>
-                                </p-inputNumber>
-                            </div>
+        <p-button
+            type="button"
+            icon="pi pi-list-check"
+            label="Revisar entradas"
+            size="large"
+            [raised]="true"
+            [badge]="listVehicleEntry.length.toString()"
+            badgeSeverity="contrast"
+            [ariaLabel]="'Revisar entradas: ' + listVehicleEntry.length + ' veículos adicionados'"
+            [disabled]="!listVehicleEntry.length || adding()"
+            (onClick)="showDialogVehicle()"
+        />
+    </header>
+    @if (loading()) {
+        <div class="entry-state" role="status">
+            <i class="pi pi-spin pi-spinner" aria-hidden="true"></i>
+            <p>Carregando dados da entrada...</p>
+        </div>
+    } @else if (loadError()) {
+        <div class="entry-state" role="alert">
+            <p>{{ loadError() }}</p>
+            <p-button label="Tentar novamente" icon="pi pi-refresh" (onClick)="loadOptions()" />
+        </div>
+    } @else {
+        <nav class="entry-steps" aria-label="Etapas da entrada">
+            <button type="button" [class.active]="activeStepper === 1" [attr.aria-current]="activeStepper === 1 ? 'step' : null" [disabled]="saving() || adding()" (click)="stepperClientCompany()">
+                <span>1</span><i class="pi pi-building" aria-hidden="true"></i>Proprietário</button
+            ><button type="button" [class.active]="activeStepper === 2" [attr.aria-current]="activeStepper === 2 ? 'step' : null" [disabled]="saving() || adding()" (click)="stepperDriver()">
+                <span>2</span><i class="pi pi-id-card" aria-hidden="true"></i>Motorista</button
+            ><button type="button" [class.active]="activeStepper === 3" [attr.aria-current]="activeStepper === 3 ? 'step' : null" [disabled]="saving() || adding()" (click)="stepperVehicle()">
+                <span>3</span><i class="pi pi-car" aria-hidden="true"></i>Veículo
+            </button>
+        </nav>
+        <section class="entry-panel">
+            @if (activeStepper === 1) {
+                <form [formGroup]="formClientCompany">
+                    <div class="section-heading">
+                        <i class="pi pi-building" aria-hidden="true"></i>
+                        <div>
+                            <h2>Proprietário do veículo</h2>
+                            <p>Selecione o cadastro responsável ou informe que a empresa não possui cadastro.</p>
                         </div>
-                    </form>
-                    <p-divider type="solid" />
-                    <div class="flex justify-end">
-                        <p-button (onClick)="nextStepperClientCompany()" label="Avançar" icon="pi pi-arrow-right" iconPos="right" />
                     </div>
-                </ng-template>
-            </p-step-panel>
-            <p-step-panel [value]="2">
-                <ng-template #content let-activateCallback="activateCallback">
-                     <form [formGroup]="formDriver" class="layout-card-step">
-                    <span>Vamos informar o motorista</span>
-                    <p>
-                        Por favor selecione o motorista.
-                    </p>
-                    <div class="grid grid-cols-12 gap-4">
-                        <div class="col-span-12 flex align-center mt-2">
-                            <div class="layout-photo-person">
-                                <p-image *ngIf="driverEntryPhoto" [imageStyle]="{'border-radius':'100%','object-fit':'cover','width':'80px','height':'80px'}" [src]="driverEntryPhoto" alt="imagem motorista" [preview]="true" />  
+                    <section class="flex items-center justify-between flex-wrap gap-5 p-5 sm:p-6 mb-5 rounded-xl border-2 border-primary-300 dark:border-primary-700 bg-primary-50 dark:bg-primary-950" aria-label="Selecionar proprietário">
+                        <div class="flex items-center gap-4 min-w-0">
+                            <span class="inline-flex items-center justify-center shrink-0 w-14 h-14 rounded-xl bg-primary text-primary-contrast text-2xl"><i class="pi pi-building" aria-hidden="true"></i></span>
+                            <div class="min-w-0">
+                                <span class="entry-eyebrow">VINCULAR PROPRIETÁRIO</span>
+                                <h3 class="!text-lg !mt-1 !mb-1">{{ formClientCompany.controls.clientCompanyName.value || 'Selecione o proprietário' }}</h3>
+                                <p class="text-sm text-muted-color m-0">Pesquise por nome, código ou documento para selecionar o cadastro.</p>
                             </div>
                         </div>
-                            <div class="col-span-12 md:col-span-1">
-                            <label for="driverEntryId">Código</label>
-                            <p-inputNumber inputId="driverEntryId" [useGrouping]="false" formControlName="driverEntryId" fluid/>
+                        <app-filterclient
+                            buttonLabel="{{ formClientCompany.controls.clientCompanyName.value ? 'Alterar proprietário' : 'Selecionar proprietário' }}"
+                            [highlighted]="true"
+                            [isDisabled]="saving() || adding()"
+                            (outputClient)="selectClientCompany.set($event)"
+                        />
+                    </section>
+                    <div class="flex items-center gap-3 mb-5 p-3 rounded-lg bg-surface-50 dark:bg-surface-900">
+                        <p-checkbox inputId="entry-client-not" [binary]="true" formControlName="clientCompanyNot" (onChange)="validationClientCompany()" /><label for="entry-client-not" class="text-sm">Empresa sem cadastro</label>
+                    </div>
+                    <div class="fields-grid">
+                        <div class="field"><label for="entry-client-code">Código</label><p-inputNumber inputId="entry-client-code" [useGrouping]="false" formControlName="clientCompanyId" fluid /></div>
+                        <div class="field"><label for="entry-client-name">Nome / Razão social</label><input pInputText id="entry-client-name" formControlName="clientCompanyName" class="w-full" /></div>
+                        <div class="field"><label for="entry-client-cnpj">CNPJ</label><p-inputMask inputId="entry-client-cnpj" mask="99.999.999/9999-99" formControlName="clientCompanyCnpj" fluid /></div>
+                        <div class="field"><label for="entry-client-cpf">CPF</label><p-inputMask inputId="entry-client-cpf" mask="999.999.999-99" formControlName="clientCompanyCpf" fluid /></div>
+                        <div class="field"><label for="entry-client-rg">RG</label><p-inputNumber inputId="entry-client-rg" [useGrouping]="false" formControlName="clientCompanyRg" fluid /></div>
+                    </div>
+                </form>
+                <footer class="step-actions"><span>Etapa 1 de 3</span><p-button label="Avançar" icon="pi pi-arrow-right" iconPos="right" [disabled]="saving()" (onClick)="nextStepperClientCompany()" /></footer>
+            } @else if (activeStepper === 2) {
+                <form [formGroup]="formDriver">
+                    <div class="section-heading">
+                        <i class="pi pi-id-card" aria-hidden="true"></i>
+                        <div>
+                            <h2>Motorista de entrada</h2>
+                            <p>Selecione o motorista e confira os dados e documentos.</p>
                         </div>
-                        <div class="col-span-10 md:col-span-6">
-                            <label for="driverEntryName">Nome</label>
-                            <input pInputText id="driverEntryName" type="text" class="w-full" formControlName="driverEntryName" [style]="{'text-transform':'uppercase'}">
-                        </div>
-                        <div class="col-span-2 md:col-span-1 flex flex-col">
-                            <label for="">Filtro</label>
-                            <app-filterdriver (outputDriver)="selectDriver.set($event)"/>
-                        </div>
-                        <div class="md:col-span-4"></div>
-                        <div class="col-span-12 md:col-span-3">
-                            <label for="driverEntryCpf">CPF</label>
-                            <p-inputMask id="driverEntryCpf" mask="999.999.999-99" unmask="true" formControlName="driverEntryCpf" fluid/>
-                        </div>
-                        <div class="col-span-12 md:col-span-3">
-                            <label for="driverEntryRg">RG</label>
-                            <p-inputNumber id="clientCompanyRg" mode="decimal" [useGrouping]="false" formControlName="driverEntryRg" fluid/>
-                        </div>
-                        <div class="md:col-span-8"></div>
-                        <div class="col-span-12 md:col-span-6 flex align-items-center gap-2">
-                            <div class="layout-file">
-                                <div class="layout-file-img">
-                                    <p-image *ngIf="driverEntryPhotoDoc1"  [imageStyle]="{'border-radius':'8px','object-fit':'cover'}" [src]="driverEntryPhotoDoc1" alt="" [preview]="true" />
-                                </div>
+                    </div>
+                    <section class="flex items-center justify-between flex-wrap gap-5 p-5 sm:p-6 mb-5 rounded-xl border-2 border-primary-300 dark:border-primary-700 bg-primary-50 dark:bg-primary-950" aria-label="Selecionar motorista">
+                        <div class="flex items-center gap-4 min-w-0">
+                            <span class="inline-flex items-center justify-center shrink-0 w-14 h-14 rounded-xl bg-primary text-primary-contrast text-2xl"><i class="pi pi-id-card" aria-hidden="true"></i></span>
+                            <div class="min-w-0">
+                                <span class="entry-eyebrow">VINCULAR MOTORISTA</span>
+                                <h3 class="!text-lg !mt-1 !mb-1">{{ formDriver.controls.driverEntryName.value || 'Selecione o motorista' }}</h3>
+                                <p class="text-sm text-muted-color m-0">Pesquise por nome, código ou documento para selecionar o cadastro.</p>
                             </div>
-                            <div class="layout-file">
-                                <div class="layout-file-img">
-                                    <p-image *ngIf="driverEntryPhotoDoc2"  [imageStyle]="{'border-radius':'8px','object-fit':'cover'}" [src]="driverEntryPhotoDoc2" alt="" [preview]="true" />
-                                </div>
+                        </div>
+                        <app-filterdriver
+                            buttonLabel="{{ formDriver.controls.driverEntryName.value ? 'Alterar motorista' : 'Selecionar motorista' }}"
+                            [highlighted]="true"
+                            [isDisabled]="saving() || adding()"
+                            (outputDriver)="selectDriver.set($event)"
+                        />
+                    </section>
+                    <div class="fields-grid">
+                        <div class="field"><label for="entry-driver-code">Código</label><p-inputNumber inputId="entry-driver-code" [useGrouping]="false" formControlName="driverEntryId" fluid /></div>
+                        <div class="field"><label for="entry-driver-name">Nome completo</label><input pInputText id="entry-driver-name" formControlName="driverEntryName" class="w-full" /></div>
+                        <div class="field"><label for="entry-driver-cpf">CPF</label><p-inputMask inputId="entry-driver-cpf" mask="999.999.999-99" formControlName="driverEntryCpf" fluid /></div>
+                        <div class="field"><label for="entry-driver-rg">RG</label><p-inputNumber inputId="entry-driver-rg" [useGrouping]="false" formControlName="driverEntryRg" fluid /></div>
+                    </div>
+                    <div class="driver-media">
+                        <div class="photo-card">
+                            <h3>Foto do motorista</h3>
+                            <div class="photo-preview">
+                                @if (driverEntryPhoto) {
+                                    <p-image [src]="driverEntryPhoto" alt="Foto do motorista" [preview]="true" [imageStyle]="{ width: '120px', height: '90px', objectFit: 'cover', borderRadius: '.5rem' }" />
+                                } @else {
+                                    <i class="pi pi-user" aria-hidden="true"></i>
+                                }
                             </div>
+                            <small>{{ driverEntryPhoto ? 'Clique para ampliar' : 'Nenhuma imagem cadastrada' }}</small>
+                        </div>
+                        <div class="photo-card">
+                            <h3>CNH · Frente</h3>
+                            <div class="photo-preview">
+                                @if (driverEntryPhotoDoc1) {
+                                    <p-image [src]="driverEntryPhotoDoc1" alt="CNH · Frente" [preview]="true" [imageStyle]="{ width: '120px', height: '90px', objectFit: 'cover', borderRadius: '.5rem' }" />
+                                } @else {
+                                    <i class="pi pi-id-card" aria-hidden="true"></i>
+                                }
+                            </div>
+                            <small>{{ driverEntryPhotoDoc1 ? 'Clique para ampliar' : 'Nenhuma imagem cadastrada' }}</small>
+                        </div>
+                        <div class="photo-card">
+                            <h3>CNH · Verso</h3>
+                            <div class="photo-preview">
+                                @if (driverEntryPhotoDoc2) {
+                                    <p-image [src]="driverEntryPhotoDoc2" alt="CNH · Verso" [preview]="true" [imageStyle]="{ width: '120px', height: '90px', objectFit: 'cover', borderRadius: '.5rem' }" />
+                                } @else {
+                                    <i class="pi pi-id-card" aria-hidden="true"></i>
+                                }
+                            </div>
+                            <small>{{ driverEntryPhotoDoc2 ? 'Clique para ampliar' : 'Nenhuma imagem cadastrada' }}</small>
                         </div>
                     </div>
                 </form>
-                <p-divider type="solid" />
-                <div class="flex justify-between">
-                    <p-button (onClick)="activateCallback(1)" label="Voltar" severity="secondary" icon="pi pi-arrow-left" />
-                    <p-button (onClick)="nextSterpperDriver()" label="Avançar" icon="pi pi-arrow-right"  iconPos="right" />
-                </div>
-                </ng-template>
-            </p-step-panel>
-            <p-step-panel [value]="3">
-                <ng-template #content let-activateCallback="activateCallback">
-                    <form [formGroup]="formVehicle" class="layout-card-step">
-                    <span>Vamos informar agora os dados do veículo</span>
-                    <div class="grid grid-cols-12 gap-2">
-                        <div class="col-span-12 md:col-span-1">
-                            <label for="plate">Placa</label>
-                            <p-inputMask id="plate" mask="***-****" [unmask]="true" [style]="{'text-transform':'uppercase'}" formControlName="vehiclePlate" fluid/>
-                            <small class="block text-sm text-red-500" *ngIf="formVehicle.get('vehiclePlate')?.invalid">Campo obrigatório</small>
+                <footer class="step-actions">
+                    <p-button label="Voltar" severity="secondary" [text]="true" icon="pi pi-arrow-left" (onClick)="stepperClientCompany()" /><p-button label="Avançar" icon="pi pi-arrow-right" iconPos="right" (onClick)="nextSterpperDriver()" />
+                </footer>
+            } @else {
+                <form [formGroup]="formVehicle" (ngSubmit)="addVehicleEntry()">
+                    <div class="section-heading">
+                        <i class="pi pi-car" aria-hidden="true"></i>
+                        <div>
+                            <h2>Dados do veículo</h2>
+                            <p>Preencha os campos obrigatórios (*) e adicione o veículo à lista antes de finalizar.</p>
                         </div>
-                        <div class="col-span-12 md:col-span-1">
-                            <label for="fleet">Frota</label>
-                            <input pInputText type="text" class="w-full" maxlength="10" [style]="{'text-transform':'uppercase'}" formControlName="vehicleFleet"/>
+                    </div>
+                    <div class="fields-grid">
+                        <div class="field">
+                            <label for="entry-date">Data de entrada *</label
+                            ><p-datepicker inputId="entry-date" formControlName="entryDate" [showTime]="true" hourFormat="24" [showIcon]="true" [showOnFocus]="false" dateFormat="dd/mm/yy" appendTo="body" (onInput)="applyDateTimeMask($event)" fluid />
+                            @if (formVehicle.controls.entryDate.invalid && formVehicle.controls.entryDate.touched) {
+                                <small class="field-error">Campo obrigatório</small>
+                            }
                         </div>
-                        <div class="col-span-12 md:col-span-2">
-                            <label for="vehiclemodelid">Modelos</label>
-                            <p-select
-                            formControlName="modelVehicle"
-                            [options]="vehicleModels()"
-                            optionLabel="description"
-                            [style]="{'text-transform':'uppercase'}" fluid />
-                            <small class="block text-sm text-red-500" *ngIf="formVehicle.get('modelVehicle')?.invalid">Campo obrigatório</small>
+                        <div class="field">
+                            <label for="entry-exit-date">Previsão de saída</label
+                            ><p-datepicker
+                                inputId="entry-exit-date"
+                                formControlName="exitDatePrevision"
+                                [showTime]="true"
+                                hourFormat="24"
+                                [showIcon]="true"
+                                [showOnFocus]="false"
+                                dateFormat="dd/mm/yy"
+                                appendTo="body"
+                                (onInput)="applyDateTimeMask($event)"
+                                fluid
+                            />
                         </div>
-                        <div class="col-span-12 md:col-span-3">
-                            <label for="dateEntry">Data Entrada</label>
-                            <p-datepicker [showOnFocus]="false" [showIcon]="true" inputId="dateEntry" [showTime]="true" dateFormat="dd/mm/yy" (onInput)="applyDateTimeMask($event)" formControlName="entryDate" fluid/>
-                            <small class="block text-sm text-red-500" *ngIf="formVehicle.get('entryDate')?.invalid">Campo obrigatório</small>
+                        <div class="field"><label for="entry-fleet">Frota</label><input pInputText id="entry-fleet" formControlName="vehicleFleet" class="w-full" /></div>
+                        <div class="field"><label for="entry-km">Quilometragem de entrada</label><p-inputNumber inputId="entry-km" [useGrouping]="false" formControlName="vehicleKmEntry" fluid /></div>
+                        <div class="field">
+                            <label for="entry-plate">Placa {{ formVehicle.controls.vehicleNew.value === not ? '*' : '' }}</label
+                            ><p-inputMask inputId="entry-plate" mask="***-****" [unmask]="true" formControlName="vehiclePlate" class="uppercase" placeholder="ABC-1234" fluid />
+                            @if (formVehicle.controls.vehiclePlate.invalid && formVehicle.controls.vehiclePlate.touched) {
+                                <small class="field-error">Campo obrigatório</small>
+                            }
                         </div>
-                        
-                        <div class="col-span-12 md:col-span-3">
-                            <label for="exitDatePrevision">Previsão saída</label>
-                            <p-datepicker [showOnFocus]="false" [showIcon]="true" inputId="exitDatePrevision" [showTime]="true" dateFormat="dd/mm/yy" (onInput)="applyDateTimeMask($event)" formControlName="exitDatePrevision" fluid/>
+                        <div class="field">
+                            <label for="entry-model">Modelo *</label
+                            ><p-select inputId="entry-model" formControlName="modelVehicle" [options]="vehicleModels()" optionLabel="description" [filter]="true" filterBy="description" placeholder="Selecione o modelo" appendTo="body" fluid />
+                            @if (formVehicle.controls.modelVehicle.invalid && formVehicle.controls.modelVehicle.touched) {
+                                <small class="field-error">Campo obrigatório</small>
+                            }
                         </div>
-                        <div class="md:col-span-2"></div>
-                        <div class="col-span-12 md:col-span-2">
-                            <label for="vehiclecolorid">Cor</label>
-                            <p-select
-                            formControlName="vehicleColor"
-                            [showClear]="true"
-                            [options]="colors"
-                            optionLabel="color"
-                            [style]="{'text-transform':'uppercase'}" fluid/>
+                        <div class="field"><label for="entry-color">Cor</label><p-select inputId="entry-color" formControlName="vehicleColor" [options]="colors" optionLabel="color" [showClear]="true" appendTo="body" fluid /></div>
+                        <div class="field">
+                            <label for="entry-attendant">Consultor</label
+                            ><p-select inputId="entry-attendant" formControlName="attendant" [options]="attendants()" optionLabel="name" [filter]="true" filterBy="name" [showClear]="true" appendTo="body" fluid />
                         </div>
-                        <div class="col-span-12 md:col-span-2">
-                            <label for="kmatual">KM Atual</label>
-                            <p-inputNumber inputId="kmatual" [useGrouping]="false" formControlName="vehicleKmEntry" fluid/>
-                        </div>
-                        <div class="col-span-12 md:col-span-2">
-                            <label for="consultorid">Consultor</label>
-                            <p-select 
-                            formControlName="attendant"
-                            [showClear]="true"
-                            [options]="attendants()"
-                            optionLabel="name"
-                            [style]="{'text-transform':'uppercase'}" fluid />
-                        </div>
-                        <div class="col-span-12 md:col-span-2">
-                            <label class="block font-medium">Sem Placa</label>
-                            <div class="flex items-center gap-4 border border-gray-300 rounded-md p-3">
-                                <div class="flex items-center">
-                                    <p-radioButton
-                                        inputId="newyes"
-                                        name="vehicleNew"
-                                        [value]="yes"
-                                        formControlName="vehicleNew"
-                                        (onClick)="deleteRequirePlaca()">
-                                    </p-radioButton>
-                                    <label for="newyes" class="ml-2">Sim</label>
-                                </div>
-                                <div class="flex items-center">
-                                    <p-radioButton
-                                        inputId="newnot"
-                                         name="vehicleNew"
-                                        [value]="not"
-                                        formControlName="vehicleNew"
-                                        (onClick)="addRequirePlaca()">
-                                    </p-radioButton>
-                                    <label for="newnot" class="ml-2">Não</label>
-                                </div>
+                        <fieldset class="choice-box">
+                            <legend>Veículo sem placa</legend>
+                            <div class="flex gap-5">
+                                <div class="flex items-center gap-2"><p-radioButton inputId="entry-new-yes" [value]="yes" formControlName="vehicleNew" (onClick)="deleteRequirePlaca()" /><label for="entry-new-yes">Sim</label></div>
+                                <div class="flex items-center gap-2"><p-radioButton inputId="entry-new-no" [value]="not" formControlName="vehicleNew" (onClick)="addRequirePlaca()" /><label for="entry-new-no">Não</label></div>
+                            </div>
+                        </fieldset>
+                        <fieldset class="choice-box">
+                            <legend>Possui ordem de serviço</legend>
+                            <div class="flex gap-5">
+                                <div class="flex items-center gap-2"><p-radioButton inputId="entry-service-yes" [value]="yes" formControlName="vehicleServiceOrder" /><label for="entry-service-yes">Sim</label></div>
+                                <div class="flex items-center gap-2"><p-radioButton inputId="entry-service-no" [value]="not" formControlName="vehicleServiceOrder" /><label for="entry-service-no">Não</label></div>
+                            </div>
+                        </fieldset>
+                    </div>
+                    @if (
+                        modChecklist.checklist1Enabled === yes ||
+                        modChecklist.checklist2Enabled === yes ||
+                        modChecklist.checklist3Enabled === yes ||
+                        modChecklist.checklist4Enabled === yes ||
+                        modChecklist.checklist5Enabled === yes ||
+                        modChecklist.checklist6Enabled === yes ||
+                        modChecklist.checklist7Enabled === yes ||
+                        modChecklist.checklist8Enabled === yes ||
+                        modChecklist.checklist9Enabled === yes ||
+                        modChecklist.checklist10Enabled === yes ||
+                        modChecklist.checklist11Enabled === yes ||
+                        modChecklist.checklist12Enabled === yes ||
+                        modChecklist.checklist13Enabled === yes ||
+                        modChecklist.checklist14Enabled === yes ||
+                        modChecklist.checklist15Enabled === yes ||
+                        modChecklist.checklist16Enabled === yes ||
+                        modChecklist.checklist17Enabled === yes ||
+                        modChecklist.checklist18Enabled === yes ||
+                        modChecklist.checklist19Enabled === yes ||
+                        modChecklist.checklist20Enabled === yes
+                    ) {
+                        <div class="section-heading">
+                            <i class="pi pi-list-check" aria-hidden="true"></i>
+                            <div>
+                                <h2>Checklist</h2>
+                                <p>Registre os itens verificados na entrada.</p>
                             </div>
                         </div>
-                        <div class="col-span-12 md:col-span-2">
-                            <label class="block font-medium">Ordem serviço</label>
-                            <div class="flex items-center gap-4 border border-gray-300 rounded-md p-3">
-                                <div class="flex items-center">
-                                    <p-radioButton
-                                        inputId="serviceyes3"
-                                        name="service"
-                                        [value]="yes"
-                                        formControlName="vehicleServiceOrder">
-                                    </p-radioButton>
-                                    <label for="serviceyes3" class="ml-2">Sim</label>
+                        <div class="fields-grid">
+                            @if (modChecklist.checklist1Enabled === yes) {
+                                <div class="field">
+                                    <label for="entry-checklist-1">{{ modChecklist.checklist1Desc }}</label
+                                    ><input pInputText id="entry-checklist-1" formControlName="checklist1Desc" maxlength="50" />
                                 </div>
-                                <div class="flex items-center">
-                                    <p-radioButton
-                                        inputId="servicenot4"
-                                        name="service"
-                                        [value]="not"
-                                        formControlName="vehicleServiceOrder">
-                                    </p-radioButton>
-                                    <label for="servicenot4" class="ml-2">Não</label>
+                            }
+                            @if (modChecklist.checklist2Enabled === yes) {
+                                <div class="field">
+                                    <label for="entry-checklist-2">{{ modChecklist.checklist2Desc }}</label
+                                    ><input pInputText id="entry-checklist-2" formControlName="checklist2Desc" maxlength="50" />
                                 </div>
+                            }
+                            @if (modChecklist.checklist3Enabled === yes) {
+                                <div class="field">
+                                    <label for="entry-checklist-3">{{ modChecklist.checklist3Desc }}</label
+                                    ><input pInputText id="entry-checklist-3" formControlName="checklist3Desc" maxlength="50" />
+                                </div>
+                            }
+                            @if (modChecklist.checklist4Enabled === yes) {
+                                <div class="field">
+                                    <label for="entry-checklist-4">{{ modChecklist.checklist4Desc }}</label
+                                    ><input pInputText id="entry-checklist-4" formControlName="checklist4Desc" maxlength="50" />
+                                </div>
+                            }
+                            @if (modChecklist.checklist5Enabled === yes) {
+                                <div class="field">
+                                    <label for="entry-checklist-5">{{ modChecklist.checklist5Desc }}</label
+                                    ><input pInputText id="entry-checklist-5" formControlName="checklist5Desc" maxlength="50" />
+                                </div>
+                            }
+                            @if (modChecklist.checklist6Enabled === yes) {
+                                <div class="field">
+                                    <label for="entry-checklist-6">{{ modChecklist.checklist6Desc }}</label
+                                    ><input pInputText id="entry-checklist-6" formControlName="checklist6Desc" maxlength="50" />
+                                </div>
+                            }
+                            @if (modChecklist.checklist7Enabled === yes) {
+                                <div class="field">
+                                    <label for="entry-checklist-7">{{ modChecklist.checklist7Desc }}</label
+                                    ><input pInputText id="entry-checklist-7" formControlName="checklist7Desc" maxlength="50" />
+                                </div>
+                            }
+                            @if (modChecklist.checklist8Enabled === yes) {
+                                <div class="field">
+                                    <label for="entry-checklist-8">{{ modChecklist.checklist8Desc }}</label
+                                    ><input pInputText id="entry-checklist-8" formControlName="checklist8Desc" maxlength="50" />
+                                </div>
+                            }
+                            @if (modChecklist.checklist9Enabled === yes) {
+                                <div class="field">
+                                    <label for="entry-checklist-9">{{ modChecklist.checklist9Desc }}</label
+                                    ><input pInputText id="entry-checklist-9" formControlName="checklist9Desc" maxlength="50" />
+                                </div>
+                            }
+                            @if (modChecklist.checklist10Enabled === yes) {
+                                <div class="field">
+                                    <label for="entry-checklist-10">{{ modChecklist.checklist10Desc }}</label
+                                    ><input pInputText id="entry-checklist-10" formControlName="checklist10Desc" maxlength="50" />
+                                </div>
+                            }
+                            @if (modChecklist.checklist11Enabled === yes) {
+                                <div class="field">
+                                    <label for="entry-checklist-11">{{ modChecklist.checklist11Desc }}</label
+                                    ><input pInputText id="entry-checklist-11" formControlName="checklist11Desc" maxlength="50" />
+                                </div>
+                            }
+                            @if (modChecklist.checklist12Enabled === yes) {
+                                <div class="field">
+                                    <label for="entry-checklist-12">{{ modChecklist.checklist12Desc }}</label
+                                    ><input pInputText id="entry-checklist-12" formControlName="checklist12Desc" maxlength="50" />
+                                </div>
+                            }
+                            @if (modChecklist.checklist13Enabled === yes) {
+                                <div class="field">
+                                    <label for="entry-checklist-13">{{ modChecklist.checklist13Desc }}</label
+                                    ><input pInputText id="entry-checklist-13" formControlName="checklist13Desc" maxlength="50" />
+                                </div>
+                            }
+                            @if (modChecklist.checklist14Enabled === yes) {
+                                <div class="field">
+                                    <label for="entry-checklist-14">{{ modChecklist.checklist14Desc }}</label
+                                    ><input pInputText id="entry-checklist-14" formControlName="checklist14Desc" maxlength="50" />
+                                </div>
+                            }
+                            @if (modChecklist.checklist15Enabled === yes) {
+                                <div class="field">
+                                    <label for="entry-checklist-15">{{ modChecklist.checklist15Desc }}</label
+                                    ><input pInputText id="entry-checklist-15" formControlName="checklist15Desc" maxlength="50" />
+                                </div>
+                            }
+                            @if (modChecklist.checklist16Enabled === yes) {
+                                <div class="field">
+                                    <label for="entry-checklist-16">{{ modChecklist.checklist16Desc }}</label
+                                    ><input pInputText id="entry-checklist-16" formControlName="checklist16Desc" maxlength="50" />
+                                </div>
+                            }
+                            @if (modChecklist.checklist17Enabled === yes) {
+                                <div class="field">
+                                    <label for="entry-checklist-17">{{ modChecklist.checklist17Desc }}</label
+                                    ><input pInputText id="entry-checklist-17" formControlName="checklist17Desc" maxlength="50" />
+                                </div>
+                            }
+                            @if (modChecklist.checklist18Enabled === yes) {
+                                <div class="field">
+                                    <label for="entry-checklist-18">{{ modChecklist.checklist18Desc }}</label
+                                    ><input pInputText id="entry-checklist-18" formControlName="checklist18Desc" maxlength="50" />
+                                </div>
+                            }
+                            @if (modChecklist.checklist19Enabled === yes) {
+                                <div class="field">
+                                    <label for="entry-checklist-19">{{ modChecklist.checklist19Desc }}</label
+                                    ><input pInputText id="entry-checklist-19" formControlName="checklist19Desc" maxlength="50" />
+                                </div>
+                            }
+                            @if (modChecklist.checklist20Enabled === yes) {
+                                <div class="field">
+                                    <label for="entry-checklist-20">{{ modChecklist.checklist20Desc }}</label
+                                    ><input pInputText id="entry-checklist-20" formControlName="checklist20Desc" maxlength="50" />
+                                </div>
+                            }
+                        </div>
+                    }
+                    <div class="section-heading">
+                        <i class="pi pi-align-left" aria-hidden="true"></i>
+                        <div>
+                            <h2>Observações e fotos</h2>
+                            <p>Documente as condições do veículo na chegada.</p>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label for="entry-info">Informações da entrada</label><textarea pTextarea id="entry-info" rows="4" maxlength="255" formControlName="entryInformation" class="w-full"></textarea
+                        ><small class="text-right">{{ formVehicle.controls.entryInformation.value?.length || 0 }} / 255 caracteres</small>
+                    </div>
+                    <div class="photo-grid">
+                        <div class="photo-card">
+                            <h3>Foto 1</h3>
+                            <div class="photo-preview">
+                                @if (photoVehicle1()) {
+                                    <p-image [src]="photoVehicle1()" alt="Foto 1 da entrada" [preview]="true" [imageStyle]="{ width: '120px', height: '90px', objectFit: 'cover', borderRadius: '.5rem' }" />
+                                } @else {
+                                    <i class="pi pi-camera" aria-hidden="true"></i>
+                                }
+                            </div>
+                            <div class="flex justify-center flex-wrap">
+                                <p-button type="button" label="Selecionar" icon="pi pi-camera" [text]="true" size="small" [disabled]="saving() || adding()" (onClick)="photoFile1Vehicle()" ariaLabel="Selecionar foto 1" />
+                                @if (photoVehicle1()) {
+                                    <p-button type="button" icon="pi pi-trash" severity="danger" [text]="true" size="small" [disabled]="saving() || adding()" (onClick)="deleteFileVehicle1()" ariaLabel="Remover foto 1" />
+                                }
                             </div>
                         </div>
-                        <div class="md:col-span-2"></div>
-                         <!-- Teste check list -->
-                        <div *ngIf="modChecklist.checklist1Enabled == yes" class="col-span-12 md:col-span-2">
-                            <label for="coneid">{{modChecklist.checklist1Desc}}</label>
-                            <input pInputText class="w-full" formControlName="checklist1Desc" maxlength="50"/>
-                        </div>
-                        <div *ngIf="modChecklist.checklist2Enabled == yes" class="col-span-12 md:col-span-2">
-                            <label for="extintorid">{{modChecklist.checklist2Desc}}</label>
-                            <input pInputText class="w-full" formControlName="checklist2Desc" maxlength="50"/>
-                        </div>
-                        <div *ngIf="modChecklist.checklist3Enabled == yes" class="col-span-12 md:col-span-2">
-                            <label for="pneuid">{{modChecklist.checklist3Desc}}</label>
-                            <input pInputText class="w-full" formControlName="checklist3Desc" maxlength="50"/>
-                        </div>
-                        <div *ngIf="modChecklist.checklist4Enabled == yes" class="col-span-12 md:col-span-2">
-                            <label for="pneurodaid">{{modChecklist.checklist4Desc}}</label>
-                            <input pInputText class="w-full" formControlName="checklist4Desc" maxlength="50"/>
-                        </div>
-                        <div *ngIf="modChecklist.checklist5Enabled == yes" class="col-span-12 md:col-span-2">
-                            <label for="cxferramentaid">{{modChecklist.checklist5Desc}}</label>
-                            <input pInputText class="w-full" formControlName="checklist5Desc" maxlength="50"/>
-                        </div>
-                        <div *ngIf="modChecklist.checklist6Enabled == yes" class="col-span-12 md:col-span-2">
-                            <label for="coneid">{{modChecklist.checklist6Desc}}</label>
-                            <input pInputText class="w-full" formControlName="checklist6Desc" maxlength="50"/>
-                        </div>
-                        <div *ngIf="modChecklist.checklist7Enabled == yes" class="col-span-12 md:col-span-2">
-                            <label for="extintorid">{{modChecklist.checklist7Desc}}</label>
-                              <input pInputText class="w-full" formControlName="checklist7Desc" maxlength="50"/>
-                        </div>
-                        <div *ngIf="modChecklist.checklist8Enabled == yes" class="col-span-12 md:col-span-2">
-                            <label for="pneuid">{{modChecklist.checklist8Desc}}</label>
-                            <input pInputText class="w-full" formControlName="checklist8Desc" maxlength="50"/>
-                        </div>
-                        <div *ngIf="modChecklist.checklist9Enabled == yes" class="col-span-12 md:col-span-2">
-                            <label for="pneurodaid">{{modChecklist.checklist9Desc}}</label>
-                            <input pInputText class="w-full" formControlName="checklist9Desc" maxlength="50"/>
-                        </div>
-                        <div *ngIf="modChecklist.checklist10Enabled == yes" class="col-span-12 md:col-span-2">
-                            <label for="cxferramentaid">{{modChecklist.checklist10Desc}}</label>
-                            <input pInputText class="w-full" formControlName="checklist10Desc" maxlength="50"/>
-                        </div>
-                        <div *ngIf="modChecklist.checklist11Enabled == yes" class="col-span-12 md:col-span-2">
-                            <label for="pneurodaid">{{modChecklist.checklist11Desc}}</label>
-                            <input pInputText class="w-full" formControlName="checklist11Desc" maxlength="50"/>
-                        </div>
-                        <div *ngIf="modChecklist.checklist12Enabled == yes" class="col-span-12 md:col-span-2">
-                            <label for="cxferramentaid">{{modChecklist.checklist12Desc}}</label>
-                            <input pInputText class="w-full" formControlName="checklist12Desc" maxlength="50"/>
-                        </div>
-                         <div *ngIf="modChecklist.checklist13Enabled == yes" class="col-span-12 md:col-2">
-                            <label for="cxferramentaid">{{modChecklist.checklist13Desc}}</label>
-                            <input pInputText class="w-full" formControlName="checklist13Desc" maxlength="50"/>
-                        </div>
-                        <div *ngIf="modChecklist.checklist14Enabled == yes" class="col-12 md:col-span-2">
-                            <label for="cxferramentaid">{{modChecklist.checklist14Desc}}</label>
-                            <input pInputText class="w-full" formControlName="checklist14Desc" maxlength="50"/>
-                        </div>
-                        <div *ngIf="modChecklist.checklist15Enabled == yes" class="col-span-12 md:col-span-2">
-                            <label for="cxferramentaid">{{modChecklist.checklist15Desc}}</label>
-                            <input pInputText class="w-full" formControlName="checklist15Desc" maxlength="50"/>
-                        </div>
-                        <div *ngIf="modChecklist.checklist16Enabled == yes" class="col-span-12 md:col-span-2">
-                            <label for="cxferramentaid">{{modChecklist.checklist16Desc}}</label>
-                            <input pInputText class="w-full" formControlName="checklist16Desc" maxlength="50"/>
-                        </div>
-                        <div *ngIf="modChecklist.checklist17Enabled == yes" class="col-span-12 md:col-span-2">
-                            <label for="cxferramentaid">{{modChecklist.checklist17Desc}}</label>
-                            <input pInputText class="w-full" formControlName="checklist17Desc" maxlength="50"/>
-                        </div>
-                        <div *ngIf="modChecklist.checklist18Enabled == yes" class="col-span-12 md:col-span-2">
-                            <label for="cxferramentaid">{{modChecklist.checklist18Desc}}</label>
-                            <input pInputText class="w-full" formControlName="checklist18Desc" maxlength="50"/>
-                        </div>
-                        <div *ngIf="modChecklist.checklist19Enabled == yes" class="col-span-12 md:col-span-2">
-                            <label for="cxferramentaid">{{modChecklist.checklist19Desc}}</label>
-                            <input pInputText class="w-full" formControlName="checklist19Desc" maxlength="50"/>
-                        </div>
-                        <div *ngIf="modChecklist.checklist20Enabled == yes" class="col-span-12 md:col-span-2">
-                            <label for="cxferramentaid">{{modChecklist.checklist20Desc}}</label>
-                            <input pInputText class="w-full" formControlName="checklist20Desc" maxlength="50"/>
-                        </div> 
-                        <!-- Teste check list -->                  
-                        <div class="col-span-12">
-                            <label for="informacao" class="ml-2">Informações</label>
-                            <textarea pInputTextarea maxlength="255" id="informacao" rows="4" cols="30" formControlName="entryInformation" fluid></textarea>
-                        </div>
-                        <div class="col-span-12 md:col-span-4 flex justify-between gap-1">
-                            <div class="layout-file">
-                                <div class="layout-file-img">
-                                    <p-image *ngIf="photoVehicle1()" [src]="photoVehicle1()" alt="" [preview]="true"/>
-                                </div>
-                                <button pButton *ngIf="photoVehicle1()" severity="danger" (click)="deleteFileVehicle1()">
-                                    <i class="pi pi-trash"></i>
-                                    <span>Remover</span>
-                                </button>
-                                <button pButton *ngIf="!photoVehicle1()" type="button" (click)="photoFile1Vehicle()">
-                                    <i class="pi pi-plus"></i>
-                                    <span>Incluir</span>
-                                </button>
-                            </div> 
-                            <div class="layout-file">
-                                <div class="layout-file-img">
-                                    <p-image *ngIf="photoVehicle2()" [src]="photoVehicle2()" alt="" [preview]="true"/>
-                                </div>
-                                <button *ngIf="photoVehicle2()" pButton severity="danger" (click)="deleteFileVehicle2()">
-                                    <i class="pi pi-trash"></i>
-                                    <span>Remover</span>
-                                </button>
-                                <button *ngIf="!photoVehicle2()" pButton type="button" (click)="photoFile2Vehicle()">
-                                    <i class="pi pi-plus"></i>
-                                    <span>Incluir</span>
-                                </button>
+                        <div class="photo-card">
+                            <h3>Foto 2</h3>
+                            <div class="photo-preview">
+                                @if (photoVehicle2()) {
+                                    <p-image [src]="photoVehicle2()" alt="Foto 2 da entrada" [preview]="true" [imageStyle]="{ width: '120px', height: '90px', objectFit: 'cover', borderRadius: '.5rem' }" />
+                                } @else {
+                                    <i class="pi pi-camera" aria-hidden="true"></i>
+                                }
                             </div>
-                            <div class="layout-file">
-                                <div class="layout-file-img">
-                                    <p-image *ngIf="photoVehicle3()" [src]="photoVehicle3()" alt="" [preview]="true"/>
-                                </div>
-                                <button *ngIf="photoVehicle3()" pButton severity="danger" (click)="deleteFileVehicle3()">
-                                    <i class="pi pi-trash"></i>
-                                    <span>Remover</span>
-                                </button>  
-                                <button *ngIf="!photoVehicle3()" pButton type="button" (click)="photoFile3Vehicle()">
-                                    <i class="pi pi-plus"></i>
-                                    <span>Incluir</span>
-                                </button>  
+                            <div class="flex justify-center flex-wrap">
+                                <p-button type="button" label="Selecionar" icon="pi pi-camera" [text]="true" size="small" [disabled]="saving() || adding()" (onClick)="photoFile2Vehicle()" ariaLabel="Selecionar foto 2" />
+                                @if (photoVehicle2()) {
+                                    <p-button type="button" icon="pi pi-trash" severity="danger" [text]="true" size="small" [disabled]="saving() || adding()" (onClick)="deleteFileVehicle2()" ariaLabel="Remover foto 2" />
+                                }
                             </div>
-                            <div class="layout-file">
-                                <div class="layout-file-img">
-                                    <p-image *ngIf="photoVehicle4()" [src]="photoVehicle4()" alt="" [preview]="true"/>
-                                </div>
-                                <button *ngIf="photoVehicle4()" pButton severity="danger" (click)="deleteFileVehicle4()">
-                                    <i class="pi pi-trash"></i>
-                                    <span>Remover</span>
-                                </button>
-                                <button *ngIf="!photoVehicle4()" pButton type="button" (click)="photoFile4Vehicle()">
-                                    <i class="pi pi-plus"></i>
-                                    <span>Incluir</span>
-                                </button>
+                        </div>
+                        <div class="photo-card">
+                            <h3>Foto 3</h3>
+                            <div class="photo-preview">
+                                @if (photoVehicle3()) {
+                                    <p-image [src]="photoVehicle3()" alt="Foto 3 da entrada" [preview]="true" [imageStyle]="{ width: '120px', height: '90px', objectFit: 'cover', borderRadius: '.5rem' }" />
+                                } @else {
+                                    <i class="pi pi-camera" aria-hidden="true"></i>
+                                }
+                            </div>
+                            <div class="flex justify-center flex-wrap">
+                                <p-button type="button" label="Selecionar" icon="pi pi-camera" [text]="true" size="small" [disabled]="saving() || adding()" (onClick)="photoFile3Vehicle()" ariaLabel="Selecionar foto 3" />
+                                @if (photoVehicle3()) {
+                                    <p-button type="button" icon="pi pi-trash" severity="danger" [text]="true" size="small" [disabled]="saving() || adding()" (onClick)="deleteFileVehicle3()" ariaLabel="Remover foto 3" />
+                                }
+                            </div>
+                        </div>
+                        <div class="photo-card">
+                            <h3>Foto 4</h3>
+                            <div class="photo-preview">
+                                @if (photoVehicle4()) {
+                                    <p-image [src]="photoVehicle4()" alt="Foto 4 da entrada" [preview]="true" [imageStyle]="{ width: '120px', height: '90px', objectFit: 'cover', borderRadius: '.5rem' }" />
+                                } @else {
+                                    <i class="pi pi-camera" aria-hidden="true"></i>
+                                }
+                            </div>
+                            <div class="flex justify-center flex-wrap">
+                                <p-button type="button" label="Selecionar" icon="pi pi-camera" [text]="true" size="small" [disabled]="saving() || adding()" (onClick)="photoFile4Vehicle()" ariaLabel="Selecionar foto 4" />
+                                @if (photoVehicle4()) {
+                                    <p-button type="button" icon="pi pi-trash" severity="danger" [text]="true" size="small" [disabled]="saving() || adding()" (onClick)="deleteFileVehicle4()" ariaLabel="Remover foto 4" />
+                                }
                             </div>
                         </div>
                     </div>
+                    <footer class="step-actions">
+                        <p-button type="button" label="Voltar" severity="secondary" [text]="true" icon="pi pi-arrow-left" [disabled]="saving() || adding()" (onClick)="stepperDriver()" /><button
+                            pButton
+                            type="submit"
+                            label="Adicionar veículo"
+                            icon="pi pi-plus"
+                            [loading]="adding()"
+                            [disabled]="saving()"
+                        ></button>
+                    </footer>
                 </form>
-                <p-divider type="solid" />
-                <div class="flex justify-start gap-2">
-                    <button pButton (click)="activateCallback(2)" label="Voltar" severity="secondary" icon="pi pi-arrow-left"></button>
-                    <button pButton icon="pi pi-plus" label="Adicionar " [outlined]="true" (click)="addVehicleEntry()"></button>
-                </div>
-                </ng-template>
-            </p-step-panel>
-        </p-step-panels>
-    </p-stepper>
+            }
+        </section>
+    }
 </div>
-
-<!-- Dialog Veículos -->
-<p-dialog header="Lista de veículos" [(visible)]="dialogVehicleVisible" [modal]="true"
-    [breakpoints]="{ '1199px': '75vw', '575px': '90vw' }">
-    <p-table [value]="listVehicleEntry" [tableStyle]="{ 'min-width': '60rem' }" styleClass="p-datatable-sm">
-        <ng-template pTemplate="header">
-            <tr>
-                <th pSortableColumn="vehiclePlate">Placa<p-sortIcon field="vehiclePlate"></p-sortIcon></th>
-                <th pSortableColumn="vehicleFleet">Frota<p-sortIcon field="vehicleFleet"></p-sortIcon></th>
-                <th pSortableColumn="modelDescription">Modelo<p-sortIcon field="modelDescription"></p-sortIcon></th>
-                <th pSortableColumn="attendantUserName">Consultor<p-sortIcon field="attendantUserName"></p-sortIcon>
-                </th>
-                <th pSortableColumn="clientCompanyName">Empresa<p-sortIcon field="clientCompanyName"></p-sortIcon></th>
-                <th></th>
-            </tr>
-        </ng-template>
-        <ng-template pTemplate="body" let-vehicle let-index="rowIndex">
-            <tr>
-                <td *ngIf="vehicle.vehicleNew == yes"><p-tag value="SEM PLACA" severity="info"></p-tag></td>
-                <td *ngIf="vehicle.vehicleNew == not">{{vehicle.vehiclePlate | uppercase}}</td>
-                <td>{{vehicle.vehicleFleet}}</td>
-                <td>{{vehicle.modelDescription | uppercase}}</td>
-                <td *ngIf="vehicle.attendantUserId == 0"><p-tag value="FALTA" severity="danger"></p-tag></td>
-                <td *ngIf="vehicle.attendantUserId != 0">{{vehicle.attendantUserName | uppercase}}</td>
-                <td *ngIf="vehicle.clientCompanyId == 0"><p-tag value="FALTA" severity="danger"></p-tag></td>
-                <td *ngIf="vehicle.clientCompanyId != 0">{{ firstSecondaryName(vehicle.clientCompanyName) | uppercase }}
-                </td>
+<p-dialog [(visible)]="dialogVehicleVisible" [modal]="true" [draggable]="false" [closable]="!saving()" [closeOnEscape]="!saving()" [style]="{ width: '70rem', maxWidth: '96vw' }"
+    ><ng-template #header
+        ><div class="entry-title">
+            <span class="entry-icon"><i class="pi pi-list" aria-hidden="true"></i></span>
+            <div>
+                <span class="entry-eyebrow">REVISÃO DA ENTRADA</span>
+                <h2>Veículos adicionados ({{ listVehicleEntry.length }})</h2>
+            </div>
+        </div></ng-template
+    >
+    <p class="text-muted-color mt-0 mb-4">Confira os dados antes de finalizar. Veículos salvos com fotos pendentes permanecem nesta lista para nova tentativa.</p>
+    <p-table [value]="listVehicleEntry" [scrollable]="true" [tableStyle]="{ 'min-width': '60rem' }" size="small" [rowHover]="true"
+        ><ng-template #header
+            ><tr>
+                <th>Placa</th>
+                <th>Frota</th>
+                <th>Modelo</th>
+                <th>Consultor</th>
+                <th>Proprietário</th>
+                <th>Status</th>
+                <th>Ação</th>
+            </tr></ng-template
+        ><ng-template #body let-vehicle let-index="rowIndex"
+            ><tr>
                 <td>
-                    <button pButton [text]="true" icon="pi pi-trash" severity="danger"
-                        (click)="deleteVehicleEntry(index)"></button>
+                    @if (vehicle.vehicleNew === yes) {
+                        <p-tag value="Sem placa" severity="info" [rounded]="true" />
+                    } @else {
+                        <strong>{{ vehicle.vehiclePlate | uppercase }}</strong>
+                    }
                 </td>
-            </tr>
-        </ng-template>
-    </p-table>
-    <div class="flex justify-end mt-3">
-        <button pButton type="submit" pRipple label="Finalizar" icon="pi pi-check" class="p-button-text" (click)="save()"></button>
-    </div>
-</p-dialog>
+                <td>{{ vehicle.vehicleFleet || '—' }}</td>
+                <td>{{ vehicle.modelDescription | uppercase }}</td>
+                <td>{{ vehicle.attendantUserName || 'Não informado' }}</td>
+                <td>{{ vehicle.clientCompanyName || 'Sem cadastro' }}</td>
+                <td><p-tag [value]="vehicle.id ? 'Fotos pendentes' : 'A registrar'" [severity]="vehicle.id ? 'warn' : 'secondary'" [rounded]="true" /></td>
+                <td><p-button type="button" icon="pi pi-trash" label="Remover" severity="danger" [text]="true" size="small" [disabled]="saving() || vehicle.id != null" (onClick)="deleteVehicleEntry(index)" /></td></tr></ng-template
+        ><ng-template #emptymessage
+            ><tr>
+                <td colspan="7">
+                    <div class="entry-state">
+                        <i class="pi pi-car" aria-hidden="true"></i>
+                        <p>Nenhum veículo adicionado. Preencha os dados e clique em Adicionar veículo.</p>
+                    </div>
+                </td>
+            </tr></ng-template
+        ></p-table
+    ><ng-template #footer
+        ><p-button type="button" label="Continuar preenchendo" severity="secondary" [text]="true" [disabled]="saving()" (onClick)="dialogVehicleVisible = false" /><p-button
+            type="button"
+            label="Finalizar entrada"
+            icon="pi pi-check"
+            [loading]="saving()"
+            [disabled]="!listVehicleEntry.length || adding()"
+            (onClick)="save()" /></ng-template
+></p-dialog>

@@ -19,6 +19,7 @@ public record ResaleDto(
         @NotBlank String neighborhood,
         @NotBlank String address,
         @NotBlank String addressNumber,
-        String addressComplement
+        String addressComplement,
+        @jakarta.validation.constraints.Size(max = 30) String ie
 ) {
 }

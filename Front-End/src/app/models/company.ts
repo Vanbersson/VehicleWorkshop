@@ -17,6 +17,7 @@ export interface Company {
 }
 export interface Resale extends Company {
     companyId: number;
+    ie?: string | null;
 }
 export type CompanySave = Omit<Company, 'id'> & { id?: number };
-export type ResaleSave = CompanySave & { companyId: number };
+export type ResaleSave = CompanySave & { companyId: number; ie?: string | null };

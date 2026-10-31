@@ -1,83 +1,38 @@
-import { Component, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+﻿import { Component, inject, InjectionToken, signal } from '@angular/core';
+import { firstValueFrom } from 'rxjs';
+import { MessageService } from 'primeng/api';
 import printJS from 'print-js';
-
+import { CompanyService } from '@/app/services/company.service';
 import { PurchaseOrder } from '@/app/models/parts/purchase.order';
 import { PurchaseOrderItem } from '@/app/models/parts/purchase.order.item/purchase.order.item';
-import { TypePurchaseOrderEnum } from '@/app/models/parts/type.purchase.order.enum';
 import { PurchaseOrderItemCons } from '@/app/models/parts/purchase.order.item.cons';
-
-@Component({
-  selector: 'app-printPurchase',
-  standalone: true,
-  imports: [CommonModule],
-  templateUrl: './print.purchase.component.html',
-  styleUrl: './print.purchase.component.scss'
-})
+import { purchasePrintHtml, PURCHASE_PRINT_STYLES } from './purchase.order.print';
+export const PURCHASE_ORDER_PRINTER = new InjectionToken<typeof printJS>('Purchase order printer', { providedIn: 'root', factory: () => printJS });
+@Component({ selector: 'app-printPurchase', standalone: true, templateUrl: './print.purchase.component.html', styleUrl: './print.purchase.component.scss' })
 export class PrintPurchaseComponent {
-  purchaseOrder = signal<PurchaseOrder>(new PurchaseOrder());
-  totalItemsDiscount = signal<number>(0);
-  totalItemsPrice = signal<number>(0);
-  purchaseOrderItems = signal<PurchaseOrderItem[]>([]);
-  purchaseOrderItemsCons = signal<PurchaseOrderItemCons[]>([]);
-
-  estoque = TypePurchaseOrderEnum.ESTOQUE;
-  consumo = TypePurchaseOrderEnum.CONSUMO;
-
-  constructor() { }
-
-  public async print(pu: PurchaseOrder, itemsEstoque: PurchaseOrderItem[], itemsConsumo: PurchaseOrderItemCons[]) {
-    this.purchaseOrder.set(pu);
-    if (this.purchaseOrder().type === TypePurchaseOrderEnum.ESTOQUE) {
-      const items = Array.from(
-        { length: 40 },
-        (_, index) => itemsEstoque[index] ?? new PurchaseOrderItem()
-      );
-      this.purchaseOrderItems.set(items);
-    } else {
-      const items = Array.from(
-        { length: 40 },
-        (_, index) => itemsConsumo[index] ?? new PurchaseOrderItem()
-      );
-      this.purchaseOrderItemsCons.set(items);
+    private readonly companies = inject(CompanyService);
+    private readonly messages = inject(MessageService);
+    private readonly printer = inject(PURCHASE_ORDER_PRINTER);
+    readonly printing = signal(false);
+    async print(order: PurchaseOrder, stock: PurchaseOrderItem[], consumption: PurchaseOrderItemCons[]): Promise<void> {
+        if (this.printing()) return;
+        this.printing.set(true);
+        const snapshot = { ...order };
+        const stockSnapshot = stock.map((item) => ({ ...item }));
+        const consumptionSnapshot = consumption.map((item) => ({ ...item }));
+        try {
+            if (!snapshot.companyId || !snapshot.resaleId) throw new Error('Revenda não identificada.');
+            const resales = await firstValueFrom(this.companies.resales(snapshot.companyId));
+            const resale = resales.find((item) => item.id === snapshot.resaleId && item.companyId === snapshot.companyId);
+            if (!resale) throw new Error('Revenda não localizada.');
+            const printable = purchasePrintHtml(snapshot, resale, stockSnapshot, consumptionSnapshot);
+            await new Promise<void>((resolve, reject) =>
+                this.printer({ type: 'raw-html', printable, style: PURCHASE_PRINT_STYLES, documentTitle: `Pedido de compra ${snapshot.id ?? ''}`, onLoadingEnd: resolve, onPrintDialogClose: resolve, onError: reject })
+            );
+        } catch {
+            this.messages.add({ severity: 'error', summary: 'Impressão', detail: 'Não foi possível preparar a impressão. Verifique os dados da revenda e tente novamente.' });
+        } finally {
+            this.printing.set(false);
+        }
     }
-    this.totalItem();
-    setTimeout(() => {
-      const print = document.getElementById('print-sectionId');
-      if (!print) {
-        console.error('Elemento print-sectionId não encontrado.');
-        return;
-      }
-      print.style.display = 'block';
-      printJS({
-        printable: 'print-sectionId',
-        type: 'html',
-        targetStyles: ['*'],
-        scanStyles: true,
-        documentTitle: 'Pedido de compra',
-        font_size: '8pt'
-      });
-      print.style.display = 'none';
-    }, 100);
-  }
-
-  private totalItem() {
-    var tempDiscount: number = 0;
-    var tempPrice: number = 0;
-    if (this.purchaseOrder().type === TypePurchaseOrderEnum.ESTOQUE) {
-      for (let item of this.purchaseOrderItems()) {
-        tempDiscount += item.discount!;
-        tempPrice += item.price! * item.quantity!;
-      }
-    } else {
-      for (let item of this.purchaseOrderItemsCons()) {
-        tempDiscount += item.discount!;
-        tempPrice += item.price! * item.quantity!;
-      }
-    }
-
-    this.totalItemsDiscount.set(tempDiscount);
-    this.totalItemsPrice.set(tempPrice);
-  }
-
 }
