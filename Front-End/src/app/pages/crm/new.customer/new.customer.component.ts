@@ -26,6 +26,7 @@ import { AttendanceQuoteComponent } from '@/app/pages/crm/new.customer/attendanc
 import { InputNumberModule } from 'primeng/inputnumber';
 import { AttendanceQueryMode } from '@/app/models/crm/customer.attendance';
 import { AttendanceProposalPrintService } from '@/app/services/crm/attendance.proposal.print.service';
+import { AttendanceDocumentsComponent } from './attendance.documents/attendance.documents.component';
 
 @Component({
     selector: 'p-customer-attendance',
@@ -47,7 +48,8 @@ import { AttendanceProposalPrintService } from '@/app/services/crm/attendance.pr
         AttendanceQuoteComponent,
         InputNumberModule,
         StepperModule,
-        FilterClientComponent
+        FilterClientComponent,
+        AttendanceDocumentsComponent
     ],
     templateUrl: './new.customer.component.html',
     styleUrl: './new.customer.component.scss',
@@ -94,6 +96,7 @@ export default class NewCustomerComponent implements OnInit {
     readonly statusFilter = signal<AttendanceStatus | null>(null);
     readonly first = signal(0);
     readonly editing = signal<CustomerAttendance | null>(null);
+    readonly readOnly = computed(() => this.editing()?.status === this.CANCELLED);
     readonly highlightedVisitId: number;
     dialogVisible = false;
     budgetVisible = false;
@@ -194,7 +197,7 @@ export default class NewCustomerComponent implements OnInit {
     }
 
     async open(item: CustomerAttendance): Promise<void> {
-        if (this.saving() || item.status === this.CANCELLED) return;
+        if (this.saving()) return;
         const request = ++this.detailRequest;
         this.editing.set(item);
         this.resetEditForm(item);
@@ -209,9 +212,6 @@ export default class NewCustomerComponent implements OnInit {
             if (detail?.attendance?.id !== item.id || detail.visit?.id !== detail.attendance.visitId) throw new Error('O servidor não retornou a visita de origem deste atendimento.');
             if (detail.attendance.status === this.CANCELLED) {
                 this.items.update((items) => items.map((current) => (current.id === item.id ? detail.attendance : current)));
-                this.dialogVisible = false;
-                this.messages.add({ severity: 'info', summary: 'Atendimento cancelado', detail: 'Este atendimento foi cancelado e está disponível apenas para consulta.' });
-                return;
             }
             this.editing.set(detail.attendance);
             this.originVisit.set(detail.visit);
@@ -228,12 +228,14 @@ export default class NewCustomerComponent implements OnInit {
         this.selectedClientId.set(item.clientId);
         this.selectedClientName.set(item.clientName);
         this.form.reset({ status, notes: item.notes ?? '', documentsNotes: item.documentsNotes ?? '', proposalNotes: item.proposalNotes ?? '' });
+        if (item.status === this.CANCELLED) this.form.disable({ emitEvent: false });
+        else this.form.enable({ emitEvent: false });
         const index = this.workflow.findIndex((step) => step.value === status);
-        this.activeEditStep.set(index >= 0 ? index + 1 : 5);
+        this.activeEditStep.set(item.status === this.CANCELLED ? 1 : index >= 0 ? index + 1 : 5);
     }
 
     async selectAttendanceClient(client: ClientCompany): Promise<void> {
-        if (this.saving() || this.loadingDetail() || !this.originVisit() || !client.id || !client.name.trim() || client.status !== StatusEnabDisabEnum.ENABLED) return;
+        if (this.readOnly() || this.saving() || this.loadingDetail() || !this.originVisit() || !client.id || !client.name.trim() || client.status !== StatusEnabDisabEnum.ENABLED) return;
         if (client.id === this.selectedClientId()) return;
         this.selectedClientId.set(client.id);
         this.selectedClientName.set(client.name);
@@ -246,7 +248,7 @@ export default class NewCustomerComponent implements OnInit {
     selectEditStep(value: number): void {
         if (this.saving() || this.loadingDetail() || !this.workflow[value - 1]) return;
         this.activeEditStep.set(value);
-        this.form.controls.status.setValue(this.workflow[value - 1].value);
+        if (!this.readOnly()) this.form.controls.status.setValue(this.workflow[value - 1].value);
     }
 
     closeEditor(visible: boolean): void {
@@ -277,10 +279,13 @@ export default class NewCustomerComponent implements OnInit {
         const item = this.editing();
         if (!item) return;
         this.saveError.set('');
+        this.saving.set(true);
         try {
-            this.proposalPrinter.print(item, (error) => this.saveError.set(this.errorMessage(error, 'Não foi possível imprimir a proposta comercial.')));
+            await this.proposalPrinter.print(item, this.originVisit()!, (error) => this.saveError.set(this.errorMessage(error, 'Não foi possível imprimir a proposta comercial.')));
         } catch (error: unknown) {
             this.saveError.set(this.errorMessage(error, 'Não foi possível imprimir a proposta comercial.'));
+        } finally {
+            this.saving.set(false);
         }
     }
 

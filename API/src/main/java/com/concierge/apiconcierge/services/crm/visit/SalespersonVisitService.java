@@ -136,12 +136,34 @@ public class SalespersonVisitService implements ISalespersonVisitService {
     }
 
     @Override
+    @org.springframework.transaction.annotation.Transactional
     public MessageResponse agendaUpdate(SalespersonVisitAgendaUpdateDto v, String emailUser) {
-        User userResult = this.userRepository.loginEmail(emailUser);
-        if (userResult.getStatus() == StatusEnableDisable.Desabilitado) {
-            throw new BusinessException("Usuário Bloqueado.");
+        User user = this.userRepository.loginEmail(emailUser);
+        if (user == null || user.getStatus() == StatusEnableDisable.Desabilitado) throw new BusinessException("Usuário bloqueado.");
+        SalespersonVisit visit = this.repository.findForCompletion(user.getCompanyId(), user.getResaleId(), v.id());
+        if (visit == null) throw new ResourcesNotFoundException("Visita não encontrada.");
+        if (visit.getStatus() != StatusVisitEnum.agendado) throw new BusinessException("Somente visitas agendadas podem ter o agendamento alterado.");
+        Salesperson own = this.salespersonRepository.findByCompanyIdAndResaleIdAndUserId(user.getCompanyId(), user.getResaleId(), user.getId());
+        boolean allowed = Objects.equals(visit.getUserIdRegister(), user.getId()) || (own != null && Objects.equals(visit.getSalespersonId(), own.getId()));
+        if (!allowed && this.permissionUser.findPermissionId(user.getCompanyId(), user.getResaleId(), user.getId(), LIST_AGENDA_ALL_SALESPERSON) == null
+                && this.permissionUser.findPermissionId(user.getCompanyId(), user.getResaleId(), user.getId(), LIST_VISIT_ALL_SALESPERSON) == null) {
+            throw new BusinessException("Sem permissão para editar este agendamento.");
         }
-        return null;
+        Salesperson assigned = this.salespersonRepository.findByCompanyIdAndResaleIdAndId(user.getCompanyId(), user.getResaleId(), v.salespersonId());
+        if (assigned == null || assigned.getStatus() != StatusEnableDisable.Habilitado) throw new BusinessException("Selecione um vendedor habilitado da revenda.");
+        visit.setAgendaDate(v.dateVisit());
+        visit.setAgendaInfo(v.informationAgenda() == null ? "" : v.informationAgenda().trim());
+        visit.setSalespersonId(assigned.getId());
+        visit.setSalespersonName(assigned.getName());
+        visit.setClientId(v.clientId());
+        visit.setClientName(v.clientName());
+        visit.setClientCNPJ(v.clientCNPJ());
+        visit.setClientCPF(v.clientCPF());
+        this.repository.save(visit);
+        MessageResponse response = new MessageResponse();
+        response.setStatus(ConstantsMessage.SUCCESS);
+        response.setHeader(ConstantsMessage.SUCCESS);
+        return response;
     }
 
     @Override

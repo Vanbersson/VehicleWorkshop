@@ -131,6 +131,9 @@
                         }
                     </td>
                     <td class="text-right">
+                        @if (visit.status === AGENDA) {
+                            <p-button label="Editar agendamento" icon="pi pi-calendar-clock" [text]="true" size="small" [ariaLabel]="'Editar agendamento da visita ' + visit.id" [disabled]="openingId() !== null" (onClick)="editScheduling(visit)" />
+                        }
                         <p-button
                             label="Abrir"
                             icon="pi pi-arrow-up-right"

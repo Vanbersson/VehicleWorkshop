@@ -9,30 +9,35 @@ import { StorageService } from '../../services/storage/storage.service';
 import { Router } from '@angular/router';
 
 @Component({
-  selector: 'app-logout',
-  standalone: true,
-  imports: [CommonModule, ToastModule, ConfirmDialogModule, ButtonModule],
-  templateUrl: './logout.component.html',
-  styleUrl: './logout.component.scss',
-  providers: [ConfirmationService, MessageService]
+    selector: 'app-logout',
+    standalone: true,
+    imports: [CommonModule, ToastModule, ConfirmDialogModule, ButtonModule],
+    templateUrl: './logout.component.html',
+    styleUrl: './logout.component.scss',
+    providers: [ConfirmationService, MessageService]
 })
 export class LogoutComponent {
+    constructor(
+        private router: Router,
+        private confirmationService: ConfirmationService,
+        private storageService: StorageService
+    ) {}
 
-  constructor(private router: Router,
-    private confirmationService: ConfirmationService,
-    private storageService: StorageService) { }
-
-  exit() {
-    this.confirmationService.confirm({
-      header: 'Sair?',
-      message: 'Deseja realmente sair?',
-      accept: () => {
-        localStorage.clear();
-        this.router.navigateByUrl("/auth");
-      },
-      reject: () => {
-      }
-    });
-  }
-
+    exit() {
+        this.confirmationService.confirm({
+            header: 'Sair da conta?',
+            message: 'Você será direcionado para a tela de login. Para acessar novamente, entre com suas credenciais.',
+            acceptLabel: 'Sair da conta',
+            rejectLabel: 'Continuar conectado',
+            acceptIcon: 'pi pi-sign-out',
+            acceptButtonStyleClass: 'p-button-danger',
+            rejectButtonStyleClass: 'p-button-secondary p-button-outlined',
+            defaultFocus: 'reject',
+            accept: () => {
+                localStorage.clear();
+                this.router.navigateByUrl('/auth');
+            },
+            reject: () => {}
+        });
+    }
 }

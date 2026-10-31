@@ -326,7 +326,7 @@ export default class VisitMaintenanceComponent implements OnInit {
         }
         if (await this.persist(true)) {
             this.visibleDateVisit = false;
-            await this.router.navigate(['/crm/new/customer'], { queryParams: { visitId: this.visit?.id } });
+            await this.router.navigate(['/crm/visit']);
         }
     }
 

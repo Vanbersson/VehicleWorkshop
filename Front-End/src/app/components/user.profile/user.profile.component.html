@@ -1,146 +1,86 @@
-<p-toast />
-<p-dialog
-    header="Editar Perfil"
-    [modal]="true"
-    [(visible)]="visible"
-    [style]="{ width: '44rem' }">
-
-    <form [formGroup]="userForm" (ngSubmit)="save()">
-
-        <div class="grid grid-cols-12 gap-4">
-            <!-- Foto -->
-<div class="col-span-12 flex justify-center">
-                <div class="layout-photo-person">
-                    @if(userPhotoUrl()){
-                        <p-image [src]="userPhotoUrl()" width="80" height="80" alt="Imagem do usuário" [preview]="true"
-                            [imageStyle]="{
-                            'width':'80px',
-                            'height':'80px',
-                            'border-radius':'9999px',
-                            'object-fit':'cover'
-                        }">
-                        </p-image>
-                        <button pButton type="button" severity="danger" [text]="true" label="Remover" (click)="deletePhoto()">
-                        </button>
-                    } @else {
-                    <div class="layout-photo-person-label">
-                        <button pButton type="button" label="Foto" [rounded]="true" [text]="true" size="small" (click)="selectPhoto()">
-                        </button>
-                    </div>
+﻿<p-toast />
+<p-dialog [(visible)]="visible" [modal]="true" [style]="{ width: '48rem', maxWidth: 'calc(100vw - 2rem)' }" [draggable]="false" [dismissableMask]="false">
+    <ng-template #header>
+        <div class="profile-heading">
+            <span class="profile-icon"><i class="pi pi-user" aria-hidden="true"></i></span>
+            <div>
+                <span class="profile-eyebrow">MINHA CONTA</span>
+                <h2>Meu perfil</h2>
+                <p>Gerencie seus dados pessoais e sua foto.</p>
+            </div>
+        </div>
+    </ng-template>
+    <form id="user-profile-form" [formGroup]="userForm" (ngSubmit)="save()" class="profile-form">
+        <section class="profile-summary" aria-label="Foto e identificação">
+            @if (userPhotoUrl()) {
+                <p-image [src]="userPhotoUrl()" alt="Foto do usuário" [preview]="true" [imageStyle]="{ width: '88px', height: '88px', borderRadius: '50%', objectFit: 'cover' }" />
+            } @else {
+                <span class="profile-avatar"><i class="pi pi-user" aria-hidden="true"></i></span>
+            }
+            <div class="profile-identity">
+                <h3>{{ userForm.controls.name.value || 'Seu perfil' }}</h3>
+                <p>{{ userForm.controls.roleDesc.value || 'Usuário' }}</p>
+                <div class="photo-actions">
+                    <p-button type="button" [label]="userPhotoUrl() ? 'Alterar foto' : 'Adicionar foto'" icon="pi pi-camera" size="small" [outlined]="true" (onClick)="selectPhoto()" />
+                    @if (userPhotoUrl()) {
+                        <p-button type="button" label="Remover" icon="pi pi-trash" size="small" severity="danger" [text]="true" (onClick)="deletePhoto()" />
                     }
                 </div>
             </div>
-            <!-- Nome -->
-            <div class="col-span-12">
-                <label for="nameid" class="block mb-2">Nome</label>
-                <input
-                    pInputText
-                    id="nameid"
-                    formControlName="name"
-                    class="w-full" />
-                <small
-                    class="text-red-500"
-                    *ngIf="userForm.get('name')?.invalid && userForm.get('name')?.dirty">
-                    Campo obrigatório
-                </small>
-            </div>
-            <!-- Email -->
-            <div class="col-span-12 md:col-span-6">
-                <label class="block mb-2" for="emailId">
-                    Email
-                </label>
-                <input
-                    pInputText
-                    id="emailId"
-                    formControlName="email"
-                    class="w-full" />
-            </div>
-            <!-- Celular -->
-            <div class="col-span-12 md:col-span-4">
-                <label class="block mb-2" for="cellphoneid">
-                    Celular
-                </label>
-                <p-inputMask
-                    id="cellphoneid"
-                    mask="(99) 9 9999-9999"
-                    unmask="true"
-                    formControlName="cellphone"
-                    class="w-full">
-                </p-inputMask>
-            </div>
-            <!-- Desconto -->
-            <div class="col-span-12 md:col-span-2">
-                <label class="block mb-2">
-                    Desconto
-                </label>
-                <p-inputNumber suffix="%" class="w-full" formControlName="limitDiscount" fluid>
-                </p-inputNumber>
-            </div>
-            <!-- Cargo -->
-            <div class="col-span-12 md:col-span-6">
-                <label class="block mb-2">
-                    Cargo
-                </label>
-                <input
-                    pInputText
-                    formControlName="roleDesc"
-                    class="w-full" />
-            </div>
-            <!-- Espaço -->
-            <div class="hidden md:block md:col-span-6"></div>
-            <!-- Situação -->
-            <div class="col-span-12 md:col-span-6">
-                <span class="block mb-2">
-                    Situação
-                </span>
-                <div class="border rounded-lg border-surface-300 p-4 flex gap-6">
-                    <div class="flex items-center gap-2">
-                        <p-radioButton
-                            inputId="ativo"
-                            [value]="enabled"
-                            formControlName="status">
-                        </p-radioButton>
-
-                        <label for="ativo">
-                            Ativado
-                        </label>
-
-                    </div>
-
-                    <div class="flex items-center gap-2">
-
-                        <p-radioButton
-                            inputId="inativo"
-                            [value]="disabled"
-                            formControlName="status">
-                        </p-radioButton>
-
-                        <label for="inativo">
-                            Desativado
-                        </label>
-
-                    </div>
-
+        </section>
+        <section class="profile-section" aria-labelledby="profile-personal-title">
+            <div class="section-heading">
+                <i class="pi pi-id-card" aria-hidden="true"></i>
+                <div>
+                    <h3 id="profile-personal-title">Dados pessoais</h3>
+                    <p>Mantenha seu nome e telefone atualizados.</p>
                 </div>
-
             </div>
-
-        </div>
-
-        <p-divider></p-divider>
-
-        <div class="flex justify-end">
-
-            <button
-                pButton
-                type="submit"
-                icon="pi pi-check"
-                label="Salvar"
-                class="p-button-text">
-            </button>
-
-        </div>
-
+            <div class="profile-grid">
+                <div class="profile-field full">
+                    <label for="profile-name">Nome completo <span aria-hidden="true">*</span></label
+                    ><input
+                        pInputText
+                        id="profile-name"
+                        formControlName="name"
+                        autocomplete="name"
+                        [invalid]="userForm.controls.name.invalid && userForm.controls.name.touched"
+                        aria-required="true"
+                        [attr.aria-describedby]="userForm.controls.name.invalid && userForm.controls.name.touched ? 'profile-name-error' : null"
+                    />
+                    @if (userForm.controls.name.invalid && userForm.controls.name.touched) {
+                        <small id="profile-name-error" class="field-error">Informe seu nome.</small>
+                    }
+                </div>
+                <div class="profile-field"><label for="profile-email">E-mail</label><input pInputText id="profile-email" formControlName="email" /><small>O e-mail é definido pelo administrador.</small></div>
+                <div class="profile-field">
+                    <label for="profile-cellphone">Celular</label><p-inputMask inputId="profile-cellphone" mask="(99) 9 9999-9999" [unmask]="true" formControlName="cellphone" placeholder="(00) 0 0000-0000" [fluid]="true" />
+                </div>
+            </div>
+        </section>
+        <section class="profile-section" aria-labelledby="profile-access-title">
+            <div class="section-heading">
+                <i class="pi pi-shield" aria-hidden="true"></i>
+                <div>
+                    <h3 id="profile-access-title">Informações de acesso</h3>
+                    <p>Dados gerenciados pelo administrador.</p>
+                </div>
+            </div>
+            <div class="profile-grid">
+                <div class="profile-field"><label for="profile-role">Cargo</label><input pInputText id="profile-role" formControlName="roleDesc" /></div>
+                <div class="profile-field"><label for="profile-discount">Limite de desconto</label><p-inputNumber inputId="profile-discount" suffix="%" formControlName="limitDiscount" [fluid]="true" /></div>
+            </div>
+            <div class="profile-status">
+                <span>Situação da conta</span
+                ><span class="status-badge" [class.is-enabled]="userForm.controls.status.value === enabled"
+                    ><i class="pi" [class.pi-check-circle]="userForm.controls.status.value === enabled" [class.pi-ban]="userForm.controls.status.value !== enabled" aria-hidden="true"></i
+                    >{{ userForm.controls.status.value === enabled ? 'Ativada' : 'Desativada' }}</span
+                >
+            </div>
+        </section>
     </form>
-
+    <ng-template #footer
+        ><div class="profile-footer">
+            <p-button type="button" label="Fechar" severity="secondary" [text]="true" (onClick)="visible = false" /><button pButton type="submit" form="user-profile-form" icon="pi pi-check" label="Salvar alterações"></button></div
+    ></ng-template>
 </p-dialog>

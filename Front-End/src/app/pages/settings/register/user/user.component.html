@@ -1,118 +1,144 @@
-<p-toast />
-<div class="card">
-    <header class="page-heading">
-        <div>
-            <span class="eyebrow">CONFIGURAÇÕES · CADASTROS</span>
-            <h1>Usuários</h1>
-            <p>Gerencie a equipe, os perfis e as permissões de acesso ao sistema.</p>
+<div class="users-page">
+    <p-toast />
+    <header class="users-header">
+        <div class="users-title">
+            <span class="users-icon"><i class="pi pi-users" aria-hidden="true"></i></span>
+            <div>
+                <span class="users-eyebrow">CONFIGURAÇÕES · CADASTROS</span>
+                <h1>Usuários</h1>
+                <p class="text-muted-color">Gerencie a equipe, os perfis e as permissões de acesso ao sistema.</p>
+            </div>
         </div>
-        <p-button icon="pi pi-plus" label="Novo usuário" (onClick)="showDialogSave()" />
+        <div class="header-actions"><p-button icon="pi pi-plus" label="Novo usuário" (onClick)="showDialogSave()" /></div>
     </header>
-    <div class="summary-grid">
-        <div class="summary-card">
-            <i class="pi pi-users" aria-hidden="true"></i>
+    <section class="users-panel" aria-labelledby="usersListTitle">
+        <div class="list-heading">
             <div>
-                <span>Total de usuários</span><strong>{{ users().length }}</strong>
+                <span class="users-eyebrow">ACESSOS AO SISTEMA</span>
+                <h2 id="usersListTitle">
+                    Usuários cadastrados <span class="record-count">{{ loadingUsers() ? '…' : users().length }}</span>
+                </h2>
             </div>
+            <p-button icon="pi pi-refresh" label="Atualizar" [text]="true" severity="secondary" (onClick)="getUsers()" [loading]="loadingUsers()" />
         </div>
-        <div class="summary-card">
-            <i class="pi pi-check-circle" aria-hidden="true"></i>
-            <div>
-                <span>Habilitados</span><strong>{{ enabledCount() }}</strong>
+        @if (loadError()) {
+            <div class="list-error" role="alert">
+                <i class="pi pi-exclamation-circle" aria-hidden="true"></i><span>{{ loadError() }}</span>
             </div>
-        </div>
-        <div class="summary-card">
-            <i class="pi pi-minus-circle" aria-hidden="true"></i>
-            <div>
-                <span>Desabilitados</span><strong>{{ disabledCount() }}</strong>
-            </div>
-        </div>
-    </div>
-    <p-table
-        #userTable
-        dataKey="id"
-        [value]="users()"
-        [globalFilterFields]="['id', 'name', 'email', 'roleDesc', 'status']"
-        [rowHover]="true"
-        [paginator]="true"
-        [rows]="10"
-        [rowsPerPageOptions]="[10, 25, 50]"
-        [showCurrentPageReport]="true"
-        currentPageReportTemplate="{first} a {last} de {totalRecords} usuários"
-        [tableStyle]="{ 'min-width': '58rem' }"
-    >
-        <ng-template #caption
-            ><div class="table-toolbar">
-                <div>
-                    <h2>Usuários cadastrados</h2>
-                    <span class="text-muted-color text-sm">Consulte os dados e gerencie os acessos da equipe.</span>
-                </div>
-                <div class="search-field">
-                    <i class="pi pi-search" aria-hidden="true"></i
-                    ><input pInputText type="search" placeholder="Buscar nome, e-mail ou cargo" aria-label="Buscar usuário por nome, e-mail ou cargo" (input)="userTable.filterGlobal($any($event.target).value, 'contains')" />
-                </div></div
-        ></ng-template>
-        <ng-template #header
-            ><tr>
-                <th pSortableColumn="id">Código <p-sortIcon field="id" /></th>
-                <th pSortableColumn="name">Usuário <p-sortIcon field="name" /></th>
-                <th pSortableColumn="email">E-mail <p-sortIcon field="email" /></th>
-                <th pSortableColumn="roleDesc">Cargo <p-sortIcon field="roleDesc" /></th>
-                <th pSortableColumn="status">Status <p-sortIcon field="status" /></th>
-                <th class="text-right">Ações</th>
-            </tr></ng-template
+        }
+        <p-table
+            #userTable
+            [value]="users()"
+            [loading]="loadingUsers()"
+            [rowHover]="true"
+            [paginator]="true"
+            [rows]="10"
+            [rowsPerPageOptions]="[10, 25, 50]"
+            [showCurrentPageReport]="true"
+            currentPageReportTemplate="{first}–{last} de {totalRecords} usuários"
+            [globalFilterFields]="['id', 'name', 'email', 'roleDesc', 'status']"
+            sortField="id"
+            [sortOrder]="-1"
+            dataKey="id"
+            size="small"
+            [tableStyle]="{ 'min-width': '58rem' }"
         >
-        <ng-template #body let-person
-            ><tr>
-                <td>
-                    <span class="text-muted-color">#{{ person.id }}</span>
-                </td>
-                <td>
-                    <div class="user-cell">
-                        @if (person.photoUrl) {
-                            <img class="user-avatar" [src]="person.photoUrl" [alt]="'Foto de ' + person.name" />
-                        } @else {
-                            <span class="user-avatar initials">{{ firstLetter(person) }}</span>
-                        }
-                        <strong>{{ person.name }}</strong>
-                    </div>
-                </td>
-                <td>{{ person.email }}</td>
-                <td>{{ person.roleDesc || 'Não informado' }}</td>
-                <td><p-tag [value]="person.status" [severity]="person.status === enabled ? 'success' : 'secondary'" /></td>
-                <td>
-                    <div class="row-actions">
-                        <p-button type="button" icon="pi pi-pencil" label="Editar" [text]="true" size="small" severity="secondary" (onClick)="editUser(person.id)" [ariaLabel]="'Editar usuário ' + person.name" /><p-button
-                            type="button"
-                            icon="pi pi-key"
-                            label="Senha"
-                            [text]="true"
-                            size="small"
-                            severity="secondary"
-                            (onClick)="showUpdatePass(person)"
-                            [ariaLabel]="'Alterar senha de ' + person.name"
-                        />
-                    </div>
-                </td></tr
-        ></ng-template>
-        <ng-template #emptymessage
-            ><tr>
-                <td colspan="6">
-                    <div class="empty-state">
-                        <i class="pi pi-users" aria-hidden="true"></i>
-                        <h3>Nenhum usuário encontrado</h3>
-                        <p>Revise a busca ou clique em Novo usuário para cadastrar.</p>
-                    </div>
-                </td>
-            </tr></ng-template
-        >
-    </p-table>
+            <ng-template #caption
+                ><div class="list-toolbar">
+                    <p-iconfield iconPosition="left" class="user-search"
+                        ><p-inputicon><i class="pi pi-search" aria-hidden="true"></i></p-inputicon
+                        ><input
+                            #searchInput
+                            pInputText
+                            type="search"
+                            aria-label="Pesquisar usuários por nome, e-mail, cargo ou código"
+                            (input)="userTable.filterGlobal(searchInput.value, 'contains')"
+                            placeholder="Buscar nome, e-mail ou cargo"
+                            class="w-full"
+                    /></p-iconfield>
+                    <div class="list-filters">
+                        <p-select
+                            [(ngModel)]="selectedStatus"
+                            [options]="statusOptions"
+                            optionLabel="label"
+                            optionValue="value"
+                            placeholder="Todos os status"
+                            ariaLabel="Filtrar usuários por status"
+                            [showClear]="true"
+                            (onChange)="userTable.filter(selectedStatus, 'status', 'equals')"
+                            appendTo="body"
+                            class="status-filter"
+                        /><p-button label="Limpar filtros" icon="pi pi-filter-slash" severity="secondary" [text]="true" (onClick)="clearFilters(userTable, searchInput)" />
+                    </div></div
+            ></ng-template>
+            <ng-template #header
+                ><tr>
+                    <th pSortableColumn="id">Código <p-sortIcon field="id" /></th>
+                    <th pSortableColumn="name">Usuário <p-sortIcon field="name" /></th>
+                    <th pSortableColumn="email">E-mail <p-sortIcon field="email" /></th>
+                    <th pSortableColumn="roleDesc">Cargo <p-sortIcon field="roleDesc" /></th>
+                    <th pSortableColumn="status">Status <p-sortIcon field="status" /></th>
+                    <th class="text-right">Ações</th>
+                </tr></ng-template
+            >
+            <ng-template #body let-person
+                ><tr>
+                    <td>
+                        <span class="user-code">#{{ person.id }}</span>
+                    </td>
+                    <td>
+                        <div class="user-cell">
+                            @if (person.photoUrl) {
+                                <img class="user-avatar" [src]="person.photoUrl" [alt]="'Foto de ' + person.name" />
+                            } @else {
+                                <span class="user-avatar initials">{{ firstLetter(person) }}</span>
+                            }
+                            <strong>{{ person.name }}</strong>
+                        </div>
+                    </td>
+                    <td>{{ person.email }}</td>
+                    <td>{{ person.roleDesc || 'Não informado' }}</td>
+                    <td><p-tag [value]="person.status" [severity]="person.status === enabled ? 'success' : 'secondary'" [icon]="person.status === enabled ? 'pi pi-check-circle' : 'pi pi-minus-circle'" [rounded]="true" /></td>
+                    <td>
+                        <div class="row-actions">
+                            <p-button type="button" icon="pi pi-pencil" label="Editar" [text]="true" size="small" severity="secondary" (onClick)="editUser(person.id)" [ariaLabel]="'Editar usuário ' + person.name" /><p-button
+                                type="button"
+                                icon="pi pi-key"
+                                label="Senha"
+                                [text]="true"
+                                size="small"
+                                severity="secondary"
+                                (onClick)="showUpdatePass(person)"
+                                [ariaLabel]="'Alterar senha de ' + person.name"
+                            />
+                        </div>
+                    </td></tr
+            ></ng-template>
+            <ng-template #emptymessage
+                ><tr>
+                    <td colspan="6">
+                        <div class="list-empty">
+                            <span class="users-icon"><i class="pi" [ngClass]="loadError() ? 'pi-exclamation-circle' : users().length ? 'pi-search' : 'pi-users'" aria-hidden="true"></i></span>
+                            <h3>{{ loadError() ? 'Não foi possível carregar os usuários' : users().length ? 'Nenhum usuário encontrado' : 'Gerencie os acessos da equipe' }}</h3>
+                            <p class="text-muted-color">
+                                {{
+                                    loadError() ? 'Clique em Atualizar para tentar novamente.' : users().length ? 'Experimente outro termo ou limpe os filtros para visualizar os registros.' : 'Cadastre um usuário para organizar os acessos da equipe.'
+                                }}
+                            </p>
+                            @if (!users().length && !loadError()) {
+                                <p-button label="Cadastrar primeiro usuário" icon="pi pi-plus" [outlined]="true" (onClick)="showDialogSave()" />
+                            }
+                        </div>
+                    </td></tr
+            ></ng-template>
+        </p-table>
+    </section>
 </div>
 
 <p-dialog [header]="isEditUser ? 'Editar usuário' : 'Novo usuário'" [(visible)]="visibleDialogUser" [modal]="true" [draggable]="false" [style]="{ width: '58rem', maxWidth: '96vw' }" [breakpoints]="{ '640px': '96vw' }">
     <form id="user-form" [formGroup]="formUser" (ngSubmit)="saveData()">
-        <div class="photo-panel">
-            <div class="photo-preview">
+        <div class="photo-panel flex items-center gap-4 p-5 rounded-xl bg-surface-100 dark:bg-surface-800 max-sm:items-start max-sm:p-4">
+            <div class="photo-preview flex items-center justify-center w-20 h-20 shrink-0 rounded-xl bg-surface-0 dark:bg-surface-900">
                 @if (userPhoto()) {
                     <p-image [src]="userPhoto()" alt="Foto do usuário" [preview]="true" [imageStyle]="{ width: '80px', height: '80px', 'object-fit': 'cover', 'border-radius': '12px' }" />
                 } @else {
@@ -122,7 +148,7 @@
             <div>
                 <h2>Foto do usuário</h2>
                 <p>Adicione uma imagem para identificar o profissional.</p>
-                <div class="photo-actions">
+                <div class="photo-actions flex flex-wrap items-center gap-3">
                     <p-button type="button" icon="pi pi-camera" label="Selecionar foto" size="small" severity="secondary" [outlined]="true" (onClick)="selectPhoto()" />
                     @if (userPhoto()) {
                         <p-button type="button" label="Remover" size="small" severity="danger" [text]="true" (onClick)="deletePhoto()" />
@@ -217,7 +243,7 @@
                 <h2 id="user-permissions">Permissões do usuário</h2>
                 <p>{{ isEditUser ? 'Configure os menus visíveis e as funções disponíveis para este usuário.' : 'Salve o cadastro para configurar os menus e as funções do usuário.' }}</p>
             </div>
-            <div class="permission-actions">
+            <div class="permission-actions flex flex-wrap items-center gap-3">
                 <p-button type="button" icon="pi pi-sitemap" label="Configurar menus" severity="secondary" [outlined]="true" [disabled]="!isEditUser" (onClick)="showDialogMenu()" /><p-button
                     type="button"
                     icon="pi pi-shield"
@@ -280,7 +306,7 @@
 
 <p-dialog header="Menus do usuário" [(visible)]="visibleDialogMenu" [modal]="true" [draggable]="false" [style]="{ width: '42rem', maxWidth: '96vw' }" [breakpoints]="{ '640px': '96vw' }">
     <p class="dialog-description">Selecione os menus que ficarão disponíveis para o usuário.</p>
-    <div class="menu-panel">
+    <div class="menu-panel max-h-104 overflow-auto">
         <p-tree [value]="menus" selectionMode="checkbox" [(selection)]="menuSelect" [propagateSelectionDown]="false" [propagateSelectionUp]="false" [filter]="true" filterPlaceholder="Buscar menu" aria-label="Menus disponíveis para o usuário" />
     </div>
     <ng-template #footer><p-button type="button" label="Fechar" severity="secondary" [text]="true" (onClick)="hideDialogMenu()" /><p-button type="button" label="Salvar menus" icon="pi pi-check" (onClick)="saveMenus()" /></ng-template>
@@ -288,10 +314,10 @@
 
 <p-dialog header="Alterar senha" [(visible)]="visibleUpdatePass" [modal]="true" [draggable]="false" [style]="{ width: '32rem', maxWidth: '96vw' }" [breakpoints]="{ '640px': '96vw' }">
     <form id="user-password-form" [formGroup]="formPassword" (ngSubmit)="saveUpdatePassword()">
-        <div class="password-user">
+        <div class="password-user flex items-center gap-4 p-5 rounded-xl bg-surface-100 dark:bg-surface-800 mb-6">
             <i class="pi pi-key" aria-hidden="true"></i>
             <div>
-                <span class="text-muted-color text-sm">Usuário</span><strong>{{ nameUserUpdatePass }}</strong>
+                <span class="text-muted-color text-sm">Usuário</span><strong class="block">{{ nameUserUpdatePass }}</strong>
             </div>
         </div>
         <div class="field mb-4">

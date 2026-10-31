@@ -1,7 +1,37 @@
-:host {
-    .card {
-        border: 1px solid var(--color-grey-300);
-        padding: 2rem;
-        border-radius: 12px;
-    }
-}
+:host { display: block; }
+.dashboard-page { max-width: 95rem; margin: 0 auto; }
+.dashboard-header, .dashboard-title, .header-actions, .stat-heading, .filter-panel, .filter-actions, .panel-heading { display: flex; align-items: center; gap: 1rem; }
+.dashboard-header, .filter-panel, .panel-heading, .stat-heading { justify-content: space-between; }
+.dashboard-header { margin-bottom: 1.75rem; flex-wrap: wrap; }
+.dashboard-title { gap: .85rem; }
+.header-actions, .filter-actions, .filter-panel { flex-wrap: wrap; }
+.dashboard-icon, .chart-symbol, .stat-icon { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.dashboard-icon { width: 3.25rem; height: 3.25rem; border-radius: 1rem; color: var(--p-primary-color); background: color-mix(in srgb, var(--p-primary-color) 10%, transparent); font-size: 1.25rem; }
+.dashboard-eyebrow { color: var(--text-color-secondary); font-size: .65rem; font-weight: 700; letter-spacing: .1em; }
+h1 { font-size: clamp(1.5rem, 2.5vw, 2rem); font-weight: 700; margin: .25rem 0 .4rem; letter-spacing: -.035em; }
+h2 { font-size: 1.2rem; font-weight: 650; margin: .4rem 0 0; }
+p { margin: .4rem 0 0; line-height: 1.6; }
+.dashboard-header p { margin: 0; }
+.period-label { display: flex; align-items: center; gap: .5rem; font-size: .8rem; color: var(--text-color-secondary); }
+.stats-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+.stat-card, .dashboard-panel { background: var(--surface-card); border: 1px solid var(--surface-border); border-radius: 1.25rem; padding: 1.5rem; min-width: 0; }
+.stat-heading { align-items: flex-start; gap: .75rem; color: var(--text-color-secondary); font-size: .85rem; }
+.stat-icon { width: 2.5rem; height: 2.5rem; border-radius: .75rem; font-size: 1.1rem; }
+.blue { color: var(--p-blue-500); background: color-mix(in srgb, var(--p-blue-500) 10%, transparent); }
+.green { color: var(--p-green-500); background: color-mix(in srgb, var(--p-green-500) 10%, transparent); }
+.cyan { color: var(--p-cyan-500); background: color-mix(in srgb, var(--p-cyan-500) 10%, transparent); }
+.amber { color: var(--p-amber-500); background: color-mix(in srgb, var(--p-amber-500) 10%, transparent); }
+.stat-value { display: block; font-size: 2.25rem; line-height: 1.2; font-weight: 700; letter-spacing: -.04em; margin: .6rem 0 .65rem; font-variant-numeric: tabular-nums; }
+.stat-description { color: var(--text-color-secondary); font-size: .75rem; }
+.filter-panel { margin-bottom: 1.5rem; }
+.filter-panel p, .panel-heading p { font-size: .8rem; }
+.filter-actions { gap: .75rem; }
+.client-selection { display: flex; align-items: center; gap: .6rem; color: var(--text-color-secondary); background: var(--surface-ground); border-radius: .7rem; padding: .85rem 1rem; font-size: .8rem; max-width: 24rem; }
+.client-selection span { overflow-wrap: anywhere; }
+.charts-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.5rem; }
+.panel-heading { align-items: flex-start; margin-bottom: 1.5rem; }
+.chart-symbol { width: 2.5rem; height: 2.5rem; border-radius: .75rem; background: var(--surface-ground); color: var(--p-primary-color); }
+.chart-footer { display: flex; align-items: center; gap: .5rem; border-top: 1px solid var(--surface-border); margin-top: 1rem; padding-top: 1rem; font-size: .7rem; color: var(--text-color-secondary); overflow-wrap: anywhere; }
+.dashboard-error { display: flex; align-items: center; gap: .75rem; color: var(--p-red-600); padding: 1rem; border: 1px solid currentColor; border-radius: .75rem; margin-bottom: 1rem; }
+@media (max-width: 1100px) { .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .charts-grid { grid-template-columns: 1fr; } }
+@media (max-width: 540px) { .dashboard-title > .dashboard-icon { display: none; } .header-actions { width: 100%; justify-content: space-between; } .stat-card, .dashboard-panel { padding: 1rem; border-radius: 1rem; } .stat-heading { flex-direction: column-reverse; } .stat-value { font-size: 1.9rem; } .filter-actions { width: 100%; } .client-selection { max-width: 100%; width: 100%; } }

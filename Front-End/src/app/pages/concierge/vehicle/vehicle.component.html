@@ -1,158 +1,221 @@
-<div class="layout-card">
-     <p-toast />
-    <div class="layout-card-title">
-        <span>Veículos</span>
-        <p-button icon="pi pi-sync" [outlined]="true" label="Recarregar" (onClick)="init()"/>
-    </div>  
-     <!-- Desktop -->
-     <p-table #tableFilter1 dataKey="id" [value]="listVehicleEntry()" [(selection)]="selectedItems" [rowHover]="true" [scrollable]="true" scrollHeight="100rem"
-        [globalFilterFields]="['id','vehiclePlate','modelDescription', 'vehicleFleet','entryDate','clientCompanyName','attendantUserName']" showGridlines
-        currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords}" 
-        [paginator]="true" [rows]="10" [rowsPerPageOptions]="[10, 25, 50]" [showCurrentPageReport]="true"
-        [tableStyle]="{'min-height': '20rem' }" >
-        <ng-template #caption>
-            <div class="flex">
-                <p-button label="Limpar" [outlined]="true" icon="pi pi-filter-slash" (click)="clearTable(tableFilter1)" />
-                <p-iconfield iconPosition="left" class="ml-auto">
-                    <p-inputicon>
-                        <i class="pi pi-search"></i>
-                    </p-inputicon>
-                    <input pInputText type="text" (input)="tableFilter1.filterGlobal($event.target.value, 'contains')" placeholder="Pesquisar" />
-                </p-iconfield>
+<div class="vehicles-page">
+    <p-toast />
+    <header class="vehicles-header">
+        <div class="vehicles-title">
+            <span class="vehicles-icon"><i class="pi pi-car" aria-hidden="true"></i></span>
+            <div>
+                <span class="vehicles-eyebrow">PORTARIA · VEÍCULOS</span>
+                <h1>Entrada de veículos</h1>
+                <p class="text-muted-color">Acompanhe os veículos em atendimento e gerencie as liberações de saída.</p>
             </div>
-        </ng-template>
-        <ng-template #header>
-            <tr>
-                <th>
-                    <div class="flex items-center justify-between">
-                        Sel.
+        </div>
+    </header>
+    <section class="vehicles-panel" aria-labelledby="vehicles-list-title">
+        <div class="list-heading">
+            <div>
+                <span class="vehicles-eyebrow">CONTROLE DE ENTRADAS</span>
+                <h2 id="vehicles-list-title">
+                    Veículos cadastrados <span class="record-count">{{ loadingVehicles() ? '…' : listVehicleEntry().length }}</span>
+                </h2>
+            </div>
+            <p-button icon="pi pi-refresh" label="Atualizar" [text]="true" severity="secondary" (onClick)="init()" [loading]="loadingVehicles()" />
+        </div>
+        @if (loadError()) {
+            <div class="list-error" role="alert">
+                <i class="pi pi-exclamation-circle" aria-hidden="true"></i><span>{{ loadError() }}</span>
+            </div>
+        }
+        <p-table
+            #tableFilter1
+            dataKey="id"
+            [value]="listVehicleEntry()"
+            [(selection)]="selectedItems"
+            [rowHover]="true"
+            [scrollable]="true"
+            [globalFilterFields]="['id', 'vehiclePlate', 'modelDescription', 'vehicleFleet', 'entryDate', 'clientCompanyName', 'attendantUserName', 'numServiceOrder']"
+            size="small"
+            [loading]="loadingVehicles()"
+            currentPageReportTemplate="{first}–{last} de {totalRecords} veículos"
+            [paginator]="true"
+            [rows]="10"
+            [rowsPerPageOptions]="[10, 25, 50]"
+            [showCurrentPageReport]="true"
+            [tableStyle]="{ 'min-width': '90rem' }"
+        >
+            <ng-template #caption
+                ><div class="list-toolbar">
+                    <p-iconfield iconPosition="left" class="vehicle-search"
+                        ><p-inputicon><i class="pi pi-search" aria-hidden="true"></i></p-inputicon
+                        ><input #searchInput pInputText type="search" class="w-full" placeholder="Buscar placa, modelo, frota ou empresa" aria-label="Pesquisar entradas de veículos" (input)="tableFilter1.filterGlobal(searchInput.value, 'contains')"
+                    /></p-iconfield>
+                    <div class="list-filters">
+                        <p-select
+                            [(ngModel)]="selectedAuthorization"
+                            [options]="statusLiberacao()"
+                            optionLabel="label"
+                            optionValue="value"
+                            placeholder="Todas as liberações"
+                            ariaLabel="Filtrar por liberação"
+                            [showClear]="true"
+                            appendTo="body"
+                            class="status-filter"
+                            (onChange)="tableFilter1.filter(selectedAuthorization, 'authExitStatus', 'equals')"
+                        /><p-button label="Limpar filtros" icon="pi pi-filter-slash" severity="secondary" [text]="true" (onClick)="clearTable(tableFilter1, searchInput)" />
                     </div>
-                </th>
-                <th style="min-width:5rem">
-                    <div class="flex items-center justify-between">
-                        Código
-                        <p-columnFilter type="text" field="id" display="menu" />
+                </div>
+                @if (selectedItems.length) {
+                    <div class="selection-toolbar">
+                        <span>{{ selectedItems.length }} veículo(s) selecionado(s)</span><p-button type="button" label="Liberar selecionados" icon="pi pi-car" size="small" severity="success" (onClick)="addAuthorizationAll()" />
                     </div>
-                </th>
-                <th style="min-width:5rem">
-                    <div class="flex items-center justify-between">
-                        Placa
-                        <p-columnFilter type="text" field="vehiclePlate" display="menu" />
-                    </div>
-                </th>
-                <th style="min-width:5rem">
-                    <div class="flex items-center justify-between">
-                        Modelo
-                        <p-columnFilter type="text" field="modelDescription" display="menu" />
-                    </div>
-                </th>
-                <th style="min-width:5rem">
-                    <div class="flex items-center justify-between">
-                        Frota
-                        <p-columnFilter type="text" field="vehicleFleet" display="menu" />
-                    </div>
-                </th>
-                <th style="min-width:5rem">
-                    <div class="flex items-center justify-between">
-                        Nro. O.S.
-                        <p-columnFilter type="text" field="numServiceOrder" display="menu" />
-                    </div>
-                </th>
-                <th style="min-width:5rem">
-                    <div class="flex items-center justify-between">
-                        Entrada
-                        <p-columnFilter type="text" field="entryDate" display="menu"></p-columnFilter>
-                    </div>
-                </th>
-                <th style="min-width:10rem">
-                    <div class="flex items-center justify-between">
-                        Empresa
-                        <p-columnFilter type="text" field="clientCompanyName" display="menu" />
-                    </div>
-                </th>
-                <th style="min-width:10rem">
-                    <div class="flex items-center justify-between">
-                        Consultor
-                        <p-columnFilter type="text" field="attendantUserName" display="menu"></p-columnFilter>
-                    </div>
-                </th>
-                <th style="min-width:5rem">
-                    <div class="flex items-center justify-between">
-                        Liberação
-                        <p-columnFilter field="authExitStatus" matchMode="equals" display="menu">
-                            <ng-template #filter let-value let-filter="filterCallback">
-                                <p-select [options]="statusLiberacao()" (onChange)="filter($event.value)" placeholder="Selecione" class="w-full">
-                                    <ng-template let-option #item>
-                                        <div class="flex flex-row items-center gap-2">
-                                            <i class="pi " [ngClass]="{
-                                                'pi-times-circle text-red-500':option.value== notAuth,
-                                                'pi-check-circle text-green-500':option.value == firstAuth,
-                                                'pi-thumbs-up-fill text-green-600':option.value == authorized}">
-                                            </i>
-                                             <p-tag [value]="option.label" [severity]="getSeverityAuth(option.value)"></p-tag> 
-                                        </div>
-                                    </ng-template>
-                                </p-select>
-                            </ng-template>
-                        </p-columnFilter>
-                    </div>
-                </th>
-                <th style="min-width:5rem">
-                    <div class="flex items-center justify-between">
-                        
-                    </div>
-                </th>
-                <th style="min-width:5rem">
-                    <div class="flex items-center justify-between">
-                          <p-button *ngIf="selectedItems.length > 0" type="button" label="Liberar" icon="pi pi-car" size="small" severity="success" (onClick)="addAuthorizationAll()"></p-button>
-                      </div>
-                </th>
-            </tr>
-        </ng-template>
-        <ng-template #body let-vehicle>
-            <tr [pSelectableRow]="vehicle">
-                <td> <p-tableCheckbox [value]="vehicle"></p-tableCheckbox> </td>
-                <td><span class="text-500">{{ vehicle.id }}</span></td>
-                <td>
-                    @if(vehicle.vehicleNew == "yes"){
-                    <p-tag value="SEM PLACA" severity="info"></p-tag>
-                    }@else {
-                    <span class="text-500">{{vehicle.vehiclePlate | uppercase}}</span>
-                    }
-                </td>
-                <td><span class="text-500">{{ vehicle.modelDescription | uppercase }}</span>
-                </td>
-                <td><span class="text-500">{{ vehicle.vehicleFleet | uppercase}}</span></td>
-                <td><span class="text-500">{{ vehicle.numServiceOrder}}</span></td>
-                <td><span class="text-500">{{ vehicle.entryDate }}</span></td>
-                <td>
-                    @if(vehicle.clientCompanyName =="FALTA"){
-                    <p-tag value="FALTA" severity="danger"></p-tag>
-                    }@else {
-                    <span class="text-500">{{ vehicle.clientCompanyName | uppercase }}</span>
-                    }
-                </td>
-                <td>
-                    @if(vehicle.attendantUserName == "FALTA"){
-                    <p-tag value="FALTA" severity="danger"></p-tag>
-                    }@else {
-                    <span class="text-500">{{ vehicle.attendantUserName | uppercase }}</span>
-                    }
-                </td>
-                <td class="text-center">
-                    <i class="pi " [ngClass]="{
-                        'pi-times-circle text-red-500':vehicle.authExitStatus == notAuth,
-                        'pi-check-circle text-green-500':vehicle.authExitStatus == firstAuth,
-                        'pi-thumbs-up-fill text-green-600':vehicle.authExitStatus == authorized}">
-                    </i>
-                </td>
-                <td>
-                    <p-button type="button"  icon="pi pi-pencil" text="true" size="small" severity="secondary" (onClick)="editVeiculo(vehicle.id)"></p-button>
-                </td>
-                <td>
-                  <p-button type="button" label="Liberar" icon="pi pi-car" text="true" size="small" severity="success" (onClick)="authExit(vehicle)"></p-button> 
-                 </td>
-            </tr>
-        </ng-template>
-    </p-table>
+                }
+            </ng-template>
+            <ng-template #header>
+                <tr>
+                    <th>
+                        <div class="flex items-center justify-between">
+                            <span class="sr-only">Selecionar veículos</span>
+                        </div>
+                    </th>
+                    <th style="min-width: 5rem">
+                        <div class="flex items-center justify-between">
+                            Código
+                            <p-columnFilter type="text" field="id" display="menu" />
+                        </div>
+                    </th>
+                    <th style="min-width: 5rem">
+                        <div class="flex items-center justify-between">
+                            Placa
+                            <p-columnFilter type="text" field="vehiclePlate" display="menu" />
+                        </div>
+                    </th>
+                    <th style="min-width: 5rem">
+                        <div class="flex items-center justify-between">
+                            Modelo
+                            <p-columnFilter type="text" field="modelDescription" display="menu" />
+                        </div>
+                    </th>
+                    <th style="min-width: 5rem">
+                        <div class="flex items-center justify-between">
+                            Frota
+                            <p-columnFilter type="text" field="vehicleFleet" display="menu" />
+                        </div>
+                    </th>
+                    <th style="min-width: 5rem">
+                        <div class="flex items-center justify-between">
+                            Nro. O.S.
+                            <p-columnFilter type="text" field="numServiceOrder" display="menu" />
+                        </div>
+                    </th>
+                    <th style="min-width: 5rem">
+                        <div class="flex items-center justify-between">
+                            Entrada
+                            <p-columnFilter type="text" field="entryDate" display="menu"></p-columnFilter>
+                        </div>
+                    </th>
+                    <th style="min-width: 10rem">
+                        <div class="flex items-center justify-between">
+                            Empresa
+                            <p-columnFilter type="text" field="clientCompanyName" display="menu" />
+                        </div>
+                    </th>
+                    <th style="min-width: 10rem">
+                        <div class="flex items-center justify-between">
+                            Consultor
+                            <p-columnFilter type="text" field="attendantUserName" display="menu"></p-columnFilter>
+                        </div>
+                    </th>
+                    <th style="min-width: 5rem">
+                        <div class="flex items-center justify-between">
+                            Liberação
+                            <p-columnFilter field="authExitStatus" matchMode="equals" display="menu">
+                                <ng-template #filter let-value let-filter="filterCallback">
+                                    <p-select [ngModel]="value" optionLabel="label" optionValue="value" [options]="statusLiberacao()" (onChange)="filter($event.value)" placeholder="Selecione" class="w-full">
+                                        <ng-template let-option #item>
+                                            <div class="flex flex-row items-center gap-2">
+                                                <i
+                                                    class="pi"
+                                                    [ngClass]="{
+                                                        'pi-times-circle text-red-500': option.value == notAuth,
+                                                        'pi-check-circle text-green-500': option.value == firstAuth,
+                                                        'pi-thumbs-up-fill text-green-600': option.value == authorized
+                                                    }"
+                                                >
+                                                </i>
+                                                <p-tag [value]="option.label" [severity]="getSeverityAuth(option.value)"></p-tag>
+                                            </div>
+                                        </ng-template>
+                                    </p-select>
+                                </ng-template>
+                            </p-columnFilter>
+                        </div>
+                    </th>
+                    <th>Ação</th>
+                    <th style="min-width: 5rem">
+                        <div class="flex items-center justify-between">Liberar</div>
+                    </th>
+                </tr>
+            </ng-template>
+            <ng-template #body let-vehicle>
+                <tr>
+                    <td><p-tableCheckbox [value]="vehicle"></p-tableCheckbox></td>
+                    <td>
+                        <span class="vehicle-code">#{{ vehicle.id }}</span>
+                    </td>
+                    <td>
+                        @if (vehicle.vehicleNew == 'yes') {
+                            <p-tag value="SEM PLACA" severity="info"></p-tag>
+                        } @else {
+                            <span class="vehicle-plate">{{ vehicle.vehiclePlate | uppercase }}</span>
+                        }
+                    </td>
+                    <td>
+                        <span class="text-500">{{ vehicle.modelDescription | uppercase }}</span>
+                    </td>
+                    <td>
+                        <span class="text-500">{{ vehicle.vehicleFleet | uppercase }}</span>
+                    </td>
+                    <td>
+                        <span class="text-500">{{ vehicle.numServiceOrder }}</span>
+                    </td>
+                    <td>
+                        <span class="text-500">{{ vehicle.entryDate }}</span>
+                    </td>
+                    <td>
+                        @if (vehicle.clientCompanyName == 'FALTA') {
+                            <p-tag value="FALTA" severity="danger"></p-tag>
+                        } @else {
+                            <span class="text-500">{{ vehicle.clientCompanyName | uppercase }}</span>
+                        }
+                    </td>
+                    <td>
+                        @if (vehicle.attendantUserName == 'FALTA') {
+                            <p-tag value="FALTA" severity="danger"></p-tag>
+                        } @else {
+                            <span class="text-500">{{ vehicle.attendantUserName | uppercase }}</span>
+                        }
+                    </td>
+                    <td><p-tag [value]="authorizationLabel(vehicle.authExitStatus)" [severity]="getSeverityAuth(vehicle.authExitStatus)" [rounded]="true" /></td>
+                    <td>
+                        <p-button type="button" icon="pi pi-pencil" label="Editar" [ariaLabel]="'Editar veículo ' + vehicle.vehiclePlate" [text]="true" size="small" severity="secondary" (onClick)="editVeiculo(vehicle.id)"></p-button>
+                    </td>
+                    <td>
+                        <p-button type="button" label="Liberar" icon="pi pi-car" [ariaLabel]="'Liberar veículo ' + vehicle.vehiclePlate" [text]="true" size="small" severity="success" (onClick)="authExit(vehicle)"></p-button>
+                    </td>
+                </tr>
+            </ng-template>
+            <ng-template #emptymessage
+                ><tr>
+                    <td colspan="12">
+                        <div class="list-empty">
+                            <span class="vehicles-icon"><i class="pi" [ngClass]="loadError() ? 'pi-exclamation-circle' : 'pi-car'" aria-hidden="true"></i></span>
+                            <h3>{{ loadError() ? 'Não foi possível carregar os veículos' : listVehicleEntry().length ? 'Nenhum veículo encontrado' : 'Nenhuma entrada registrada' }}</h3>
+                            <p class="text-muted-color">
+                                {{ loadError() ? 'Clique em Atualizar para tentar novamente.' : listVehicleEntry().length ? 'Experimente outro termo ou limpe os filtros.' : 'Os veículos aparecerão aqui após o registro da entrada.' }}
+                            </p>
+                        </div>
+                    </td>
+                </tr></ng-template
+            ></p-table
+        >
+    </section>
 </div>

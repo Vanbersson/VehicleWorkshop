@@ -1,6 +1,6 @@
-import { Component, computed, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormGroup, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormGroup, FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { lastValueFrom } from 'rxjs';
 import { HttpResponse } from '@angular/common/http';
 
@@ -9,7 +9,8 @@ import { InputTextModule } from 'primeng/inputtext';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { InputNumberModule } from 'primeng/inputnumber';
-import { TableModule } from 'primeng/table';
+import { Table, TableModule } from 'primeng/table';
+import { SelectModule } from 'primeng/select';
 import { ToastModule } from 'primeng/toast';
 import { DialogModule } from 'primeng/dialog';
 
@@ -26,7 +27,7 @@ import { TagModule } from 'primeng/tag';
 @Component({
     selector: 'app-brand',
     standalone: true,
-    imports: [TagModule, CommonModule, InputTextModule, IconFieldModule, RadioButtonModule, InputIconModule, ButtonModule, InputNumberModule, ReactiveFormsModule, TableModule, ToastModule, DialogModule],
+    imports: [FormsModule, SelectModule, TagModule, CommonModule, InputTextModule, IconFieldModule, RadioButtonModule, InputIconModule, ButtonModule, InputNumberModule, ReactiveFormsModule, TableModule, ToastModule, DialogModule],
     templateUrl: './brand.component.html',
     styleUrl: './brand.component.scss',
     providers: [MessageService]
@@ -43,8 +44,13 @@ export default class BrandComponent implements OnInit {
     });
 
     listBrands = signal<Brand[]>([]);
-    readonly enabledCount = computed(() => this.listBrands().filter((brand) => brand.status === this.enabled).length);
-    readonly disabledCount = computed(() => this.listBrands().filter((brand) => brand.status === this.disabled).length);
+    readonly loadingBrands = signal(false);
+    readonly loadError = signal('');
+    selectedStatus: StatusEnabDisabEnum | null = null;
+    readonly statusOptions = [
+        { label: 'Habilitada', value: StatusEnabDisabEnum.ENABLED },
+        { label: 'Desabilitada', value: StatusEnabDisabEnum.DISABLED }
+    ];
     dialogVisible: boolean = false;
 
     constructor(
@@ -54,13 +60,25 @@ export default class BrandComponent implements OnInit {
     ) {}
 
     ngOnInit(): void {
-        this.init();
+        void this.loadBrands();
     }
 
-    private async init() {
-        this.loading.show();
-        this.listBrands.set(await this.listAll());
-        this.loading.hide();
+    async loadBrands(): Promise<void> {
+        if (this.loadingBrands()) return;
+        this.loadingBrands.set(true);
+        this.loadError.set('');
+        try {
+            this.listBrands.set(await lastValueFrom(this.brandService.listAll()));
+        } catch (error: unknown) {
+            this.loadError.set('Não foi possível carregar as marcas. Tente novamente.');
+        } finally {
+            this.loadingBrands.set(false);
+        }
+    }
+    clearFilters(table: Table, search: HTMLInputElement): void {
+        table.clear();
+        search.value = '';
+        this.selectedStatus = null;
     }
     showNewBrand() {
         this.isNewBrand = true;
@@ -114,7 +132,7 @@ export default class BrandComponent implements OnInit {
         if (result.status == 201 && result.body?.status == StatusSuccessError.succes) {
             this.messageService.add({ severity: 'success', summary: result.body.header, detail: result.body.message, icon: 'pi pi-check' });
             this.hideDialog();
-            this.init();
+            void this.loadBrands();
         }
         if (result.status == 201 && result.body?.status == StatusSuccessError.error) {
             this.messageService.add({ severity: 'info', summary: result.body.header, detail: result.body.message, icon: 'pi pi-info-circle' });
@@ -137,12 +155,12 @@ export default class BrandComponent implements OnInit {
         if (result.status == 200 && result.body?.status == StatusSuccessError.succes) {
             this.messageService.add({ severity: 'success', summary: result.body.header, detail: result.body.message, icon: 'pi pi-check' });
             this.hideDialog();
-            this.init();
+            void this.loadBrands();
         }
         if (result.status == 200 && result.body?.status == StatusSuccessError.error) {
             this.messageService.add({ severity: 'info', summary: result.body.header, detail: result.body.message, icon: 'pi pi-info-circle' });
             this.hideDialog();
-            this.init();
+            void this.loadBrands();
         }
         if (result.status == 401) {
             this.messageService.add({ severity: 'error', summary: 'Erro', detail: result.body?.message });
@@ -163,14 +181,6 @@ export default class BrandComponent implements OnInit {
         } catch (error: any) {
             this.messageService.add({ severity: 'error', summary: 'Erro', detail: error.message, icon: 'pi pi-times' });
             return error;
-        }
-    }
-    private async listAll(): Promise<Brand[]> {
-        try {
-            return await lastValueFrom(this.brandService.listAll());
-        } catch (error: any) {
-            this.messageService.add({ severity: 'error', summary: 'Erro', detail: error.message, icon: 'pi pi-times' });
-            return [];
         }
     }
 }

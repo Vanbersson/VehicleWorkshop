@@ -13,14 +13,6 @@ export interface VisitAgenda extends VisitAgendaNew {
     id: number;
 }
 
-export interface VisitAgendaUpdate {
+export interface VisitAgendaUpdate extends VisitAgendaNew {
     id: number;
-    salespersonId: number;
-    salespersonName: string;
-    clientId: number;
-    clientName: string;
-    type: string;
-    latitude: string;
-    longitude: string;
-    description: string;
 }

@@ -1,143 +1,103 @@
-<div class="grid grid-cols-12 gap-4">
-    <div class="col-span-12 lg:col-span-6 xl:col-span-3">
-        <div class="card mb-0">
-            <div class="flex justify-between mb-3">
+<div class="dashboard-page">
+    <header class="dashboard-header">
+        <div class="dashboard-title">
+            <span class="dashboard-icon"><i class="pi pi-chart-bar" aria-hidden="true"></i></span>
+            <div>
+                <span class="dashboard-eyebrow">VISÃO GERAL DA OPERAÇÃO</span>
+                <h1>Dashboard</h1>
+                <p class="text-muted-color">Acompanhe os veículos e os resultados da sua oficina.</p>
+            </div>
+        </div>
+        <div class="header-actions">
+            <span class="period-label"><i class="pi pi-calendar" aria-hidden="true"></i>{{ yearNow() - 1 }} – {{ yearNow() }}</span
+            ><p-button label="Atualizar" icon="pi pi-refresh" severity="secondary" [outlined]="true" (onClick)="refreshDashboard()" [loading]="loadingDashboard()" />
+        </div>
+    </header>
+
+    @if (loadError()) {
+        <div class="dashboard-error" role="alert">
+            <i class="pi pi-exclamation-circle" aria-hidden="true"></i><span>{{ loadError() }}</span>
+        </div>
+    }
+
+    <section class="stats-grid" aria-label="Indicadores da operação" [attr.aria-busy]="loadingDashboard()">
+        <article class="stat-card">
+            <div class="stat-heading">
+                <span>Veículos em atendimento</span><span class="stat-icon blue"><i class="pi pi-car" aria-hidden="true"></i></span>
+            </div>
+            <strong class="stat-value">{{ loadingDashboard() ? '…' : (countVehicle().at(0) ?? '—') }}</strong
+            ><span class="stat-description">Veículos presentes na oficina</span>
+        </article>
+        <article class="stat-card">
+            <div class="stat-heading">
+                <span>Saída autorizada</span><span class="stat-icon green"><i class="pi pi-check-circle" aria-hidden="true"></i></span>
+            </div>
+            <strong class="stat-value">{{ loadingDashboard() ? '…' : (countVehicle().at(1) ?? '—') }}</strong
+            ><span class="stat-description">Veículos liberados para saída</span>
+        </article>
+        <article class="stat-card">
+            <div class="stat-heading">
+                <span>Passagens em {{ yearNow() }}</span
+                ><span class="stat-icon cyan"><i class="pi pi-directions" aria-hidden="true"></i></span>
+            </div>
+            <strong class="stat-value">{{ loadingDashboard() ? '…' : (annualTotal(clientData1) ?? '—') }}</strong
+            ><span class="stat-description">{{ isSearchClient ? 'Do cliente selecionado, no ano' : 'Total de passagens no ano' }}</span>
+        </article>
+        <article class="stat-card">
+            <div class="stat-heading">
+                <span>Serviços em {{ yearNow() }}</span
+                ><span class="stat-icon amber"><i class="pi pi-wrench" aria-hidden="true"></i></span>
+            </div>
+            <strong class="stat-value">{{ loadingDashboard() ? '…' : (annualTotal(clientData2) ?? '—') }}</strong
+            ><span class="stat-description">{{ isSearchClient ? 'Do cliente selecionado, no ano' : 'Total de serviços no ano' }}</span>
+        </article>
+    </section>
+
+    <section class="dashboard-panel filter-panel" aria-labelledby="dashboardFilterTitle">
+        <div>
+            <span class="dashboard-eyebrow">ANÁLISE POR CLIENTE</span>
+            <h2 id="dashboardFilterTitle">Explore os resultados</h2>
+            <p class="text-muted-color">Selecione um cliente para filtrar os gráficos e os totais anuais.</p>
+        </div>
+        <div class="filter-actions">
+            <div class="client-selection">
+                <i class="pi pi-building" aria-hidden="true"></i><span>{{ clientName ? (clientName | uppercase) : 'Todos os clientes' }}</span>
+            </div>
+            <app-filterclient [isDisabled]="loadingDashboard()" (outputClient)="selectClientCompany.set($event)" />
+            @if (isSearchClient) {
+                <p-button label="Limpar filtro" icon="pi pi-filter-slash" severity="secondary" [text]="true" (onClick)="init()" [disabled]="loadingDashboard()" />
+            }
+        </div>
+    </section>
+
+    <section class="charts-grid" aria-label="Comparativo anual">
+        <article class="dashboard-panel chart-panel" aria-labelledby="vehicleChartTitle">
+            <div class="panel-heading">
                 <div>
-                    <span class="block text-500 font-medium mb-3">
-                        Veículos
-                    </span>
-
-                    <div class="text-900 font-medium text-xl">
-                        {{ countVehicle().at(0) }}
-                    </div>
+                    <span class="dashboard-eyebrow">MOVIMENTAÇÃO DA OFICINA</span>
+                    <h2 id="vehicleChartTitle">Passagens de veículos</h2>
+                    <p class="text-muted-color">Comparativo mensal entre {{ yearNow() - 1 }} e {{ yearNow() }}.</p>
                 </div>
-
-                <div class="flex items-center justify-center bg-blue-100 rounded-md w-10 h-10">
-                    <i class="pi pi-car text-blue-500 text-xl"></i>
-                </div>
+                <span class="chart-symbol"><i class="pi pi-chart-bar" aria-hidden="true"></i></span>
             </div>
-
-            <span class="text-green-500 font-medium">
-                Veículos
-            </span>
-
-            <span class="text-500">
-                em atendimento
-            </span>
-        </div>
-    </div>
-
-    <div class="col-span-12 lg:col-span-6 xl:col-span-3">
-        <div class="card mb-0">
-            <div class="flex justify-between mb-3">
+            <p-chart type="bar" [data]="clientData1" [options]="clientOptions1" height="300px" [ariaLabel]="'Passagens mensais de veículos em ' + (yearNow() - 1) + ' e ' + yearNow()" />
+            <div class="chart-footer">
+                <i class="pi pi-filter" aria-hidden="true"></i><span>{{ clientName ? (clientName | uppercase) : 'Todos os clientes' }}</span>
+            </div>
+        </article>
+        <article class="dashboard-panel chart-panel" aria-labelledby="serviceChartTitle">
+            <div class="panel-heading">
                 <div>
-                    <span class="block text-500 font-medium mb-3">
-                        Autorizados
-                    </span>
-
-                    <div class="text-900 font-medium text-xl">
-                        {{ countVehicle().at(1) }}
-                    </div>
+                    <span class="dashboard-eyebrow">ATIVIDADE DA OFICINA</span>
+                    <h2 id="serviceChartTitle">Serviços realizados</h2>
+                    <p class="text-muted-color">Comparativo mensal entre {{ yearNow() - 1 }} e {{ yearNow() }}.</p>
                 </div>
-
-                <div class="flex items-center justify-center bg-green-100 rounded-md w-10 h-10">
-                    <i class="pi pi-thumbs-up-fill text-green-500 text-xl"></i>
-                </div>
+                <span class="chart-symbol"><i class="pi pi-chart-line" aria-hidden="true"></i></span>
             </div>
-
-            <span class="text-green-500 font-medium">
-                Veículos
-            </span>
-
-            <span class="text-500">
-                com saída autorizada
-            </span>
-        </div>
-    </div>
-    <div class="col-span-12 lg:col-span-6 xl:col-span-3">
-        <div class="card mb-0">
-            <div class="flex justify-between mb-3">
-                <div>
-                    <span class="block text-500 font-medium mb-3">
-                        Orçamento
-                    </span>
-                    <div class="text-900 font-medium text-xl">
-                        0
-                    </div>
-                </div>
-                <div class="flex items-center justify-center bg-cyan-100 rounded-md w-10 h-10">
-                    <i class="pi pi-verified text-cyan-500 text-xl"></i>
-                </div>
+            <p-chart type="line" [data]="clientData2" [options]="clientOptions2" height="300px" [ariaLabel]="'Serviços mensais em ' + (yearNow() - 1) + ' e ' + yearNow()" />
+            <div class="chart-footer">
+                <i class="pi pi-filter" aria-hidden="true"></i><span>{{ clientName ? (clientName | uppercase) : 'Todos os clientes' }}</span>
             </div>
-            <span class="text-green-500 font-medium">
-                Orçamentos
-            </span>
-            <span class="text-500">
-                gerados
-            </span>
-        </div>
-    </div>
-
-    <div class="col-span-12 lg:col-span-6 xl:col-span-3">
-        <div class="card mb-0">
-            <div class="flex justify-between mb-3">
-                <div>
-                    <span class="block text-500 font-medium mb-3">
-                        Valor
-                    </span>
-                    <div class="text-900 font-medium text-xl">
-                        {{ 0 | currency }}
-                    </div>
-                </div>
-                <div class="flex items-center justify-center bg-yellow-100 rounded-md w-10 h-10">
-                    <i class="pi pi-dollar text-yellow-500 text-xl"></i>
-                </div>
-            </div>
-            <span class="text-green-500 font-medium">
-                Valor
-            </span>
-            <span class="text-500">
-                total dos orçamentos
-            </span>
-        </div>
-    </div>
-    <div class="col-span-12 card ">
-
-        <div class="grid grid-cols-12 gap-4">
-            <div class="col-span-8">
-                <label for="clientCompanyName"> Cliente </label>
-                <input pInputText id="clientCompanyName" type="text" class="w-full" style="text-transform: uppercase" [(ngModel)]="clientName" disabled />
-            </div>
-             <div class="col-span-2 flex flex-col">
-                <label for="">Filtro</label>
-                <app-filterclient (outputClient)="selectClientCompany.set($event)" />
-            </div>
-            <div *ngIf="isSearchClient" class="col-span-2 flex flex-col">
-                <label for=""> Limpar </label>
-                <p-button icon="pi pi-filter-slash" severity="danger" (onClick)="init()" />
-            </div>
-        </div>
-    </div>
-    <div class="col-span-12 lg:col-span-6">
-        <div class="card">
-            <div class="flex justify-center w-full mb-2">
-                <span><strong>Passagem de veículos por ano</strong></span>
-            </div>
-            <div class="flex justify-center w-full mb-2">
-                <span *ngIf="clientName">{{clientName | uppercase}}</span>
-            </div>
-            <p-chart type="bar" [data]="clientData1" [options]="clientOptions1" />
-        </div>
-    </div>
-    <div class="col-span-12 lg:col-span-6 ">
-        <div class="card">
-            <div class="flex justify-center w-full mb-2">
-                <span><strong>Seviços realizados</strong></span>
-            </div>
-            <div class="flex justify-center w-full mb-2">
-                <span *ngIf="clientName">{{clientName | uppercase}}</span>
-            </div>
-            <p-chart type="line" [data]="clientData2" [options]="clientOptions2" />
-        </div>
-    </div>
+        </article>
+    </section>
 </div>

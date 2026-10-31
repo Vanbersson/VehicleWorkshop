@@ -12,7 +12,8 @@ import { InputIconModule } from 'primeng/inputicon';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { InputMaskModule } from 'primeng/inputmask';
 import { InputGroupModule } from 'primeng/inputgroup';
-import { TableModule } from 'primeng/table';
+import { Table, TableModule } from 'primeng/table';
+import { TagModule } from 'primeng/tag';
 import { DatePickerModule } from 'primeng/datepicker';
 import { ButtonModule } from 'primeng/button';
 import { SelectModule } from 'primeng/select';
@@ -37,527 +38,552 @@ import { StatusSuccessError } from '@/app/models/status-suc-err';
 import { LoadingService } from '@/app/services/loading/loading.service';
 
 interface sexo {
-  type: string;
+    type: string;
 }
 
 @Component({
-  selector: 'app-driver',
-  standalone: true,
-  imports: [CommonModule, ButtonModule, ToastModule, FormsModule, ReactiveFormsModule, InputNumberModule, InputMaskModule, DividerModule,
-    ImageModule, DatePickerModule, SelectModule,
-    InputGroupModule, InputIconModule, IconFieldModule, InputTextModule, TableModule, DialogModule, RadioButtonModule],
-  templateUrl: './driver.component.html',
-  styleUrl: './driver.component.scss',
-  providers: [MessageService]
+    selector: 'app-driver',
+    standalone: true,
+    imports: [
+        TagModule,
+        CommonModule,
+        ButtonModule,
+        ToastModule,
+        FormsModule,
+        ReactiveFormsModule,
+        InputNumberModule,
+        InputMaskModule,
+        DividerModule,
+        ImageModule,
+        DatePickerModule,
+        SelectModule,
+        InputGroupModule,
+        InputIconModule,
+        IconFieldModule,
+        InputTextModule,
+        TableModule,
+        DialogModule,
+        RadioButtonModule
+    ],
+    templateUrl: './driver.component.html',
+    styleUrl: './driver.component.scss',
+    providers: [MessageService]
 })
 export default class DriverComponent implements OnInit {
-  listDriver = signal<Driver[]>([]);
-  private driver!: Driver;
-  private isNewDriver: boolean = true;
-
-  enabled = StatusEnabDisabEnum.ENABLED;
-  disabled = StatusEnabDisabEnum.DISABLED;
-
-  //Dialog novo
-  visibleDialogNew: boolean = false;
-
-  driverPhotoUrl = signal<string>('');
-  isNewPhotoDriver: boolean = false;
-  isDeletePhotoDriver: boolean = false;
-
-  driverPhotoDoc1Url = signal<string>('');
-  isNewPhotoDoc1: boolean = false;
-  isDeletePhotoDoc1: boolean = false;
-
-  driverPhotoDoc2Url = signal<string>('');
-  isNewPhotoDoc2: boolean = false;
-  isDeletePhotoDoc2: boolean = false;
-
-  sexos: sexo[] | undefined;
-
-  formDriver = new FormGroup({
-    status: new FormControl<StatusEnabDisabEnum>(StatusEnabDisabEnum.ENABLED, Validators.required),
-    id: new FormControl<number | null>({ value: null, disabled: true }),
-    name: new FormControl<string>("", [Validators.required, Validators.maxLength(100)]),
-    dateBirth: new FormControl<string | Date>("", Validators.required),
-    cpf: new FormControl<string>("", Validators.required),
-    rg: new FormControl<string | null>(null, [Validators.required, Validators.maxLength(11)]),
-    maleFemale: new FormControl<sexo | null>(null, Validators.required),
-    email: new FormControl<string>(""),
-    cnhRegister: new FormControl<string | null>(null, [Validators.required, Validators.maxLength(11)]),
-    cnhCategory: new FormControl<string>("", [Validators.required, Validators.maxLength(10)]),
-    cnhValidation: new FormControl<string | Date>("", Validators.required),
-    dddPhone: new FormControl<string>(""),
-    phone: new FormControl<string>(""),
-    dddCellphone: new FormControl<string>(""),
-    cellphone: new FormControl<string>(""),
-    zipCode: new FormControl<string>("", Validators.required),
-    address: new FormControl<string>("", [Validators.required, Validators.maxLength(100)]),
-    addressNumber: new FormControl<string | null>(null),
-    state: new FormControl<string>("", Validators.required),
-    city: new FormControl<string>("", [Validators.required, Validators.maxLength(100)]),
-    neighborhood: new FormControl<string>("", [Validators.required, Validators.maxLength(100)]),
-    addressComplement: new FormControl<string>(""),
-  });
-
-  constructor(
-    private loadingService: LoadingService,
-    private storageService: StorageService,
-    private messageService: MessageService,
-    private driverService: DriverService,
-    private cepService: CEPService,
-    private photoService: PhotoService) { }
-
-  ngOnInit(): void {
-    this.sexos = [{ type: StatusMaleFemaleEnum.male }, { type: StatusMaleFemaleEnum.female }]
-    //Lista todos os motoristas
-    this.listDrivers();
-  }
-
-  applyDateMask(event: any) {
-    let value = event.target.value.replace(/\D/g, '');
-    if (value.length > 2) {
-      value = value.replace(/^(\d{2})(\d)/, '$1/$2');
+    listDriver = signal<Driver[]>([]);
+    readonly loadingDrivers = signal(false);
+    readonly loadError = signal('');
+    selectedStatus: StatusEnabDisabEnum | null = null;
+    readonly statusOptions = [
+        { label: 'Habilitado', value: StatusEnabDisabEnum.ENABLED },
+        { label: 'Desabilitado', value: StatusEnabDisabEnum.DISABLED }
+    ];
+    clearFilters(table: Table, input: HTMLInputElement): void {
+        table.clear();
+        input.value = '';
+        this.selectedStatus = null;
     }
-    if (value.length > 5) {
-      value = value.replace(/^(\d{2})\/(\d{2})(\d)/, '$1/$2/$3');
-    }
+    private driver!: Driver;
+    private isNewDriver: boolean = true;
 
-    event.target.value = value;
-  }
+    enabled = StatusEnabDisabEnum.ENABLED;
+    disabled = StatusEnabDisabEnum.DISABLED;
 
-  async listDrivers() {
-    this.loadingService.show();
-    this.listDriver.set(await this.listAll());
-    this.loadingService.hide();
-  }
+    //Dialog novo
+    visibleDialogNew: boolean = false;
 
-  maskCPF(cpf: string): string {
-    if (cpf == "") return "";
-    const CPF = cpf.substring(0, 3) + "." + cpf.substring(3, 6) + "." + cpf.substring(6, 9) + "-" + cpf.substring(9, 11);
-    return CPF;
-  }
+    driverPhotoUrl = signal<string>('');
+    isNewPhotoDriver: boolean = false;
+    isDeletePhotoDriver: boolean = false;
 
-  public showDialog() {
-    this.cleanForm();
-    this.visibleDialogNew = true;
-  }
+    driverPhotoDoc1Url = signal<string>('');
+    isNewPhotoDoc1: boolean = false;
+    isDeletePhotoDoc1: boolean = false;
 
-  public hideDialog() {
-    this.visibleDialogNew = false;
-  }
+    driverPhotoDoc2Url = signal<string>('');
+    isNewPhotoDoc2: boolean = false;
+    isDeletePhotoDoc2: boolean = false;
 
-  private cleanForm() {
-    this.formDriver.patchValue({
-      status: StatusEnabDisabEnum.ENABLED,
-      id: null,
-      name: "",
-      dateBirth: null,
-      cpf: "",
-      rg: null,
-      email: "",
-      cnhRegister: null,
-      cnhCategory: "",
-      cnhValidation: null,
-      maleFemale: null,
-      dddPhone: "",
-      phone: "",
-      dddCellphone: "",
-      cellphone: "",
-      zipCode: null,
-      address: "",
-      addressNumber: null,
-      state: "",
-      city: "",
-      neighborhood: "",
-      addressComplement: ""
+    sexos: sexo[] | undefined;
+
+    formDriver = new FormGroup({
+        status: new FormControl<StatusEnabDisabEnum>(StatusEnabDisabEnum.ENABLED, Validators.required),
+        id: new FormControl<number | null>({ value: null, disabled: true }),
+        name: new FormControl<string>('', [Validators.required, Validators.maxLength(100)]),
+        dateBirth: new FormControl<string | Date>('', Validators.required),
+        cpf: new FormControl<string>('', Validators.required),
+        rg: new FormControl<string | null>(null, [Validators.required, Validators.maxLength(11)]),
+        maleFemale: new FormControl<sexo | null>(null, Validators.required),
+        email: new FormControl<string>(''),
+        cnhRegister: new FormControl<string | null>(null, [Validators.required, Validators.maxLength(11)]),
+        cnhCategory: new FormControl<string>('', [Validators.required, Validators.maxLength(10)]),
+        cnhValidation: new FormControl<string | Date>('', Validators.required),
+        dddPhone: new FormControl<string>(''),
+        phone: new FormControl<string>(''),
+        dddCellphone: new FormControl<string>(''),
+        cellphone: new FormControl<string>(''),
+        zipCode: new FormControl<string>('', Validators.required),
+        address: new FormControl<string>('', [Validators.required, Validators.maxLength(100)]),
+        addressNumber: new FormControl<string | null>(null),
+        state: new FormControl<string>('', Validators.required),
+        city: new FormControl<string>('', [Validators.required, Validators.maxLength(100)]),
+        neighborhood: new FormControl<string>('', [Validators.required, Validators.maxLength(100)]),
+        addressComplement: new FormControl<string>('')
     });
 
-    this.driverPhotoUrl.set('');
-    this.driverPhotoDoc1Url.set('');
-    this.driverPhotoDoc2Url.set('');
-  }
+    constructor(
+        private loadingService: LoadingService,
+        private storageService: StorageService,
+        private messageService: MessageService,
+        private driverService: DriverService,
+        private cepService: CEPService,
+        private photoService: PhotoService
+    ) {}
 
-  async selectPhoto() {
-    const photo: IPhotoResult = await this.photoService.takePicture();
-    if (photo.status == StatusPhotoResult.SUCCESS) {
-      this.driverPhotoUrl.set(photo.base64!);
-      this.isNewPhotoDriver = true;
-      this.isDeletePhotoDriver = false;
+    ngOnInit(): void {
+        this.sexos = [{ type: StatusMaleFemaleEnum.male }, { type: StatusMaleFemaleEnum.female }];
+        //Lista todos os motoristas
+        this.listDrivers();
     }
-    if (photo.status == StatusPhotoResult.LIMIT) {
-      this.messageService.add({ severity: 'info', summary: 'Imagem', detail: this.photoService.maxSiseLabel, icon: 'pi pi-info-circle', life: 3000 });
+
+    applyDateMask(event: any) {
+        let value = event.target.value.replace(/\D/g, '');
+        if (value.length > 2) {
+            value = value.replace(/^(\d{2})(\d)/, '$1/$2');
+        }
+        if (value.length > 5) {
+            value = value.replace(/^(\d{2})\/(\d{2})(\d)/, '$1/$2/$3');
+        }
+
+        event.target.value = value;
     }
-    if (photo.status == StatusPhotoResult.ERROR) {
-      // this.messageService.add({ severity: 'error', summary: 'Erro', detail: "Ocorreu um problema.", icon: 'pi pi-times', life: 3000 });
+
+    async listDrivers() {
+        if (this.loadingDrivers()) return;
+        this.loadingDrivers.set(true);
+        this.loadError.set('');
+        try {
+            this.listDriver.set(await lastValueFrom(this.driverService.listAll()));
+        } catch {
+            this.loadError.set('Não foi possível carregar os motoristas. Tente novamente.');
+        } finally {
+            this.loadingDrivers.set(false);
+        }
     }
-  }
-  async photoFile1Driver() {
-    const photo: IPhotoResult = await this.photoService.takePicture();
-    if (photo.status == StatusPhotoResult.SUCCESS) {
-      this.driverPhotoDoc1Url.set(photo.base64!);
-      this.isNewPhotoDoc1 = true;
-      this.isDeletePhotoDoc1 = false
+
+    maskCPF(cpf: string): string {
+        if (cpf == '') return '';
+        const CPF = cpf.substring(0, 3) + '.' + cpf.substring(3, 6) + '.' + cpf.substring(6, 9) + '-' + cpf.substring(9, 11);
+        return CPF;
     }
-    if (photo.status == StatusPhotoResult.LIMIT) {
-      this.messageService.add({ severity: 'info', summary: 'Imagem', detail: this.photoService.maxSiseLabel, icon: 'pi pi-info-circle', life: 3000 });
+
+    public showDialog() {
+        this.cleanForm();
+        this.visibleDialogNew = true;
     }
-    if (photo.status == StatusPhotoResult.ERROR) {
-      // this.messageService.add({ severity: 'error', summary: 'Erro', detail: "Ocorreu um problema.", icon: 'pi pi-times', life: 3000 });
+
+    public hideDialog() {
+        this.visibleDialogNew = false;
     }
-  }
-  async photoFile2Driver() {
-    const photo: IPhotoResult = await this.photoService.takePicture();
-    if (photo.status == StatusPhotoResult.SUCCESS) {
-      this.driverPhotoDoc2Url.set(photo.base64!);
-      this.isNewPhotoDoc2 = true;
-      this.isDeletePhotoDoc2 = false
+
+    private cleanForm() {
+        this.formDriver.patchValue({
+            status: StatusEnabDisabEnum.ENABLED,
+            id: null,
+            name: '',
+            dateBirth: null,
+            cpf: '',
+            rg: null,
+            email: '',
+            cnhRegister: null,
+            cnhCategory: '',
+            cnhValidation: null,
+            maleFemale: null,
+            dddPhone: '',
+            phone: '',
+            dddCellphone: '',
+            cellphone: '',
+            zipCode: null,
+            address: '',
+            addressNumber: null,
+            state: '',
+            city: '',
+            neighborhood: '',
+            addressComplement: ''
+        });
+
+        this.driverPhotoUrl.set('');
+        this.driverPhotoDoc1Url.set('');
+        this.driverPhotoDoc2Url.set('');
     }
-    if (photo.status == StatusPhotoResult.LIMIT) {
-      this.messageService.add({ severity: 'info', summary: 'Imagem', detail: this.photoService.maxSiseLabel, icon: 'pi pi-info-circle', life: 3000 });
+
+    async selectPhoto() {
+        const photo: IPhotoResult = await this.photoService.takePicture();
+        if (photo.status == StatusPhotoResult.SUCCESS) {
+            this.driverPhotoUrl.set(photo.base64!);
+            this.isNewPhotoDriver = true;
+            this.isDeletePhotoDriver = false;
+        }
+        if (photo.status == StatusPhotoResult.LIMIT) {
+            this.messageService.add({ severity: 'info', summary: 'Imagem', detail: this.photoService.maxSiseLabel, icon: 'pi pi-info-circle', life: 3000 });
+        }
+        if (photo.status == StatusPhotoResult.ERROR) {
+            // this.messageService.add({ severity: 'error', summary: 'Erro', detail: "Ocorreu um problema.", icon: 'pi pi-times', life: 3000 });
+        }
     }
-    if (photo.status == StatusPhotoResult.ERROR) {
-      // this.messageService.add({ severity: 'error', summary: 'Erro', detail: "Ocorreu um problema.", icon: 'pi pi-times', life: 3000 });
+    async photoFile1Driver() {
+        const photo: IPhotoResult = await this.photoService.takePicture();
+        if (photo.status == StatusPhotoResult.SUCCESS) {
+            this.driverPhotoDoc1Url.set(photo.base64!);
+            this.isNewPhotoDoc1 = true;
+            this.isDeletePhotoDoc1 = false;
+        }
+        if (photo.status == StatusPhotoResult.LIMIT) {
+            this.messageService.add({ severity: 'info', summary: 'Imagem', detail: this.photoService.maxSiseLabel, icon: 'pi pi-info-circle', life: 3000 });
+        }
+        if (photo.status == StatusPhotoResult.ERROR) {
+            // this.messageService.add({ severity: 'error', summary: 'Erro', detail: "Ocorreu um problema.", icon: 'pi pi-times', life: 3000 });
+        }
     }
-  }
-  deletePhoto() {
-    this.driverPhotoUrl.set('');
-    this.driver.photoDriverUrl = "";
-    this.isNewPhotoDriver = false;
-    this.isDeletePhotoDriver = true;
-  }
-  deleteEntryFileDriver1() {
-    this.driverPhotoDoc1Url.set('');
-    this.driver.photoDoc1Url = "";
-    this.isNewPhotoDoc1 = false;
-    this.isDeletePhotoDoc1 = true;
-  }
-  deleteEntryFileDriver2() {
-    this.driverPhotoDoc2Url.set('');
-    this.driver.photoDoc2Url = "";
-    this.isNewPhotoDoc2 = false;
-    this.isDeletePhotoDoc2 = true;
-  }
-  public newDriver() {
-    this.isNewDriver = true;
-    //Habilita o campo CPF
-    this.formDriver.get('cpf')?.enable();
-    this.showDialog();
-  }
-  public async save() {
-    if (this.isNewDriver) {
-      this.driver = new Driver();
-      this.saveNewDriver();
-    } else {
-      this.updateSaveDriver();
+    async photoFile2Driver() {
+        const photo: IPhotoResult = await this.photoService.takePicture();
+        if (photo.status == StatusPhotoResult.SUCCESS) {
+            this.driverPhotoDoc2Url.set(photo.base64!);
+            this.isNewPhotoDoc2 = true;
+            this.isDeletePhotoDoc2 = false;
+        }
+        if (photo.status == StatusPhotoResult.LIMIT) {
+            this.messageService.add({ severity: 'info', summary: 'Imagem', detail: this.photoService.maxSiseLabel, icon: 'pi pi-info-circle', life: 3000 });
+        }
+        if (photo.status == StatusPhotoResult.ERROR) {
+            // this.messageService.add({ severity: 'error', summary: 'Erro', detail: "Ocorreu um problema.", icon: 'pi pi-times', life: 3000 });
+        }
     }
-  }
-  private async saveNewDriver() {
-    const { value, valid } = this.formDriver;
-    if (!valid) {
-      return;
-    }
-    //Save
-    this.driver.companyId = this.storageService.companyId;
-    this.driver.resaleId = this.storageService.resaleId;
-    this.driver.status = value.status!;
-    this.driver.name = value.name!;
-    this.driver.dateBirth = value.dateBirth!;
-    this.driver.cpf = value.cpf!;
-    this.driver.rg = value.rg!.toString();
-    this.driver.maleFemale = value.maleFemale!['type'] == StatusMaleFemaleEnum.male ? StatusMaleFemaleEnum.male : StatusMaleFemaleEnum.female;
-    this.driver.cnhRegister = value.cnhRegister!.toString();
-    this.driver.cnhCategory = value.cnhCategory!;
-    this.driver.cnhValidation = value.cnhValidation!;
-    this.driver.email = value.email!;
-    this.driver.dddPhone = value.dddPhone!;
-    this.driver.phone = value.phone!;
-    this.driver.dddCellphone = value.dddCellphone!;
-    this.driver.cellphone = value.cellphone!;
-    this.driver.zipCode = value.zipCode!;
-    this.driver.address = value.address!;
-    this.driver.addressNumber = value.addressNumber == null ? "" : value.addressNumber.toString();
-    this.driver.state = value.state!;
-    this.driver.city = value.city!;
-    this.driver.neighborhood = value.neighborhood!;
-    this.driver.addressComplement = value.addressComplement!;
-    //Inicia load
-    this.loadingService.show();
-    const resultSave = await this.saveDriver(this.driver);
-    if (resultSave.status == 201 && resultSave.body?.status == StatusSuccessError.succes) {
-      this.messageService.add({ severity: 'success', summary: resultSave.body.header, detail: resultSave.body.message, icon: 'pi pi-check' });
-      this.driver = resultSave.body.data;
-      this.formDriver.get('id')!.setValue(this.driver.id);
-      this.isNewDriver = false;
-      //Salva a foto do motorista
-      if (this.isNewPhotoDriver) {
+    deletePhoto() {
+        this.driverPhotoUrl.set('');
+        this.driver.photoDriverUrl = '';
         this.isNewPhotoDriver = false;
-        this.driver.photoDriverUrl = await this.saveImage(this.driver.id!, 'image1.jpg', this.driverPhotoUrl());
-      }
-      if (this.isNewPhotoDoc1) {
+        this.isDeletePhotoDriver = true;
+    }
+    deleteEntryFileDriver1() {
+        this.driverPhotoDoc1Url.set('');
+        this.driver.photoDoc1Url = '';
         this.isNewPhotoDoc1 = false;
-        this.driver.photoDoc1Url = await this.saveImage(this.driver.id!, 'image2.jpg', this.driverPhotoDoc1Url());
-      }
-      if (this.isNewPhotoDoc2) {
+        this.isDeletePhotoDoc1 = true;
+    }
+    deleteEntryFileDriver2() {
+        this.driverPhotoDoc2Url.set('');
+        this.driver.photoDoc2Url = '';
         this.isNewPhotoDoc2 = false;
-        this.driver.photoDoc2Url = await this.saveImage(this.driver.id!, 'image3.jpg', this.driverPhotoDoc2Url());
-      }
-      await this.updateDriver(this.driver);
-      //Lista motoristas
-      this.listDrivers();
+        this.isDeletePhotoDoc2 = true;
     }
-    if (resultSave.status == 201 && resultSave.body?.status == StatusSuccessError.error) {
-      this.messageService.add({ severity: 'info', summary: resultSave.body.header, detail: resultSave.body.message, icon: 'pi pi-info-circle' });
+    public newDriver() {
+        this.isNewDriver = true;
+        //Habilita o campo CPF
+        this.formDriver.get('cpf')?.enable();
+        this.showDialog();
     }
-    //Fecha load
-    this.loadingService.hide();
-  }
-  async edit(id: number) {
-    //Inicia load
-    this.loadingService.show();
-    const result = await this.filterDriverId(id);
-    //Fecha load
-    this.loadingService.hide();
-    if (result.status == 200 && result.body?.status == StatusSuccessError.succes) {
+    public async save() {
+        if (this.formDriver.invalid) {
+            this.formDriver.markAllAsTouched();
+            return;
+        }
+        if (this.isNewDriver) {
+            this.driver = new Driver();
+            this.saveNewDriver();
+        } else {
+            this.updateSaveDriver();
+        }
+    }
+    private async saveNewDriver() {
+        const { value, valid } = this.formDriver;
+        if (!valid) {
+            return;
+        }
+        //Save
+        this.driver.companyId = this.storageService.companyId;
+        this.driver.resaleId = this.storageService.resaleId;
+        this.driver.status = value.status!;
+        this.driver.name = value.name!;
+        this.driver.dateBirth = value.dateBirth!;
+        this.driver.cpf = value.cpf!;
+        this.driver.rg = value.rg!.toString();
+        this.driver.maleFemale = value.maleFemale!['type'] == StatusMaleFemaleEnum.male ? StatusMaleFemaleEnum.male : StatusMaleFemaleEnum.female;
+        this.driver.cnhRegister = value.cnhRegister!.toString();
+        this.driver.cnhCategory = value.cnhCategory!;
+        this.driver.cnhValidation = value.cnhValidation!;
+        this.driver.email = value.email!;
+        this.driver.dddPhone = value.dddPhone!;
+        this.driver.phone = value.phone!;
+        this.driver.dddCellphone = value.dddCellphone!;
+        this.driver.cellphone = value.cellphone!;
+        this.driver.zipCode = value.zipCode!;
+        this.driver.address = value.address!;
+        this.driver.addressNumber = value.addressNumber == null ? '' : value.addressNumber.toString();
+        this.driver.state = value.state!;
+        this.driver.city = value.city!;
+        this.driver.neighborhood = value.neighborhood!;
+        this.driver.addressComplement = value.addressComplement!;
+        //Inicia load
+        this.loadingService.show();
+        const resultSave = await this.saveDriver(this.driver);
+        if (resultSave.status == 201 && resultSave.body?.status == StatusSuccessError.succes) {
+            this.messageService.add({ severity: 'success', summary: resultSave.body.header, detail: resultSave.body.message, icon: 'pi pi-check' });
+            this.driver = resultSave.body.data;
+            this.formDriver.get('id')!.setValue(this.driver.id);
+            this.isNewDriver = false;
+            //Salva a foto do motorista
+            if (this.isNewPhotoDriver) {
+                this.isNewPhotoDriver = false;
+                this.driver.photoDriverUrl = await this.saveImage(this.driver.id!, 'image1.jpg', this.driverPhotoUrl());
+            }
+            if (this.isNewPhotoDoc1) {
+                this.isNewPhotoDoc1 = false;
+                this.driver.photoDoc1Url = await this.saveImage(this.driver.id!, 'image2.jpg', this.driverPhotoDoc1Url());
+            }
+            if (this.isNewPhotoDoc2) {
+                this.isNewPhotoDoc2 = false;
+                this.driver.photoDoc2Url = await this.saveImage(this.driver.id!, 'image3.jpg', this.driverPhotoDoc2Url());
+            }
+            await this.updateDriver(this.driver);
+            //Lista motoristas
+            this.listDrivers();
+        }
+        if (resultSave.status == 201 && resultSave.body?.status == StatusSuccessError.error) {
+            this.messageService.add({ severity: 'info', summary: resultSave.body.header, detail: resultSave.body.message, icon: 'pi pi-info-circle' });
+        }
+        //Fecha load
+        this.loadingService.hide();
+    }
+    async edit(id: number) {
+        //Inicia load
+        this.loadingService.show();
+        const result = await this.filterDriverId(id);
+        //Fecha load
+        this.loadingService.hide();
+        if (result.status == 200 && result.body?.status == StatusSuccessError.succes) {
+            this.isNewDriver = false;
+            this.showDialog();
+            this.driver = result.body.data;
+            //desabilita o campo CPF
+            this.formDriver.get('cpf')?.disable();
 
-      this.isNewDriver = false;
-      this.showDialog();
-      this.driver = result.body.data;
-      //desabilita o campo CPF
-      this.formDriver.get('cpf')?.disable();
+            this.formDriver.patchValue({
+                status: this.driver.status,
+                id: this.driver.id,
+                name: this.driver.name,
+                dateBirth: this.driver.dateBirth != null ? new Date(this.driver.dateBirth) : '',
+                cpf: this.driver.cpf,
+                rg: this.driver.rg,
+                maleFemale: { type: this.driver.maleFemale },
+                email: this.driver.email,
+                cnhRegister: this.driver.cnhRegister,
+                cnhCategory: this.driver.cnhCategory,
+                cnhValidation: new Date(this.driver.cnhValidation),
+                dddPhone: this.driver.dddPhone,
+                phone: this.driver.phone,
+                dddCellphone: this.driver.dddCellphone,
+                cellphone: this.driver.cellphone,
+                zipCode: this.driver.zipCode,
+                address: this.driver.address,
+                addressNumber: this.driver.addressNumber,
+                state: this.driver.state,
+                city: this.driver.city,
+                neighborhood: this.driver.neighborhood,
+                addressComplement: this.driver.addressComplement
+            });
 
-      this.formDriver.patchValue({
-        status: this.driver.status,
-        id: this.driver.id,
-        name: this.driver.name,
-        dateBirth: this.driver.dateBirth != null ? new Date(this.driver.dateBirth) : "",
-        cpf: this.driver.cpf,
-        rg: this.driver.rg,
-        maleFemale: { type: this.driver.maleFemale },
-        email: this.driver.email,
-        cnhRegister: this.driver.cnhRegister,
-        cnhCategory: this.driver.cnhCategory,
-        cnhValidation: new Date(this.driver.cnhValidation),
-        dddPhone: this.driver.dddPhone,
-        phone: this.driver.phone,
-        dddCellphone: this.driver.dddCellphone,
-        cellphone: this.driver.cellphone,
-        zipCode: this.driver.zipCode,
-        address: this.driver.address,
-        addressNumber: this.driver.addressNumber,
-        state: this.driver.state,
-        city: this.driver.city,
-        neighborhood: this.driver.neighborhood,
-        addressComplement: this.driver.addressComplement,
+            this.driverPhotoUrl.set(this.driver.photoDriverUrl);
+            this.driverPhotoDoc1Url.set(this.driver.photoDoc1Url);
+            this.driverPhotoDoc2Url.set(this.driver.photoDoc2Url);
+        }
+    }
+    private async updateSaveDriver() {
+        const { value, valid } = this.formDriver;
+        if (!valid) {
+            return;
+        }
+        //Inicia load
+        this.loadingService.show();
+        //Salva a foto do motorista
+        if (this.isNewPhotoDriver) {
+            this.isNewPhotoDriver = false;
+            this.driver.photoDriverUrl = await this.saveImage(this.driver.id!, 'image1.jpg', this.driverPhotoUrl());
+        }
+        if (this.isNewPhotoDoc1) {
+            this.isNewPhotoDoc1 = false;
+            this.driver.photoDoc1Url = await this.saveImage(this.driver.id!, 'image2.jpg', this.driverPhotoDoc1Url());
+        }
+        if (this.isNewPhotoDoc2) {
+            this.isNewPhotoDoc2 = false;
+            this.driver.photoDoc2Url = await this.saveImage(this.driver.id!, 'image3.jpg', this.driverPhotoDoc2Url());
+        }
+        //Exclui a foto do motorista
+        const formData = new FormData();
+        if (this.isDeletePhotoDriver) {
+            this.isDeletePhotoDriver = false;
+            let path = `${this.storageService.companyId}/` + `${this.storageService.resaleId}/concierge/driver/` + `${this.driver.id}/image1.jpg`;
+            formData.append('local', path);
+            this.deletePhotoDriver(formData);
+            this.driver.photoDriverUrl = '';
+        }
+        if (this.isDeletePhotoDoc1) {
+            this.isDeletePhotoDoc1 = false;
+            let path = `${this.storageService.companyId}/` + `${this.storageService.resaleId}/concierge/driver/` + `${this.driver.id}/image2.jpg`;
+            formData.append('local', path);
 
-      });
+            this.deletePhotoDriver(formData);
+            this.driver.photoDoc1Url = '';
+        }
+        if (this.isDeletePhotoDoc2) {
+            this.isDeletePhotoDoc2 = false;
+            let path = `${this.storageService.companyId}/` + `${this.storageService.resaleId}/concierge/driver/` + `${this.driver.id}/image3.jpg`;
+            formData.append('local', path);
+            this.deletePhotoDriver(formData);
+            this.driver.photoDoc2Url = '';
+        }
 
-      this.driverPhotoUrl.set(this.driver.photoDriverUrl);
-      this.driverPhotoDoc1Url.set(this.driver.photoDoc1Url);
-      this.driverPhotoDoc2Url.set(this.driver.photoDoc2Url);
+        this.driver.status = value.status!;
+        this.driver.name = value.name!;
+        this.driver.dateBirth = value.dateBirth!;
+        //this.driver.cpf = value.cpf!;
+        this.driver.rg = value.rg!.toString();
+        this.driver.maleFemale = value.maleFemale!['type'] == StatusMaleFemaleEnum.male ? StatusMaleFemaleEnum.male : StatusMaleFemaleEnum.female;
+        this.driver.cnhRegister = value.cnhRegister!.toString();
+        this.driver.cnhCategory = value.cnhCategory!;
+        this.driver.cnhValidation = value.cnhValidation!;
+        this.driver.email = value.email!;
+        this.driver.dddPhone = value.dddPhone!;
+        this.driver.phone = value.phone!;
+        this.driver.dddCellphone = value.dddCellphone!;
+        this.driver.cellphone = value.cellphone!;
+        this.driver.zipCode = value.zipCode!;
+        this.driver.address = value.address!;
+        this.driver.addressNumber = value.addressNumber == null ? '' : value.addressNumber.toString();
+        this.driver.state = value.state!;
+        this.driver.city = value.city!;
+        this.driver.neighborhood = value.neighborhood!;
+        this.driver.addressComplement = value.addressComplement!;
+        const resultSave = await this.updateDriver(this.driver);
+        //Fecha load
+        this.loadingService.hide();
+        if (resultSave.status == 200 && resultSave.body?.status == StatusSuccessError.succes) {
+            this.messageService.add({ severity: 'success', summary: resultSave.body.header, detail: resultSave.body.message, icon: 'pi pi-check' });
+            //Lista motoristas
+            this.listDrivers();
+        } else if (resultSave.status == 200 && resultSave.body?.status == StatusSuccessError.error) {
+            this.messageService.add({ severity: 'info', summary: resultSave.body.header, detail: resultSave.body.message, icon: 'pi pi-info-circle' });
+        }
     }
-  }
-  private async updateSaveDriver() {
-    const { value, valid } = this.formDriver;
-    if (!valid) {
-      return;
+    private async saveDriver(driver: Driver): Promise<HttpResponse<MessageResponse>> {
+        try {
+            return await lastValueFrom(this.driverService.save(driver));
+        } catch (error: any) {
+            this.messageService.add({ severity: 'error', summary: 'Erro', detail: error.message, icon: 'pi pi-times' });
+            return error;
+        }
     }
-    //Inicia load
-    this.loadingService.show();
-    //Salva a foto do motorista
-    if (this.isNewPhotoDriver) {
-      this.isNewPhotoDriver = false;
-      this.driver.photoDriverUrl = await this.saveImage(this.driver.id!, 'image1.jpg', this.driverPhotoUrl());
+    private async updateDriver(driver: Driver): Promise<HttpResponse<MessageResponse>> {
+        try {
+            return await lastValueFrom(this.driverService.update(driver));
+        } catch (error: any) {
+            this.messageService.add({ severity: 'error', summary: 'Erro', detail: error.message, icon: 'pi pi-times' });
+            return error;
+        }
     }
-    if (this.isNewPhotoDoc1) {
-      this.isNewPhotoDoc1 = false;
-      this.driver.photoDoc1Url = await this.saveImage(this.driver.id!, 'image2.jpg', this.driverPhotoDoc1Url());
+    private async filterDriverId(id: number): Promise<HttpResponse<MessageResponse>> {
+        try {
+            return await lastValueFrom(this.driverService.filterId(id));
+        } catch (error: any) {
+            return error;
+        }
     }
-    if (this.isNewPhotoDoc2) {
-      this.isNewPhotoDoc2 = false;
-      this.driver.photoDoc2Url = await this.saveImage(this.driver.id!, 'image3.jpg', this.driverPhotoDoc2Url());
+    private async listAll(): Promise<Driver[]> {
+        try {
+            return await lastValueFrom(this.driverService.listAll());
+        } catch (error: any) {
+            return [];
+        }
     }
-    //Exclui a foto do motorista
-    const formData = new FormData();
-    if (this.isDeletePhotoDriver) {
-      this.isDeletePhotoDriver = false;
-      let path =
-        `${this.storageService.companyId}/` +
-        `${this.storageService.resaleId}/concierge/driver/` +
-        `${this.driver.id}/image1.jpg`;
-      formData.append('local', path);
-      this.deletePhotoDriver(formData);
-      this.driver.photoDriverUrl = "";
-    }
-    if (this.isDeletePhotoDoc1) {
-      this.isDeletePhotoDoc1 = false;
-      let path =
-        `${this.storageService.companyId}/` +
-        `${this.storageService.resaleId}/concierge/driver/` +
-        `${this.driver.id}/image2.jpg`;
-      formData.append('local', path);
+    public async searchCEP() {
+        if (!this.formDriver.get('zipCode')!.value) {
+            return;
+        }
+        const result = await this.cep(this.formDriver.get('zipCode')!.value!);
 
-      this.deletePhotoDriver(formData);
-      this.driver.photoDoc1Url = "";
+        if (result.status == 200) {
+            this.formDriver.patchValue({
+                address: result.body.logradouro,
+                addressComplement: result.body.complemento,
+                state: result.body.uf,
+                city: result.body.localidade,
+                neighborhood: result.body.bairro
+            });
+        }
     }
-    if (this.isDeletePhotoDoc2) {
-      this.isDeletePhotoDoc2 = false;
-      let path =
-        `${this.storageService.companyId}/` +
-        `${this.storageService.resaleId}/concierge/driver/` +
-        `${this.driver.id}/image3.jpg`;
-      formData.append('local', path);
-      this.deletePhotoDriver(formData);
-      this.driver.photoDoc2Url = "";
-    }
-
-    this.driver.status = value.status!;
-    this.driver.name = value.name!;
-    this.driver.dateBirth = value.dateBirth!;
-    //this.driver.cpf = value.cpf!;
-    this.driver.rg = value.rg!.toString();
-    this.driver.maleFemale = value.maleFemale!['type'] == StatusMaleFemaleEnum.male ? StatusMaleFemaleEnum.male : StatusMaleFemaleEnum.female;
-    this.driver.cnhRegister = value.cnhRegister!.toString();
-    this.driver.cnhCategory = value.cnhCategory!;
-    this.driver.cnhValidation = value.cnhValidation!;
-    this.driver.email = value.email!;
-    this.driver.dddPhone = value.dddPhone!;
-    this.driver.phone = value.phone!;
-    this.driver.dddCellphone = value.dddCellphone!;
-    this.driver.cellphone = value.cellphone!;
-    this.driver.zipCode = value.zipCode!;
-    this.driver.address = value.address!;
-    this.driver.addressNumber = value.addressNumber == null ? "" : value.addressNumber.toString();
-    this.driver.state = value.state!;
-    this.driver.city = value.city!;
-    this.driver.neighborhood = value.neighborhood!;
-    this.driver.addressComplement = value.addressComplement!;
-    const resultSave = await this.updateDriver(this.driver);
-    //Fecha load
-    this.loadingService.hide();
-    if (resultSave.status == 200 && resultSave.body?.status == StatusSuccessError.succes) {
-      this.messageService.add({ severity: 'success', summary: resultSave.body.header, detail: resultSave.body.message, icon: 'pi pi-check' });
-      //Lista motoristas
-      this.listDrivers();
-    } else if (resultSave.status == 200 && resultSave.body?.status == StatusSuccessError.error) {
-      this.messageService.add({ severity: 'info', summary: resultSave.body.header, detail: resultSave.body.message, icon: 'pi pi-info-circle' });
-    }
-  }
-  private async saveDriver(driver: Driver): Promise<HttpResponse<MessageResponse>> {
-    try {
-      return await lastValueFrom(this.driverService.save(driver));
-    } catch (error: any) {
-      this.messageService.add({ severity: 'error', summary: 'Erro', detail: error.message, icon: 'pi pi-times' });
-      return error;
-    }
-  }
-  private async updateDriver(driver: Driver): Promise<HttpResponse<MessageResponse>> {
-    try {
-      return await lastValueFrom(this.driverService.update(driver));
-    } catch (error: any) {
-      this.messageService.add({ severity: 'error', summary: 'Erro', detail: error.message, icon: 'pi pi-times' });
-      return error;
-    }
-  }
-  private async filterDriverId(id: number): Promise<HttpResponse<MessageResponse>> {
-    try {
-      return await lastValueFrom(this.driverService.filterId(id));
-    } catch (error: any) {
-      return error;
-    }
-  }
-  private async listAll(): Promise<Driver[]> {
-    try {
-      return await lastValueFrom(this.driverService.listAll());
-    } catch (error: any) {
-      return [];
-    }
-  }
-  public async searchCEP() {
-    if (!this.formDriver.get('zipCode')!.value) {
-      return;
-    }
-    const result = await this.cep(this.formDriver.get('zipCode')!.value!);
-
-    if (result.status == 200) {
-      this.formDriver.patchValue({
-        address: result.body.logradouro,
-        addressComplement: result.body.complemento,
-        state: result.body.uf,
-        city: result.body.localidade,
-        neighborhood: result.body.bairro
-      });
+    private async cep(cep: string): Promise<HttpResponse<any>> {
+        try {
+            return await lastValueFrom(this.cepService.search(cep));
+        } catch (error: any) {
+            return error;
+        }
     }
 
-  }
-  private async cep(cep: string): Promise<HttpResponse<any>> {
-    try {
-      return await lastValueFrom(this.cepService.search(cep));
-    } catch (error: any) {
-      return error;
+    private async saveImage(driverId: number, name: string, pathImg: string): Promise<string> {
+        try {
+            let path = `${this.storageService.companyId}/` + `${this.storageService.resaleId}/concierge/driver/` + `${driverId}/${name}`;
+
+            const { base64, mime } = this.cleanBase64(pathImg);
+            const file = this.base64ToFile(base64, mime);
+
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('local', path);
+
+            const resultSave = await this.savePhotoDriver(formData);
+            if (resultSave.status == 200 && resultSave.body?.status == StatusSuccessError.succes) {
+                return `${environment.apiuUrl}${resultSave.body.data['url']}`;
+            }
+        } catch (error: any) {
+            this.messageService.add({ severity: 'error', summary: 'Erro', detail: error.message, icon: 'pi pi-times' });
+        }
+        return '';
     }
-  }
+    private cleanBase64(base64: string): { base64: string; mime: string } {
+        if (!base64.includes(',')) {
+            return { base64, mime: 'image/jpeg' };
+        }
 
-  private async saveImage(driverId: number, name: string, pathImg: string): Promise<string> {
-    try {
-      let path =
-        `${this.storageService.companyId}/` +
-        `${this.storageService.resaleId}/concierge/driver/` +
-        `${driverId}/${name}`;
+        const [header, data] = base64.split(',');
+        const mime = header.match(/data:(.*);base64/)?.[1] || 'image/jpeg';
 
-      const { base64, mime } = this.cleanBase64(pathImg);
-      const file = this.base64ToFile(base64, mime);
-
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('local', path);
-
-      const resultSave = await this.savePhotoDriver(formData);
-      if (resultSave.status == 200 && resultSave.body?.status == StatusSuccessError.succes) {
-        return `${environment.apiuUrl}${resultSave.body.data["url"]}`;
-      }
-    } catch (error: any) {
-      this.messageService.add({ severity: 'error', summary: 'Erro', detail: error.message, icon: 'pi pi-times' });
+        return { base64: data, mime };
     }
-    return "";
+    private base64ToFile(base64: string, mime: string): File {
+        const byteString = atob(base64);
+        const ab = new ArrayBuffer(byteString.length);
+        const ia = new Uint8Array(ab);
 
-  }
-  private cleanBase64(base64: string): { base64: string; mime: string } {
-    if (!base64.includes(',')) {
-      return { base64, mime: 'image/jpeg' };
+        for (let i = 0; i < byteString.length; i++) {
+            ia[i] = byteString.charCodeAt(i);
+        }
+
+        return new File([ia], 'image.jpg', { type: mime });
     }
-
-    const [header, data] = base64.split(',');
-    const mime = header.match(/data:(.*);base64/)?.[1] || 'image/jpeg';
-
-    return { base64: data, mime };
-  }
-  private base64ToFile(base64: string, mime: string): File {
-    const byteString = atob(base64);
-    const ab = new ArrayBuffer(byteString.length);
-    const ia = new Uint8Array(ab);
-
-    for (let i = 0; i < byteString.length; i++) {
-      ia[i] = byteString.charCodeAt(i);
+    private async savePhotoDriver(data: FormData): Promise<HttpResponse<MessageResponse>> {
+        try {
+            return await lastValueFrom(this.driverService.saveImage(data));
+        } catch (error: any) {
+            this.messageService.add({ severity: 'error', summary: 'Erro', detail: error.message, icon: 'pi pi-times' });
+            return error;
+        }
     }
-
-    return new File([ia], 'image.jpg', { type: mime });
-  }
-  private async savePhotoDriver(data: FormData): Promise<HttpResponse<MessageResponse>> {
-    try {
-      return await lastValueFrom(this.driverService.saveImage(data))
-    } catch (error: any) {
-      this.messageService.add({ severity: 'error', summary: 'Erro', detail: error.message, icon: 'pi pi-times' });
-      return error;
+    private async deletePhotoDriver(data: FormData): Promise<HttpResponse<MessageResponse>> {
+        try {
+            return await lastValueFrom(this.driverService.deleteImage(data));
+        } catch (error: any) {
+            this.messageService.add({ severity: 'error', summary: 'Erro', detail: error.message, icon: 'pi pi-times' });
+            return error;
+        }
     }
-  }
-  private async deletePhotoDriver(data: FormData): Promise<HttpResponse<MessageResponse>> {
-    try {
-      return await lastValueFrom(this.driverService.deleteImage(data))
-    } catch (error: any) {
-      this.messageService.add({ severity: 'error', summary: 'Erro', detail: error.message, icon: 'pi pi-times' });
-      return error;
-    }
-  }
-
 }

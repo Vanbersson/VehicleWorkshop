@@ -13,11 +13,23 @@ import { filter } from 'rxjs/operators';
             <div class="layout-menuitem-root-text">{{ item().label }}</div>
         }
         @if ((!hasRouterLink() || hasChildren()) && isVisible()) {
-            <a [attr.href]="item().url" (click)="itemClick($event)" [ngClass]="item().class" [attr.target]="item().target" tabindex="0" pRipple>
-                <i [ngClass]="item().icon" class="layout-menuitem-icon"></i>
+            <a
+                [attr.href]="item().url"
+                (click)="itemClick($event)"
+                (keydown.enter)="toggleFromKeyboard($event)"
+                (keydown.space)="toggleFromKeyboard($event)"
+                [attr.role]="hasChildren() ? 'button' : null"
+                [attr.aria-expanded]="hasChildren() ? isActive() : null"
+                [attr.aria-disabled]="item().disabled || null"
+                [ngClass]="item().class"
+                [attr.target]="item().target"
+                tabindex="0"
+                pRipple
+            >
+                <i [ngClass]="item().icon || 'pi pi-folder'" class="layout-menuitem-icon" aria-hidden="true"></i>
                 <span class="layout-menuitem-text">{{ item().label }}</span>
                 @if (hasChildren()) {
-                    <i class="pi pi-fw pi-angle-down layout-submenu-toggler"></i>
+                    <i class="pi pi-fw pi-angle-down layout-submenu-toggler" aria-hidden="true"></i>
                 }
             </a>
         }
@@ -27,6 +39,7 @@ import { filter } from 'rxjs/operators';
                 [ngClass]="item().class"
                 [routerLink]="item().routerLink"
                 routerLinkActive="active-route"
+                ariaCurrentWhenActive="page"
                 [routerLinkActiveOptions]="item().routerLinkActiveOptions || { paths: 'exact', queryParams: 'ignored', matrixParams: 'ignored', fragment: 'ignored' }"
                 [fragment]="item().fragment"
                 [queryParamsHandling]="item().queryParamsHandling"
@@ -39,7 +52,7 @@ import { filter } from 'rxjs/operators';
                 tabindex="0"
                 pRipple
             >
-                <i [ngClass]="item().icon" class="layout-menuitem-icon"></i>
+                <i [ngClass]="item().icon || 'pi pi-circle-fill'" class="layout-menuitem-icon" [class.layout-menuitem-bullet]="!item().icon" aria-hidden="true"></i>
                 <span class="layout-menuitem-text">{{ item().label }}</span>
                 @if (hasChildren()) {
                     <i class="pi pi-fw pi-angle-down layout-submenu-toggler"></i>
@@ -56,6 +69,7 @@ import { filter } from 'rxjs/operators';
     `,
     host: {
         '[class.active-menuitem]': 'isActive()',
+        '[class.menuitem-hidden]': '!isVisible()',
         '[class.layout-root-menuitem]': 'root()'
     },
     styles: [
@@ -205,5 +219,11 @@ export class AppMenuitem {
                 menuHoverActive: false
             }));
         }
+    }
+
+    toggleFromKeyboard(event: Event): void {
+        if (!this.hasChildren()) return;
+        event.preventDefault();
+        this.itemClick(event);
     }
 }

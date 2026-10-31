@@ -29,11 +29,12 @@ describe('VisitService agenda endpoints', () => {
     });
 
     it('uses the agenda update route with the record identifier', () => {
-        const payload: VisitAgendaUpdate = { id: 42, salespersonId: 7, salespersonName: 'Vendedor', clientId: 3, clientName: 'Cliente', type: '', latitude: '', longitude: '', description: '' };
+        const payload: VisitAgendaUpdate = { id: 42, dateVisit: '2026-11-05T19:10:00.000Z', salespersonId: 7, salespersonName: 'Vendedor', clientId: 3, clientName: 'Cliente', informationAgenda: 'Novo horário' };
         service.agendaUpdate(payload).subscribe();
         const request = http.expectOne(`${environment.apiuUrl}/salesperson/visit/agenda/update`);
         expect(request.request.method).toBe('POST');
         expect(request.request.body.id).toBe(42);
+        expect(request.request.body).toEqual(payload);
         request.flush({ status: 'Success.' });
     });
 

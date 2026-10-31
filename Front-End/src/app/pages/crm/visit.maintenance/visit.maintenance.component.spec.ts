@@ -52,7 +52,17 @@ describe('VisitMaintenanceComponent registration flow', () => {
         expect(component.visibleDateVisit).toBeTrue();
         await component.saveComplete();
         expect(service.registerUpdate.calls.mostRecent().args[0].status).toBe(StatusVisitEnum.CLOSE);
-        expect(TestBed.inject(Router).navigate).toHaveBeenCalledWith(['/crm/new/customer'], { queryParams: { visitId: 42 } });
+        expect(TestBed.inject(Router).navigate).toHaveBeenCalledWith(['/crm/visit']);
+    });
+
+    it('stays on the registration screen when completing the visit fails', async () => {
+        fillOtherSelections();
+        await component.goToStep(5);
+        component.openDateVisit();
+        service.registerUpdate.and.returnValue(throwError(() => new Error('Offline')));
+        await component.saveComplete();
+        expect(TestBed.inject(Router).navigate).not.toHaveBeenCalled();
+        expect(component.visibleDateVisit).toBeTrue();
     });
 
     it('rejects whitespace-only descriptions and redirects to the required step', async () => {

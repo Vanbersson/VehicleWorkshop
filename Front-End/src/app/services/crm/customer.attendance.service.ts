@@ -6,6 +6,7 @@ import { StorageService } from '@/app/services/storage/storage.service';
 import { environment } from '@/environments/environment';
 import { AttendanceQuoteResponse, AttendanceQuoteSave } from '@/app/models/crm/attendance.quote';
 import { AttendanceDetail } from '@/app/models/crm/attendance.detail';
+import { AttendanceDocument } from '@/app/models/crm/attendance.document';
 
 @Injectable({ providedIn: 'root' })
 export class CustomerAttendanceService {
@@ -43,5 +44,19 @@ export class CustomerAttendanceService {
 
     saveQuote(data: AttendanceQuoteSave): Observable<AttendanceQuoteResponse> {
         return this.http.post<AttendanceQuoteResponse>(`${environment.apiuUrl}/crm/customer-attendance/quote`, data, { headers: this.headers() });
+    }
+
+    documents(attendanceId: number): Observable<AttendanceDocument[]> {
+        return this.http.get<AttendanceDocument[]>(`${environment.apiuUrl}/crm/customer-attendance/${attendanceId}/documents`, { headers: this.headers() });
+    }
+
+    uploadDocument(attendanceId: number, file: File): Observable<AttendanceDocument> {
+        const data = new FormData();
+        data.append('file', file);
+        return this.http.post<AttendanceDocument>(`${environment.apiuUrl}/crm/customer-attendance/${attendanceId}/documents`, data, { headers: this.headers() });
+    }
+
+    downloadDocument(attendanceId: number, documentId: number): Observable<Blob> {
+        return this.http.get(`${environment.apiuUrl}/crm/customer-attendance/${attendanceId}/documents/${documentId}`, { headers: this.headers(), responseType: 'blob' });
     }
 }

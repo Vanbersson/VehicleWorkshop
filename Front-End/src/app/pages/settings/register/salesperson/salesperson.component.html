@@ -1,92 +1,111 @@
-<div class="card salesperson-page">
+<div class="salespersons-page">
     <p-toast />
-    <div class="layout-card-title">
-        <div>
-            <span class="eyebrow">CONFIGURAÇÕES · CADASTROS</span>
-            <h1>Vendedores</h1>
-            <p class="text-muted-color m-0">Gerencie sua equipe comercial, atuação e limites de desconto.</p>
-        </div>
-        <p-button icon="pi pi-plus" label="Novo vendedor" (onClick)="newSalesperson()" />
-    </div>
-    <div class="summary-grid">
-        <div class="summary-card">
-            <i class="pi pi-users" aria-hidden="true"></i>
+    <header class="salespersons-header">
+        <div class="salespersons-title">
+            <span class="salespersons-icon"><i class="pi pi-users" aria-hidden="true"></i></span>
             <div>
-                <span>Total de vendedores</span><strong>{{ salespersons().length }}</strong>
+                <span class="salespersons-eyebrow">CONFIGURAÇÕES · CADASTROS</span>
+                <h1>Vendedores</h1>
+                <p class="text-muted-color">Gerencie sua equipe comercial, áreas de atuação e limites de desconto.</p>
             </div>
         </div>
-        <div class="summary-card">
-            <i class="pi pi-user-plus" aria-hidden="true"></i>
+        <div class="header-actions"><p-button icon="pi pi-plus" label="Novo vendedor" (onClick)="newSalesperson()" /></div>
+    </header>
+    <section class="salespersons-panel" aria-labelledby="salespersonsListTitle">
+        <div class="list-heading">
             <div>
-                <span>Habilitados</span><strong>{{ enabledCount() }}</strong>
+                <span class="salespersons-eyebrow">EQUIPE COMERCIAL</span>
+                <h2 id="salespersonsListTitle">
+                    Vendedores cadastrados <span class="record-count">{{ loadingSalespersons() ? '…' : salespersons().length }}</span>
+                </h2>
             </div>
+            <p-button icon="pi pi-refresh" label="Atualizar" [text]="true" severity="secondary" (onClick)="loadSalespersons()" [loading]="loadingSalespersons()" />
         </div>
-        <div class="summary-card">
-            <i class="pi pi-user-minus" aria-hidden="true"></i>
-            <div>
-                <span>Desabilitados</span><strong>{{ disabledCount() }}</strong>
+        @if (loadError()) {
+            <div class="list-error" role="alert">
+                <i class="pi pi-exclamation-circle" aria-hidden="true"></i><span>{{ loadError() }}</span>
             </div>
-        </div>
-    </div>
-    <p-table
-        #salespersonTable
-        [value]="salespersons()"
-        dataKey="id"
-        [paginator]="true"
-        [rows]="10"
-        [rowsPerPageOptions]="[10, 25, 50]"
-        [globalFilterFields]="['id', 'name', 'status']"
-        [rowHover]="true"
-        [showCurrentPageReport]="true"
-        currentPageReportTemplate="{first} a {last} de {totalRecords} vendedores"
-        [tableStyle]="{ 'min-width': '40rem' }"
-    >
-        <ng-template #caption
-            ><div class="table-toolbar">
-                <div>
-                    <h2>Equipe comercial</h2>
-                    <span class="text-muted-color text-sm">Consulte e edite os dados dos vendedores.</span>
-                </div>
-                <div class="search-field">
-                    <i class="pi pi-search" aria-hidden="true"></i
-                    ><input pInputText type="search" placeholder="Buscar vendedor, código ou status" aria-label="Buscar vendedor, código ou status" (input)="salespersonTable.filterGlobal($any($event.target).value, 'contains')" />
-                </div></div
-        ></ng-template>
-        <ng-template #header>
-            <tr>
-                <th pSortableColumn="id">Código <p-sortIcon field="id" /></th>
-                <th pSortableColumn="status">Status <p-sortIcon field="status" /></th>
-                <th pSortableColumn="name">Vendedor <p-sortIcon field="name" /></th>
-
-                <th class="text-right">Ações</th>
-            </tr>
-        </ng-template>
-        <ng-template #body let-person>
-            <tr>
-                <td>{{ person.id }}</td>
-                <td><p-tag [value]="person.status" [severity]="person.status === enabled ? 'success' : 'secondary'" /></td>
-                <td>
-                    <div class="person-cell">
-                        <span class="person-avatar">{{ person.name?.charAt(0) | uppercase }}</span
-                        ><strong>{{ person.name | titlecase }}</strong>
-                    </div>
-                </td>
-                <td class="text-right"><p-button label="Editar" [ariaLabel]="'Editar vendedor ' + person.name" icon="pi pi-pencil" [text]="true" severity="secondary" size="small" (onClick)="edit(person.id)" /></td>
-            </tr>
-        </ng-template>
-
-        <ng-template #emptymessage
-            ><tr>
-                <td colspan="4">
-                    <div class="empty-state">
-                        <i class="pi pi-users" aria-hidden="true"></i>
-                        <h3>Nenhum vendedor encontrado</h3>
-                        <p>Revise a busca ou clique em Novo vendedor para cadastrar.</p>
-                    </div>
-                </td>
-            </tr></ng-template
-        ></p-table
-    >
+        }
+        <p-table
+            #salespersonTable
+            [value]="salespersons()"
+            [loading]="loadingSalespersons()"
+            [rowHover]="true"
+            [paginator]="true"
+            [rows]="10"
+            [rowsPerPageOptions]="[10, 25, 50]"
+            [showCurrentPageReport]="true"
+            currentPageReportTemplate="{first}–{last} de {totalRecords} vendedores"
+            [globalFilterFields]="['id', 'name', 'status']"
+            sortField="id"
+            [sortOrder]="-1"
+            dataKey="id"
+            size="small"
+            [tableStyle]="{ 'min-width': '46rem' }"
+        >
+            <ng-template #caption
+                ><div class="list-toolbar">
+                    <p-iconfield iconPosition="left" class="salesperson-search"
+                        ><p-inputicon><i class="pi pi-search" aria-hidden="true"></i></p-inputicon
+                        ><input #searchInput pInputText type="search" aria-label="Pesquisar vendedores por nome ou código" (input)="salespersonTable.filterGlobal(searchInput.value, 'contains')" placeholder="Buscar vendedor ou código" class="w-full"
+                    /></p-iconfield>
+                    <div class="list-filters">
+                        <p-select
+                            [(ngModel)]="selectedStatus"
+                            [options]="statusOptions"
+                            optionLabel="label"
+                            optionValue="value"
+                            placeholder="Todos os status"
+                            ariaLabel="Filtrar vendedores por status"
+                            [showClear]="true"
+                            (onChange)="salespersonTable.filter(selectedStatus, 'status', 'equals')"
+                            appendTo="body"
+                            class="status-filter"
+                        /><p-button label="Limpar filtros" icon="pi pi-filter-slash" severity="secondary" [text]="true" (onClick)="clearFilters(salespersonTable, searchInput)" />
+                    </div></div
+            ></ng-template>
+            <ng-template #header
+                ><tr>
+                    <th pSortableColumn="id">Código <p-sortIcon field="id" /></th>
+                    <th pSortableColumn="name">Vendedor <p-sortIcon field="name" /></th>
+                    <th pSortableColumn="status">Status <p-sortIcon field="status" /></th>
+                    <th class="text-right">Ação</th>
+                </tr></ng-template
+            >
+            <ng-template #body let-person
+                ><tr>
+                    <td>
+                        <span class="salesperson-code">#{{ person.id }}</span>
+                    </td>
+                    <td>
+                        <span class="salesperson-name">{{ person.name | uppercase }}</span>
+                    </td>
+                    <td><p-tag [value]="person.status" [severity]="person.status === enabled ? 'success' : 'secondary'" [icon]="person.status === enabled ? 'pi pi-check-circle' : 'pi pi-minus-circle'" [rounded]="true" /></td>
+                    <td class="text-right"><p-button icon="pi pi-pencil" label="Editar" [text]="true" size="small" [ariaLabel]="'Editar vendedor ' + person.name" (onClick)="edit(person.id)" /></td></tr
+            ></ng-template>
+            <ng-template #emptymessage
+                ><tr>
+                    <td colspan="4">
+                        <div class="list-empty">
+                            <span class="salespersons-icon"><i class="pi" [ngClass]="loadError() ? 'pi-exclamation-circle' : salespersons().length ? 'pi-search' : 'pi-users'" aria-hidden="true"></i></span>
+                            <h3>{{ loadError() ? 'Não foi possível carregar os vendedores' : salespersons().length ? 'Nenhum vendedor encontrado' : 'Organize sua equipe comercial' }}</h3>
+                            <p class="text-muted-color">
+                                {{
+                                    loadError()
+                                        ? 'Clique em Atualizar para tentar novamente.'
+                                        : salespersons().length
+                                          ? 'Experimente outro termo ou limpe os filtros para visualizar os registros.'
+                                          : 'Cadastre um vendedor para organizar sua equipe comercial.'
+                                }}
+                            </p>
+                            @if (!salespersons().length && !loadError()) {
+                                <p-button label="Cadastrar primeiro vendedor" icon="pi pi-plus" [outlined]="true" (onClick)="newSalesperson()" />
+                            }
+                        </div>
+                    </td></tr
+            ></ng-template>
+        </p-table>
+    </section>
 </div>
 
 <p-dialog [header]="formPerson.controls.id.value ? 'Editar vendedor' : 'Novo vendedor'" [(visible)]="visible" [modal]="true" [draggable]="false" [style]="{ width: '64rem', maxWidth: '96vw' }" [breakpoints]="{ '640px': '96vw' }">

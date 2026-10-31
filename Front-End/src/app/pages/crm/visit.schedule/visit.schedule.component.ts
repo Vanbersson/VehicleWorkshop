@@ -1,6 +1,6 @@
 import { Component, OnInit, computed, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { CommonModule } from '@angular/common';
+import { CommonModule, Location } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { interval, lastValueFrom } from 'rxjs';
@@ -23,6 +23,7 @@ import { StatusSuccessError } from '@/app/models/status-suc-err';
 import { ISalespersonType } from '@/app/interfaces/salesperson/i.salesperson.type';
 import { YesNotEnum } from '@/app/models/yes.not.enum';
 import { VisitAgenda } from '@/app/models/crm/visit/visit.agenda';
+import { StatusVisitEnum } from '@/app/models/crm/visit/status.visit.enum';
 
 @Component({
     selector: 'app-visit-schedule',
@@ -50,6 +51,8 @@ export default class VisitScheduleComponent implements OnInit {
     loading = signal(false);
     loadingSalespersons = signal(false);
     saving = signal(false);
+    readonly editingId = signal<number | null>(null);
+    readonly openingId = signal<number | null>(null);
     submitted = signal(false);
     loadError = signal('');
     saveError = signal('');
@@ -70,7 +73,8 @@ export default class VisitScheduleComponent implements OnInit {
     constructor(
         private visitService: VisitService,
         private salespersonService: SalespersonService,
-        private messageService: MessageService
+        private messageService: MessageService,
+        private location: Location
     ) {
         this.form.controls.date.valueChanges.pipe(takeUntilDestroyed()).subscribe((date) => this.selectDay(date));
         interval(60_000)
@@ -81,7 +85,48 @@ export default class VisitScheduleComponent implements OnInit {
     ngOnInit(): void {
         void this.loadAppointments();
         void this.loadOverdueAppointments();
-        void this.loadSalespersons();
+        void this.initializeEditing();
+    }
+
+    private async initializeEditing(): Promise<void> {
+        await this.loadSalespersons();
+        const state = this.location.getState() as { editAgendaId?: number };
+        if (state?.editAgendaId) await this.editAppointment(state.editAgendaId);
+    }
+
+    async editAppointment(id: number): Promise<void> {
+        if (this.saving() || this.openingId() !== null || this.loadingSalespersons()) return;
+        this.openingId.set(id);
+        this.saveError.set('');
+        try {
+            const response = await lastValueFrom(this.visitService.visitFilterId(id));
+            const visit = response.body;
+            if (!visit || visit.id !== id) throw new Error('Não foi possível carregar o agendamento.');
+            if (visit.status !== StatusVisitEnum.AGENDA) throw new Error('Esta visita não está mais agendada. Atualize a lista.');
+            const date = visit.agendaDate ? new Date(visit.agendaDate) : null;
+            if (!date || Number.isNaN(date.getTime())) throw new Error('O agendamento não possui uma data válida.');
+            const client = Object.assign(new ClientCompany(), { id: visit.clientId, name: visit.clientName, cnpj: visit.clientCNPJ, cpf: visit.clientCPF });
+            const salesperson = this.salespersons().find((person) => person.id === visit.salespersonId) ?? null;
+            this.editingId.set(id);
+            this.selectedDay.set(date);
+            this.form.reset({ date, time: new Date(date), client, salesperson, information: visit.agendaInfo ?? '' }, { emitEvent: false });
+            this.submitted.set(false);
+            this.visibleOverdue = false;
+            if (!salesperson) this.saveError.set('Selecione um vendedor habilitado para salvar este agendamento.');
+            await this.loadAppointments();
+        } catch (error: unknown) {
+            this.saveError.set(this.errorMessage(error, 'Não foi possível abrir o agendamento.'));
+        } finally {
+            this.openingId.set(null);
+        }
+    }
+
+    cancelEditing(): void {
+        if (this.saving() || this.openingId() !== null) return;
+        this.editingId.set(null);
+        this.form.reset({ date: this.selectedDay(), time: null, client: null, salesperson: null, information: '' }, { emitEvent: false });
+        this.submitted.set(false);
+        this.saveError.set('');
     }
 
     goToToday(): void {
@@ -167,7 +212,7 @@ export default class VisitScheduleComponent implements OnInit {
     }
 
     async save(): Promise<void> {
-        if (this.saving() || this.loadingSalespersons()) return;
+        if (this.saving() || this.openingId() !== null || this.loadingSalespersons()) return;
         this.submitted.set(true);
         this.saveError.set('');
         this.form.markAllAsTouched();
@@ -178,27 +223,28 @@ export default class VisitScheduleComponent implements OnInit {
             return;
         }
         const scheduled = new Date(date.getFullYear(), date.getMonth(), date.getDate(), time.getHours(), time.getMinutes());
+        const editingId = this.editingId();
         this.saving.set(true);
         try {
-            const response = await lastValueFrom(
-                this.visitService.agendaNew({
-                    dateVisit: scheduled.toISOString(),
-                    clientId: client.id,
-                    clientName: client.name,
-                    clientCNPJ: client?.cnpj ?? '',
-                    clientCPF: client?.cpf ?? '',
-                    salespersonId: salesperson.id,
-                    salespersonName: salesperson.name,
-                    informationAgenda: information.trim()
-                })
-            );
+            const data = {
+                dateVisit: scheduled.toISOString(),
+                clientId: client.id,
+                clientName: client.name,
+                clientCNPJ: client?.cnpj ?? '',
+                clientCPF: client?.cpf ?? '',
+                salespersonId: salesperson.id,
+                salespersonName: salesperson.name,
+                informationAgenda: information.trim()
+            };
+            const response = await lastValueFrom(editingId ? this.visitService.agendaUpdate({ ...data, id: editingId }) : this.visitService.agendaNew(data));
             if (response.body?.status !== StatusSuccessError.succes) {
                 throw new Error(response.body?.message || 'O servidor não confirmou o agendamento. Os dados foram mantidos para tentar novamente.');
             }
             this.selectedDay.set(date);
+            this.editingId.set(null);
             this.form.reset({ date, time: null, client: null, salesperson, information: '' });
             this.submitted.set(false);
-            this.messageService.add({ severity: 'success', summary: 'Agenda', detail: 'Visita agendada com sucesso.' });
+            this.messageService.add({ severity: 'success', summary: 'Agenda', detail: editingId ? 'Agendamento atualizado com sucesso.' : 'Visita agendada com sucesso.' });
             await this.loadAppointments();
             await this.loadOverdueAppointments();
         } catch (error: unknown) {

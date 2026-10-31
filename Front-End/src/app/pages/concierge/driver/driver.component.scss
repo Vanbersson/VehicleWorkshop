@@ -1,127 +1,36 @@
 :host {
-    .layout-card-title {
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 1rem;
-
-        span {
-            display: flex;
-            align-items: center;
-            font-size: 1.25rem;
-            font-weight: 700;
-            color: var(--color-grey-800);
-        }
-    }
-
-    .layout-file {
-        display: flex;
-        flex-direction: column;
-        background-color: var(--color-grey-300);
-        justify-content: center;
-        align-items: center;
-        border-radius: 6px;
-
-        .layout-file-img {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            width: 80px;
-            height: 80px;
-        }
-
-        label {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            width: 100px;
-            padding: 10px 0;
-            border-radius: 0 0 6px 6px;
-            background: var(--color-primary);
-            color: #FFF;
-            cursor: pointer;
-
-            span {
-                display: flex;
-            }
-        }
-
-        button {
-            display: flex;
-            justify-content: center;
-            gap: 6px;
-            width: 100px;
-            padding: 10px 0;
-            border-radius: 0 0 6px 6px;
-
-            span {
-                display: flex;
-                color: #FFF;
-                font-size: 14px;
-                font-weight: 400;
-            }
-        }
-    }
-
-    ::ng-deep {
-
-        .p-inputgroup .p-inputtext,
-        .p-fluid .p-inputgroup .p-inputtext,
-        .p-inputgroup .p-inputwrapper,
-        .p-inputgroup .p-inputwrapper>.p-component {
-            flex: 1 1 auto;
-            width: 100%;
-            border-bottom-right-radius: 0;
-            border-top-right-radius: 0;
-        }
-
-        .p-image-preview-container>img {
-            width: 78px;
-            height: 78px;
-        }
-
-    }
-
-    @media (max-width: 991px) {
-
-        ::ng-deep {
-            .p-image-preview-container>img {
-                width: 62px;
-                height: 62px;
-                object-fit: cover;
-                border-radius: 6px 6px 0 0;
-            }
-        }
-
-        .layout-file {
-
-            .layout-file-img {
-                width: 62px;
-                height: 62px;
-
-            }
-
-            label {
-                padding: 5px 0px;
-                width: 62px;
-                height: 38px;
-                border-radius: 0 0 6px 6px;
-                cursor: pointer;
-
-                span {
-                    display: none;
-                }
-            }
-
-            button {
-                width: 62px;
-                border-radius: 0 0 6px 6px;
-
-                span {
-                    display: none;
-                }
-            }
-        }
-
-    }
-
+    display: block;
+    .drivers-page { max-width: 95rem; margin: 0 auto; }
+    .drivers-header, .list-heading, .list-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+    .drivers-header { margin-bottom: 1.75rem; }
+    .drivers-title, .header-actions, .list-filters { display: flex; align-items: center; gap: .85rem; }
+    .header-actions { flex-wrap: wrap; }
+    .drivers-icon { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; width: 3.25rem; height: 3.25rem; border-radius: 1rem; color: var(--p-primary-color); background: color-mix(in srgb, var(--p-primary-color) 10%, transparent); font-size: 1.25rem; }
+    .drivers-eyebrow { color: var(--text-color-secondary); font-size: .65rem; font-weight: 700; letter-spacing: .1em; }
+    h1 { font-size: clamp(1.5rem, 2.5vw, 2rem); font-weight: 700; margin: .25rem 0 .4rem; letter-spacing: -.035em; }
+    h2 { font-size: 1.2rem; font-weight: 650; margin: .4rem 0 0; }
+    .drivers-header p { margin: 0; line-height: 1.6; }
+    .drivers-panel { min-width: 0; padding: 1.5rem; border: 1px solid var(--surface-border); border-radius: 1.25rem; background: var(--surface-card); }
+    .list-heading { margin-bottom: 1.25rem; }
+    .record-count { display: inline-block; font-size: .75rem; padding: .25rem .6rem; margin-left: .4rem; border-radius: 2rem; color: var(--p-primary-color); background: var(--surface-ground); vertical-align: middle; }
+    .list-toolbar { padding: .25rem 0; }
+    .driver-search { flex: 1; min-width: 15rem; max-width: 30rem; }
+    .status-filter { width: 13rem; }
+    .driver-code { font-variant-numeric: tabular-nums; color: var(--text-color-secondary); font-size: .85rem; }
+    .driver-name { display: block; font-weight: 600; min-width: 12rem; max-width: 24rem; overflow-wrap: anywhere; }
+    .list-empty { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 3rem 1rem; }
+    .list-empty h3 { font-size: 1.15rem; margin: 1rem 0 0; }
+    .list-empty p { margin: .6rem 0 1.25rem; max-width: 30rem; line-height: 1.6; }
+    .list-error { display: flex; align-items: center; gap: .75rem; padding: 1rem; border-radius: .75rem; color: var(--p-red-600); border: 1px solid currentColor; margin-bottom: 1rem; }
+    @media (max-width: 720px) { .list-toolbar { align-items: stretch; flex-direction: column; } .driver-search { max-width: none; min-width: 0; } .list-filters { justify-content: space-between; flex-wrap: wrap; } .status-filter { flex: 1; min-width: 10rem; } }
+    @media (max-width: 540px) { .drivers-panel { padding: 1rem; } .drivers-title > .drivers-icon { display: none; } .header-actions { width: 100%; } }
 }
+
+.driver-media { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 1rem; }
+.media-card { background: var(--surface-ground); border: 1px solid var(--surface-border); border-radius: .85rem; padding: 1rem; text-align: center; }
+.media-card h3 { font-size: .85rem; margin: 0 0 .75rem; font-weight: 600; }
+.media-preview { height: 80px; display: flex; align-items: center; justify-content: center; color: var(--text-color-secondary); font-size: 2rem; }
+.media-actions { display: flex; justify-content: center; align-items: center; margin-top: .5rem; }
+.form-section { display: flex; gap: .65rem; align-items: center; border-bottom: 1px solid var(--surface-border); padding-bottom: .75rem; color: var(--p-primary-color); }
+.form-section h2 { font-size: 1rem; font-weight: 650; margin: 0; }
+@media(max-width:540px) { .driver-media { grid-template-columns: 1fr; } }

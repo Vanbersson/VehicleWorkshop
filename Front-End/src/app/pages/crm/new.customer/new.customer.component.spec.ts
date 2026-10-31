@@ -31,6 +31,7 @@ describe('Customer attendance cards', () => {
 
     beforeEach(() => {
         printer = jasmine.createSpyObj<AttendanceProposalPrintService>('ProposalPrinter', ['print']);
+        printer.print.and.resolveTo();
         service = jasmine.createSpyObj<CustomerAttendanceService>('CustomerAttendanceService', ['list', 'detail', 'search', 'update', 'cancel']);
         service.list.and.returnValue(of([first, second]));
         service.search.and.returnValue(of([first, second]));
@@ -59,7 +60,17 @@ describe('Customer attendance cards', () => {
         service.update.and.returnValue(of(saved));
         await component.printProposal();
         expect(service.update).toHaveBeenCalled();
-        expect(printer.print).toHaveBeenCalledWith(saved, jasmine.any(Function));
+        expect(printer.print).toHaveBeenCalledWith(saved, component.originVisit()!, jasmine.any(Function));
+        expect(component.dialogVisible).toBeTrue();
+    });
+
+    it('shows loading failures and allows retrying proposal printing', async () => {
+        await component.open(first);
+        component.form.controls.proposalNotes.setValue('Proposta');
+        printer.print.and.rejectWith(new Error('Falha ao carregar a revenda'));
+        await component.printProposal();
+        expect(component.saveError()).toContain('Falha ao carregar a revenda');
+        expect(component.saving()).toBeFalse();
         expect(component.dialogVisible).toBeTrue();
     });
 
@@ -116,6 +127,22 @@ describe('Customer attendance cards', () => {
         expect(service.update).toHaveBeenCalledWith({ id: 1, status: AttendanceStatus.APPROVAL_PENDING, notes: 'Aguardando confirmação', version: 0, documentsNotes: '', proposalNotes: '' });
         expect(component.items()[0].status).toBe(AttendanceStatus.APPROVAL_PENDING);
         expect(component.dialogVisible).toBeFalse();
+    });
+
+    it('saves a stage without closing the dialog or advancing to another step', async () => {
+        await component.load();
+        await component.open(first);
+        component.selectEditStep(2);
+        component.form.controls.documentsNotes.setValue('Documentos conferidos');
+        component.form.markAsDirty();
+        const saved = { ...first, status: AttendanceStatus.DOCUMENTS_PENDING, documentsNotes: 'Documentos conferidos', version: 1 };
+        service.update.and.returnValue(of(saved));
+        await component.save(component.activeEditStep() >= 5);
+        expect(service.update).toHaveBeenCalledWith(jasmine.objectContaining({ id: first.id, status: AttendanceStatus.DOCUMENTS_PENDING, documentsNotes: 'Documentos conferidos' }));
+        expect(component.dialogVisible).toBeTrue();
+        expect(component.activeEditStep()).toBe(2);
+        expect(component.editing()?.version).toBe(1);
+        expect(component.form.pristine).toBeTrue();
     });
 
     it('keeps the dialog and entered data on an update failure', async () => {
@@ -238,7 +265,53 @@ describe('Customer attendance cards', () => {
         expect(component.items()[0].status).toBe(AttendanceStatus.CANCELLED);
         expect(component.items()[0].quoteTotal).toBe(180);
         expect(component.cancellationVisible).toBeFalse();
-        component.open(component.items()[0]);
-        expect(component.dialogVisible).toBeFalse();
+        const cancelled = component.items()[0];
+        service.detail.and.returnValue(of({ attendance: cancelled, visit: Object.assign(new Visit(), { id: cancelled.visitId }) }));
+        await component.open(cancelled);
+        expect(component.dialogVisible).toBeTrue();
+        expect(component.readOnly()).toBeTrue();
+    });
+
+    it('shows all saved attendance notes and its visit after cancellation without allowing updates', async () => {
+        const cancelled = { ...first, status: AttendanceStatus.CANCELLED, notes: 'Observações salvas', documentsNotes: 'Documentos recebidos', proposalNotes: 'Proposta negociada', cancellationReason: 'Cliente desistiu', quoteTotal: 180 };
+        service.detail.and.returnValue(of({ attendance: cancelled, visit: Object.assign(new Visit(), { id: 42, clientName: 'Cliente original', reasonVisitInfo: 'Motivo informado' }) }));
+        await component.open(cancelled);
+        expect(component.dialogVisible).toBeTrue();
+        expect(component.form.disabled).toBeTrue();
+        expect(component.form.getRawValue()).toEqual(jasmine.objectContaining({ notes: 'Observações salvas', documentsNotes: 'Documentos recebidos', proposalNotes: 'Proposta negociada' }));
+        expect(component.originVisit()?.reasonVisitInfo).toBe('Motivo informado');
+        for (let step = 1; step <= component.workflow.length; step++) {
+            component.selectEditStep(step);
+            expect(component.activeEditStep()).toBe(step);
+            expect(component.form.controls.status.value).toBe(AttendanceStatus.CANCELLED);
+        }
+        await component.selectAttendanceClient(Object.assign(new ClientCompany(), { id: 88, name: 'Outro cliente', status: StatusEnabDisabEnum.ENABLED }));
+        expect(component.selectedClientId()).toBe(first.clientId);
+        expect(await component.save()).toBeFalse();
+        expect(service.update).not.toHaveBeenCalled();
+        await component.openEditingBudget();
+        expect(component.budgetAttendance()).toEqual(cancelled);
+        expect(component.budgetVisible).toBeTrue();
+    });
+
+    it('restores editing when an active attendance is opened after a cancelled one', async () => {
+        const cancelled = { ...first, status: AttendanceStatus.CANCELLED };
+        service.detail.and.returnValue(of({ attendance: cancelled, visit: Object.assign(new Visit(), { id: 42 }) }));
+        await component.open(cancelled);
+        expect(component.form.disabled).toBeTrue();
+        service.detail.and.returnValue(of({ attendance: first, visit: Object.assign(new Visit(), { id: 42 }) }));
+        await component.open(first);
+        expect(component.readOnly()).toBeFalse();
+        expect(component.form.enabled).toBeTrue();
+    });
+
+    it('keeps consultation open if the server reports cancellation while opening an active card', async () => {
+        const cancelled = { ...first, status: AttendanceStatus.CANCELLED, cancellationReason: 'Cancelado por outro usuário' };
+        service.detail.and.returnValue(of({ attendance: cancelled, visit: Object.assign(new Visit(), { id: 42 }) }));
+        await component.open(first);
+        expect(component.dialogVisible).toBeTrue();
+        expect(component.readOnly()).toBeTrue();
+        expect(component.editing()?.cancellationReason).toBe(cancelled.cancellationReason);
+        expect(component.form.disabled).toBeTrue();
     });
 });

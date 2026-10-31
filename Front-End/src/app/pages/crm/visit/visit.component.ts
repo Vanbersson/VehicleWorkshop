@@ -90,6 +90,11 @@ export default class VisitComponent implements OnInit {
         }
     }
 
+    async editScheduling(visit: Visit): Promise<void> {
+        if (visit.status !== this.AGENDA || this.openingId() !== null) return;
+        await this.router.navigate(['/crm/visit/schedule'], { state: { editAgendaId: visit.id } });
+    }
+
     private errorMessage(error: unknown, fallback: string): string {
         if (error instanceof HttpErrorResponse) return error.error?.emessage || error.error?.message || fallback;
         return error instanceof Error ? error.message : fallback;

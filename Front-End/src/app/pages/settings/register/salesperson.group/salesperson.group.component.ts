@@ -1,6 +1,6 @@
-import { Component, computed, signal } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { lastValueFrom } from 'rxjs';
 import { HttpResponse } from '@angular/common/http';
 
@@ -9,7 +9,8 @@ import { InputNumberModule } from 'primeng/inputnumber';
 import { InputGroupModule } from 'primeng/inputgroup';
 import { InputIconModule } from 'primeng/inputicon';
 import { ButtonModule } from 'primeng/button';
-import { TableModule } from 'primeng/table';
+import { Table, TableModule } from 'primeng/table';
+import { SelectModule } from 'primeng/select';
 import { IconFieldModule } from 'primeng/iconfield';
 import { DialogModule } from 'primeng/dialog';
 import { ToastModule } from 'primeng/toast';
@@ -32,7 +33,24 @@ import { BrandService } from '@/app/services/brand/brand.service';
 @Component({
     selector: 'app-salesperson.group',
     standalone: true,
-    imports: [TagModule, CommonModule, ReactiveFormsModule, ToastModule, InputTextModule, InputNumberModule, MultiSelectModule, InputGroupModule, IconFieldModule, TableModule, RadioButtonModule, ButtonModule, InputIconModule, DialogModule],
+    imports: [
+        FormsModule,
+        SelectModule,
+        TagModule,
+        CommonModule,
+        ReactiveFormsModule,
+        ToastModule,
+        InputTextModule,
+        InputNumberModule,
+        MultiSelectModule,
+        InputGroupModule,
+        IconFieldModule,
+        TableModule,
+        RadioButtonModule,
+        ButtonModule,
+        InputIconModule,
+        DialogModule
+    ],
     templateUrl: './salesperson.group.component.html',
     styleUrl: './salesperson.group.component.scss',
     providers: [MessageService]
@@ -44,8 +62,13 @@ export default class SalespersonGroupComponent {
 
     groups = signal<SalespersonGroup[]>([]);
 
-    readonly enabledCount = computed(() => this.groups().filter((group) => group.status === this.enabled).length);
-    readonly disabledCount = computed(() => this.groups().filter((group) => group.status === this.disabled).length);
+    readonly loadingGroups = signal(false);
+    readonly loadError = signal('');
+    selectedStatus: StatusEnabDisabEnum | null = null;
+    readonly statusOptions = [
+        { label: 'Habilitado', value: StatusEnabDisabEnum.ENABLED },
+        { label: 'Desabilitado', value: StatusEnabDisabEnum.DISABLED }
+    ];
     group!: SalespersonGroup;
     isNewGroup: boolean = true;
 
@@ -102,7 +125,7 @@ export default class SalespersonGroupComponent {
 
     private async init() {
         this.loadingService.show();
-        this.groups.set(await this.listAllGroups());
+        await this.loadGroups();
         this.brands.set(await this.listAllBrands());
         this.regions.set(await this.listAllRegions());
         this.loadingService.hide();
@@ -174,7 +197,7 @@ export default class SalespersonGroupComponent {
             this.group = resultSave.body.data;
             this.formSalespersonGroup.get('id')?.setValue(this.group.id);
             this.isNewGroup = false;
-            this.groups.set(await this.listAllGroups());
+            await this.loadGroups();
         }
         if (resultSave.status == 201 && resultSave.body?.status == StatusSuccessError.error) {
             this.messageService.add({ severity: 'info', summary: resultSave.body.header, detail: resultSave.body.message, icon: 'pi pi-info-circle' });
@@ -198,19 +221,28 @@ export default class SalespersonGroupComponent {
         this.loadingService.hide();
         if (resultSave.status == 200 && resultSave.body?.status == StatusSuccessError.succes) {
             this.messageService.add({ severity: 'success', summary: resultSave.body.header, detail: resultSave.body.message, icon: 'pi pi-check' });
-            this.groups.set(await this.listAllGroups());
+            await this.loadGroups();
         }
         if (resultSave.status == 200 && resultSave.body?.status == StatusSuccessError.error) {
             this.messageService.add({ severity: 'info', summary: resultSave.body.header, detail: resultSave.body.message, icon: 'pi pi-info-circle' });
         }
     }
-    private async listAllGroups(): Promise<SalespersonGroup[]> {
+    async loadGroups(): Promise<void> {
+        if (this.loadingGroups()) return;
+        this.loadingGroups.set(true);
+        this.loadError.set('');
         try {
-            return await lastValueFrom(this.salespersonGroupService.listAll());
-        } catch (error: any) {
-            this.messageService.add({ severity: 'error', summary: 'Erro', detail: error.message, icon: 'pi pi-times' });
-            return [];
+            this.groups.set(await lastValueFrom(this.salespersonGroupService.listAll()));
+        } catch (error: unknown) {
+            this.loadError.set('Não foi possível carregar os grupos de vendedores. Tente novamente.');
+        } finally {
+            this.loadingGroups.set(false);
         }
+    }
+    clearFilters(table: Table, search: HTMLInputElement): void {
+        table.clear();
+        search.value = '';
+        this.selectedStatus = null;
     }
     private async saveGroup(group: SalespersonGroup): Promise<HttpResponse<MessageResponse>> {
         try {

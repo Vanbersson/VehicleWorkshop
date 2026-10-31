@@ -1,11 +1,11 @@
-import { Component, OnInit, computed, signal } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule, UpperCasePipe } from '@angular/common';
 import { environment } from '@/environments/environment';
 import { FormControl, FormsModule, ReactiveFormsModule, FormGroup, Validators } from '@angular/forms';
 import { lastValueFrom } from 'rxjs';
 import { HttpResponse } from '@angular/common/http';
 //PrimeNG
-import { TableModule } from 'primeng/table';
+import { Table, TableModule } from 'primeng/table';
 import { InputTextModule } from 'primeng/inputtext';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
@@ -93,8 +93,13 @@ export default class UserComponent implements OnInit {
     enabled = StatusEnabDisabEnum.ENABLED;
     disabled = StatusEnabDisabEnum.DISABLED;
 
-    readonly enabledCount = computed(() => this.users().filter((person) => person.status === this.enabled).length);
-    readonly disabledCount = computed(() => this.users().filter((person) => person.status === this.disabled).length);
+    readonly loadingUsers = signal(false);
+    readonly loadError = signal('');
+    selectedStatus: StatusEnabDisabEnum | null = null;
+    readonly statusOptions = [
+        { label: 'Habilitado', value: StatusEnabDisabEnum.ENABLED },
+        { label: 'Desabilitado', value: StatusEnabDisabEnum.DISABLED }
+    ];
     admin = StatusRoleFuncEnum.ADMIN;
     user = StatusRoleFuncEnum.USER;
 
@@ -359,24 +364,24 @@ export default class UserComponent implements OnInit {
         this.formUser.controls['passwordValid'].removeValidators([Validators.minLength(8), Validators.required]);
         this.formUser.controls['passwordValid'].updateValueAndValidity();
     }
-    private async getUsers() {
-        this.loadingService.show();
-        const result = await this.listAllUsers();
-        this.loadingService.hide();
-        if (result.status == 200 && result.body?.status == StatusSuccessError.succes) {
-            //this.messageService.add({ severity: 'success', summary: result.body.header, detail: result.body.message, icon: 'pi pi-check' });
+    async getUsers(): Promise<void> {
+        if (this.loadingUsers()) return;
+        this.loadingUsers.set(true);
+        this.loadError.set('');
+        try {
+            const result = await lastValueFrom(this.userService.listAll());
+            if (result.status !== 200 || result.body?.status !== StatusSuccessError.succes) throw new Error(result.body?.message || 'Não foi possível carregar os usuários.');
             this.users.set(result.body.data);
-        } else if (result.status == 200 && result.body?.status == StatusSuccessError.error) {
-            this.messageService.add({ severity: 'info', summary: result.body.header, detail: result.body.message, icon: 'pi pi-info-circle' });
+        } catch (error: unknown) {
+            this.loadError.set(error instanceof Error ? error.message : 'Não foi possível carregar os usuários. Tente novamente.');
+        } finally {
+            this.loadingUsers.set(false);
         }
     }
-    private async listAllUsers(): Promise<HttpResponse<MessageResponse>> {
-        try {
-            return await lastValueFrom(this.userService.listAll());
-        } catch (error: any) {
-            this.messageService.add({ severity: 'error', summary: 'Erro', detail: error.error.message, icon: 'pi pi-times' });
-            return error;
-        }
+    clearFilters(table: Table, search: HTMLInputElement): void {
+        table.clear();
+        search.value = '';
+        this.selectedStatus = null;
     }
     private getRoles() {
         this.userRoleService.listAllEnabled().subscribe((data) => {

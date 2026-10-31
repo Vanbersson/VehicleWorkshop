@@ -1,38 +1,30 @@
-:host {
-    .layout-photo-person {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        width: 80px;
-        height: 80px;
-        background-color: rgba(218, 214, 214, 0.767);
-        border-radius: 100%;
-
-        button {
-            width: 80px;
-            height: 80px;
-            padding: 10px 10px;
-            border-radius: 100%;
-        }
-
-        .layout-photo-person-label {
-            display: flex;
-            align-items: center;
-            width: 80px;
-            height: 80px;
-
-            label {
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                padding: 10px 0px;
-                width: 100%;
-                height: 100%;
-                color: #3B82F6;
-                cursor: pointer;
-            }
-
-        }
-
-    }
-}
+﻿.profile-heading, .section-heading { display: flex; align-items: center; gap: .8rem; }
+.profile-icon, .profile-avatar { display: inline-flex; align-items: center; justify-content: center; color: var(--p-primary-color); background: color-mix(in srgb, var(--p-primary-color) 10%, transparent); flex-shrink: 0; }
+.profile-icon { width: 2.8rem; height: 2.8rem; border-radius: .85rem; font-size: 1.2rem; }
+.profile-eyebrow { color: var(--p-primary-color); font-size: .65rem; font-weight: 700; letter-spacing: .13em; }
+h2, h3, p { margin: 0; }
+h2 { font-size: 1.35rem; font-weight: 700; margin-top: .2rem; }
+.profile-heading p, .section-heading p { color: var(--text-color-secondary); font-size: .85rem; margin-top: .3rem; font-weight: 400; }
+.profile-form { display: grid; gap: 1.25rem; padding-top: .25rem; }
+.profile-summary { display: flex; align-items: center; gap: 1.25rem; padding: 1.4rem; background: var(--surface-ground); border: 1px solid var(--surface-border); border-radius: 1rem; }
+.profile-avatar { width: 88px; height: 88px; border-radius: 50%; font-size: 2rem; }
+.profile-identity { min-width: 0; }
+.profile-identity h3 { font-size: 1.15rem; font-weight: 700; overflow-wrap: anywhere; }
+.profile-identity p { color: var(--text-color-secondary); margin-top: .3rem; }
+.photo-actions { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem; margin-top: .85rem; }
+.profile-section { padding: 1.25rem; border: 1px solid var(--surface-border); border-radius: 1rem; }
+.section-heading { margin-bottom: 1.25rem; align-items: flex-start; }
+.section-heading > i { color: var(--p-primary-color); margin-top: .15rem; font-size: 1.15rem; }
+.section-heading h3 { font-size: 1rem; font-weight: 650; }
+.profile-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.15rem; }
+.profile-field { display: flex; flex-direction: column; gap: .5rem; min-width: 0; }
+.profile-field.full { grid-column: 1 / -1; }
+.profile-field label { font-size: .9rem; font-weight: 600; }
+.profile-field label span, .field-error { color: var(--p-red-600); }
+.profile-field small { font-size: .78rem; color: var(--text-color-secondary); }
+.profile-field .field-error { color: var(--p-red-600); }
+.profile-status { display: flex; justify-content: space-between; align-items: center; gap: 1rem; border-top: 1px solid var(--surface-border); margin-top: 1.25rem; padding-top: 1rem; font-size: .85rem; }
+.status-badge { display: inline-flex; align-items: center; gap: .4rem; border-radius: 2rem; padding: .4rem .75rem; color: var(--p-red-600); background: color-mix(in srgb, var(--p-red-500) 10%, transparent); font-weight: 600; }
+.status-badge.is-enabled { color: var(--p-green-600); background: color-mix(in srgb, var(--p-green-500) 10%, transparent); }
+.profile-footer { display: flex; justify-content: flex-end; gap: .75rem; width: 100%; padding-top: .5rem; }
+@media (max-width: 540px) { .profile-grid { grid-template-columns: 1fr; } .profile-summary { flex-direction: column; text-align: center; padding: 1.15rem; } .photo-actions { justify-content: center; } .profile-section { padding: 1rem; } .profile-heading p { max-width: 16rem; } .profile-icon { display: none; } }

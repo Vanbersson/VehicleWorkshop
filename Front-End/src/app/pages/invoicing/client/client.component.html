@@ -1,94 +1,124 @@
-<p-toast />
-<div class="card client-page">
-    <header class="page-heading">
-        <div>
-            <span class="eyebrow">FATURAMENTO · CADASTROS</span>
-            <h1>Clientes</h1>
-            <p>Gerencie os dados, contatos e documentos de clientes e fornecedores.</p>
+<div class="clients-page">
+    <p-toast />
+    <header class="clients-header">
+        <div class="clients-title">
+            <span class="clients-icon"><i class="pi pi-address-book" aria-hidden="true"></i></span>
+            <div>
+                <span class="clients-eyebrow">FATURAMENTO · CADASTROS</span>
+                <h1>Clientes</h1>
+                <p class="text-muted-color">Gerencie os dados, contatos e documentos de clientes e fornecedores.</p>
+            </div>
         </div>
-        <div class="page-actions"><app-filter-client-apollo (outputClient)="importClientCompanyApollo.set($event)" /><p-button icon="pi pi-plus" label="Novo cliente" (onClick)="newClient()" /></div>
+        <div class="header-actions"><app-filter-client-apollo (outputClient)="importClientCompanyApollo.set($event)" /><p-button icon="pi pi-plus" label="Novo cliente" (onClick)="newClient()" /></div>
     </header>
-    <div class="summary-grid">
-        <div class="summary-card">
-            <i class="pi pi-address-book" aria-hidden="true"></i>
+    <section class="clients-panel" aria-labelledby="clientsListTitle">
+        <div class="list-heading">
             <div>
-                <span>Total de cadastros</span><strong>{{ clients().length }}</strong>
+                <span class="clients-eyebrow">CLIENTES E FORNECEDORES</span>
+                <h2 id="clientsListTitle">
+                    Clientes cadastrados <span class="record-count">{{ loadingClients() ? '…' : clients().length }}</span>
+                </h2>
             </div>
+            <p-button icon="pi pi-refresh" label="Atualizar" [text]="true" severity="secondary" (onClick)="loadClients()" [loading]="loadingClients()" />
         </div>
-        <div class="summary-card">
-            <i class="pi pi-check-circle" aria-hidden="true"></i>
-            <div>
-                <span>Habilitados</span><strong>{{ enabledCount() }}</strong>
+        @if (loadError()) {
+            <div class="list-error" role="alert">
+                <i class="pi pi-exclamation-circle" aria-hidden="true"></i><span>{{ loadError() }}</span>
             </div>
-        </div>
-        <div class="summary-card">
-            <i class="pi pi-minus-circle" aria-hidden="true"></i>
-            <div>
-                <span>Desabilitados</span><strong>{{ disabledCount() }}</strong>
-            </div>
-        </div>
-    </div>
-    <p-table
-        #clientTable
-        dataKey="id"
-        [value]="clients()"
-        [rowHover]="true"
-        [globalFilterFields]="['id', 'status', 'fantasia', 'name', 'cnpj', 'cpf']"
-        [paginator]="true"
-        [rows]="10"
-        [rowsPerPageOptions]="[10, 25, 50]"
-        [showCurrentPageReport]="true"
-        currentPageReportTemplate="{first} a {last} de {totalRecords} cadastros"
-        [tableStyle]="{ 'min-width': '58rem' }"
-    >
-        <ng-template #caption
-            ><div class="table-toolbar">
-                <div>
-                    <h2>Clientes e fornecedores</h2>
-                    <span class="text-muted-color text-sm">Consulte e atualize os cadastros da sua base.</span>
-                </div>
-                <div class="search-field">
-                    <i class="pi pi-search" aria-hidden="true"></i
-                    ><input pInputText type="search" placeholder="Buscar nome, código, CPF ou CNPJ" aria-label="Buscar cliente por nome, código, CPF ou CNPJ" (input)="clientTable.filterGlobal($any($event.target).value, 'contains')" />
-                </div></div
-        ></ng-template>
-        <ng-template #header
-            ><tr>
-                <th pSortableColumn="id">Código <p-sortIcon field="id" /></th>
-                <th pSortableColumn="name">Nome / Razão social <p-sortIcon field="name" /></th>
-                <th pSortableColumn="fantasia">Apelido / Fantasia <p-sortIcon field="fantasia" /></th>
-                <th pSortableColumn="status">Status <p-sortIcon field="status" /></th>
-                <th>CPF / CNPJ</th>
-                <th class="text-right">Ações</th>
-            </tr></ng-template
+        }
+        <p-table
+            #clientTable
+            [value]="clients()"
+            [loading]="loadingClients()"
+            [rowHover]="true"
+            [paginator]="true"
+            [rows]="10"
+            [rowsPerPageOptions]="[10, 25, 50]"
+            [showCurrentPageReport]="true"
+            currentPageReportTemplate="{first}–{last} de {totalRecords} clientes"
+            [globalFilterFields]="['id', 'status', 'fantasia', 'name', 'cnpj', 'cpf']"
+            sortField="id"
+            [sortOrder]="-1"
+            dataKey="id"
+            size="small"
+            [tableStyle]="{ 'min-width': '58rem' }"
         >
-        <ng-template #body let-client
-            ><tr>
-                <td>
-                    <span class="text-muted-color">#{{ client.id }}</span>
-                </td>
-                <td>
-                    <div class="client-cell">
-                        <span class="client-avatar"><i [class]="client.fisjur === juridica ? 'pi pi-building' : 'pi pi-user'" aria-hidden="true"></i></span><strong>{{ client.name }}</strong>
-                    </div>
-                </td>
-                <td>{{ client.fantasia || 'Não informado' }}</td>
-                <td><p-tag [value]="client.status" [severity]="client.status === enabled ? 'success' : 'secondary'" /></td>
-                <td>{{ client.cnpj ? maskCNPJ(client.cnpj) : client.cpf ? maskCPF(client.cpf) : 'Não informado' }}</td>
-                <td class="text-right"><p-button icon="pi pi-pencil" label="Editar" [text]="true" severity="secondary" size="small" (onClick)="editClient(client)" [ariaLabel]="'Editar cliente ' + client.name" /></td></tr
-        ></ng-template>
-        <ng-template #emptymessage
-            ><tr>
-                <td colspan="6">
-                    <div class="empty-state">
-                        <i class="pi pi-address-book" aria-hidden="true"></i>
-                        <h3>Nenhum cliente encontrado</h3>
-                        <p>Revise a busca, importe do Apollo ou clique em Novo cliente para cadastrar.</p>
-                    </div>
-                </td>
-            </tr></ng-template
-        >
-    </p-table>
+            <ng-template #caption
+                ><div class="list-toolbar">
+                    <p-iconfield iconPosition="left" class="client-search"
+                        ><p-inputicon><i class="pi pi-search" aria-hidden="true"></i></p-inputicon
+                        ><input
+                            #searchInput
+                            pInputText
+                            type="search"
+                            aria-label="Pesquisar clientes por nome, código, CPF ou CNPJ"
+                            (input)="clientTable.filterGlobal(searchInput.value, 'contains')"
+                            placeholder="Buscar nome, código, CPF ou CNPJ"
+                            class="w-full"
+                    /></p-iconfield>
+                    <div class="list-filters">
+                        <p-select
+                            [(ngModel)]="selectedStatus"
+                            [options]="statusOptions"
+                            optionLabel="label"
+                            optionValue="value"
+                            placeholder="Todos os status"
+                            ariaLabel="Filtrar clientes por status"
+                            [showClear]="true"
+                            (onChange)="clientTable.filter(selectedStatus, 'status', 'equals')"
+                            appendTo="body"
+                            class="status-filter"
+                        /><p-button label="Limpar filtros" icon="pi pi-filter-slash" severity="secondary" [text]="true" (onClick)="clearFilters(clientTable, searchInput)" />
+                    </div></div
+            ></ng-template>
+            <ng-template #header
+                ><tr>
+                    <th pSortableColumn="id">Código <p-sortIcon field="id" /></th>
+                    <th pSortableColumn="name">Nome / Razão social <p-sortIcon field="name" /></th>
+                    <th pSortableColumn="fantasia">Apelido / Fantasia <p-sortIcon field="fantasia" /></th>
+                    <th pSortableColumn="status">Status <p-sortIcon field="status" /></th>
+                    <th>CPF / CNPJ</th>
+                    <th class="text-right">Ações</th>
+                </tr></ng-template
+            >
+            <ng-template #body let-client
+                ><tr>
+                    <td>
+                        <span class="client-code">#{{ client.id }}</span>
+                    </td>
+                    <td>
+                        <div class="client-cell">
+                            <span class="client-avatar"><i [class]="client.fisjur === juridica ? 'pi pi-building' : 'pi pi-user'" aria-hidden="true"></i></span><strong>{{ client.name }}</strong>
+                        </div>
+                    </td>
+                    <td>{{ client.fantasia || 'Não informado' }}</td>
+                    <td><p-tag [value]="client.status" [severity]="client.status === enabled ? 'success' : 'secondary'" [icon]="client.status === enabled ? 'pi pi-check-circle' : 'pi pi-minus-circle'" [rounded]="true" /></td>
+                    <td>{{ client.cnpj ? maskCNPJ(client.cnpj) : client.cpf ? maskCPF(client.cpf) : 'Não informado' }}</td>
+                    <td class="text-right"><p-button icon="pi pi-pencil" label="Editar" [text]="true" severity="secondary" size="small" (onClick)="editClient(client)" [ariaLabel]="'Editar cliente ' + client.name" /></td></tr
+            ></ng-template>
+            <ng-template #emptymessage
+                ><tr>
+                    <td colspan="6">
+                        <div class="list-empty">
+                            <span class="clients-icon"><i class="pi" [ngClass]="loadError() ? 'pi-exclamation-circle' : clients().length ? 'pi-search' : 'pi-address-book'" aria-hidden="true"></i></span>
+                            <h3>{{ loadError() ? 'Não foi possível carregar os clientes' : clients().length ? 'Nenhum cliente encontrado' : 'Organize sua base de clientes' }}</h3>
+                            <p class="text-muted-color">
+                                {{
+                                    loadError()
+                                        ? 'Clique em Atualizar para tentar novamente.'
+                                        : clients().length
+                                          ? 'Experimente outro termo ou limpe os filtros para visualizar os registros.'
+                                          : 'Cadastre um cliente para organizar sua base de clientes.'
+                                }}
+                            </p>
+                            @if (!clients().length && !loadError()) {
+                                <p-button label="Cadastrar primeiro cliente" icon="pi pi-plus" [outlined]="true" (onClick)="newClient()" />
+                            }
+                        </div>
+                    </td></tr
+            ></ng-template>
+        </p-table>
+    </section>
 </div>
 
 <!-- Dialog Add or Alter cliente -->

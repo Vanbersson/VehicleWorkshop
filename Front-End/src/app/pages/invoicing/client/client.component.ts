@@ -1,6 +1,6 @@
-import { Component, DoCheck, OnInit, computed, signal } from '@angular/core';
+import { Component, DoCheck, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpResponse } from '@angular/common/http';
 import { lastValueFrom } from 'rxjs';
 
@@ -10,7 +10,7 @@ import { InputMaskModule } from 'primeng/inputmask';
 import { InputGroupModule } from 'primeng/inputgroup';
 import { InputIconModule } from 'primeng/inputicon';
 import { ButtonModule } from 'primeng/button';
-import { TableModule } from 'primeng/table';
+import { Table, TableModule } from 'primeng/table';
 import { IconFieldModule } from 'primeng/iconfield';
 import { DialogModule } from 'primeng/dialog';
 import { SelectModule } from 'primeng/select';
@@ -43,6 +43,7 @@ import { ClientCompanyRegionService } from '@/app/services/client/client.company
     selector: 'app-client',
     standalone: true,
     imports: [
+        FormsModule,
         TagModule,
         CommonModule,
         TabsModule,
@@ -76,8 +77,13 @@ export default class ClientComponent implements OnInit, DoCheck {
 
     enabled = StatusEnabDisabEnum.ENABLED;
     disabled = StatusEnabDisabEnum.DISABLED;
-    readonly enabledCount = computed(() => this.clients().filter((client) => client.status === this.enabled).length);
-    readonly disabledCount = computed(() => this.clients().filter((client) => client.status === this.disabled).length);
+    readonly loadingClients = signal(false);
+    readonly loadError = signal('');
+    selectedStatus: StatusEnabDisabEnum | null = null;
+    readonly statusOptions = [
+        { label: 'Habilitado', value: StatusEnabDisabEnum.ENABLED },
+        { label: 'Desabilitado', value: StatusEnabDisabEnum.DISABLED }
+    ];
     clifor: ITypeClient[] = [];
 
     fisica = FisJurEnum.FISICA;
@@ -165,10 +171,7 @@ export default class ClientComponent implements OnInit, DoCheck {
     private async init() {
         //Show load
         this.loadingService.show();
-        const result = await this.listAll();
-        if (result.status == 200 && result.body?.status == StatusSuccessError.succes) {
-            this.clients.set(result.body.data);
-        }
+        await this.loadClients();
 
         const resultCate = await this.listAllCategories();
         this.categories.set(resultCate.body?.data);
@@ -202,13 +205,24 @@ export default class ClientComponent implements OnInit, DoCheck {
         }
     }
 
-    private async listAll(): Promise<HttpResponse<MessageResponse>> {
+    async loadClients(): Promise<void> {
+        if (this.loadingClients()) return;
+        this.loadingClients.set(true);
+        this.loadError.set('');
         try {
-            return await lastValueFrom(this.clientService.listAll());
-        } catch (error: any) {
-            this.messageService.add({ severity: 'error', summary: 'Erro', detail: error.error.message, icon: 'pi pi-times' });
-            return error;
+            const result = await lastValueFrom(this.clientService.listAll());
+            if (result.status !== 200 || result.body?.status !== StatusSuccessError.succes) throw new Error(result.body?.message || 'Não foi possível carregar os clientes.');
+            this.clients.set(result.body.data);
+        } catch (error: unknown) {
+            this.loadError.set(error instanceof Error ? error.message : 'Não foi possível carregar os clientes. Tente novamente.');
+        } finally {
+            this.loadingClients.set(false);
         }
+    }
+    clearFilters(table: Table, search: HTMLInputElement): void {
+        table.clear();
+        search.value = '';
+        this.selectedStatus = null;
     }
 
     private addValidCNPJ() {
@@ -337,10 +351,7 @@ export default class ClientComponent implements OnInit, DoCheck {
             this.isClientNew.set(false);
             this.messageService.add({ severity: 'success', summary: result.body.header, detail: result.body.message, icon: 'pi pi-check' });
             //lista os clientes novamente
-            const resultCli = await this.listAll();
-            if (resultCli.status == 200 && resultCli.body?.status == StatusSuccessError.succes) {
-                this.clients.set(resultCli.body.data);
-            }
+            await this.loadClients();
         }
         if (result.status == 201 && result.body?.status == StatusSuccessError.error) {
             this.messageService.add({ severity: 'info', summary: result.body.header, detail: result.body.message, icon: 'pi pi-info-circle' });
@@ -541,10 +552,7 @@ export default class ClientComponent implements OnInit, DoCheck {
         if (resultClient.status == 200 && resultClient.body?.status == StatusSuccessError.succes) {
             this.messageService.add({ severity: 'success', summary: resultClient.body.header, detail: resultClient.body.message, icon: 'pi pi-check' });
             //lista os clientes novamente
-            const result = await this.listAll();
-            if (result.status == 200 && result.body?.status == StatusSuccessError.succes) {
-                this.clients.set(result.body.data);
-            }
+            await this.loadClients();
         } else if (resultClient.status == 200 && resultClient.body?.status == StatusSuccessError.error) {
             this.messageService.add({ severity: 'info', summary: resultClient.body.header, detail: resultClient.body.message, icon: 'pi pi-info-circle' });
         }

@@ -1,11 +1,13 @@
-import { Component, OnInit, computed, signal } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpResponse } from '@angular/common/http';
-import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { lastValueFrom } from 'rxjs';
 
 import { ButtonModule } from 'primeng/button';
-import { TableModule } from 'primeng/table';
+import { Table, TableModule } from 'primeng/table';
+import { IconFieldModule } from 'primeng/iconfield';
+import { InputIconModule } from 'primeng/inputicon';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 import { DialogModule } from 'primeng/dialog';
@@ -39,7 +41,25 @@ import { environment } from '@/environments/environment';
 @Component({
     selector: 'app-salesperson',
     standalone: true,
-    imports: [CommonModule, TagModule, ButtonModule, TableModule, ToastModule, CheckboxModule, RadioButtonModule, InputMaskModule, MultiSelectModule, SelectModule, DialogModule, InputTextModule, InputNumberModule, ReactiveFormsModule],
+    imports: [
+        FormsModule,
+        IconFieldModule,
+        InputIconModule,
+        CommonModule,
+        TagModule,
+        ButtonModule,
+        TableModule,
+        ToastModule,
+        CheckboxModule,
+        RadioButtonModule,
+        InputMaskModule,
+        MultiSelectModule,
+        SelectModule,
+        DialogModule,
+        InputTextModule,
+        InputNumberModule,
+        ReactiveFormsModule
+    ],
     templateUrl: './salesperson.component.html',
     styleUrl: './salesperson.component.scss',
     providers: [MessageService]
@@ -61,8 +81,13 @@ export default class SalespersonComponent implements OnInit {
     YES = YesNotEnum.YES;
     NOT = YesNotEnum.NOT;
     salespersons = signal<Salesperson[]>([]);
-    readonly enabledCount = computed(() => this.salespersons().filter((person) => person.status === this.enabled).length);
-    readonly disabledCount = computed(() => this.salespersons().filter((person) => person.status === this.disabled).length);
+    readonly loadingSalespersons = signal(false);
+    readonly loadError = signal('');
+    selectedStatus: StatusEnabDisabEnum | null = null;
+    readonly statusOptions = [
+        { label: 'Habilitado', value: StatusEnabDisabEnum.ENABLED },
+        { label: 'Desabilitado', value: StatusEnabDisabEnum.DISABLED }
+    ];
     visible: boolean = false;
 
     formPerson = new FormGroup({
@@ -98,7 +123,7 @@ export default class SalespersonComponent implements OnInit {
 
     private async init() {
         this.loadingService.show();
-        this.salespersons.set(await this.listAll());
+        await this.loadSalespersons();
         this.attendantsUser.set(await this.getUsers());
         this.groups.set(await this.listAllGroups());
         this.loadingService.hide();
@@ -170,7 +195,7 @@ export default class SalespersonComponent implements OnInit {
                 this.salesperson.photoUrl = await this.saveImage(this.salesperson.id!, this.photoPerson());
                 await this.updatePerson(this.salesperson);
             }
-            this.salespersons.set(await this.listAll());
+            await this.loadSalespersons();
         }
         this.loadingService.hide();
         if (resultSave.status == 201 && resultSave.body?.status == StatusSuccessError.error) {
@@ -232,7 +257,7 @@ export default class SalespersonComponent implements OnInit {
         this.loadingService.hide();
         if (resultSave.status == 200 && resultSave.body?.status == StatusSuccessError.succes) {
             this.messageService.add({ severity: 'success', summary: resultSave.body.header, detail: resultSave.body.message, icon: 'pi pi-check' });
-            this.salespersons.set(await this.listAll());
+            await this.loadSalespersons();
         }
         if (resultSave.status == 200 && resultSave.body?.status == StatusSuccessError.error) {
             this.messageService.add({ severity: 'info', summary: resultSave.body.header, detail: resultSave.body.message, icon: 'pi pi-info-circle' });
@@ -331,13 +356,22 @@ export default class SalespersonComponent implements OnInit {
             return error;
         }
     }
-    private async listAll(): Promise<Salesperson[]> {
+    async loadSalespersons(): Promise<void> {
+        if (this.loadingSalespersons()) return;
+        this.loadingSalespersons.set(true);
+        this.loadError.set('');
         try {
-            return await lastValueFrom(this.salespersonService.listAll());
-        } catch (error: any) {
-            this.messageService.add({ severity: 'error', summary: 'Erro', detail: error.error.emessage, icon: 'pi pi-times' });
-            return [];
+            this.salespersons.set(await lastValueFrom(this.salespersonService.listAll()));
+        } catch (error: unknown) {
+            this.loadError.set('Não foi possível carregar os vendedores. Tente novamente.');
+        } finally {
+            this.loadingSalespersons.set(false);
         }
+    }
+    clearFilters(table: Table, search: HTMLInputElement): void {
+        table.clear();
+        search.value = '';
+        this.selectedStatus = null;
     }
     private async filterIdPerson(id: number): Promise<HttpResponse<Salesperson>> {
         try {

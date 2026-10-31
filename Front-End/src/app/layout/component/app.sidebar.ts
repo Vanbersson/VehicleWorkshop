@@ -9,9 +9,20 @@ import { LayoutService } from '@/app/layout/service/layout.service';
     standalone: true,
     imports: [AppMenu, RouterModule],
     template: `
-        <div class="layout-sidebar">
-            <app-menu></app-menu>
-        </div>
+        <aside class="layout-sidebar" aria-label="Menu lateral">
+            <div class="sidebar-heading">
+                <div class="sidebar-brand">
+                    <span class="sidebar-brand-icon"><i class="pi pi-truck" aria-hidden="true"></i></span>
+                    <div>
+                        <strong>ATENA <span>TRUCK</span></strong
+                        ><small>Gestão da sua oficina</small>
+                    </div>
+                </div>
+                <button type="button" class="sidebar-close" aria-label="Fechar menu lateral" (click)="closeMenu()"><i class="pi pi-times" aria-hidden="true"></i></button>
+            </div>
+            <nav class="sidebar-navigation" aria-label="Navegação principal"><app-menu /></nav>
+            <div class="sidebar-footer"><i class="pi pi-th-large" aria-hidden="true"></i><span>Seu espaço de trabalho</span></div>
+        </aside>
     `
 })
 export class AppSidebar implements OnInit, OnDestroy {
@@ -65,6 +76,10 @@ export class AppSidebar implements OnInit, OnDestroy {
         this.unbindOutsideClickListener();
     }
 
+    closeMenu(): void {
+        this.layoutService.layoutState.update((state) => ({ ...state, overlayMenuActive: false, mobileMenuActive: false, menuHoverActive: false }));
+    }
+
     private onRouteChange(path: string) {
         this.layoutService.layoutState.update((val) => ({
             ...val,
@@ -105,11 +120,6 @@ export class AppSidebar implements OnInit, OnDestroy {
         const topbarButtonEl = document.querySelector('.topbar-start > button');
         const sidebarEl = this.el.nativeElement;
 
-        return !(
-            sidebarEl?.isSameNode(event.target as Node) ||
-            sidebarEl?.contains(event.target as Node) ||
-            topbarButtonEl?.isSameNode(event.target as Node) ||
-            topbarButtonEl?.contains(event.target as Node)
-        );
+        return !(sidebarEl?.isSameNode(event.target as Node) || sidebarEl?.contains(event.target as Node) || topbarButtonEl?.isSameNode(event.target as Node) || topbarButtonEl?.contains(event.target as Node));
     }
 }

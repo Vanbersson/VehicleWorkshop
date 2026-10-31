@@ -1,31 +1,73 @@
 <p-toast />
-<div class="login-container">
-    <div class="card-login">
-        <div class="card-login-title">
-            <span>Conecte-se</span>
-        </div>
-        <P class="mb-4">Faça login em sua conta</P>
-        <form [formGroup]="formLogin" (submit)="login()" class="w-full">
-            <div class="grid grid-cols-12 gap-4">
-                <div class="col-span-12">
-                    <label>Digite seu email</label>
-                    <input type="email" pInputText class="w-full" formControlName="email" />
-                </div>
-                <div class="col-span-12">
-                    <label>Digite sua senha</label>
-                    <p-password [toggleMask]="true" [feedback]="false" formControlName="password" fluid />
-                </div>
-                <div class="col-span-12">
-                    <p-button type="submit" icon="pi pi-sign-in" label="Entrar" severity="info" fluid />
+<main class="login-page">
+    <div class="login-shell">
+        <section class="welcome-panel" aria-labelledby="welcome-title">
+            <div class="brand">
+                <span class="brand-mark"><i class="pi pi-truck" aria-hidden="true"></i></span>
+                <div>
+                    <strong>ATENA <span>TRUCK</span></strong
+                    ><small>Gestão que acompanha você</small>
                 </div>
             </div>
-        </form>
-    </div>
+            <div class="welcome-content">
+                <span class="eyebrow">SUA OPERAÇÃO, MAIS CONECTADA</span>
+                <h1 id="welcome-title">Mais organização.<br /><span>Mais oportunidades.</span></h1>
+                <p>Da primeira visita ao atendimento na oficina, acompanhe cada etapa em um só lugar.</p>
+                <div class="feature-list">
+                    <div>
+                        <span class="feature-icon"><i class="pi pi-calendar" aria-hidden="true"></i></span>
+                        <div><strong>Relacionamento com o cliente</strong><small>Visitas, agenda e propostas comerciais.</small></div>
+                    </div>
+                    <div>
+                        <span class="feature-icon"><i class="pi pi-wrench" aria-hidden="true"></i></span>
+                        <div><strong>Rotina da oficina</strong><small>Equipe, veículos e operação organizados.</small></div>
+                    </div>
+                    <div>
+                        <span class="feature-icon"><i class="pi pi-users" aria-hidden="true"></i></span>
+                        <div><strong>Sua equipe no mesmo ritmo</strong><small>Informações reunidas para o dia a dia.</small></div>
+                    </div>
+                </div>
+            </div>
+            <div class="welcome-footer"><span class="w-6 h-0.5 bg-sky-300" aria-hidden="true"></span>Feito para manter sua oficina em movimento.</div>
+        </section>
 
-    <div class="card-login-info">
-        <div class="info-tile">
-            <span>Bem-vindo</span>
-        </div>
-        <p>Sua oficina perto de você.</p>
+        <section class="form-panel" aria-labelledby="login-title">
+            <div class="mobile-brand"><i class="pi pi-truck" aria-hidden="true"></i><strong>ATENA TRUCK</strong></div>
+            <div class="login-form-content">
+                <span class="login-symbol"><i class="pi pi-sign-in" aria-hidden="true"></i></span>
+                <header class="form-heading">
+                    <span class="form-eyebrow">ACESSO AO SISTEMA</span>
+                    <h2 id="login-title">Bem-vindo de volta</h2>
+                    <p>Entre com suas credenciais para continuar.</p>
+                </header>
+                <form [formGroup]="formLogin" (ngSubmit)="login()">
+                    <div class="login-field">
+                        <label for="login-email">E-mail</label>
+                        <input
+                            id="login-email"
+                            type="email"
+                            pInputText
+                            formControlName="email"
+                            placeholder="seuemail@empresa.com.br"
+                            autocomplete="username"
+                            autocapitalize="none"
+                            spellcheck="false"
+                            [attr.aria-invalid]="formLogin.controls.email.touched && formLogin.controls.email.invalid"
+                            aria-describedby="login-email-error"
+                            class="w-full"
+                        />
+                        @if (formLogin.controls.email.touched && formLogin.controls.email.invalid) {<small id="login-email-error" class="field-error">Informe seu e-mail.</small>}
+                    </div>
+                    <div class="login-field">
+                        <label for="login-password">Senha</label>
+                        <p-password inputId="login-password" [toggleMask]="true" [feedback]="false" formControlName="password" autocomplete="current-password" placeholder="Digite sua senha" [inputStyle]="{ 'min-height': '3.25rem' }" fluid />
+                        @if (formLogin.controls.password.touched && formLogin.controls.password.invalid) {<small id="login-password-error" class="field-error">Informe sua senha com pelo menos 8 caracteres.</small>}
+                    </div>
+                    <p-button type="submit" label="Entrar no sistema" icon="pi pi-arrow-right" iconPos="right" [style]="{ 'min-height': '3.25rem', 'margin-top': '.5rem' }" fluid />
+                </form>
+                <p class="access-help"><i class="pi pi-info-circle mt-1" aria-hidden="true"></i><span>Precisa de acesso? Fale com o administrador da sua empresa.</span></p>
+            </div>
+            <footer class="form-footer">ATENA TRUCK <span aria-hidden="true">·</span> Gestão de oficinas</footer>
+        </section>
     </div>
-</div>
+</main>

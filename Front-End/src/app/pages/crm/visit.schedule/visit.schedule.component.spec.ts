@@ -11,6 +11,9 @@ import { VisitAgenda } from '@/app/models/crm/visit/visit.agenda';
 import { MessageResponse } from '@/app/models/message-response';
 import { StatusSuccessError } from '@/app/models/status-suc-err';
 import { StatusEnabDisabEnum } from '@/app/models/status-enab-disab-enum';
+import { Location } from '@angular/common';
+import { Visit } from '@/app/models/crm/visit/visit';
+import { StatusVisitEnum } from '@/app/models/crm/visit/status.visit.enum';
 
 describe('VisitScheduleComponent', () => {
     let component: VisitScheduleComponent;
@@ -20,13 +23,22 @@ describe('VisitScheduleComponent', () => {
     const salesperson = Object.assign(new Salesperson(), { id: 7, name: 'Vendedor', status: StatusEnabDisabEnum.ENABLED });
 
     beforeEach(() => {
-        visits = jasmine.createSpyObj<VisitService>('VisitService', ['agendaNew', 'listAllAgenda', 'listOverdueAgenda']);
+        visits = jasmine.createSpyObj<VisitService>('VisitService', ['agendaNew', 'agendaUpdate', 'visitFilterId', 'listAllAgenda', 'listOverdueAgenda']);
         people = jasmine.createSpyObj<SalespersonService>('SalespersonService', ['filterType']);
         visits.agendaNew.and.returnValue(of(new HttpResponse({ status: 201, body: Object.assign(new MessageResponse(), { status: StatusSuccessError.succes }) })));
+        visits.agendaUpdate.and.returnValue(of(new HttpResponse({ status: 200, body: Object.assign(new MessageResponse(), { status: StatusSuccessError.succes }) })));
         visits.listAllAgenda.and.returnValue(of([]));
         visits.listOverdueAgenda.and.returnValue(of([]));
         people.filterType.and.returnValue(of([salesperson]));
-        TestBed.configureTestingModule({ providers: [VisitScheduleComponent, { provide: VisitService, useValue: visits }, { provide: SalespersonService, useValue: people }, { provide: MessageService, useValue: { add: jasmine.createSpy('add') } }] });
+        TestBed.configureTestingModule({
+            providers: [
+                VisitScheduleComponent,
+                { provide: Location, useValue: { getState: () => ({}) } },
+                { provide: VisitService, useValue: visits },
+                { provide: SalespersonService, useValue: people },
+                { provide: MessageService, useValue: { add: jasmine.createSpy('add') } }
+            ]
+        });
         component = TestBed.inject(VisitScheduleComponent);
     });
 
@@ -37,6 +49,75 @@ describe('VisitScheduleComponent', () => {
     function appointment(id: number, date: Date): VisitAgenda {
         return { id, dateVisit: date.toISOString(), salespersonId: salesperson.id!, salespersonName: salesperson.name, clientId: client.id!, clientName: client.name, informationAgenda: '' };
     }
+
+    async function editExisting(): Promise<void> {
+        await component.loadSalespersons();
+        visits.visitFilterId.and.returnValue(
+            of(
+                new HttpResponse({
+                    body: Object.assign(new Visit(), {
+                        id: 42,
+                        status: StatusVisitEnum.AGENDA,
+                        agendaDate: new Date(2026, 10, 4, 14, 35).toISOString(),
+                        agendaInfo: 'Levar catálogo',
+                        clientId: 3,
+                        clientName: client.name,
+                        clientCPF: '12345678901',
+                        salespersonId: 7,
+                        salespersonName: salesperson.name
+                    })
+                })
+            )
+        );
+        await component.editAppointment(42);
+    }
+
+    it('loads the saved date, time, people and notes for editing', async () => {
+        await editExisting();
+        expect(component.editingId()).toBe(42);
+        expect(component.form.controls.time.value?.getHours()).toBe(14);
+        expect(component.form.controls.time.value?.getMinutes()).toBe(35);
+        expect(component.form.controls.client.value?.cpf).toBe('12345678901');
+        expect(component.form.controls.salesperson.value).toBe(salesperson);
+        expect(component.form.controls.information.value).toBe('Levar catálogo');
+        expect(component.selectedDay().getDate()).toBe(4);
+    });
+
+    it('updates the same appointment instead of creating another visit', async () => {
+        await editExisting();
+        component.form.patchValue({ date: new Date(2026, 10, 5), time: new Date(2026, 0, 1, 16, 10), information: '  Novo horário  ' });
+        await component.save();
+        const payload = visits.agendaUpdate.calls.mostRecent().args[0];
+        const date = new Date(payload.dateVisit);
+        expect(payload.id).toBe(42);
+        expect([date.getFullYear(), date.getMonth(), date.getDate(), date.getHours(), date.getMinutes()]).toEqual([2026, 10, 5, 16, 10]);
+        expect(payload.informationAgenda).toBe('Novo horário');
+        expect(payload.clientCPF).toBe('12345678901');
+        expect(visits.agendaNew).not.toHaveBeenCalled();
+        expect(component.editingId()).toBeNull();
+    });
+
+    it('preserves the appointment being edited when saving fails', async () => {
+        await editExisting();
+        visits.agendaUpdate.and.returnValue(throwError(() => new Error('Offline')));
+        await component.save();
+        expect(component.editingId()).toBe(42);
+        expect(component.form.controls.information.value).toBe('Levar catálogo');
+        expect(component.saveError()).toBe('Offline');
+        expect(component.saving()).toBeFalse();
+    });
+
+    it('rejects a visit that has already started and allows cancelling an edit without saving', async () => {
+        await editExisting();
+        component.cancelEditing();
+        expect(component.editingId()).toBeNull();
+        expect(component.form.controls.client.value).toBeNull();
+        expect(visits.agendaUpdate).not.toHaveBeenCalled();
+        visits.visitFilterId.and.returnValue(of(new HttpResponse({ body: Object.assign(new Visit(), { id: 42, status: StatusVisitEnum.OPEN }) })));
+        await component.editAppointment(42);
+        expect(component.editingId()).toBeNull();
+        expect(component.saveError()).toContain('não está mais agendada');
+    });
 
     it('requires the date, time, client and salesperson before sending', async () => {
         await component.save();

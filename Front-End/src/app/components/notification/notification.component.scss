@@ -1,25 +1,35 @@
-.layout-notification {
-    display: flex;
-    flex-direction: column;
-
-    .layout-btn-a {
-        display: flex;
-        justify-content: space-between;
-
-        a {
-            display: flex;
-            flex-direction: column;
-            text-decoration: none;
-            color: var(--color-text-primary);
-            padding: 0.5rem;
-            cursor: pointer;
-        }
-
-        a:hover {
-            background-color: var(--color-grey-100);
-            border-radius: 12px;
-        }
-    }
-}
-
-
+:host { display: inline-flex; }
+.notification-center { display: flex; flex-direction: column; max-height: min(76dvh, 48rem); min-height: min(18rem, 76dvh); }
+.notification-heading, .notification-title, .heading-actions, .notification-card-heading, .notification-card-footer, .notification-item-actions, .notification-footer { display: flex; align-items: center; }
+.notification-heading, .notification-card-heading, .notification-card-footer, .notification-footer { justify-content: space-between; gap: .75rem; }
+.notification-heading { flex-shrink: 0; padding-bottom: 1rem; }
+.notification-title { gap: .7rem; }
+.notification-symbol, .empty-symbol { display: inline-flex; align-items: center; justify-content: center; background: color-mix(in srgb, var(--p-primary-color) 10%, transparent); color: var(--p-primary-color); border-radius: .85rem; width: 2.7rem; height: 2.7rem; }
+h2 { font-size: 1.15rem; font-weight: 700; margin: 0; }
+.notification-count { font-size: .75rem; color: var(--p-primary-color); background: var(--surface-ground); padding: .2rem .5rem; border-radius: 2rem; vertical-align: middle; }
+.notification-heading p { margin: .3rem 0 0; font-size: .78rem; color: var(--text-color-secondary); }
+.notification-filters { display: flex; gap: .35rem; padding: .3rem; background: var(--surface-ground); border-radius: .75rem; margin-bottom: 1rem; flex-shrink: 0; }
+.notification-filters button { flex: 1; display: inline-flex; justify-content: center; align-items: center; gap: .4rem; border: 1px solid transparent; border-radius: .55rem; padding: .65rem .5rem; background: transparent; color: var(--text-color-secondary); font-size: .85rem; cursor: pointer; }
+.notification-filters button.selected { background: var(--surface-card); color: var(--p-primary-color); border-color: var(--surface-border); font-weight: 600; }
+.notification-feed { min-height: 0; overflow-y: auto; overscroll-behavior: contain; display: grid; gap: .75rem; padding-right: .2rem; scrollbar-width: thin; }
+.notification-card { border: 1px solid var(--surface-border); border-radius: .9rem; padding: .9rem; }
+.notification-card-heading { align-items: flex-start; }
+.event-kind { display: inline-flex; align-items: center; gap: .45rem; font-size: .8rem; font-weight: 650; }
+.is-entry .event-kind { color: var(--p-blue-600); }
+.is-exit .event-kind { color: var(--p-orange-600); }
+time { color: var(--text-color-secondary); font-size: .7rem; white-space: nowrap; }
+.notification-open { display: flex; flex-direction: column; align-items: flex-start; gap: .5rem; width: 100%; text-align: left; padding: .85rem 0; border: 0; background: transparent; color: var(--text-color); cursor: pointer; border-radius: .5rem; }
+.notification-open:hover .vehicle-description { color: var(--p-primary-color); }
+.notification-description, .additional-description { color: var(--text-color-secondary); font-size: .9rem; line-height: 1.6; }
+.vehicle-description { font-size: .93rem; line-height: 1.5; overflow-wrap: anywhere; }
+.open-hint { display: inline-flex; align-items: center; gap: .4rem; font-size: .75rem; color: var(--p-primary-color); }
+.notification-card-footer { border-top: 1px solid var(--surface-border); padding-top: .5rem; flex-wrap: wrap; }
+.notification-card-footer > span { display: inline-flex; gap: .4rem; align-items: center; font-size: .7rem; color: var(--text-color-secondary); }
+.notification-footer { border-top: 1px solid var(--surface-border); padding-top: .75rem; margin-top: 1rem; flex-shrink: 0; }
+.notification-footer > span { color: var(--text-color-secondary); font-size: .75rem; }
+.notification-empty { display: flex; flex-direction: column; align-items: center; gap: 1rem; padding: 2rem 1rem; text-align: center; }
+.empty-symbol { width: 3.5rem; height: 3.5rem; font-size: 1.3rem; }
+.notification-empty p { color: var(--text-color-secondary); font-size: .85rem; line-height: 1.6; margin: 0; max-width: 23rem; }
+.notification-error { font-size: .85rem; color: var(--p-red-600); margin: 0 0 1rem; }
+.notification-open:focus-visible, .notification-filters button:focus-visible { outline: 2px solid var(--p-primary-color); outline-offset: 2px; }
+@media (max-width: 540px) { .notification-title { gap: .5rem; } .notification-symbol { display: none; } h2 { font-size: 1.05rem; } .notification-card-heading { flex-wrap: wrap; gap: .4rem; } .notification-card-footer { gap: .35rem; } }

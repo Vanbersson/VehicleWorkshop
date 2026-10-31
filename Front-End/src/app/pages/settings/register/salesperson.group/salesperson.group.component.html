@@ -1,96 +1,109 @@
-<p-toast />
-<div class="card">
-    <header class="page-heading">
-        <div>
-            <span class="eyebrow">CONFIGURAÇÕES · CADASTROS</span>
-            <h1>Grupos de vendedores</h1>
-            <p>Organize a equipe comercial por estados, marcas e regiões de atuação.</p>
+<div class="groups-page">
+    <p-toast />
+    <header class="groups-header">
+        <div class="groups-title">
+            <span class="groups-icon"><i class="pi pi-sitemap" aria-hidden="true"></i></span>
+            <div>
+                <span class="groups-eyebrow">CONFIGURAÇÕES · CADASTROS</span>
+                <h1>Grupos de vendedores</h1>
+                <p class="text-muted-color">Organize a equipe comercial por estados, marcas e regiões de atuação.</p>
+            </div>
         </div>
-        <p-button icon="pi pi-plus" label="Novo grupo" (onClick)="newGroup()" />
+        <div class="header-actions"><p-button icon="pi pi-plus" label="Novo grupo" (onClick)="newGroup()" /></div>
     </header>
-
-    <div class="summary-grid">
-        <div class="summary-card">
-            <i class="pi pi-sitemap" aria-hidden="true"></i>
+    <section class="groups-panel" aria-labelledby="groupsListTitle">
+        <div class="list-heading">
             <div>
-                <span>Total de grupos</span><strong>{{ groups().length }}</strong>
+                <span class="groups-eyebrow">EQUIPE COMERCIAL</span>
+                <h2 id="groupsListTitle">
+                    Grupos cadastrados <span class="record-count">{{ loadingGroups() ? '…' : groups().length }}</span>
+                </h2>
             </div>
+            <p-button icon="pi pi-refresh" label="Atualizar" [text]="true" severity="secondary" (onClick)="loadGroups()" [loading]="loadingGroups()" />
         </div>
-        <div class="summary-card">
-            <i class="pi pi-check-circle" aria-hidden="true"></i>
-            <div>
-                <span>Habilitados</span><strong>{{ enabledCount() }}</strong>
+        @if (loadError()) {
+            <div class="list-error" role="alert">
+                <i class="pi pi-exclamation-circle" aria-hidden="true"></i><span>{{ loadError() }}</span>
             </div>
-        </div>
-        <div class="summary-card">
-            <i class="pi pi-minus-circle" aria-hidden="true"></i>
-            <div>
-                <span>Desabilitados</span><strong>{{ disabledCount() }}</strong>
-            </div>
-        </div>
-    </div>
-
-    <p-table
-        #groupTable
-        dataKey="id"
-        [value]="groups()"
-        [rowHover]="true"
-        [globalFilterFields]="['id', 'description', 'status', 'ufs']"
-        [paginator]="true"
-        [rows]="10"
-        [rowsPerPageOptions]="[10, 25, 50]"
-        [showCurrentPageReport]="true"
-        currentPageReportTemplate="{first} a {last} de {totalRecords} grupos"
-        [tableStyle]="{ 'min-width': '46rem' }"
-    >
-        <ng-template #caption
-            ><div class="table-toolbar">
-                <div>
-                    <h2>Grupos comerciais</h2>
-                    <span class="text-muted-color text-sm">Consulte os grupos e suas áreas de atuação.</span>
-                </div>
-                <div class="search-field">
-                    <i class="pi pi-search" aria-hidden="true"></i
-                    ><input pInputText type="search" placeholder="Buscar grupo, código ou UF" aria-label="Buscar grupo, código ou UF" (input)="groupTable.filterGlobal($any($event.target).value, 'contains')" />
-                </div></div
-        ></ng-template>
-        <ng-template #header
-            ><tr>
-                <th pSortableColumn="id">Código <p-sortIcon field="id" /></th>
-                <th pSortableColumn="description">Grupo <p-sortIcon field="description" /></th>
-                <th pSortableColumn="status">Status <p-sortIcon field="status" /></th>
-                <th>UFs de atuação</th>
-                <th class="text-right">Ações</th>
-            </tr></ng-template
+        }
+        <p-table
+            #groupTable
+            [value]="groups()"
+            [loading]="loadingGroups()"
+            [rowHover]="true"
+            [paginator]="true"
+            [rows]="10"
+            [rowsPerPageOptions]="[10, 25, 50]"
+            [showCurrentPageReport]="true"
+            currentPageReportTemplate="{first}–{last} de {totalRecords} grupos"
+            [globalFilterFields]="['id', 'description', 'status', 'ufs']"
+            sortField="id"
+            [sortOrder]="-1"
+            dataKey="id"
+            size="small"
+            [tableStyle]="{ 'min-width': '46rem' }"
         >
-        <ng-template #body let-group
-            ><tr>
-                <td>
-                    <span class="text-muted-color">#{{ group.id }}</span>
-                </td>
-                <td>
-                    <div class="group-cell">
-                        <span class="group-icon"><i class="pi pi-sitemap" aria-hidden="true"></i></span><strong>{{ group.description }}</strong>
-                    </div>
-                </td>
-                <td><p-tag [value]="group.status" [severity]="group.status === enabled ? 'success' : 'secondary'" /></td>
-                <td>
-                    <span class="text-muted-color">{{ group.ufs ? group.ufs.split(',').join(', ') : 'Não informadas' }}</span>
-                </td>
-                <td class="text-right"><p-button label="Editar" icon="pi pi-pencil" [text]="true" severity="secondary" size="small" (onClick)="edit(group)" [ariaLabel]="'Editar grupo ' + group.description" /></td></tr
-        ></ng-template>
-        <ng-template #emptymessage
-            ><tr>
-                <td colspan="5">
-                    <div class="empty-state">
-                        <i class="pi pi-sitemap" aria-hidden="true"></i>
-                        <h3>Nenhum grupo encontrado</h3>
-                        <p>Revise a busca ou clique em Novo grupo para cadastrar.</p>
-                    </div>
-                </td>
-            </tr></ng-template
-        >
-    </p-table>
+            <ng-template #caption
+                ><div class="list-toolbar">
+                    <p-iconfield iconPosition="left" class="group-search"
+                        ><p-inputicon><i class="pi pi-search" aria-hidden="true"></i></p-inputicon
+                        ><input #searchInput pInputText type="search" aria-label="Pesquisar grupos por nome, código ou UF" (input)="groupTable.filterGlobal(searchInput.value, 'contains')" placeholder="Buscar grupo, código ou UF" class="w-full"
+                    /></p-iconfield>
+                    <div class="list-filters">
+                        <p-select
+                            [(ngModel)]="selectedStatus"
+                            [options]="statusOptions"
+                            optionLabel="label"
+                            optionValue="value"
+                            placeholder="Todos os status"
+                            ariaLabel="Filtrar grupos por status"
+                            [showClear]="true"
+                            (onChange)="groupTable.filter(selectedStatus, 'status', 'equals')"
+                            appendTo="body"
+                            class="status-filter"
+                        /><p-button label="Limpar filtros" icon="pi pi-filter-slash" severity="secondary" [text]="true" (onClick)="clearFilters(groupTable, searchInput)" />
+                    </div></div
+            ></ng-template>
+            <ng-template #header
+                ><tr>
+                    <th pSortableColumn="id">Código <p-sortIcon field="id" /></th>
+                    <th pSortableColumn="description">Grupo <p-sortIcon field="description" /></th>
+                    <th pSortableColumn="status">Status <p-sortIcon field="status" /></th>
+                    <th>UFs de atuação</th>
+                    <th class="text-right">Ação</th>
+                </tr></ng-template
+            >
+            <ng-template #body let-group
+                ><tr>
+                    <td>
+                        <span class="group-code">#{{ group.id }}</span>
+                    </td>
+                    <td>
+                        <span class="group-name">{{ group.description | uppercase }}</span>
+                    </td>
+                    <td><p-tag [value]="group.status" [severity]="group.status === enabled ? 'success' : 'secondary'" [icon]="group.status === enabled ? 'pi pi-check-circle' : 'pi pi-minus-circle'" [rounded]="true" /></td>
+                    <td>
+                        <span class="text-muted-color">{{ group.ufs ? group.ufs.split(',').join(', ') : 'Não informadas' }}</span>
+                    </td>
+                    <td class="text-right"><p-button icon="pi pi-pencil" label="Editar" [text]="true" size="small" [ariaLabel]="'Editar grupo ' + group.description" (onClick)="edit(group)" /></td></tr
+            ></ng-template>
+            <ng-template #emptymessage
+                ><tr>
+                    <td colspan="5">
+                        <div class="list-empty">
+                            <span class="groups-icon"><i class="pi" [ngClass]="loadError() ? 'pi-exclamation-circle' : groups().length ? 'pi-search' : 'pi-tag'" aria-hidden="true"></i></span>
+                            <h3>{{ loadError() ? 'Não foi possível carregar os grupos' : groups().length ? 'Nenhum grupo encontrado' : 'Organize sua equipe comercial' }}</h3>
+                            <p class="text-muted-color">
+                                {{ loadError() ? 'Clique em Atualizar para tentar novamente.' : groups().length ? 'Experimente outro termo ou limpe os filtros para visualizar os registros.' : 'Cadastre um grupo e defina suas áreas de atuação.' }}
+                            </p>
+                            @if (!groups().length && !loadError()) {
+                                <p-button label="Cadastrar primeiro grupo" icon="pi pi-plus" [outlined]="true" (onClick)="newGroup()" />
+                            }
+                        </div>
+                    </td></tr
+            ></ng-template>
+        </p-table>
+    </section>
 </div>
 
 <p-dialog [header]="isNewGroup ? 'Novo grupo de vendedores' : 'Editar grupo de vendedores'" [(visible)]="visibleDialog" [modal]="true" [draggable]="false" [style]="{ width: '48rem', maxWidth: '96vw' }" [breakpoints]="{ '640px': '96vw' }">
