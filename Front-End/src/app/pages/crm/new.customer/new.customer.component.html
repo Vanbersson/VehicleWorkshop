@@ -1,3 +1,392 @@
-<div class="layout-card">
-    <p>new.customer.component works!</p>
+<div class="attendance-page">
+    <p-toast />
+    <header class="attendance-heading">
+        <div class="heading-title">
+            <span class="attendance-icon"><i class="pi pi-objects-column" aria-hidden="true"></i></span>
+            <div>
+                <span class="eyebrow">ACOMPANHAMENTO COMERCIAL</span>
+                <h1>Atendimentos do cliente</h1>
+                <p class="text-muted-color">Da visita ao fechamento, acompanhe a próxima etapa de cada cliente.</p>
+            </div>
+        </div>
+        <div class="heading-actions">
+            <p-button label="Visitas" icon="pi pi-arrow-left" [outlined]="true" severity="secondary" routerLink="/crm/visit" /><p-button
+                label="Atualizar"
+                icon="pi pi-refresh"
+                [text]="true"
+                (onClick)="load()"
+                [loading]="loading()"
+                [disabled]="saving()"
+            />
+        </div>
+    </header>
+    @if (highlightedVisitId) {
+        <div class="completion-note" role="status">
+            <i class="pi pi-check-circle" aria-hidden="true"></i><span>Visita #{{ highlightedVisitId }} concluída. Acompanhe o atendimento gerado abaixo.</span>
+        </div>
+    }
+    <div class="flex gap-2 flex-wrap mb-5" role="group" aria-label="Tipo de consulta de atendimentos">
+        <p-button label="Não cancelados" icon="pi pi-briefcase" [outlined]="queryMode() !== 'ACTIVE'" [severity]="queryMode() === 'ACTIVE' ? 'primary' : 'secondary'" (onClick)="changeQueryMode('ACTIVE')" [disabled]="saving()" />
+        <p-button label="Cancelados" icon="pi pi-ban" [outlined]="queryMode() !== 'CANCELLED'" [severity]="queryMode() === 'CANCELLED' ? 'primary' : 'secondary'" (onClick)="changeQueryMode('CANCELLED')" [disabled]="saving()" />
+    </div>
+    <div class="stage-overview" aria-label="Resumo dos resultados por etapa">
+        @for (stage of counts(); track stage.value) {
+            <button type="button" class="stage-tile" [class.selected]="statusFilter() === stage.value" [attr.aria-pressed]="statusFilter() === stage.value" (click)="changeStatus(statusFilter() === stage.value ? null : stage.value)">
+                <i [class]="stage.icon" aria-hidden="true"></i><span>{{ stage.label }}</span
+                ><strong>{{ loading() ? '…' : stage.count }}</strong>
+            </button>
+        }
+    </div>
+    <section class="attendance-panel" aria-label="Lista de atendimentos">
+        <h2 class="text-lg font-semibold mb-4">{{ queryMode() === 'CANCELLED' ? 'Consulta de atendimentos cancelados' : 'Consulta de atendimentos não cancelados' }}</h2>
+        <form [formGroup]="queryForm" (ngSubmit)="load()" class="mb-5">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                <div><label for="queryAttendanceCode">Código do atendimento</label><p-inputnumber inputId="queryAttendanceCode" formControlName="id" [useGrouping]="false" [min]="1" [maxFractionDigits]="0" fluid /></div>
+                <div><label for="queryAttendanceClient">Cliente</label><input pInputText id="queryAttendanceClient" formControlName="clientName" maxlength="255" placeholder="Nome do cliente" class="w-full" /></div>
+                <div><label for="queryAttendanceSalesperson">Vendedor</label><input pInputText id="queryAttendanceSalesperson" formControlName="salespersonName" maxlength="255" placeholder="Nome do vendedor" class="w-full" /></div>
+            </div>
+            <div class="flex gap-2">
+                <p-button type="submit" label="Consultar" icon="pi pi-search" [loading]="loading()" [disabled]="saving()" /><p-button
+                    label="Limpar"
+                    icon="pi pi-filter-slash"
+                    severity="secondary"
+                    [text]="true"
+                    (onClick)="clearQuery()"
+                    [disabled]="saving()"
+                />
+            </div>
+        </form>
+        <div class="attendance-toolbar">
+            @if (queryMode() === 'ACTIVE') {
+                <p-select
+                    [ngModel]="statusFilter()"
+                    (ngModelChange)="changeStatus($event)"
+                    [options]="queryStages()"
+                    optionLabel="label"
+                    optionValue="value"
+                    placeholder="Todas as etapas"
+                    ariaLabel="Filtrar atendimentos por etapa"
+                    [showClear]="true"
+                    appendTo="body"
+                />
+            }
+            <span class="text-muted-color text-sm" role="status">{{ filteredItems().length }} atendimento(s)</span>
+        </div>
+        @if (queryMode() === 'CANCELLED') {
+            <p class="text-muted-color text-sm mb-4">Informe ao menos um filtro e clique em Consultar para visualizar atendimentos cancelados.</p>
+        }
+        @if (queryError()) {
+            <p class="attendance-error" role="alert">{{ queryError() }}</p>
+        }
+        @if (loadError()) {
+            <p class="attendance-error" role="alert">{{ loadError() }} Use Atualizar para tentar novamente.</p>
+        }
+        @if (loading()) {
+            <div class="attendance-grid" aria-label="Carregando atendimentos">
+                @for (item of [1, 2, 3]; track item) {
+                    <div class="attendance-card">
+                        <p-skeleton height="1.5rem" width="50%" />
+                        <div class="my-5"><p-skeleton height="4rem" /></div>
+                        <p-skeleton height="2rem" />
+                    </div>
+                }
+            </div>
+        } @else {
+            <div class="attendance-grid">
+                @for (item of pageItems(); track item.id) {
+                    <article class="attendance-card" [class.highlighted]="item.visitId === highlightedVisitId">
+                        <div class="card-top">
+                            <span class="eyebrow">ATENDIMENTO #{{ item.id }}</span
+                            ><p-tag [value]="stageFor(item.status).label" [icon]="stageFor(item.status).icon" [severity]="stageFor(item.status).severity" [rounded]="true" />
+                        </div>
+                        <h2>{{ item.clientName | uppercase }}</h2>
+                        <div class="card-detail">
+                            <i class="pi pi-user" aria-hidden="true"></i><span>{{ item.salespersonName }}</span>
+                        </div>
+                        <div class="card-detail">
+                            <i class="pi pi-calendar" aria-hidden="true"></i><span>Visita #{{ item.visitId }} · {{ item.dateVisit ? (item.dateVisit | date: 'dd/MM/yyyy HH:mm') : 'Data não informada' }}</span>
+                        </div>
+                        <div class="flex items-center justify-between gap-3 rounded-lg bg-surface-100 dark:bg-surface-800 p-3 my-3">
+                            <span class="text-sm text-muted-color">Total em orçamento</span>
+                            @if (item.quoteTotal != null) {
+                                <strong class="text-lg text-primary">{{ item.quoteTotal | currency: 'BRL' }}</strong>
+                            } @else {
+                                <span class="text-sm text-muted-color">Sem orçamento</span>
+                            }
+                        </div>
+                        @if (item.status === CANCELLED) {
+                            <div class="rounded-lg border border-red-200 dark:border-red-900 p-3 mb-3">
+                                <strong class="text-sm text-red-600">Motivo do cancelamento</strong>
+                                <p class="text-sm whitespace-pre-wrap break-words">{{ item.cancellationReason }}</p>
+                                <small class="text-muted-color">{{ item.cancelledAt | date: 'dd/MM/yyyy HH:mm' }}{{ item.cancelledByName ? ' · ' + item.cancelledByName : '' }}</small>
+                            </div>
+                        }
+                        @if (item.notes) {
+                            <p class="card-notes">{{ item.notes }}</p>
+                        } @else {
+                            <p class="card-notes text-muted-color">Nenhuma observação adicionada.</p>
+                        }
+                        <div class="card-footer">
+                            <p-button
+                                [label]="item.status === CANCELLED ? 'Consultar orçamento' : 'Orçamento'"
+                                icon="pi pi-file-edit"
+                                [outlined]="true"
+                                size="small"
+                                (onClick)="openBudget(item)"
+                                [disabled]="saving() || (item.status === CANCELLED && item.quoteTotal == null)"
+                                [ariaLabel]="'Abrir orçamento de ' + item.clientName"
+                            />
+                            <small class="text-muted-color">Criado em {{ item.dateCreated | date: 'dd/MM/yyyy' }}</small>
+                            @if (item.status !== CANCELLED) {
+                                <p-button label="Editar atendimento" icon="pi pi-pencil" [text]="true" size="small" (onClick)="open(item)" [disabled]="saving()" [ariaLabel]="'Editar atendimento de ' + item.clientName" />
+                                <p-button label="Cancelar" icon="pi pi-ban" severity="danger" [text]="true" size="small" (onClick)="openCancellation(item)" [disabled]="saving()" [ariaLabel]="'Cancelar atendimento de ' + item.clientName" />
+                            }
+                        </div>
+                    </article>
+                } @empty {
+                    @if (!loadError()) {
+                        <div class="attendance-empty">
+                            <span class="attendance-icon"><i class="pi pi-inbox" aria-hidden="true"></i></span>
+                            <h2>Nenhum atendimento nesta consulta</h2>
+                            <p class="text-muted-color">{{ queryMode() === 'CANCELLED' ? 'Use código, cliente ou vendedor para localizar um atendimento cancelado.' : 'Ajuste os filtros ou conclua uma visita para gerar um novo atendimento.' }}</p>
+                            <p-button label="Ver visitas" icon="pi pi-arrow-right" [outlined]="true" routerLink="/crm/visit" />
+                        </div>
+                    }
+                }
+            </div>
+            @if (filteredItems().length > 12) {
+                <p-paginator [first]="first()" [rows]="12" [totalRecords]="filteredItems().length" (onPageChange)="first.set($event.first ?? 0)" />
+            }
+        }
+    </section>
 </div>
+<p-dialog
+    [header]="'Editar atendimento #' + (editing()?.id ?? '')"
+    [visible]="dialogVisible"
+    (visibleChange)="closeEditor($event)"
+    [modal]="true"
+    [closable]="!saving()"
+    [closeOnEscape]="!saving()"
+    [draggable]="false"
+    [style]="{ width: '74rem', maxWidth: '96vw' }"
+>
+    @if (loadingDetail()) {
+        <div class="py-8" role="status">
+            <p-skeleton height="5rem" />
+            <div class="mt-4"><p-skeleton height="12rem" /></div>
+            <p class="text-muted-color">Carregando atendimento e visita de origem…</p>
+        </div>
+    } @else if (detailError()) {
+        <p class="attendance-error" role="alert">{{ detailError() }}</p>
+        <p-button label="Tentar novamente" icon="pi pi-refresh" (onClick)="open(editing()!)" />
+    } @else if (originVisit()) {
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 rounded-xl bg-surface-100 dark:bg-surface-800 p-4 mb-5">
+            <div>
+                <span class="text-sm text-muted-color">Cliente</span><strong class="block break-words">{{ selectedClientName() | uppercase }}</strong
+                ><small class="text-muted-color">{{ selectedClientId() ? 'Código ' + selectedClientId() : 'Cliente sem cadastro' }}</small>
+                <div class="mt-2"><app-filterclient [isDisabled]="saving() || loadingDetail()" (outputClient)="selectAttendanceClient($event)" /></div>
+            </div>
+            <div>
+                <span class="text-sm text-muted-color">Vendedor responsável</span><strong class="block">{{ editing()?.salespersonName | uppercase }}</strong
+                ><small class="text-muted-color">Criado em {{ editing()?.dateCreated | date: 'dd/MM/yyyy HH:mm' }}</small>
+            </div>
+            <div>
+                <span class="text-sm text-muted-color block mb-2">Etapa salva</span><p-tag [value]="stageFor(editing()!.status).label" [icon]="stageFor(editing()!.status).icon" [severity]="stageFor(editing()!.status).severity" [rounded]="true" />
+            </div>
+        </div>
+        <p class="text-muted-color text-sm mb-5">Selecione uma etapa para consultar ou editar. Use Salvar etapa para atualizar o andamento do atendimento.</p>
+        <form [formGroup]="form">
+            <fieldset [disabled]="saving()" class="attendance-fields">
+                <p-stepper [value]="activeEditStep()">
+                    <p-step-list class="overflow-x-auto" aria-label="Etapas do atendimento">
+                        @for (flow of workflow; track flow.value; let index = $index) {
+                            <p-step #step [value]="index + 1" [disabled]="saving()">
+                                <ng-template #content let-active="active" let-value="value">
+                                    <button
+                                        type="button"
+                                        role="tab"
+                                        class="inline-flex flex-col items-center gap-2 bg-transparent border-0 p-2 cursor-pointer min-w-28"
+                                        [id]="step.id()"
+                                        [attr.aria-controls]="step.ariaControls()"
+                                        [attr.aria-selected]="active"
+                                        [disabled]="saving()"
+                                        (click)="selectEditStep(value)"
+                                    >
+                                        <span class="p-step-number"><i [class]="flow.icon" aria-hidden="true"></i></span><span class="text-sm font-medium" [class.text-primary]="active">{{ flow.label }}</span>
+                                    </button>
+                                </ng-template>
+                            </p-step>
+                        }
+                    </p-step-list>
+                    <p-step-panels>
+                        @for (flow of workflow; track flow.value; let index = $index) {
+                            <p-step-panel [value]="index + 1"
+                                ><ng-template #content><ng-container [ngTemplateOutlet]="attendanceStepContent" /></ng-template
+                            ></p-step-panel>
+                        }
+                    </p-step-panels>
+                </p-stepper>
+                <ng-template #attendanceStepContent>
+                    <div class="py-4">
+                        @switch (activeEditStep()) {
+                            @case (1) {
+                                <h2 class="text-xl font-semibold mb-4">Visita que originou o atendimento</h2>
+                                <dl class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <dt class="text-sm text-muted-color">Visita</dt>
+                                        <dd class="m-0 font-semibold">#{{ originVisit()?.id }} · {{ originVisit()?.status | uppercase }}</dd>
+                                    </div>
+                                    <div>
+                                        <dt class="text-sm text-muted-color">Realizada em</dt>
+                                        <dd class="m-0">{{ originVisit()?.dateVisit ? (originVisit()?.dateVisit | date: 'dd/MM/yyyy HH:mm') : 'Não informado' }}</dd>
+                                    </div>
+                                    <div>
+                                        <dt class="text-sm text-muted-color">Cliente visitado</dt>
+                                        <dd class="m-0">{{ originVisit()?.clientName | uppercase }}</dd>
+                                    </div>
+                                    <div>
+                                        <dt class="text-sm text-muted-color">Vendedor da visita</dt>
+                                        <dd class="m-0">{{ originVisit()?.salespersonName | uppercase }}</dd>
+                                    </div>
+                                    <div>
+                                        <dt class="text-sm text-muted-color">CNPJ / CPF</dt>
+                                        <dd class="m-0">{{ originVisit()?.clientCNPJ || originVisit()?.clientCPF || 'Não informado' }}</dd>
+                                    </div>
+                                    <div>
+                                        <dt class="text-sm text-muted-color">Contato</dt>
+                                        <dd class="m-0 break-words">{{ originVisit()?.contactType }}{{ originVisit()?.contact ? ' · ' + originVisit()?.contact : '' }}</dd>
+                                    </div>
+                                    <div>
+                                        <dt class="text-sm text-muted-color">Registrada por</dt>
+                                        <dd class="m-0">{{ originVisit()?.userNameRegister || 'Não informado' }} · {{ originVisit()?.dateRegister | date: 'dd/MM/yyyy HH:mm' }}</dd>
+                                    </div>
+                                    <div>
+                                        <dt class="text-sm text-muted-color">Agendamento</dt>
+                                        <dd class="m-0">{{ originVisit()?.agendaDate ? (originVisit()?.agendaDate | date: 'dd/MM/yyyy HH:mm') : 'Sem agendamento' }}</dd>
+                                    </div>
+                                    <div>
+                                        <dt class="text-sm text-muted-color">Motivos da visita</dt>
+                                        <dd class="m-0 whitespace-pre-wrap">{{ describeVisitValues(originVisit()?.reasonVisit, visitReasons) || 'Não informado' }}{{ originVisit()?.reasonVisitInfo ? ' · ' + originVisit()?.reasonVisitInfo : '' }}</dd>
+                                    </div>
+                                    <div>
+                                        <dt class="text-sm text-muted-color">Produtos de interesse</dt>
+                                        <dd class="m-0 whitespace-pre-wrap">{{ describeVisitValues(originVisit()?.products, visitProducts) || 'Não informado' }}{{ originVisit()?.productsInfo ? ' · ' + originVisit()?.productsInfo : '' }}</dd>
+                                    </div>
+                                    <div class="md:col-span-2">
+                                        <dt class="text-sm text-muted-color">Observações da visita</dt>
+                                        <dd class="m-0 whitespace-pre-wrap break-words">{{ originVisit()?.salespersonInfo || 'Nenhuma observação.' }}</dd>
+                                    </div>
+                                    @if (originVisit()?.agendaInfo) {
+                                        <div class="md:col-span-2">
+                                            <dt class="text-sm text-muted-color">Observações do agendamento</dt>
+                                            <dd class="m-0 whitespace-pre-wrap break-words">{{ originVisit()?.agendaInfo }}</dd>
+                                        </div>
+                                    }
+                                    @if (originVisit()?.latitude || originVisit()?.longitude) {
+                                        <div>
+                                            <dt class="text-sm text-muted-color">Localização registrada</dt>
+                                            <dd class="m-0">{{ originVisit()?.latitude }}, {{ originVisit()?.longitude }}</dd>
+                                        </div>
+                                    }
+                                </dl>
+                            }
+                            @case (2) {
+                                <h2 class="text-xl font-semibold mb-3">Documentos</h2>
+                                <p class="text-muted-color mb-5">Confira os documentos do cliente e registre as pendências ou conferências realizadas.</p>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
+                                    <div>
+                                        <label>CNPJ informado na visita</label>
+                                        <p>{{ originVisit()?.clientCNPJ || 'Não informado' }}</p>
+                                    </div>
+                                    <div>
+                                        <label>CPF informado na visita</label>
+                                        <p>{{ originVisit()?.clientCPF || 'Não informado' }}</p>
+                                    </div>
+                                </div>
+                                <label for="attendanceDocuments">Observações sobre os documentos</label><textarea pTextarea id="attendanceDocuments" formControlName="documentsNotes" rows="6" maxlength="2000" fluid></textarea
+                                ><small class="text-muted-color">{{ form.controls.documentsNotes.value.length }}/2000 caracteres</small>
+                            }
+                            @case (3) {
+                                <h2 class="text-xl font-semibold mb-3">Proposta comercial</h2>
+                                <p class="text-muted-color mb-5">Registre as condições comerciais combinadas com o cliente.</p>
+                                <label for="attendanceProposal">Descrição da proposta</label
+                                ><textarea pTextarea id="attendanceProposal" formControlName="proposalNotes" rows="7" maxlength="2000" placeholder="Escopo, condições, prazos e detalhes comerciais" fluid></textarea
+                                ><small class="text-muted-color">{{ form.controls.proposalNotes.value.length }}/2000 caracteres</small>
+                                <div class="mt-4"><p-button label="Imprimir proposta" icon="pi pi-print" severity="secondary" [outlined]="true" (onClick)="printProposal()" [disabled]="saving() || !form.controls.proposalNotes.value.trim()" /></div>
+                            }
+                            @case (4) {
+                                <h2 class="text-xl font-semibold mb-3">Orçamento do atendimento</h2>
+                                <p class="text-muted-color mb-5">Consulte ou edite os produtos, quantidades, preços e descontos do orçamento.</p>
+                                <div class="rounded-xl bg-surface-100 dark:bg-surface-800 p-5 mb-5">
+                                    <span class="text-muted-color block">Total em orçamento</span
+                                    ><strong class="block text-2xl text-primary mt-2">{{ editing()?.quoteTotal != null ? (editing()?.quoteTotal | currency: 'BRL') : 'Sem orçamento salvo' }}</strong>
+                                </div>
+                                <p-button label="Abrir orçamento" icon="pi pi-file-edit" (onClick)="openEditingBudget()" [disabled]="saving()" />
+                            }
+                            @case (5) {
+                                <h2 class="text-xl font-semibold mb-3">Enviar para aprovação</h2>
+                                <p class="text-muted-color mb-5">Ao salvar esta etapa, o atendimento ficará marcado como aguardando aprovação.</p>
+                                <p-tag value="Aguardando aprovação" severity="warn" icon="pi pi-clock" />
+                                <p class="mt-5 text-muted-color">{{ editing()?.approvalRequestedAt ? 'Última solicitação: ' + (editing()?.approvalRequestedAt | date: 'dd/MM/yyyy HH:mm') : 'A solicitação será registrada ao salvar esta etapa.' }}</p>
+                            }
+                            @case (6) {
+                                <h2 class="text-xl font-semibold mb-3">Concluir atendimento</h2>
+                                <p class="text-muted-color mb-5">Confira as informações e salve para marcar o atendimento como concluído.</p>
+                                <dl class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <dt class="text-muted-color">Total em orçamento</dt>
+                                        <dd class="m-0 font-semibold">{{ editing()?.quoteTotal != null ? (editing()?.quoteTotal | currency: 'BRL') : 'Sem orçamento' }}</dd>
+                                    </div>
+                                    <div>
+                                        <dt class="text-muted-color">Data da conclusão</dt>
+                                        <dd class="m-0">{{ editing()?.completedAt ? (editing()?.completedAt | date: 'dd/MM/yyyy HH:mm') : 'Será registrada ao concluir' }}</dd>
+                                    </div>
+                                    <div class="md:col-span-2">
+                                        <dt class="text-muted-color">Proposta comercial</dt>
+                                        <dd class="m-0 whitespace-pre-wrap break-words">{{ form.controls.proposalNotes.value || 'Não informada' }}</dd>
+                                    </div>
+                                </dl>
+                            }
+                        }
+                    </div>
+                </ng-template>
+                <div>
+                    <label for="attendanceNotes">Observações gerais do atendimento</label><textarea pTextarea id="attendanceNotes" formControlName="notes" rows="3" maxlength="2000" fluid></textarea
+                    ><small class="text-muted-color">{{ form.controls.notes.value.length }}/2000 caracteres</small>
+                </div>
+                @if (saveError()) {
+                    <p class="attendance-error" role="alert">{{ saveError() }}</p>
+                }
+            </fieldset>
+        </form>
+    }
+    <ng-template #footer>
+        <p-button label="Fechar" severity="secondary" [text]="true" (onClick)="closeEditor(false)" [disabled]="saving()" />
+        @if (originVisit() && !detailError() && !loadingDetail()) {
+            @if (activeEditStep() < workflow.length) {
+                <p-button label="Salvar e avançar" icon="pi pi-arrow-right" severity="secondary" [outlined]="true" (onClick)="save(false, activeEditStep() + 1)" [disabled]="saving()" />
+            }
+            <p-button [label]="activeEditStep() === 5 ? 'Marcar como aguardando aprovação' : activeEditStep() === 6 ? 'Concluir atendimento' : 'Salvar etapa'" icon="pi pi-check" (onClick)="save()" [loading]="saving()" />
+        }
+    </ng-template>
+</p-dialog>
+<p-attendance-quote [attendance]="budgetAttendance()" [(visible)]="budgetVisible" (saved)="budgetSaved($event)" />
+<p-dialog header="Cancelar atendimento" [(visible)]="cancellationVisible" [modal]="true" [closable]="!saving()" [closeOnEscape]="!saving()" [draggable]="false" [style]="{ width: '32rem', maxWidth: '95vw' }">
+    <p class="font-semibold">{{ cancelling()?.clientName | uppercase }}</p>
+    <p class="text-muted-color mb-5">Informe o motivo para cancelar. O atendimento e o orçamento salvo continuarão disponíveis para consulta.</p>
+    <form [formGroup]="cancelForm">
+        <label for="cancellationReason">Motivo do cancelamento *</label><textarea pTextarea id="cancellationReason" formControlName="reason" rows="5" maxlength="2000" [readonly]="saving()" fluid></textarea
+        ><small class="text-muted-color">{{ cancelForm.controls.reason.value.length }}/2000 caracteres</small>
+        @if (cancelError()) {
+            <p class="attendance-error" role="alert">{{ cancelError() }}</p>
+        }
+    </form>
+    <ng-template #footer
+        ><p-button label="Voltar" severity="secondary" [text]="true" (onClick)="cancellationVisible = false" [disabled]="saving()" /><p-button
+            label="Confirmar cancelamento"
+            icon="pi pi-ban"
+            severity="danger"
+            (onClick)="cancel()"
+            [loading]="saving()"
+    /></ng-template>
+</p-dialog>

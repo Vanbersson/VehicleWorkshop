@@ -23,11 +23,15 @@ public class ResaleController {
     @Autowired
     private ResaleRepository resaleRepository;
 
+    @Autowired
+    private CompanyRepository companyRepository;
+
     @PostMapping("/save")
     public ResponseEntity<Object> saveResale(@RequestBody @Valid ResaleDto data) {
 
         //Validation
-        if (data.cnpj().length() != 14) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        if (!companyRepository.existsById(data.companyId())) return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        if (!data.cnpj().matches("[0-9]{14}")) return ResponseEntity.badRequest().build();
 
         Resale resale0 = resaleRepository.findByCompanyIdAndCnpj(data.companyId(), data.cnpj());
         //Validation
@@ -41,11 +45,12 @@ public class ResaleController {
     }
 
     @PostMapping("/update")
-    public ResponseEntity<Object> updateResale(@PathVariable(value = "companyId") Integer companyId, @RequestBody @Valid ResaleDto data) {
+    public ResponseEntity<Object> updateResale(@RequestBody @Valid ResaleDto data) {
 
-        Resale resale = resaleRepository.findByCompanyIdAndId(companyId, data.id());
-        //Validation
-        if (companyId != data.companyId()) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        if (data.id() == null || !data.cnpj().matches("[0-9]{14}")) return ResponseEntity.badRequest().build();
+        Resale resale = resaleRepository.findByCompanyIdAndId(data.companyId(), data.id());
+        Resale duplicate = resaleRepository.findByCompanyIdAndCnpj(data.companyId(), data.cnpj());
+        if (duplicate != null && !java.util.Objects.equals(duplicate.getId(), data.id())) return ResponseEntity.status(HttpStatus.CONFLICT).body("Resale already exists.");
 
         if (resale == null) return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
 

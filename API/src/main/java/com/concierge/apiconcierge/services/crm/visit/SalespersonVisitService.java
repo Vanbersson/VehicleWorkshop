@@ -62,13 +62,27 @@ public class SalespersonVisitService implements ISalespersonVisitService {
         return this.repository.save(v);
     }
 
+    @Autowired
+    private com.concierge.apiconcierge.services.crm.attendance.CustomerAttendanceService attendanceService;
+
     @Override
+    @org.springframework.transaction.annotation.Transactional
     public SalespersonVisit registerUpdate(SalespersonVisit v, String emailUser) {
         User userResult = this.userRepository.loginEmail(emailUser);
         if (userResult.getStatus() == StatusEnableDisable.Desabilitado) {
             throw new BusinessException("Usuário Bloqueado.");
         }
-        return this.repository.save(v);
+        SalespersonVisit existing = this.repository.findForCompletion(userResult.getCompanyId(), userResult.getResaleId(), v.getId());
+        if (existing == null) throw new ResourcesNotFoundException("Visita não encontrada.");
+        // Keep the original registration metadata and scope, regardless of request values.
+        v.setCompanyId(existing.getCompanyId());
+        v.setResaleId(existing.getResaleId());
+        v.setDateRegister(existing.getDateRegister());
+        v.setUserIdRegister(existing.getUserIdRegister());
+        v.setUserNameRegister(existing.getUserNameRegister());
+        SalespersonVisit saved = this.repository.save(v);
+        if (saved.getStatus() == StatusVisitEnum.concluído) attendanceService.createForVisit(saved);
+        return saved;
     }
 
     @Override

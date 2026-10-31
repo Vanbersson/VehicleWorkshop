@@ -1,96 +1,128 @@
-<div class="layout-card">
-    <p-toast />
-    <div class="layout-card-title">
-        <span>Marcas</span>
-        <p-button icon="pi pi-plus" [outlined]="true" label="Marca" (onClick)="showNewBrand()" />
-    </div>
-    <p-table #tableModel [value]="listBrands()" currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} Cadastros" showGridlines
-        [globalFilterFields]="['id','status','name']" [paginator]="true" [rows]="10"
-        [rowsPerPageOptions]="[10, 25, 50]">
-        <ng-template pTemplate="caption">
-            <div class="flex justify-content-between">
-                <p-iconField iconPosition="left">
-                    <p-inputIcon>
-                        <i class="pi pi-search"></i>
-                    </p-inputIcon>
-                    <input pInputText type="text" (input)="tableModel.filterGlobal($event.target.value, 'contains')"
-                        placeholder="Pesquisar" />
-                </p-iconField>
+<p-toast />
+<div class="card">
+    <header class="page-heading">
+        <div>
+            <span class="eyebrow">CONFIGURAÇÕES · CADASTROS</span>
+            <h1>Marcas</h1>
+            <p>Organize as marcas utilizadas nos cadastros e nas operações da oficina.</p>
+        </div>
+        <p-button icon="pi pi-plus" label="Nova marca" (onClick)="showNewBrand()" />
+    </header>
+    <div class="summary-grid">
+        <div class="summary-card">
+            <i class="pi pi-tag" aria-hidden="true"></i>
+            <div>
+                <span>Total de marcas</span><strong>{{ listBrands().length }}</strong>
             </div>
-        </ng-template>
-        <ng-template pTemplate="header">
-            <tr>
-                <th pSortableColumn="id" style="width:10%">Código <p-sortIcon field="id"></p-sortIcon></th>
-                <th pSortableColumn="status" style="width:10%">Status <p-sortIcon field="status"></p-sortIcon></th>
-                <th pSortableColumn="name" style="width:80%">Nome<p-sortIcon field="name"></p-sortIcon></th>
-                <th></th>
-            </tr>
-        </ng-template>
-        <ng-template pTemplate="body" let-brand>
-            <tr>
-                <td>{{brand.id}}</td>
+        </div>
+        <div class="summary-card">
+            <i class="pi pi-check-circle" aria-hidden="true"></i>
+            <div>
+                <span>Habilitadas</span><strong>{{ enabledCount() }}</strong>
+            </div>
+        </div>
+        <div class="summary-card">
+            <i class="pi pi-minus-circle" aria-hidden="true"></i>
+            <div>
+                <span>Desabilitadas</span><strong>{{ disabledCount() }}</strong>
+            </div>
+        </div>
+    </div>
+    <p-table
+        #brandTable
+        [value]="listBrands()"
+        dataKey="id"
+        [rowHover]="true"
+        [globalFilterFields]="['id', 'status', 'name']"
+        [paginator]="true"
+        [rows]="10"
+        [rowsPerPageOptions]="[10, 25, 50]"
+        [showCurrentPageReport]="true"
+        currentPageReportTemplate="{first} a {last} de {totalRecords} marcas"
+        [tableStyle]="{ 'min-width': '36rem' }"
+    >
+        <ng-template #caption
+            ><div class="table-toolbar">
+                <div>
+                    <h2>Marcas cadastradas</h2>
+                    <span class="text-muted-color text-sm">Consulte e atualize as marcas da sua base.</span>
+                </div>
+                <div class="search-field">
+                    <i class="pi pi-search" aria-hidden="true"></i
+                    ><input pInputText type="search" placeholder="Buscar marca, código ou status" aria-label="Buscar marca, código ou status" (input)="brandTable.filterGlobal($any($event.target).value, 'contains')" />
+                </div></div
+        ></ng-template>
+        <ng-template #header
+            ><tr>
+                <th pSortableColumn="id">Código <p-sortIcon field="id" /></th>
+                <th pSortableColumn="name">Marca <p-sortIcon field="name" /></th>
+                <th pSortableColumn="status">Status <p-sortIcon field="status" /></th>
+                <th class="text-right">Ações</th>
+            </tr></ng-template
+        >
+        <ng-template #body let-brand
+            ><tr>
                 <td>
-                    <i class="pi " [ngClass]="{
-                        'pi-times-circle text-red-500':brand.status == disabled,
-                        'pi-check-circle text-green-500':brand.status == enabled}">
-                    </i> <span *ngIf="isMobile"> {{brand.status | uppercase}}</span>
+                    <span class="text-muted-color">#{{ brand.id }}</span>
                 </td>
-                <td>{{brand.name | uppercase}}</td>
                 <td>
-                  <p-button icon="pi pi-pencil" [text]="true" size="small" severity="secondary" (onClick)="edit(brand)"/>  
+                    <div class="brand-cell">
+                        <span class="brand-icon"><i class="pi pi-tag" aria-hidden="true"></i></span><strong>{{ brand.name | uppercase }}</strong>
+                    </div>
                 </td>
-            </tr>
-        </ng-template>
+                <td><p-tag [value]="brand.status" [severity]="brand.status === enabled ? 'success' : 'secondary'" /></td>
+                <td class="text-right"><p-button icon="pi pi-pencil" label="Editar" [text]="true" severity="secondary" size="small" (onClick)="edit(brand)" [ariaLabel]="'Editar marca ' + brand.name" /></td></tr
+        ></ng-template>
+        <ng-template #emptymessage
+            ><tr>
+                <td colspan="4">
+                    <div class="empty-state">
+                        <i class="pi pi-tag" aria-hidden="true"></i>
+                        <h3>Nenhuma marca encontrada</h3>
+                        <p>Revise a busca ou clique em Nova marca para cadastrar.</p>
+                    </div>
+                </td>
+            </tr></ng-template
+        >
     </p-table>
 </div>
 
-<p-dialog header="Cadastro da Marca" [(visible)]="dialogVisible" [modal]="true" [style]="{width: '450px'}"
-    [breakpoints]="{ '1199px': '75vw', '575px': '90vw' }">
-    <form [formGroup]="formBrand" (ngSubmit)="save()">
-        <div class="grid grid-cols-12 gap-4">
-            <!-- Nome -->
-            <div class="col-span-12">
-                <label for="nameId" class="block mb-2">
-                    Nome
-                </label>
-                <input pInputText id="nameId" formControlName="name" maxlength="100" class="w-full" />
-
-                <small *ngIf="formBrand.get('name')?.invalid && formBrand.get('name')?.touched" class="text-red-500">
-                    Campo obrigatório
-                </small>
+<p-dialog [header]="isNewBrand ? 'Nova marca' : 'Editar marca'" [(visible)]="dialogVisible" [modal]="true" [draggable]="false" [style]="{ width: '32rem', maxWidth: '96vw' }" [breakpoints]="{ '640px': '96vw' }">
+    <form id="brand-form" [formGroup]="formBrand" (ngSubmit)="save()">
+        <div class="dialog-intro">
+            <i class="pi pi-tag" aria-hidden="true"></i>
+            <div>
+                <h2>Dados da marca</h2>
+                <p>Informe o nome e o status do cadastro.</p>
             </div>
-            <!-- Status -->
-            <div class="col-span-12">
-                <label class="block mb-2 font-medium">
-                    Status
-                </label>
-                <div class="border border-surface-300 rounded-lg p-4 flex gap-6">
-                    <div class="flex items-center gap-2">
-                        <p-radioButton inputId="enabledId" [value]="enabled" formControlName="status">
-                        </p-radioButton>
-
-                        <label for="enabledId">
-                            {{ enabled }}
-                        </label>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <p-radioButton inputId="disabledId" [value]="disabled" formControlName="status">
-                        </p-radioButton>
-
-                        <label for="disabledId">
-                            {{ disabled }}
-                        </label>
-                    </div>
+        </div>
+        <div class="field">
+            <label for="brand-name">Nome da marca *</label>
+            <input
+                pInputText
+                id="brand-name"
+                formControlName="name"
+                maxlength="100"
+                placeholder="Digite o nome da marca"
+                [attr.aria-invalid]="formBrand.controls.name.touched && formBrand.controls.name.invalid"
+                aria-describedby="brand-name-hint brand-name-error"
+            />
+            <small id="brand-name-hint" class="text-muted-color">Até 100 caracteres.</small>
+            @if (formBrand.controls.name.touched && formBrand.controls.name.invalid) {
+                <small id="brand-name-error" class="field-error">Informe um nome com até 100 caracteres.</small>
+            }
+        </div>
+        <fieldset class="choice-box">
+            <legend>Status do cadastro</legend>
+            <div class="choices">
+                <div>
+                    <p-radioButton inputId="brand-enabled" name="status" [value]="enabled" formControlName="status" /><label for="brand-enabled">{{ enabled }}</label>
+                </div>
+                <div>
+                    <p-radioButton inputId="brand-disabled" name="status" [value]="disabled" formControlName="status" /><label for="brand-disabled">{{ disabled }}</label>
                 </div>
             </div>
-        </div>
-        <!-- Botões -->
-        <div class="flex justify-end gap-2 mt-6">
-            <button pButton type="button" text icon="pi pi-times" label="Fechar" (click)="hideDialog()">
-            </button>
-
-            <button pButton type="submit" text icon="pi pi-check" label="Salvar">
-            </button>
-        </div>
+        </fieldset>
     </form>
+    <ng-template #footer><p-button type="button" label="Fechar" severity="secondary" [text]="true" (onClick)="hideDialog()" /><button pButton type="submit" form="brand-form" label="Salvar marca" icon="pi pi-check"></button></ng-template>
 </p-dialog>

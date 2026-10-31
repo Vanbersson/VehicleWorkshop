@@ -24,9 +24,9 @@ export const appRoutes: Routes = [
                         path: 'register',
                         children: [
                             { path: 'vehicle/model', title: 'Modelo de veículo', loadComponent: () => import('./app/pages/concierge/register/vehicle.model/vehicle.model.component') },
-                            { path: 'module', title: 'Modulo portaria', loadComponent: () => import('./app/pages/concierge/register/module/module.component') },
+                            { path: 'module', title: 'Modulo portaria', loadComponent: () => import('./app/pages/concierge/register/module/module.component') }
                         ]
-                    },
+                    }
                 ]
             },
             {
@@ -40,7 +40,7 @@ export const appRoutes: Routes = [
                             { path: 'part', title: 'Peças', loadComponent: () => import('./app/pages/parts/register/parts/parts.component') },
                             { path: 'group', title: 'Grupo', loadComponent: () => import('./app/pages/parts/register/grouppart/grouppart.component') },
                             { path: 'category', title: 'Grupo', loadComponent: () => import('./app/pages/parts/register/category/category.component') },
-                            { path: 'unit', title: 'Grupo', loadComponent: () => import('./app/pages/parts/register/unitmeasure/unitmeasure.component') },
+                            { path: 'unit', title: 'Grupo', loadComponent: () => import('./app/pages/parts/register/unitmeasure/unitmeasure.component') }
                         ]
                     }
                 ]
@@ -57,7 +57,7 @@ export const appRoutes: Routes = [
                                 path: 'register',
                                 children: [
                                     { path: 'category/material', title: 'Categoria', loadComponent: () => import('./app/pages/workshop/equipment/register/category/category.material.component') },
-                                    { path: 'material', title: 'Material', loadComponent: () => import('./app/pages/workshop/equipment/register/material/material.component') },
+                                    { path: 'material', title: 'Material', loadComponent: () => import('./app/pages/workshop/equipment/register/material/material.component') }
                                 ]
                             }
                         ]
@@ -66,21 +66,21 @@ export const appRoutes: Routes = [
                         path: 'register',
                         children: [
                             { path: 'mechanic', title: 'Cadastro de Mecânico', loadComponent: () => import('./app/pages/workshop/register/mechanic/mechanic.component') },
-                            { path: 'mechanic/department', title: 'Cadastro de departamentos', loadComponent: () => import('./app/pages/workshop/register/mechanic.department/mechanic.department.component') },
+                            { path: 'mechanic/department', title: 'Cadastro de departamentos', loadComponent: () => import('./app/pages/workshop/register/mechanic.department/mechanic.department.component') }
                         ]
-                    },
+                    }
                 ]
-
             },
             {
                 path: 'invoicing',
                 children: [
                     { path: 'client', title: 'Faturamento', loadComponent: () => import('./app/pages/invoicing/client/client.component') },
                     {
-                        path: 'register', children: [
+                        path: 'register',
+                        children: [
                             { path: 'category', title: 'Categoria', loadComponent: () => import('./app/pages/invoicing/register/category/category.component') },
                             { path: 'payment', title: 'Pagamento', loadComponent: () => import('./app/pages/invoicing/register/type-payment/type-payment.component') },
-                            { path: 'region', title: 'Região', loadComponent: () => import('./app/pages/invoicing/register/region/region.component') },
+                            { path: 'region', title: 'Região', loadComponent: () => import('./app/pages/invoicing/register/region/region.component') }
                         ]
                     }
                 ]
@@ -95,10 +95,8 @@ export const appRoutes: Routes = [
                     { path: 'new/customer', title: 'Atendimento', loadComponent: () => import('./app/pages/crm/new.customer/new.customer.component') },
                     { path: 'report', title: 'Relatório', loadComponent: () => import('./app/pages/crm/report/report.component') },
                     {
-                        path: 'register', children: [
-                            { path: 'type/customer', title: 'Tipo Atendimento', loadComponent: () => import('./app/pages/crm/register/type.customer/type.customer.component') },
-
-                        ]
+                        path: 'register',
+                        children: [{ path: 'type/customer', title: 'Tipo Atendimento', loadComponent: () => import('./app/pages/crm/register/type.customer/type.customer.component') }]
                     }
                 ]
             },
@@ -106,25 +104,19 @@ export const appRoutes: Routes = [
                 path: 'report',
                 children: [
                     {
-                        path: 'concierge', children: [
-                            { path: 'vehicle/entry', title: 'Entrada de Veículos', loadComponent: () => import('./app/pages/reports/concierge/vehicle.entry/vehicle.entry.report.component') }
-                        ]
+                        path: 'concierge',
+                        children: [{ path: 'vehicle/entry', title: 'Entrada de Veículos', loadComponent: () => import('./app/pages/reports/concierge/vehicle.entry/vehicle.entry.report.component') }]
                     },
                     {
-                        path: 'part', children: [
-                            { path: 'purchase/order', title: 'Pedido de Comprar', loadComponent: () => import('./app/pages/reports/parts/purchase/purchase.report.component') }
-                        ]
+                        path: 'part',
+                        children: [{ path: 'purchase/order', title: 'Pedido de Comprar', loadComponent: () => import('./app/pages/reports/parts/purchase/purchase.report.component') }]
                     },
                     {
-                        path: 'workshop', children: [
-                            { path: 'equipment/request/material', title: 'Requisições', loadComponent: () => import('./app/pages/reports/workshop/equipment/request.equipment.report/request.equipment.report.component') }
-                        ]
+                        path: 'workshop',
+                        children: [{ path: 'equipment/request/material', title: 'Requisições', loadComponent: () => import('./app/pages/reports/workshop/equipment/request.equipment.report/request.equipment.report.component') }]
                     }
-
                 ]
-
             },
-
 
             {
                 path: 'config',
@@ -132,7 +124,7 @@ export const appRoutes: Routes = [
                     {
                         path: 'register',
                         children: [
-                            { path: 'company', title: 'Empresa', loadComponent: () => import('./app/pages/settings/register/company/company') },
+                            { path: 'company', title: 'Empresa', loadComponent: () => import('./app/pages/settings/register/company/company.component') },
                             { path: 'user', title: 'Usuários', loadComponent: () => import('./app/pages/settings/register/user/user.component') },
                             { path: 'brand', title: 'Marcas', loadComponent: () => import('./app/pages/settings/register/brand/brand.component') },
                             { path: 'salesperson', title: 'Vendedores', loadComponent: () => import('./app/pages/settings/register/salesperson/salesperson.component') },
@@ -140,7 +132,6 @@ export const appRoutes: Routes = [
                         ]
                     }
                 ]
-
             }
         ]
     },

@@ -1,0 +1,25 @@
+-- Execute this script in the application database before deploying the updated API.
+CREATE TABLE IF NOT EXISTS tb_crm_customer_attendance (
+    id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    company_id INT NOT NULL,
+    resale_id INT NOT NULL,
+    visit_id INT NOT NULL,
+    client_id INT,
+    client_name VARCHAR(255) NOT NULL,
+    salesperson_id INT NOT NULL,
+    salesperson_name VARCHAR(255) NOT NULL,
+    date_created DATETIME(6) NOT NULL,
+    date_visit DATETIME(6),
+    status VARCHAR(32) NOT NULL,
+    notes VARCHAR(2000),
+    cancellation_reason VARCHAR(2000),
+    cancelled_at DATETIME(6),
+    cancelled_by_id INT,
+    cancelled_by_name VARCHAR(255),
+    documents_notes VARCHAR(2000),
+    proposal_notes VARCHAR(2000),
+    approval_requested_at DATETIME(6),
+    completed_at DATETIME(6),
+    version BIGINT,
+    CONSTRAINT uk_customer_attendance_visit UNIQUE (visit_id)
+);

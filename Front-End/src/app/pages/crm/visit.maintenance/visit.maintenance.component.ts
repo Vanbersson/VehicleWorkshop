@@ -1,3 +1,4 @@
+import { VISIT_REASONS, VISIT_PRODUCTS } from '@/app/models/crm/visit/visit.catalog';
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule, DatePipe, Location } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
@@ -126,26 +127,8 @@ export default class VisitMaintenanceComponent implements OnInit {
         const state = this.location.getState() as { visit?: Visit };
         this.visit = state?.visit ?? null;
 
-        this.reasonVisits.set([
-            { id: 1, description: 'Implemento Librelato' },
-            { id: 2, description: 'Consorcio Nacional Librelato' },
-            { id: 3, description: 'Sistema de telemetria (Sigaway)' },
-            { id: 4, description: 'Peças e pneus' },
-            { id: 5, description: 'Oficina: Serviços mecânicos, hidráulicos, pneumáticos' },
-            { id: 6, description: 'Reforma ou corretiva (Pintura, desempeno chassis, jateamento, solda)' },
-            { id: 7, description: 'Plano manutenção preventiva' }
-        ]);
-        this.products.set([
-            { id: 1, description: 'Consórcio' },
-            { id: 2, description: 'Serviços e Peças' },
-            { id: 3, description: 'Graneleiro' },
-            { id: 4, description: 'Porta Container' },
-            { id: 5, description: 'Bau lonado / sider' },
-            { id: 6, description: 'Bau Aluminio' },
-            { id: 7, description: 'Tanque' },
-            { id: 8, description: 'Carrega tudo' },
-            { id: 9, description: 'Frigorifico' }
-        ]);
+        this.reasonVisits.set([...VISIT_REASONS]);
+        this.products.set([...VISIT_PRODUCTS]);
         this.init();
     }
 
@@ -343,7 +326,7 @@ export default class VisitMaintenanceComponent implements OnInit {
         }
         if (await this.persist(true)) {
             this.visibleDateVisit = false;
-            await this.router.navigate(['/crm/visit']);
+            await this.router.navigate(['/crm/new/customer'], { queryParams: { visitId: this.visit?.id } });
         }
     }
 

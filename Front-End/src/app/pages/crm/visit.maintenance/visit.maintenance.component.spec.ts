@@ -52,6 +52,7 @@ describe('VisitMaintenanceComponent registration flow', () => {
         expect(component.visibleDateVisit).toBeTrue();
         await component.saveComplete();
         expect(service.registerUpdate.calls.mostRecent().args[0].status).toBe(StatusVisitEnum.CLOSE);
+        expect(TestBed.inject(Router).navigate).toHaveBeenCalledWith(['/crm/new/customer'], { queryParams: { visitId: 42 } });
     });
 
     it('rejects whitespace-only descriptions and redirects to the required step', async () => {
@@ -75,7 +76,7 @@ describe('VisitMaintenanceComponent registration flow', () => {
         component.formVisit.controls.clientName.setValue('Cliente alterado');
         await component.goToStep(2);
         expect(service.registerNew).toHaveBeenCalledTimes(1);
-        expect(service.registerUpdate.calls.mostRecent().args[0].clientName).toBe('Cliente alterado');
+        expect(service.registerUpdate.calls.mostRecent().args[0].clientName).toBe('cliente alterado');
     });
 
     it('prevents concurrent registrations and preserves the current step on failure', async () => {

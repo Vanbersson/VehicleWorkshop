@@ -1,0 +1,4 @@
+﻿:host { display: block; }
+label { display: block; font-weight: 500; margin-bottom: .5rem; }
+.selected-company { background: color-mix(in srgb, var(--p-primary-color) 8%, transparent); }
+.form-error { border-radius: .5rem; padding: .85rem 1rem; color: var(--p-red-700); background: var(--p-red-50); border: 1px solid var(--p-red-200); }

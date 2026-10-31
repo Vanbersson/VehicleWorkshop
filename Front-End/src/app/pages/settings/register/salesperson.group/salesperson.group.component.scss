@@ -1,16 +1,34 @@
-:host {
-    .layout-card-title {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 1rem;
 
-        span {
-            display: flex;
-            align-items: center;
-            font-size: 1.25rem;
-            font-weight: 700;
-            color: var(--color-grey-800);
-        }
-    }
-}
+:host { display: block; }
+.page-heading, .table-toolbar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1.5rem; }
+.page-heading, .summary-grid { margin-bottom: 1.5rem; }
+.eyebrow { color: var(--primary-color); font-size: .75rem; font-weight: 700; letter-spacing: .08em; }
+h1 { margin: .4rem 0; font-size: 2rem; font-weight: 650; }
+h2 { margin: 0; font-size: 1rem; font-weight: 600; }
+p { margin: .4rem 0 0; color: var(--text-color-secondary); line-height: 1.5; }
+.summary-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
+.summary-card, .group-cell { display: flex; align-items: center; gap: 1rem; }
+.summary-card { padding: 1.25rem; border: 1px solid var(--surface-border); border-radius: .85rem; }
+.summary-card > i, .group-icon { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; background: var(--surface-ground); color: var(--primary-color); border-radius: .75rem; width: 2.75rem; height: 2.75rem; font-size: 1.25rem; }
+.summary-card span { color: var(--text-color-secondary); font-size: .85rem; }
+.summary-card strong { display: block; margin-top: .25rem; font-size: 1.75rem; line-height: 1.2; }
+.group-icon { width: 2.25rem; height: 2.25rem; font-size: 1rem; }
+.table-toolbar { padding: .25rem 0 .75rem; }
+.search-field { position: relative; width: min(100%, 22rem); }
+.search-field > i { position: absolute; left: .85rem; top: 50%; transform: translateY(-50%); color: var(--text-color-secondary); }
+.search-field input { width: 100%; padding-left: 2.5rem; }
+.empty-state { padding: 3rem 1rem; text-align: center; }
+.empty-state > i { font-size: 2rem; color: var(--text-color-secondary); }
+.empty-state h3 { font-size: 1.1rem; margin: 1rem 0 .25rem; }
+.section-heading { margin-bottom: 1.25rem; }
+.section-heading p { font-size: .85rem; }
+.coverage-section { margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--surface-border); }
+.field { display: flex; flex-direction: column; gap: .5rem; }
+.field > label, legend { font-size: .85rem; font-weight: 600; }
+.field-error { color: var(--p-red-500); }
+.choice-box { border: 1px solid var(--surface-border); border-radius: .6rem; padding: .85rem 1rem; margin: 0; }
+legend { padding: 0 .35rem; }
+.choices, .choices > div { display: flex; align-items: center; flex-wrap: wrap; gap: 1rem; }
+.choices > div { gap: .5rem; }
+.choices label { cursor: pointer; }
+@media (max-width: 640px) { .summary-grid { grid-template-columns: 1fr; } h1 { font-size: 1.6rem; } .search-field { width: 100%; } }

@@ -1,343 +1,318 @@
-<div class="layout-card">
-    <!-- Info -->
-    <p-toast />
-    <div class="layout-card-title">
-        <span>Usuários</span>
-        <div class="flex">
-            <p-button icon="pi pi-plus" label="Usuário" [outlined]="true" (onClick)="showDialogSave()" />
+<p-toast />
+<div class="card">
+    <header class="page-heading">
+        <div>
+            <span class="eyebrow">CONFIGURAÇÕES · CADASTROS</span>
+            <h1>Usuários</h1>
+            <p>Gerencie a equipe, os perfis e as permissões de acesso ao sistema.</p>
+        </div>
+        <p-button icon="pi pi-plus" label="Novo usuário" (onClick)="showDialogSave()" />
+    </header>
+    <div class="summary-grid">
+        <div class="summary-card">
+            <i class="pi pi-users" aria-hidden="true"></i>
+            <div>
+                <span>Total de usuários</span><strong>{{ users().length }}</strong>
+            </div>
+        </div>
+        <div class="summary-card">
+            <i class="pi pi-check-circle" aria-hidden="true"></i>
+            <div>
+                <span>Habilitados</span><strong>{{ enabledCount() }}</strong>
+            </div>
+        </div>
+        <div class="summary-card">
+            <i class="pi pi-minus-circle" aria-hidden="true"></i>
+            <div>
+                <span>Desabilitados</span><strong>{{ disabledCount() }}</strong>
+            </div>
         </div>
     </div>
-    <p-table #tableFilter dataKey="id" [value]="users()" [globalFilterFields]="['id','name','email','roleDesc']" showGridlines>
-        <ng-template pTemplate="caption">
-            <div class="flex">
-                <p-iconField iconPosition="left">
-                    <p-inputIcon>
-                        <i class="pi pi-search"></i>
-                    </p-inputIcon>
-                    <input pInputText type="text"
-                        (input)="tableFilter.filterGlobal($any($event.target).value, 'contains')"
-                        placeholder="Pesquisar" />
-                </p-iconField>
-            </div>
-        </ng-template>
-        <ng-template pTemplate="header">
-            <tr>
-                <th pSortableColumn="id" style="width:10%">Código<p-sortIcon field="id"></p-sortIcon></th>
-                <th pSortableColumn="status" style="width:10%">Status<p-sortIcon field="status"></p-sortIcon></th>
-                <th pSortableColumn="name" style="width:40%">Nome<p-sortIcon field="name"></p-sortIcon></th>
-                <th pSortableColumn="email" style="width:22%">E-mail<p-sortIcon field="email"></p-sortIcon></th>
-                <th pSortableColumn="roleDesc" style="width:20%">Cargo<p-sortIcon field="roleDesc"></p-sortIcon></th>
-                <th></th>
-                <th></th>
-            </tr>
-        </ng-template>
-        <ng-template pTemplate="body" let-user>
-            <tr>
-                <td>{{user.id}}</td>
+    <p-table
+        #userTable
+        dataKey="id"
+        [value]="users()"
+        [globalFilterFields]="['id', 'name', 'email', 'roleDesc', 'status']"
+        [rowHover]="true"
+        [paginator]="true"
+        [rows]="10"
+        [rowsPerPageOptions]="[10, 25, 50]"
+        [showCurrentPageReport]="true"
+        currentPageReportTemplate="{first} a {last} de {totalRecords} usuários"
+        [tableStyle]="{ 'min-width': '58rem' }"
+    >
+        <ng-template #caption
+            ><div class="table-toolbar">
+                <div>
+                    <h2>Usuários cadastrados</h2>
+                    <span class="text-muted-color text-sm">Consulte os dados e gerencie os acessos da equipe.</span>
+                </div>
+                <div class="search-field">
+                    <i class="pi pi-search" aria-hidden="true"></i
+                    ><input pInputText type="search" placeholder="Buscar nome, e-mail ou cargo" aria-label="Buscar usuário por nome, e-mail ou cargo" (input)="userTable.filterGlobal($any($event.target).value, 'contains')" />
+                </div></div
+        ></ng-template>
+        <ng-template #header
+            ><tr>
+                <th pSortableColumn="id">Código <p-sortIcon field="id" /></th>
+                <th pSortableColumn="name">Usuário <p-sortIcon field="name" /></th>
+                <th pSortableColumn="email">E-mail <p-sortIcon field="email" /></th>
+                <th pSortableColumn="roleDesc">Cargo <p-sortIcon field="roleDesc" /></th>
+                <th pSortableColumn="status">Status <p-sortIcon field="status" /></th>
+                <th class="text-right">Ações</th>
+            </tr></ng-template
+        >
+        <ng-template #body let-person
+            ><tr>
                 <td>
-                    <i class="pi " [ngClass]="{
-                        'pi-times-circle text-red-500':user.status == disabled,
-                        'pi-check-circle text-green-500':user.status == enabled}">
-                    </i> {{user.status | uppercase}}
+                    <span class="text-muted-color">#{{ person.id }}</span>
                 </td>
-                <td class="flex items-center gap-2">
-                    <img class="layout-tab-img" *ngIf="user.photoUrl" [src]="user.photoUrl" style="vertical-align: middle" />
-                    <p-avatar *ngIf="!user.photoUrl" [label]="firstLetter(user)" size="large" shape="circle" [style]="{ 'background-color': '#dee9fc', color: '#1a2551' }"></p-avatar>
-                    <span>{{user.name | uppercase}}</span>
+                <td>
+                    <div class="user-cell">
+                        @if (person.photoUrl) {
+                            <img class="user-avatar" [src]="person.photoUrl" [alt]="'Foto de ' + person.name" />
+                        } @else {
+                            <span class="user-avatar initials">{{ firstLetter(person) }}</span>
+                        }
+                        <strong>{{ person.name }}</strong>
+                    </div>
                 </td>
-                <td>{{user.email | uppercase}}</td>
-                <td>{{user.roleDesc | uppercase}}</td>
-                <td><p-button type="button" icon="pi pi-pencil" [text]="true" size="small" severity="secondary" (onClick)="editUser(user.id)" /></td>
-                <td><p-button type="button" icon="pi pi-shield" size="small" label="Senha" severity="danger" (onClick)="showUpdatePass(user)" /></td>
-            </tr>
-        </ng-template>
+                <td>{{ person.email }}</td>
+                <td>{{ person.roleDesc || 'Não informado' }}</td>
+                <td><p-tag [value]="person.status" [severity]="person.status === enabled ? 'success' : 'secondary'" /></td>
+                <td>
+                    <div class="row-actions">
+                        <p-button type="button" icon="pi pi-pencil" label="Editar" [text]="true" size="small" severity="secondary" (onClick)="editUser(person.id)" [ariaLabel]="'Editar usuário ' + person.name" /><p-button
+                            type="button"
+                            icon="pi pi-key"
+                            label="Senha"
+                            [text]="true"
+                            size="small"
+                            severity="secondary"
+                            (onClick)="showUpdatePass(person)"
+                            [ariaLabel]="'Alterar senha de ' + person.name"
+                        />
+                    </div>
+                </td></tr
+        ></ng-template>
+        <ng-template #emptymessage
+            ><tr>
+                <td colspan="6">
+                    <div class="empty-state">
+                        <i class="pi pi-users" aria-hidden="true"></i>
+                        <h3>Nenhum usuário encontrado</h3>
+                        <p>Revise a busca ou clique em Novo usuário para cadastrar.</p>
+                    </div>
+                </td>
+            </tr></ng-template
+        >
     </p-table>
 </div>
-<!-- Cadastro usuário -->
-<p-dialog header="Cadastro de usuário" [(visible)]="visibleDialogUser" [modal]="true"
-    [style]="{ width: '52rem', height:'47rem' }" [breakpoints]="{ '1199px': '75vw', '575px': '90vw' }">
-    <form [formGroup]="formUser" (ngSubmit)="saveData()" class="space-y-6">
-        <div class="grid grid-cols-12 gap-4">
-            <!-- Foto -->
-            <div class="col-span-12 flex justify-center">
-                <div class="layout-photo-person">
-                    @if(userPhoto()){
-                    <p-image [src]="userPhoto()" width="80" height="80" alt="Imagem do usuário" [preview]="true"
-                        [imageStyle]="{
-                            'width':'80px',
-                            'height':'80px',
-                            'border-radius':'9999px',
-                            'object-fit':'cover'
-                        }">
-                    </p-image>
-                    <button pButton type="button" severity="danger" [text]="true" label="Remover"
-                        (click)="deletePhoto()">
-                    </button>
-                    } @else {
-                    <div class="layout-photo-person-label">
-                        <button pButton type="button" label="Foto" [rounded]="true" [text]="true" size="small"
-                            (click)="selectPhoto()">
-                        </button>
-                    </div>
+
+<p-dialog [header]="isEditUser ? 'Editar usuário' : 'Novo usuário'" [(visible)]="visibleDialogUser" [modal]="true" [draggable]="false" [style]="{ width: '58rem', maxWidth: '96vw' }" [breakpoints]="{ '640px': '96vw' }">
+    <form id="user-form" [formGroup]="formUser" (ngSubmit)="saveData()">
+        <div class="photo-panel">
+            <div class="photo-preview">
+                @if (userPhoto()) {
+                    <p-image [src]="userPhoto()" alt="Foto do usuário" [preview]="true" [imageStyle]="{ width: '80px', height: '80px', 'object-fit': 'cover', 'border-radius': '12px' }" />
+                } @else {
+                    <i class="pi pi-user" aria-hidden="true"></i>
+                }
+            </div>
+            <div>
+                <h2>Foto do usuário</h2>
+                <p>Adicione uma imagem para identificar o profissional.</p>
+                <div class="photo-actions">
+                    <p-button type="button" icon="pi pi-camera" label="Selecionar foto" size="small" severity="secondary" [outlined]="true" (onClick)="selectPhoto()" />
+                    @if (userPhoto()) {
+                        <p-button type="button" label="Remover" size="small" severity="danger" [text]="true" (onClick)="deletePhoto()" />
                     }
                 </div>
             </div>
-            <!-- Código -->
-            <div class="col-span-12 md:col-span-2">
-                <label for="id" class="block mb-2">
-                    Código
-                </label>
-                <p-inputNumber inputId="id" formControlName="id" fluid>
-                </p-inputNumber>
-            </div>
-            <!-- Nome -->
-            <div class="col-span-12 md:col-span-10">
-                <label for="nameid" class="block mb-2">
-                    Nome
-                </label>
-                <input pInputText id="nameid" class="w-full" formControlName="name">
-                <small class="text-red-500" *ngIf="formUser.get('name')?.invalid">
-                    Campo obrigatório
-                </small>
-            </div>
-            <!-- Email -->
-            <div class="col-span-12 md:col-span-6">
-                <label for="emailid" class="block mb-2 ">
-                    Email
-                </label>
-                <input pInputText id="emailid" type="email" class="w-full" formControlName="email">
-                <small class="text-red-500" *ngIf="formUser.get('email')?.invalid">
-                    Campo obrigatório
-                </small>
-            </div>
+        </div>
 
-            <!-- Celular -->
-            <div class="col-span-12 md:col-span-4">
-                <label class="block mb-2 ">
-                    Celular
-                </label>
-                <p-inputMask class="w-full" mask="(99) 9 9999-9999" formControlName="cellphone" unmask="true" fluid>
-                </p-inputMask>
+        <section class="form-section" aria-labelledby="user-identification">
+            <div class="section-heading">
+                <h2 id="user-identification">Dados pessoais</h2>
+                <p>Informações de identificação e contato. Campos com * são obrigatórios.</p>
             </div>
-            <!-- Desconto -->
-            <div class="col-span-12 md:col-span-2">
-                <label class="block mb-2 ">
-                    Desconto
-                </label>
-                <p-inputNumber suffix="%" class="w-full" formControlName="limitDiscount" fluid>
-                </p-inputNumber>
-            </div>
-            <!-- Senha -->
-            <div class="col-span-12 md:col-span-4">
-                <label class="block mb-2 ">
-                    Senha
-                </label>
-                <input *ngIf="isEditUser" pInputText class="w-full" formControlName="password" fluid>
-                <p-password *ngIf="!isEditUser" class="w-full" formControlName="password" [feedback]="false"
-                    [toggleMask]="true" fluid>
-                </p-password>
-                <small class="text-red-500" *ngIf="formUser.get('password')?.invalid">
-                    Campo obrigatório
-                </small>
-            </div>
-            <!-- Confirmar senha -->
-            <div class="col-span-12 md:col-span-4">
-                <label class="block mb-2 ">
-                    Repetir senha
-                </label>
-                <input *ngIf="isEditUser" pInputText class="w-full" formControlName="passwordValid">
-                <p-password *ngIf="!isEditUser" class="w-full" formControlName="passwordValid" [feedback]="false"
-                    [toggleMask]="true" fluid>
-                </p-password>
-                <small class="text-red-500" *ngIf="formUser.get('passwordValid')?.invalid">
-                    Campo obrigatório
-                </small>
-            </div>
-            <!-- Cargo -->
-            <div class="col-span-12 md:col-span-4">
-                <label class="block mb-2">
-                    Cargo
-                </label>
-                <p-select class="w-full" [options]="roles" optionLabel="description" placeholder="Selecione" 
-                 [style]="{'text-transform':'uppercase'}" formControlName="roleDesc" fluid>
-                </p-select>
-            </div>
-            <!-- Perfil -->
-            <div class="col-span-12 md:col-span-5">
-                <div class="rounded-lg border border-surface-200 dark:border-surface-700 p-4 space-y-3">
-                    <span>Perfil</span>
-                    <div class="flex items-center gap-2">
-                        <p-radioButton inputId="admin1" name="roleFunc" [value]="admin" formControlName="roleFunc"></p-radioButton>
-                        <label for="admin1"> Administrador </label>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <p-radioButton inputId="user1" name="roleFunc" [value]="user" formControlName="roleFunc"></p-radioButton>
-                        <label for="user1"> Usuário </label>
-                    </div>
+            <div class="grid grid-cols-12 gap-4">
+                <div class="field col-span-12 sm:col-span-3"><label for="user-id">Código</label><p-inputNumber inputId="user-id" formControlName="id" [useGrouping]="false" placeholder="Automático" fluid /></div>
+                <div class="field col-span-12 sm:col-span-9">
+                    <label for="user-name">Nome completo *</label><input pInputText id="user-name" formControlName="name" autocomplete="name" placeholder="Nome do usuário" />
+                    @if (formUser.controls.name.touched && formUser.controls.name.invalid) {
+                        <small class="field-error">Informe o nome do usuário.</small>
+                    }
+                </div>
+                <div class="field col-span-12 sm:col-span-6">
+                    <label for="user-email">E-mail *</label><input pInputText id="user-email" type="email" formControlName="email" autocomplete="email" placeholder="nome@empresa.com.br" />
+                    @if (formUser.controls.email.touched && formUser.controls.email.invalid) {
+                        <small class="field-error">Informe um e-mail válido.</small>
+                    }
+                </div>
+                <div class="field col-span-12 sm:col-span-6">
+                    <label for="user-cellphone">Celular</label><p-inputMask inputId="user-cellphone" mask="(99) 9 9999-9999" formControlName="cellphone" [unmask]="true" placeholder="(00) 9 0000-0000" fluid />
                 </div>
             </div>
-            <!-- Situação -->
-            <div class="col-span-12 md:col-span-5">
-                <div class="rounded-lg border border-surface-200 dark:border-surface-700 p-4 space-y-3">
-                    <span> Situação </span>
-                    <div class="flex items-center gap-2">
-                        <p-radioButton inputId="enabled1" name="status" [value]="enabled" formControlName="status">
-                        </p-radioButton>
-                        <label for="enabled1"> Ativado </label>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <p-radioButton inputId="disabled1" name="status" [value]="disabled" formControlName="status">
-                        </p-radioButton>
-                        <label for="disabled1"> Desativado </label>
-                    </div>
-                </div>
-            </div>
-            <!-- Botões -->
-            <div class="col-span-12 md:col-span-4">
-                <p-button label="Menus" class="w-full" (onClick)="showDialogMenu()" fluid>
-                </p-button>
-            </div>
-            <div class="col-span-12 md:col-span-4">
-                <p-button label="Funções" class="w-full" (onClick)="showDialogFunc()" fluid>
-                </p-button>
-            </div>
+        </section>
 
-        </div>
-        <div class="col-span-12 border-b border-surface-200 dark:border-surface-700"></div>
-        <div class="flex justify-end gap-3">
-            <p-button label="Fechar" icon="pi pi-times" [text]="true" (onClick)="hideDialogUser()">
-            </p-button>
-            <p-button type="submit" label="Salvar" [text]="true" icon="pi pi-check">
-            </p-button>
-        </div>
+        <section class="form-section" aria-labelledby="user-access">
+            <div class="section-heading">
+                <h2 id="user-access">Acesso e configuração</h2>
+                <p>Defina o cargo, o perfil e a situação do usuário.</p>
+            </div>
+            <div class="grid grid-cols-12 gap-4">
+                <div class="field col-span-12 sm:col-span-8">
+                    <label for="user-role">Cargo *</label
+                    ><p-select inputId="user-role" [options]="roles" optionLabel="description" [filter]="true" filterBy="description" placeholder="Selecione o cargo" formControlName="roleDesc" appendTo="body" fluid />
+                    @if (formUser.controls.roleDesc.touched && formUser.controls.roleDesc.invalid) {
+                        <small class="field-error">Selecione o cargo.</small>
+                    }
+                </div>
+                <div class="field col-span-12 sm:col-span-4"><label for="user-discount">Limite de desconto</label><p-inputNumber inputId="user-discount" suffix="%" formControlName="limitDiscount" fluid /></div>
+                <fieldset class="choice-box col-span-12 sm:col-span-6">
+                    <legend>Perfil de acesso *</legend>
+                    <div class="choices">
+                        <div><p-radioButton inputId="user-admin" name="roleFunc" [value]="admin" formControlName="roleFunc" /><label for="user-admin">Administrador</label></div>
+                        <div><p-radioButton inputId="user-standard" name="roleFunc" [value]="user" formControlName="roleFunc" /><label for="user-standard">Usuário</label></div>
+                    </div>
+                </fieldset>
+                <fieldset class="choice-box col-span-12 sm:col-span-6">
+                    <legend>Situação</legend>
+                    <div class="choices">
+                        <div>
+                            <p-radioButton inputId="user-enabled" name="status" [value]="enabled" formControlName="status" /><label for="user-enabled">{{ enabled }}</label>
+                        </div>
+                        <div>
+                            <p-radioButton inputId="user-disabled" name="status" [value]="disabled" formControlName="status" /><label for="user-disabled">{{ disabled }}</label>
+                        </div>
+                    </div>
+                </fieldset>
+                @if (!isEditUser) {
+                    <div class="field col-span-12 sm:col-span-6">
+                        <label for="user-password">Senha *</label><p-password inputId="user-password" formControlName="password" [feedback]="false" [toggleMask]="true" autocomplete="new-password" fluid /><small class="text-muted-color"
+                            >Use pelo menos 8 caracteres.</small
+                        >
+                        @if (formUser.controls.password.touched && formUser.controls.password.invalid) {
+                            <small class="field-error">Informe uma senha com pelo menos 8 caracteres.</small>
+                        }
+                    </div>
+                    <div class="field col-span-12 sm:col-span-6">
+                        <label for="user-password-confirm">Confirmar senha *</label><p-password inputId="user-password-confirm" formControlName="passwordValid" [feedback]="false" [toggleMask]="true" autocomplete="new-password" fluid />
+                        @if (formUser.controls.passwordValid.touched && formUser.controls.passwordValid.invalid) {
+                            <small class="field-error">Confirme a senha com pelo menos 8 caracteres.</small>
+                        }
+                        @if (formUser.controls.passwordValid.touched && formUser.controls.password.value !== formUser.controls.passwordValid.value) {
+                            <small class="field-error">As senhas devem ser iguais.</small>
+                        }
+                    </div>
+                } @else {
+                    <div class="col-span-12 access-note"><i class="pi pi-key" aria-hidden="true"></i><span>Para alterar a senha, use a ação Senha na lista de usuários.</span></div>
+                }
+            </div>
+        </section>
+
+        <section class="form-section" aria-labelledby="user-permissions">
+            <div class="section-heading">
+                <h2 id="user-permissions">Permissões do usuário</h2>
+                <p>{{ isEditUser ? 'Configure os menus visíveis e as funções disponíveis para este usuário.' : 'Salve o cadastro para configurar os menus e as funções do usuário.' }}</p>
+            </div>
+            <div class="permission-actions">
+                <p-button type="button" icon="pi pi-sitemap" label="Configurar menus" severity="secondary" [outlined]="true" [disabled]="!isEditUser" (onClick)="showDialogMenu()" /><p-button
+                    type="button"
+                    icon="pi pi-shield"
+                    label="Configurar funções"
+                    severity="secondary"
+                    [outlined]="true"
+                    [disabled]="!isEditUser"
+                    (onClick)="showDialogFunc()"
+                />
+            </div>
+        </section>
     </form>
+    <ng-template #footer><p-button type="button" label="Fechar" severity="secondary" [text]="true" (onClick)="hideDialogUser()" /><button pButton type="submit" form="user-form" label="Salvar usuário" icon="pi pi-check"></button></ng-template>
 </p-dialog>
-<!-- Permissões -->
-<p-dialog header="Funções do usuário" [(visible)]="visibleDialogPerm" [modal]="true" [style]="{ width: '50rem' }"
-    [breakpoints]="{ '1199px': '75vw', '575px': '90vw' }">
-    <p-table #dt1 dataKey="id" [value]="permissions()" [(selection)]="permissionsSelect"
-        [globalFilterFields]="['id', 'description']" size="small">
-        <ng-template pTemplate="caption">
-            <div class="flex justify-content-between">
-                <p-iconField iconPosition="left">
-                    <p-inputIcon>
-                        <i class="pi pi-search"></i>
-                    </p-inputIcon>
-                    <input pInputText type="text" (input)="dt1.filterGlobal($event.target.value, 'contains')"
-                        placeholder="Pesquisar" />
-                </p-iconField>
-            </div>
-        </ng-template>
-        <ng-template pTemplate="header">
-            <tr>
-                <th>Sel.</th>
-                <th pSortableColumn="id" style="width: 20%;">Código<p-sortIcon field="id"></p-sortIcon></th>
-                <th pSortableColumn="menu" style="width: 20%;">Menu<p-sortIcon field="menu"></p-sortIcon></th>
-                <th pSortableColumn="description">Descrição<p-sortIcon field="description"></p-sortIcon></th>
-            </tr>
-        </ng-template>
-        <ng-template pTemplate="body" let-permission>
-            <tr [pSelectableRow]="permission">
-                <td>
-                    <p-tableCheckbox [value]="permission" />
-                </td>
-                <td>{{permission.id}}</td>
-                <td>{{permission.menu | uppercase}}</td>
-                <td>{{permission.description | uppercase}}</td>
-            </tr>
-        </ng-template>
+
+<p-dialog header="Funções do usuário" [(visible)]="visibleDialogPerm" [modal]="true" [draggable]="false" [style]="{ width: '54rem', maxWidth: '96vw' }" [breakpoints]="{ '640px': '96vw' }">
+    <p class="dialog-description">Selecione as funções que o usuário poderá executar.</p>
+    <p-table
+        #permissionTable
+        dataKey="id"
+        [value]="permissions()"
+        [(selection)]="permissionsSelect"
+        [globalFilterFields]="['id', 'menu', 'description']"
+        [rowHover]="true"
+        [scrollable]="true"
+        scrollHeight="24rem"
+        [tableStyle]="{ 'min-width': '34rem' }"
+        size="small"
+    >
+        <ng-template #caption
+            ><div class="table-toolbar">
+                <span class="text-muted-color text-sm">{{ permissionsSelect().length }} funções selecionadas</span>
+                <div class="search-field">
+                    <i class="pi pi-search" aria-hidden="true"></i><input pInputText type="search" placeholder="Buscar função ou menu" aria-label="Buscar função ou menu" (input)="permissionTable.filterGlobal($any($event.target).value, 'contains')" />
+                </div></div
+        ></ng-template>
+        <ng-template #header
+            ><tr>
+                <th scope="col"><span class="sr-only">Selecionar função</span></th>
+                <th pSortableColumn="id">Código <p-sortIcon field="id" /></th>
+                <th pSortableColumn="menu">Menu <p-sortIcon field="menu" /></th>
+                <th pSortableColumn="description">Descrição <p-sortIcon field="description" /></th></tr
+        ></ng-template>
+        <ng-template #body let-permission
+            ><tr [pSelectableRow]="permission">
+                <td><p-tableCheckbox [value]="permission" [ariaLabel]="'Selecionar função ' + permission.description" /></td>
+                <td>{{ permission.id }}</td>
+                <td>{{ permission.menu }}</td>
+                <td>{{ permission.description }}</td>
+            </tr></ng-template
+        >
+        <ng-template #emptymessage
+            ><tr>
+                <td colspan="4" class="text-center py-6 text-muted-color">Nenhuma função encontrada.</td>
+            </tr></ng-template
+        >
     </p-table>
-    <div class="flex justify-end gap-2 mt-3">
-        <button pButton type="button" pRipple label="Fechar" icon="pi pi-times" class="p-button-text" (click)="hideDialogFunc()"></button>
-        <button pButton type="button" pRipple label="Salvar" icon="pi pi-check" class="p-button-text" (click)="savePermissions()"></button>
-    </div>
+    <ng-template #footer><p-button type="button" label="Fechar" severity="secondary" [text]="true" (onClick)="hideDialogFunc()" /><p-button type="button" label="Salvar funções" icon="pi pi-check" (onClick)="savePermissions()" /></ng-template>
 </p-dialog>
-<!-- Menu -->
-<p-dialog header="Menus do usuário" [(visible)]="visibleDialogMenu" [modal]="true" [style]="{ width: '40rem'}"
-    [breakpoints]="{ '1199px': '75vw', '575px': '90vw' }">
-    <p-tree [value]="menus" selectionMode="checkbox" [(selection)]="menuSelect" [propagateSelectionDown]="false"
-        [propagateSelectionUp]="false" />
-    <div class="col-span-12 border-b border-surface-200 dark:border-surface-700"></div>
-    <div class="col-span-12 flex justify-end gap-2 mt-2">
-        <button pButton type="button" pRipple label="Fechar" icon="pi pi-times" class="p-button-text" (click)="hideDialogMenu()"></button>
-        <button pButton type="button" pRipple label="Salvar" icon="pi pi-check" class="p-button-text" (click)="saveMenus()"></button>
+
+<p-dialog header="Menus do usuário" [(visible)]="visibleDialogMenu" [modal]="true" [draggable]="false" [style]="{ width: '42rem', maxWidth: '96vw' }" [breakpoints]="{ '640px': '96vw' }">
+    <p class="dialog-description">Selecione os menus que ficarão disponíveis para o usuário.</p>
+    <div class="menu-panel">
+        <p-tree [value]="menus" selectionMode="checkbox" [(selection)]="menuSelect" [propagateSelectionDown]="false" [propagateSelectionUp]="false" [filter]="true" filterPlaceholder="Buscar menu" aria-label="Menus disponíveis para o usuário" />
     </div>
+    <ng-template #footer><p-button type="button" label="Fechar" severity="secondary" [text]="true" (onClick)="hideDialogMenu()" /><p-button type="button" label="Salvar menus" icon="pi pi-check" (onClick)="saveMenus()" /></ng-template>
 </p-dialog>
-<!-- Update password -->
-<p-dialog header="Alterar senha do usuário" [(visible)]="visibleUpdatePass" [modal]="true" [style]="{ width: '30rem' }"
-    [breakpoints]="{ '1199px': '75vw', '575px': '90vw' }">
-    <form [formGroup]="formPassword" class="space-y-6">
-        <div class="grid grid-cols-12 gap-4">
-            <!-- Nome do usuário -->
-            <div class="col-span-12">
-                <span class="font-bold text-surface-700 dark:text-surface-200">
-                    {{ nameUserUpdatePass | uppercase }}
-                </span>
-            </div>
-            <!-- Senha -->
-            <div class="col-span-12">
-                <label for="passwordid" class="block mb-2">
-                    Senha
-                </label>
-                <p-password id="passwordid" class="w-full" formControlName="password" [feedback]="false"
-                    [toggleMask]="true" fluid>
-                </p-password>
-                <small class="block mt-1 text-red-500" *ngIf="formPassword.get('password')?.invalid">
-                    Campo obrigatório
-                </small>
-            </div>
-            <!-- Confirmar senha -->
-            <div class="col-span-12">
-                <label for="passwordvalidid" class="block mb-2">
-                    Repetir senha
-                </label>
-                <p-password id="passwordvalidid" class="w-full" formControlName="passwordValid" [feedback]="false"
-                    [toggleMask]="true" fluid>
-                </p-password>
-                <small class="block mt-1 text-red-500" *ngIf="formPassword.get('passwordValid')?.invalid">
-                    Campo obrigatório
-                </small>
-                <small class="block mt-1 text-red-500"
-                    *ngIf="formPassword.get('password')?.value !== formPassword.get('passwordValid')?.value">
-                    Senhas diferentes
-                </small>
+
+<p-dialog header="Alterar senha" [(visible)]="visibleUpdatePass" [modal]="true" [draggable]="false" [style]="{ width: '32rem', maxWidth: '96vw' }" [breakpoints]="{ '640px': '96vw' }">
+    <form id="user-password-form" [formGroup]="formPassword" (ngSubmit)="saveUpdatePassword()">
+        <div class="password-user">
+            <i class="pi pi-key" aria-hidden="true"></i>
+            <div>
+                <span class="text-muted-color text-sm">Usuário</span><strong>{{ nameUserUpdatePass }}</strong>
             </div>
         </div>
-
-        <!-- Botão -->
-        <div class="flex justify-end">
-            <p-button label="Atualizar senha" icon="pi pi-check" [text]="true" (onClick)="saveUpdatePassword()">
-            </p-button>
-
+        <div class="field mb-4">
+            <label for="update-password">Nova senha *</label><p-password inputId="update-password" formControlName="password" [feedback]="false" [toggleMask]="true" autocomplete="new-password" fluid /><small class="text-muted-color"
+                >Use pelo menos 8 caracteres.</small
+            >
+            @if (formPassword.controls.password.touched && formPassword.controls.password.invalid) {
+                <small class="field-error">Informe uma senha com pelo menos 8 caracteres.</small>
+            }
         </div>
-
+        <div class="field">
+            <label for="update-password-confirm">Confirmar nova senha *</label><p-password inputId="update-password-confirm" formControlName="passwordValid" [feedback]="false" [toggleMask]="true" autocomplete="new-password" fluid />
+            @if (formPassword.controls.passwordValid.touched && formPassword.controls.passwordValid.invalid) {
+                <small class="field-error">Confirme a senha com pelo menos 8 caracteres.</small>
+            }
+            @if (formPassword.controls.passwordValid.touched && formPassword.controls.password.value !== formPassword.controls.passwordValid.value) {
+                <small class="field-error">As senhas devem ser iguais.</small>
+            }
+        </div>
     </form>
-
-    <!-- 
-    <form [formGroup]="formPassword">
-        <div class="p-fluid p-formgrid grid">
-            <div class="col-12">
-                <span class="text-700 font-bold">{{nameUserUpdatePass | uppercase}}</span>
-            </div>
-            <div class="col-12">
-                <label for="passwordid">Senha</label>
-                <p-password id="passwordid" formControlName="password" [feedback]="false" [toggleMask]="true" />
-                <small class="p-error block" *ngIf="formPassword.get('password')?.invalid">Campo obrigatório</small>
-            </div>
-            <div class="col-12">
-                <label for="passwordvalidid">Repetir senha</label>
-                <p-password id="passwordvalidid" formControlName="passwordValid" [feedback]="false"
-                    [toggleMask]="true" />
-                <small class="p-error block" *ngIf="formPassword.get('passwordValid')?.invalid">Campo
-                    Obrigatório</small>
-                <small class="p-error block"
-                    *ngIf="formPassword.get('password')?.value != formPassword.get('passwordValid')?.value">Senha
-                    diferentes</small>
-            </div>
-        </div>
-        <div class="flex justify-content-end">
-            <button pButton type="button" pRipple label="Atualizar senha" icon="pi pi-check" class="p-button-text"
-                (click)="saveUpdatePassword()"></button>
-        </div>
-    </form> -->
+    <ng-template #footer
+        ><p-button type="button" label="Fechar" severity="secondary" [text]="true" (onClick)="visibleUpdatePass = false" /><button pButton type="submit" form="user-password-form" label="Atualizar senha" icon="pi pi-check"></button
+    ></ng-template>
 </p-dialog>

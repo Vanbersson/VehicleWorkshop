@@ -1,40 +1,34 @@
-:host {
 
-    .layout-card-title {
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 1rem;
-
-        span {
-            display: flex;
-            align-items: center;
-            font-size: 1.25rem;
-            font-weight: 400;
-            color: var(--color-grey-800);
-        }
-
-    }
-
-    .layout-dialog-img {
-        width: 100%;
-        height: 160px;
-        background-color: var(--color-grey-200);
-        border-radius: 8px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        margin-bottom: 1rem;
-
-        img {
-            width: 150px;
-            height: 150px;
-            object-fit: cover;
-        }
-
-    }
-    .layout-img-large {
-        background-color: var(--color-grey-200);
-        border-radius: 6px;
-        object-fit: cover;
-    }
-}
+:host { display: block; }
+.layout-card-title, .table-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 1.5rem; flex-wrap: wrap; }
+.layout-card-title { margin-bottom: 1.5rem; }
+.eyebrow { color: var(--primary-color); font-size: .75rem; font-weight: 700; letter-spacing: .08em; }
+h1 { font-size: 2rem; font-weight: 650; margin: .4rem 0; }
+h2 { font-size: 1rem; font-weight: 600; margin: 0; }
+p { color: var(--text-color-secondary); line-height: 1.5; margin: .4rem 0 0; }
+.summary-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+.summary-card { display: flex; align-items: center; gap: 1rem; border: 1px solid var(--surface-border); border-radius: .85rem; padding: 1.25rem; }
+.summary-card > i { display: flex; align-items: center; justify-content: center; width: 2.75rem; height: 2.75rem; border-radius: .75rem; background: var(--surface-ground); color: var(--primary-color); font-size: 1.25rem; flex-shrink: 0; }
+.summary-card span { color: var(--text-color-secondary); font-size: .85rem; }
+.summary-card strong { display: block; font-size: 1.75rem; margin-top: .25rem; line-height: 1.2; }
+.table-toolbar { padding: .25rem 0 .75rem; }
+.search-field { position: relative; width: min(100%, 22rem); }
+.search-field > i { position: absolute; left: .85rem; top: 50%; transform: translateY(-50%); color: var(--text-color-secondary); }
+.search-field input { width: 100%; padding-left: 2.5rem; }
+.person-cell { display: flex; align-items: center; gap: .75rem; }
+.person-avatar { display: inline-flex; align-items: center; justify-content: center; width: 2.25rem; height: 2.25rem; border-radius: 50%; background: var(--surface-ground); color: var(--primary-color); font-weight: 600; flex-shrink: 0; }
+.empty-state { padding: 3rem 1rem; text-align: center; }
+.empty-state > i { font-size: 2rem; color: var(--text-color-secondary); }
+.empty-state h3 { font-size: 1.1rem; margin: 1rem 0 .25rem; }
+.photo-panel { display: flex; align-items: center; gap: 1.25rem; border-radius: .85rem; padding: 1.25rem; background: var(--surface-ground); }
+.photo-panel p { margin-bottom: .85rem; font-size: .85rem; }
+.photo-preview { display: flex; align-items: center; justify-content: center; width: 6rem; height: 6rem; border-radius: 1rem; overflow: hidden; flex-shrink: 0; background: var(--surface-card); border: 1px solid var(--surface-border); }
+.photo-preview img { width: 100%; height: 100%; object-fit: cover; }
+.photo-preview i { font-size: 2rem; color: var(--text-color-secondary); }
+.section-heading { padding-top: 1rem; border-top: 1px solid var(--surface-border); }
+.section-heading p { font-size: .85rem; }
+form label, .field-label { display: inline-block; font-size: .85rem; font-weight: 500; margin-bottom: .5rem; }
+.choice-box { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem; padding: .85rem; border: 1px solid var(--surface-border); border-radius: .6rem; min-height: 3.25rem; }
+.choice-box label { margin-bottom: 0; cursor: pointer; }
+.choice-box > div { display: flex; align-items: center; }
+@media (max-width: 640px) { .summary-grid { grid-template-columns: 1fr; } h1 { font-size: 1.6rem; } .search-field { width: 100%; } .photo-panel { gap: .85rem; padding: 1rem; } .photo-preview { width: 4rem; height: 4rem; } }

@@ -1,0 +1,101 @@
+<p-dialog
+    [header]="quoteId() ? 'Editar orçamento #' + quoteId() : 'Orçamento do atendimento'"
+    [visible]="visible"
+    (visibleChange)="close($event)"
+    [modal]="true"
+    [draggable]="false"
+    [closable]="!saving()"
+    [closeOnEscape]="!saving()"
+    [style]="{ width: '72rem', maxWidth: '96vw' }"
+>
+    <div class="quote-heading">
+        <div>
+            <strong>{{ attendance?.clientName | uppercase }}</strong>
+            <p class="text-muted-color">Atendimento #{{ attendance?.id }} · {{ attendance?.salespersonName }}</p>
+        </div>
+        <span class="quote-label">ORÇAMENTO COMERCIAL</span>
+    </div>
+    @if (loading()) {
+        <div class="quote-loading" role="status"><p-progress-spinner ariaLabel="Carregando orçamento" [style]="{ width: '3rem', height: '3rem' }" /><span>Carregando orçamento…</span></div>
+    } @else if (loadError()) {
+        <p class="quote-error" role="alert">{{ loadError() }}</p>
+        <p-button label="Tentar novamente" icon="pi pi-refresh" (onClick)="load()" />
+    } @else {
+        <p class="text-muted-color">Informe os produtos. O desconto em R$ é aplicado sobre o subtotal do item; o percentual é aplicado após multiplicar quantidade e preço.</p>
+        <form [formGroup]="form">
+            @if (cancelled()) {
+                <p class="text-muted-color" role="status">Atendimento cancelado. O orçamento está disponível apenas para consulta.</p>
+            }
+            <fieldset [disabled]="saving() || cancelled()" class="quote-fields">
+                <div formArrayName="items" class="quote-items">
+                    @for (group of items.controls; track group; let index = $index) {
+                        <article [formGroupName]="index" class="quote-item">
+                            <div class="quote-item-title">
+                                <span>ITEM {{ index + 1 }}</span
+                                ><p-button icon="pi pi-trash" severity="danger" [text]="true" size="small" [ariaLabel]="'Remover produto ' + (index + 1)" (onClick)="removeItem(index)" [disabled]="saving() || cancelled()" />
+                            </div>
+                            <div class="quote-row">
+                                <div class="product-field">
+                                    <label [for]="'quoteProduct' + index">Produto *</label><input pInputText [id]="'quoteProduct' + index" formControlName="productName" maxlength="255" placeholder="Nome ou descrição do produto" class="w-full" />
+                                    @if (submitted() && (group.controls.productName.invalid || !group.controls.productName.value.trim())) {
+                                        <small class="quote-error">Informe o produto.</small>
+                                    }
+                                </div>
+                                <div>
+                                    <label [for]="'quoteQuantity' + index">Quantidade *</label
+                                    ><p-inputnumber [inputId]="'quoteQuantity' + index" formControlName="quantity" [min]="0.001" [maxFractionDigits]="3" [useGrouping]="false" locale="pt-BR" fluid />
+                                </div>
+                                <div>
+                                    <label [for]="'quotePrice' + index">Preço unitário *</label
+                                    ><p-inputnumber [inputId]="'quotePrice' + index" formControlName="unitPrice" mode="currency" currency="BRL" locale="pt-BR" [min]="0" [maxFractionDigits]="2" fluid />
+                                </div>
+                                <div>
+                                    <label [for]="'quoteDiscount' + index">Desconto</label>
+                                    <div class="discount-field">
+                                        <p-select [inputId]="'quoteDiscountType' + index" [options]="discountOptions" optionLabel="label" optionValue="value" formControlName="discountType" ariaLabel="Tipo de desconto" appendTo="body" /><p-inputnumber
+                                            [inputId]="'quoteDiscount' + index"
+                                            formControlName="discountValue"
+                                            [min]="0"
+                                            [maxFractionDigits]="2"
+                                            locale="pt-BR"
+                                            fluid
+                                        />
+                                    </div>
+                                </div>
+                                <div class="item-total">
+                                    <span class="text-muted-color">Total do item</span><strong>{{ amounts(index) ? (amounts(index)!.total | currency: 'BRL') : 'Revise os valores' }}</strong>
+                                </div>
+                            </div>
+                            @if (itemError(index)) {
+                                <p class="quote-error" role="alert">{{ itemError(index) }}</p>
+                            }
+                        </article>
+                    }
+                </div>
+                <p-button label="Adicionar produto" icon="pi pi-plus" [outlined]="true" (onClick)="addItem()" [disabled]="saving() || cancelled() || items.length >= 100" />
+                <div class="quote-bottom">
+                    <div><label for="quoteNotes">Observações (opcional)</label><textarea pTextarea id="quoteNotes" formControlName="notes" maxlength="2000" rows="4" fluid></textarea></div>
+                    <dl class="quote-totals">
+                        <dt>Subtotal</dt>
+                        <dd>{{ totals() ? (totals()!.subtotal | currency: 'BRL') : '—' }}</dd>
+                        <dt>Descontos</dt>
+                        <dd>{{ totals() ? (totals()!.discountAmount | currency: 'BRL') : '—' }}</dd>
+                        <dt class="grand-total">Total</dt>
+                        <dd class="grand-total">{{ totals() ? (totals()!.total | currency: 'BRL') : '—' }}</dd>
+                    </dl>
+                </div>
+            </fieldset>
+        </form>
+        @if (saveError()) {
+            <p class="quote-error" role="alert">{{ saveError() }}</p>
+        }
+    }
+    <ng-template #footer
+        ><p-button [label]="cancelled() ? 'Fechar' : 'Cancelar'" severity="secondary" [text]="true" (onClick)="close(false)" [disabled]="saving()" /><p-button
+            label="Salvar orçamento"
+            icon="pi pi-check"
+            (onClick)="save()"
+            [loading]="saving()"
+            [disabled]="loading() || !!loadError() || cancelled()"
+    /></ng-template>
+</p-dialog>

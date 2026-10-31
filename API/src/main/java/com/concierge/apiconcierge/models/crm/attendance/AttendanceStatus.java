@@ -1,0 +1,5 @@
+package com.concierge.apiconcierge.models.crm.attendance;
+
+public enum AttendanceStatus {
+    VISIT_COMPLETED, QUOTATION, DOCUMENTS_PENDING, PAYMENT_PENDING, COMPLETED, CANCELLED, COMMERCIAL_PROPOSAL, APPROVAL_PENDING
+}

@@ -1,0 +1,35 @@
+:host {
+    display: block;
+    .attendance-page { max-width: 95rem; margin: 0 auto; }
+    .attendance-heading, .card-top, .card-footer, .attendance-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; }
+    .attendance-heading { margin-bottom: 1.5rem; }
+    .heading-title, .heading-actions, .card-detail { display: flex; align-items: center; gap: .85rem; }
+    .attendance-icon { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; width: 3.25rem; height: 3.25rem; border-radius: 1rem; background: color-mix(in srgb, var(--p-primary-color) 10%, transparent); color: var(--p-primary-color); font-size: 1.3rem; }
+    h1 { font-size: clamp(1.5rem, 2.5vw, 2rem); font-weight: 700; margin: .25rem 0 .4rem; }
+    .eyebrow { font-size: .65rem; font-weight: 700; letter-spacing: .08em; color: var(--text-color-secondary); }
+    .attendance-heading p { margin: 0; }
+    .stage-overview { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+    .stage-tile, .attendance-panel, .attendance-card { border: 1px solid var(--surface-border); background: var(--surface-card); border-radius: 1rem; padding: 1.25rem; min-width: 0; }
+    .stage-tile { display: flex; align-items: center; gap: .75rem; color: var(--text-color); cursor: pointer; text-align: left; }
+    .stage-tile strong { margin-left: auto; font-size: 1.5rem; }
+    .stage-tile i { color: var(--p-primary-color); }
+    .selected, .highlighted { border-color: var(--p-primary-color); }
+    .attendance-toolbar { margin-bottom: 1.5rem; }
+    .search-field { display: flex; align-items: center; gap: .6rem; flex: 1; min-width: 15rem; }
+    .search-field input { width: 100%; }
+    .attendance-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
+    .attendance-card { display: flex; flex-direction: column; }
+    .attendance-card h2 { font-size: 1.1rem; line-height: 1.5; margin: 1rem 0; overflow-wrap: anywhere; }
+    .card-detail { font-size: .8rem; margin-bottom: .75rem; color: var(--text-color-secondary); }
+    .card-notes { white-space: pre-wrap; overflow-wrap: anywhere; font-size: .85rem; padding: .8rem; background: var(--surface-ground); border-radius: .7rem; max-height: 8rem; overflow-y: auto; }
+    .card-footer { border-top: 1px solid var(--surface-border); padding-top: .75rem; margin-top: auto; gap: .5rem; }
+    .completion-note, .attendance-error { display: flex; align-items: center; gap: .75rem; padding: 1rem; border: 1px solid currentColor; border-radius: .75rem; margin-bottom: 1.5rem; }
+    .completion-note { color: var(--p-primary-color); }
+    .attendance-error { color: var(--p-red-600); }
+    .attendance-empty { grid-column: 1 / -1; text-align: center; padding: 3rem 1rem; }
+    .attendance-empty h2 { font-size: 1.2rem; margin-top: 1rem; }
+    .attendance-fields { display: flex; flex-direction: column; gap: 1.25rem; border: 0; padding: 0; min-width: 0; }
+    label { display: block; font-weight: 600; margin-bottom: .5rem; }
+    @media (max-width: 1200px) { .attendance-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .stage-overview { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @media (max-width: 640px) { .attendance-grid { grid-template-columns: 1fr; } .heading-title > .attendance-icon { display: none; } .stage-tile { flex-wrap: wrap; padding: 1rem; } .attendance-toolbar { align-items: stretch; flex-direction: column; } .search-field { min-width: 0; } }
+}

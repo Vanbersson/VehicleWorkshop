@@ -1,0 +1,25 @@
+:host {
+    .quote-heading, .quote-item-title { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+    .quote-heading p { margin: .4rem 0; }
+    .quote-label, .quote-item-title { font-size: .7rem; font-weight: 700; letter-spacing: .08em; color: var(--text-color-secondary); }
+    .quote-fields { display: flex; flex-direction: column; align-items: stretch; gap: 1.25rem; padding: 0; border: 0; min-width: 0; }
+    .quote-items { display: flex; flex-direction: column; gap: 1rem; }
+    .quote-item { padding: 1rem; border: 1px solid var(--surface-border); border-radius: 1rem; }
+    .quote-item-title { margin-bottom: .5rem; }
+    .quote-row { display: grid; grid-template-columns: minmax(12rem, 2fr) minmax(5rem, .7fr) minmax(9rem, 1fr) minmax(10rem, 1.2fr) minmax(8rem, 1fr); align-items: start; gap: 1rem; }
+    .quote-row > div { min-width: 0; }
+    label { display: block; font-size: .85rem; font-weight: 600; margin-bottom: .5rem; }
+    .discount-field { display: flex; gap: .4rem; }
+    .discount-field p-select { flex-shrink: 0; }
+    .discount-field p-inputnumber { min-width: 0; }
+    .item-total { display: flex; flex-direction: column; gap: .8rem; font-size: .85rem; text-align: right; overflow-wrap: anywhere; }
+    .item-total strong { color: var(--p-primary-color); font-size: 1rem; }
+    .quote-bottom { display: grid; grid-template-columns: 1fr minmax(15rem, .6fr); gap: 2rem; }
+    .quote-totals { display: grid; grid-template-columns: 1fr auto; gap: .75rem; padding: 1.25rem; border-radius: 1rem; background: var(--surface-ground); margin: 0; }
+    dd { text-align: right; margin: 0; font-variant-numeric: tabular-nums; }
+    .grand-total { border-top: 1px solid var(--surface-border); padding-top: .75rem; font-size: 1.2rem; font-weight: 700; color: var(--p-primary-color); }
+    .quote-error { color: var(--p-red-600); font-size: .85rem; }
+    .quote-loading { display: flex; align-items: center; justify-content: center; gap: 1rem; padding: 3rem; }
+    @media (max-width: 1000px) { .quote-row { grid-template-columns: repeat(2, minmax(0, 1fr)); } .product-field { grid-column: 1 / -1; } }
+    @media (max-width: 540px) { .quote-bottom, .quote-row { grid-template-columns: 1fr; } .quote-bottom { gap: 1rem; } .item-total { text-align: left; } }
+}

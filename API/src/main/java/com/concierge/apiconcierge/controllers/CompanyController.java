@@ -21,7 +21,9 @@ public class CompanyController {
     private CompanyRepository companyRepository;
 
     @PostMapping("/save")
-    public ResponseEntity<Object> saveCompany(@RequestBody @Valid CompanyDto data) {
+    public synchronized ResponseEntity<Object> saveCompany(@RequestBody @Valid CompanyDto data) {
+        if (!data.cnpj().matches("[0-9]{14}")) return ResponseEntity.badRequest().build();
+        if (companyRepository.count() > 0) return ResponseEntity.status(HttpStatus.CONFLICT).body(java.util.Map.of("message", "É permitido cadastrar apenas uma empresa."));
         Company company0 = companyRepository.findByCnpj(data.cnpj());
 
         if (company0 != null) return ResponseEntity.status(HttpStatus.CONFLICT).body("Company already exists.");
@@ -36,11 +38,14 @@ public class CompanyController {
 
     @PostMapping("/update")
     public ResponseEntity<Object> updateCompany(@RequestBody @Valid CompanyDto data) {
+        if (data.id() == null || !data.cnpj().matches("[0-9]{14}")) return ResponseEntity.badRequest().build();
         Optional<Company> company0 = companyRepository.findById(data.id());
 
         if (company0.isEmpty()) return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        Company duplicate = companyRepository.findByCnpj(data.cnpj());
+        if (duplicate != null && !java.util.Objects.equals(duplicate.getId(), data.id())) return ResponseEntity.status(HttpStatus.CONFLICT).body("Company already exists.");
 
-        Company company = new Company();
+        Company company = company0.get();
         BeanUtils.copyProperties(data, company);
 
         this.companyRepository.save(company);

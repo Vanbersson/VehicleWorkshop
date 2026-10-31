@@ -1,0 +1,168 @@
+﻿<p-toast />
+<div class="card">
+    <div class="flex flex-wrap items-start justify-between gap-4 mb-6">
+        <div>
+            <span class="text-primary font-semibold text-sm">CONFIGURAÇÕES · CADASTROS</span>
+            <h1 class="text-3xl font-semibold mt-2 mb-2">Empresa e revendas</h1>
+            <p class="text-muted-color m-0">Cadastre uma única empresa e gerencie suas revendas.</p>
+        </div>
+        <div class="flex gap-2">
+            <p-button icon="pi pi-refresh" label="Atualizar" severity="secondary" [outlined]="true" (onClick)="load()" [disabled]="loading() || saving()" /><p-button
+                icon="pi pi-plus"
+                label="Nova empresa"
+                (onClick)="open('company')"
+                [disabled]="saving() || loading() || !!loadError() || companies().length > 0"
+            />
+        </div>
+    </div>
+    @if (loadError()) {
+        <div class="form-error mb-4" role="alert">{{ loadError() }}</div>
+    }
+    <p-table #companyTable [value]="companies()" [loading]="loading()" [paginator]="true" [rows]="5" [rowsPerPageOptions]="[5, 10, 20]" [globalFilterFields]="['name', 'cnpj', 'city']" dataKey="id" [tableStyle]="{ 'min-width': '42rem' }">
+        <ng-template #caption
+            ><div class="flex flex-wrap items-center justify-between gap-3">
+                <h2 class="text-xl font-semibold m-0">
+                    Empresa <span class="text-muted-color text-sm">({{ companies().length }})</span>
+                </h2>
+                <input pInputText placeholder="Buscar empresa, CNPJ ou cidade" aria-label="Buscar empresa" (input)="companyTable.filterGlobal($any($event.target).value, 'contains')" /></div
+        ></ng-template>
+        <ng-template #header
+            ><tr>
+                <th>Código</th>
+                <th>Empresa / CNPJ</th>
+                <th>Cidade / UF</th>
+                <th>Status</th>
+                <th class="text-right">Ações</th>
+            </tr></ng-template
+        >
+        <ng-template #body let-item
+            ><tr [class.selected-company]="selectedCompany()?.id === item.id">
+                <td>{{ item.id }}</td>
+                <td>
+                    <strong>{{ item.name }}</strong
+                    ><small class="block text-muted-color mt-1">{{ formatCnpj(item.cnpj) }}</small>
+                </td>
+                <td>{{ item.city }} / {{ item.state }}</td>
+                <td><p-tag [value]="item.status" [severity]="item.status === enabled ? 'success' : 'secondary'" /></td>
+                <td>
+                    <div class="flex justify-end gap-2">
+                        <p-button label="Revendas" icon="pi pi-sitemap" size="small" [outlined]="selectedCompany()?.id !== item.id" (onClick)="selectCompany(item)" [disabled]="saving()" [ariaLabel]="'Ver revendas de ' + item.name" /><p-button
+                            icon="pi pi-pencil"
+                            [text]="true"
+                            (onClick)="open('company', item)"
+                            [disabled]="saving()"
+                            [ariaLabel]="'Editar empresa ' + item.name"
+                        />
+                    </div>
+                </td></tr
+        ></ng-template>
+        <ng-template #emptymessage
+            ><tr>
+                <td colspan="5" class="text-center py-8 text-muted-color">Nenhuma empresa encontrada. Clique em Nova empresa para cadastrar.</td>
+            </tr></ng-template
+        >
+    </p-table>
+</div>
+<div class="card">
+    <div class="flex flex-wrap items-center justify-between gap-3 mb-5">
+        <div>
+            <h2 class="text-xl font-semibold m-0">Revendas</h2>
+            <p class="text-muted-color mt-2 mb-0">{{ selectedCompany() ? 'Vinculadas a ' + selectedCompany()?.name : 'Selecione ou cadastre uma empresa para gerenciar suas revendas.' }}</p>
+        </div>
+        <p-button icon="pi pi-plus" label="Nova revenda" (onClick)="open('resale')" [disabled]="!selectedCompany() || saving() || loading()" />
+    </div>
+    @if (resaleError()) {
+        <div class="form-error mb-4" role="alert">{{ resaleError() }} <p-button label="Tentar novamente" [text]="true" (onClick)="selectCompany(selectedCompany()!)" [disabled]="saving()" /></div>
+    }
+    <p-table [value]="resales()" [loading]="loadingResales()" [paginator]="true" [rows]="10" dataKey="id" [tableStyle]="{ 'min-width': '38rem' }">
+        <ng-template #header
+            ><tr>
+                <th>Código</th>
+                <th>Revenda / CNPJ</th>
+                <th>Cidade / UF</th>
+                <th>Contato</th>
+                <th>Status</th>
+                <th>Ações</th>
+            </tr></ng-template
+        >
+        <ng-template #body let-item
+            ><tr>
+                <td>{{ item.id }}</td>
+                <td>
+                    <strong>{{ item.name }}</strong
+                    ><small class="block text-muted-color mt-1">{{ formatCnpj(item.cnpj) }}</small>
+                </td>
+                <td>{{ item.city }} / {{ item.state }}</td>
+                <td>
+                    {{ item.phone || item.cellphone || '—' }}<small class="block text-muted-color">{{ item.email }}</small>
+                </td>
+                <td><p-tag [value]="item.status" [severity]="item.status === enabled ? 'success' : 'secondary'" /></td>
+                <td><p-button icon="pi pi-pencil" label="Editar" [text]="true" (onClick)="open('resale', item)" [disabled]="saving()" [ariaLabel]="'Editar revenda ' + item.name" /></td></tr
+        ></ng-template>
+        <ng-template #emptymessage
+            ><tr>
+                <td colspan="6" class="text-center py-8 text-muted-color">{{ selectedCompany() ? 'Nenhuma revenda cadastrada para esta empresa.' : 'Selecione uma empresa acima.' }}</td>
+            </tr></ng-template
+        >
+    </p-table>
+</div>
+<p-dialog
+    [(visible)]="dialogVisible"
+    [header]="(editingId ? 'Editar ' : 'Cadastrar ') + (dialogKind === 'company' ? 'empresa' : 'revenda')"
+    [modal]="true"
+    [closable]="!saving()"
+    [closeOnEscape]="!saving()"
+    [draggable]="false"
+    [style]="{ width: '56rem', maxWidth: '96vw' }"
+>
+    @if (dialogKind === 'resale') {
+        <div class="rounded-lg bg-surface-100 dark:bg-surface-800 p-3 mb-5">
+            <span class="text-muted-color">Empresa vinculada</span><strong class="block mt-1">{{ selectedCompany()?.name }}</strong>
+        </div>
+    }
+    <p class="text-muted-color text-sm">Os campos com * são obrigatórios.</p>
+    <form [formGroup]="form" (ngSubmit)="save()" id="companyForm">
+        <fieldset [disabled]="saving()" class="border-0 p-0 m-0 min-w-0">
+            <h3 class="text-lg font-semibold mb-4">Identificação</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="md:col-span-2">
+                    <label for="companyName">Razão social / Nome *</label><input pInputText id="companyName" formControlName="name" maxlength="255" class="w-full" [invalid]="form.controls.name.touched && form.controls.name.invalid" />
+                </div>
+                <div><label for="companyStatus">Status *</label><p-select inputId="companyStatus" formControlName="status" [options]="statuses" optionLabel="label" optionValue="value" appendTo="body" fluid /></div>
+                <div><label for="companyCnpj">CNPJ *</label><p-inputmask inputId="companyCnpj" mask="99.999.999/9999-99" formControlName="cnpj" [unmask]="true" [invalid]="form.controls.cnpj.touched && form.controls.cnpj.invalid" fluid /></div>
+                <div class="md:col-span-2">
+                    <label for="companyEmail">E-mail</label><input pInputText id="companyEmail" formControlName="email" type="email" maxlength="255" class="w-full" [invalid]="form.controls.email.touched && form.controls.email.invalid" />
+                </div>
+                <div><label for="companyPhone">Telefone</label><input pInputText id="companyPhone" formControlName="phone" type="tel" maxlength="20" class="w-full" /></div>
+                <div><label for="companyCellphone">Celular</label><input pInputText id="companyCellphone" formControlName="cellphone" type="tel" maxlength="20" class="w-full" /></div>
+            </div>
+            <h3 class="text-lg font-semibold mt-6 mb-4">Endereço</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div><label for="companyZip">CEP *</label><p-inputmask inputId="companyZip" mask="99999-999" formControlName="zipCode" [unmask]="true" [invalid]="form.controls.zipCode.touched && form.controls.zipCode.invalid" fluid /></div>
+                <div>
+                    <label for="companyState">UF *</label
+                    ><p-select inputId="companyState" formControlName="state" [options]="states" [filter]="true" appendTo="body" placeholder="Selecione" [invalid]="form.controls.state.touched && form.controls.state.invalid" fluid />
+                </div>
+                <div><label for="companyCity">Cidade *</label><input pInputText id="companyCity" formControlName="city" maxlength="255" class="w-full" [invalid]="form.controls.city.touched && form.controls.city.invalid" /></div>
+                <div class="md:col-span-2">
+                    <label for="companyAddress">Logradouro *</label><input pInputText id="companyAddress" formControlName="address" maxlength="255" class="w-full" [invalid]="form.controls.address.touched && form.controls.address.invalid" />
+                </div>
+                <div>
+                    <label for="companyNumber">Número *</label
+                    ><input pInputText id="companyNumber" formControlName="addressNumber" maxlength="255" class="w-full" [invalid]="form.controls.addressNumber.touched && form.controls.addressNumber.invalid" />
+                </div>
+                <div>
+                    <label for="companyNeighborhood">Bairro *</label
+                    ><input pInputText id="companyNeighborhood" formControlName="neighborhood" maxlength="255" class="w-full" [invalid]="form.controls.neighborhood.touched && form.controls.neighborhood.invalid" />
+                </div>
+                <div class="md:col-span-2"><label for="companyComplement">Complemento</label><input pInputText id="companyComplement" formControlName="addressComplement" maxlength="255" class="w-full" /></div>
+            </div>
+            @if (saveError()) {
+                <p class="form-error mt-4" role="alert">{{ saveError() }}</p>
+            }
+        </fieldset>
+    </form>
+    <ng-template #footer
+        ><p-button label="Cancelar" severity="secondary" [text]="true" (onClick)="dialogVisible = false" [disabled]="saving()" /><p-button label="Salvar cadastro" icon="pi pi-check" (onClick)="save()" [loading]="saving()"
+    /></ng-template>
+</p-dialog>
