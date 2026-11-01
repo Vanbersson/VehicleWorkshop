@@ -1,158 +1,158 @@
-<div class="layout-card">
-    <p-toast />
-    <div class="layout-card-title">
-        <span class="text-500 font-medium">Pedidos de compras</span>
-        <p-button icon="pi pi-filter-slash" [outlined]="true" label="Limpar" (onClick)="cleanList()" />
-    </div>
-
-    <p-table #tableFilter dataKey="id" [value]="purchaseOrders()" showGridlines [rowHover]="true" [showCurrentPageReport]="true"
-        [tableStyle]="{ 'min-width': '50rem' }"
-        [globalFilterFields]="['id', 'clientCompanyName', 'attendantName', 'responsibleName','status']"
-        [paginator]="true" [rows]="10" [rowsPerPageOptions]="[10, 25, 50]" styleClass="p-datatable-sm">
-        <ng-template pTemplate="caption">
-            <div class="flex justify-between">
-                <p-iconField iconPosition="left">
-                    <p-inputIcon>
-                        <i class="pi pi-search"></i>
-                    </p-inputIcon>
-                    <input pInputText type="text"
-                        (input)="tableFilter.filterGlobal($any($event.target).value, 'contains')"
-                        placeholder="Pesquisar" />
-                </p-iconField>
-                <p-button icon="pi pi-filter" severity="warn" [outlined]="true" label="Filtros"
-                    (onClick)="showDialog()" />
-            </div>
-        </ng-template>
-        <ng-template pTemplate="header">
-            <tr>
-                <th style="width:10%;">Pedido</th>
-                <th style="width:10%;">Entrega</th>
-                <th style="width:10%;">Status</th>
-                <th style="width:10%;">Nota</th>
-                <th style="width:30%;">Fornecedor</th>
-                <th style="width:20%;">Responsavel</th>
-                <th style="width:10%;">Tipo</th>
-
-                <th></th>
-            </tr>
-        </ng-template>
-        <ng-template pTemplate="body" let-purchase>
-            <tr>
-                <td>{{purchase.id}}</td>
-                <td><p-tag [value]="getStatusDelivery(purchase)" [severity]="getStatusSeverity(purchase)" /></td>
-                <td>
-                    @if(purchase.status == `${OPEN}`){
-                    <p-tag [value]="purchase.status | titlecase" severity="success" />
-                    }@else {
-                    <p-tag [value]="purchase.status  | titlecase" severity="danger" />
-                    }
-                </td>
-                @if(purchase.nfNum != 0){
-                <td>{{purchase.nfNum}}</td>
-                }@else {
-                <td></td>
-                }
-                <td>{{abreviaNome(purchase.clientCompanyName) | uppercase}}</td>
-                <td>{{purchase.responsibleUserName | uppercase}}</td>
-                <td>{{purchase.type | uppercase}}</td>
-                <td><p-button icon="pi pi-print" [text]="true" severity="secondary" size="small" (onClick)="print(purchase.id)" /></td>
-            </tr>
-        </ng-template>
-    </p-table>
-
-</div>
-
-<p-dialog [(visible)]="dialogVisible" header="Filtros" [modal]="true" [style]="{ width: '70rem',height:'60rem' }"
-    [breakpoints]="{ '1199px': '75vw', '575px': '90vw' }" [maximizable]="true">
-    <form [formGroup]="formFilter" style="min-height: 47rem;">
-        <div class="grid grid-cols-12 gap-4">
-            <div class="col-span-12 flex justify-end mt-2">
-                <p-button icon="pi pi-filter-slash" [outlined]="true" label="Limpar" (onClick)="cleanformFilter()" />
-            </div>
-            <div class="col-span-12 md:col-span-8">
-                <label>Período recebimento de mecadoria</label>
-                <div class="col-span-12 flex items-center gap-4 border border-surface-300 rounded-lg p-3">
-                    <div class="col-span-12">
-                        <label for="dateIniId">Período inicial</label>
-                        <p-datepicker dateFormat="dd/mm/yy" [iconDisplay]="'input'" [showIcon]="true" inputId="buttondisplay"
-                            formControlName="dateInit" fluid />
-                    </div>
-                    <div class="col-span-12">
-                        <label for="dateIniId">Período final</label>
-                        <p-datepicker dateFormat="dd/mm/yy" [iconDisplay]="'input'" [showIcon]="true" inputId="buttondisplay"
-                            formControlName="dateFinal" fluid />
-                    </div>
-                </div>
-            </div>
-            
-            <div class="md:col-span-4"></div>
-            <div class="col-span-12 md:col-span-4">
-                <label for="">Status</label>
-                <div class="flex items-center gap-4 border border-surface-300 rounded-lg p-3">
-                    <div class="flex items-center">
-                        <p-radioButton name="status" [value]="OPEN" inputId="openId"
-                            formControlName="status"></p-radioButton>
-                        <label for="openId" class="ml-2">
-                            Aberto
-                        </label>
-                    </div>
-                    <div class="flex items-center">
-                        <p-radioButton name="status" [value]="CLOSE" inputId="closeId"
-                            formControlName="status"></p-radioButton>
-                        <label for="closeId" class="ml-2">
-                            Encerrado
-                        </label>
-                    </div>
-                    <div class="flex items-center">
-                        <p-radioButton name="status" [value]="BOTH" inputId="bothId"
-                            formControlName="status"></p-radioButton>
-                        <label for="bothId" class="ml-2">
-                            Ambos
-                        </label>
-                    </div>
-                </div>
-            </div>
-
-            <div class="md:col-span-8"></div>
-            <div class="col-span-12 md:col-span-2">
-                <label for="clientCompanyCodeId">Código</label>
-                <p-inputNumber inputId="clientCompanyCodeId" mode="decimal" [useGrouping]="false"
-                    formControlName="clientCompanyId" fluid />
-            </div>
-            <div class="col-span-10 md:col-span-6">
-                <label for="clientCompanyNameId">Empresa</label>
-                <input pInputText id="clientCompanyNameId" type="text" class="w-full"
-                    formControlName="clientCompanyName" />
-            </div>
-            <div class="col-span-2 md:col-span-1">
-                <label for="">Filtro</label>
-                <app-filterclient (outputClient)="selectClientCompany.set($event)" />
-            </div>
-            <div class="md:col-span-3"></div>
-            <div class="col-span-12 md:col-span-4">
-                <label for="responsableId">Responsavel</label>
-                <p-select fluid [options]="responsable()" [showClear]="true" optionLabel="name" display="chip"
-                    placeholder="Selecione" formControlName="responsible" [style]="{'text-transform':'uppercase'}" />
-            </div>
-            <div class=" col-span-12 md:col-span-2">
-                <label for="purchaseId">Nro. Pedido</label>
-                <p-inputNumber inputId="purchaseId" mode="decimal" [useGrouping]="false"
-                    formControlName="purchaseOrderId" fluid />
-            </div>
-            <div class=" col-span-12 md:col-span-2">
-                <label for="nfNumId">Nro. Nota</label>
-                <p-inputNumber inputId="nfNumId" mode="decimal" [useGrouping]="false" formControlName="nfNum" fluid />
+<p-toast />
+<div class="report-page">
+    <header class="report-header">
+        <div class="report-title">
+            <span class="report-icon"><i class="pi pi-shopping-cart" aria-hidden="true"></i></span>
+            <div>
+                <span class="eyebrow">PEÇAS · RELATÓRIOS</span>
+                <h1>Pedidos de compras</h1>
+                <p>Consulte pedidos, acompanhe as entregas e imprima os detalhes das compras.</p>
             </div>
         </div>
+        <p-button label="Consultar pedidos" icon="pi pi-filter" (onClick)="showDialog()" [disabled]="searching()" />
+    </header>
+    <section class="report-panel" aria-labelledby="purchase-results">
+        <div class="report-heading">
+            <div>
+                <span class="eyebrow">RESULTADO DA CONSULTA</span>
+                <h2 id="purchase-results">
+                    Pedidos encontrados <span class="record-count">{{ purchaseOrders().length }}</span>
+                </h2>
+            </div>
+            <p-button label="Limpar consulta" icon="pi pi-filter-slash" severity="secondary" [text]="true" [disabled]="searching()" (onClick)="cleanList(); tableFilter.clear()" />
+        </div>
+        @if (searchError()) {
+            <div class="report-error" role="alert">{{ searchError() }}</div>
+        }
+        <p-table
+            #tableFilter
+            dataKey="id"
+            [value]="purchaseOrders()"
+            [loading]="searching()"
+            [rowHover]="true"
+            [showCurrentPageReport]="true"
+            currentPageReportTemplate="{first}–{last} de {totalRecords} pedidos"
+            [tableStyle]="{ 'min-width': '70rem' }"
+            [globalFilterFields]="['id', 'clientCompanyName', 'responsibleUserName', 'status', 'nfNum', 'type']"
+            [paginator]="true"
+            [rows]="10"
+            [rowsPerPageOptions]="[10, 25, 50]"
+            sortField="id"
+            [sortOrder]="-1"
+            size="small"
+            ><ng-template #caption
+                ><div class="result-search">
+                    <p-iconfield
+                        ><p-inputicon styleClass="pi pi-search" /><input
+                            #searchInput
+                            pInputText
+                            type="search"
+                            [value]="search()"
+                            (input)="search.set(searchInput.value); tableFilter.filterGlobal(searchInput.value, 'contains')"
+                            aria-label="Pesquisar nos pedidos encontrados"
+                            placeholder="Pedido, fornecedor, responsável ou nota"
+                            class="w-full" /></p-iconfield
+                    ><span class="text-muted-color text-sm">Pesquise nos resultados ou ajuste os filtros da consulta.</span>
+                </div></ng-template
+            ><ng-template #header
+                ><tr>
+                    <th pSortableColumn="id">Pedido <p-sortIcon field="id" /></th>
+                    <th>Entrega</th>
+                    <th pSortableColumn="status">Status <p-sortIcon field="status" /></th>
+                    <th pSortableColumn="nfNum">Nota fiscal <p-sortIcon field="nfNum" /></th>
+                    <th pSortableColumn="clientCompanyName">Fornecedor <p-sortIcon field="clientCompanyName" /></th>
+                    <th pSortableColumn="responsibleUserName">Responsável <p-sortIcon field="responsibleUserName" /></th>
+                    <th pSortableColumn="type">Tipo <p-sortIcon field="type" /></th>
+                    <th class="text-right">Ação</th>
+                </tr></ng-template
+            ><ng-template #body let-purchase
+                ><tr>
+                    <td>
+                        <span class="record-code">#{{ purchase.id }}</span>
+                    </td>
+                    <td><p-tag [value]="getStatusDelivery(purchase)" [severity]="getStatusSeverity(purchase)" [rounded]="true" /></td>
+                    <td><p-tag [value]="purchase.status | titlecase" [severity]="purchase.status === OPEN ? 'success' : 'secondary'" [rounded]="true" /></td>
+                    <td>{{ purchase.nfNum || '—' }}</td>
+                    <td>
+                        <span class="supplier-name">{{ purchase.clientCompanyName | uppercase }}</span>
+                    </td>
+                    <td>{{ purchase.responsibleUserName | uppercase }}</td>
+                    <td>{{ purchase.type | uppercase }}</td>
+                    <td class="text-right"><p-button label="Imprimir" icon="pi pi-print" [text]="true" severity="secondary" size="small" [ariaLabel]="'Imprimir pedido ' + purchase.id" (onClick)="print(purchase.id)" /></td></tr></ng-template
+            ><ng-template #emptymessage
+                ><tr>
+                    <td colspan="8">
+                        <div class="report-empty">
+                            <span class="report-icon"><i class="pi" [ngClass]="searchError() ? 'pi-exclamation-circle' : 'pi-search'" aria-hidden="true"></i></span>
+                            <h3>{{ searchError() ? 'Consulta indisponível' : searched() ? 'Nenhum pedido encontrado' : 'Consulte os pedidos de compras' }}</h3>
+                            <p>
+                                {{
+                                    searchError()
+                                        ? 'Abra os filtros e tente consultar novamente.'
+                                        : searched()
+                                          ? 'Ajuste os filtros ou a busca para visualizar outros pedidos.'
+                                          : 'Selecione o período e os filtros para acompanhar as compras da oficina.'
+                                }}
+                            </p>
+                            <p-button label="Ajustar filtros" icon="pi pi-filter" [outlined]="true" (onClick)="showDialog()" />
+                        </div>
+                    </td></tr></ng-template
+        ></p-table>
+    </section>
+</div>
+<p-dialog [(visible)]="dialogVisible" header="Consultar pedidos de compras" [modal]="true" [draggable]="false" [style]="{ width: '58rem', maxWidth: '96vw' }" [breakpoints]="{ '960px': '94vw', '640px': '96vw' }" [maximizable]="true"
+    ><form id="purchase-report-filter" [formGroup]="formFilter" (ngSubmit)="searchPurchaseOrder()">
+        <div class="dialog-intro">
+            <i class="pi pi-filter" aria-hidden="true"></i>
+            <div>
+                <h2>Filtros da consulta</h2>
+                <p>Combine os filtros para localizar os pedidos desejados.</p>
+            </div>
+        </div>
+        <fieldset class="filter-section">
+            <legend>Período de recebimento da mercadoria</legend>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="field">
+                    <label for="purchase-date-init">Data inicial</label
+                    ><p-datepicker inputId="purchase-date-init" dateFormat="dd/mm/yy" [iconDisplay]="'input'" [showIcon]="true" formControlName="dateInit" appendTo="body" placeholder="dd/mm/aaaa" fluid />
+                </div>
+                <div class="field">
+                    <label for="purchase-date-final">Data final</label
+                    ><p-datepicker inputId="purchase-date-final" dateFormat="dd/mm/yy" [iconDisplay]="'input'" [showIcon]="true" formControlName="dateFinal" appendTo="body" placeholder="dd/mm/aaaa" fluid />
+                </div>
+            </div>
+        </fieldset>
+        <fieldset class="filter-section">
+            <legend>Status do pedido</legend>
+            <div class="choices">
+                <div><p-radioButton inputId="purchase-open" name="status" [value]="OPEN" formControlName="status" /><label for="purchase-open">Aberto</label></div>
+                <div><p-radioButton inputId="purchase-close" name="status" [value]="CLOSE" formControlName="status" /><label for="purchase-close">Encerrado</label></div>
+                <div><p-radioButton inputId="purchase-both" name="status" [value]="BOTH" formControlName="status" /><label for="purchase-both">Ambos</label></div>
+            </div>
+        </fieldset>
+        <fieldset class="filter-section">
+            <legend>Fornecedor</legend>
+            <div class="grid grid-cols-12 gap-4">
+                <div class="field col-span-12 sm:col-span-3"><label for="purchase-supplier-id">Código</label><p-inputNumber inputId="purchase-supplier-id" [useGrouping]="false" formControlName="clientCompanyId" fluid /></div>
+                <div class="field col-span-12 sm:col-span-9">
+                    <label for="purchase-supplier-name">Nome / razão social</label><input pInputText id="purchase-supplier-name" formControlName="clientCompanyName" class="w-full" placeholder="Selecione um fornecedor" />
+                </div>
+                <div class="col-span-12"><app-filterclient buttonLabel="Selecionar fornecedor" [highlighted]="true" [isDisabled]="searching()" (outputClient)="selectClientCompany.set($event)" /></div>
+            </div>
+        </fieldset>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="field sm:col-span-2">
+                <label for="purchase-responsible">Responsável</label
+                ><p-select inputId="purchase-responsible" [options]="responsable()" [showClear]="true" optionLabel="name" placeholder="Todos os responsáveis" formControlName="responsible" appendTo="body" class="uppercase" fluid />
+            </div>
+            <div class="field"><label for="purchase-order-id">Número do pedido</label><p-inputNumber inputId="purchase-order-id" [useGrouping]="false" formControlName="purchaseOrderId" fluid /></div>
+            <div class="field"><label for="purchase-invoice">Número da nota fiscal</label><p-inputNumber inputId="purchase-invoice" [useGrouping]="false" formControlName="nfNum" fluid /></div>
+        </div>
     </form>
-    <div class="flex flex-col items-center w-full border-b border-surface-200 dark:border-surface-700 mt-4"></div>
-    <div class="flex justify-end gap-2 mt-4">
-        <button pButton type="button" pRipple label="Fechar" icon="pi pi-times" class="p-button-text"
-            (click)="hideDialog()"></button>
-        <button pButton type="button" pRipple label="Pesquisar" icon="pi pi-search" class="p-button-text"
-            (click)="searchPurchaseOrder()"></button>
-    </div>
-</p-dialog>
-
-<!-- Print -->
-<app-printPurchase #printComponent></app-printPurchase> 
+    <ng-template #footer
+        ><div class="filter-footer">
+            <p-button label="Limpar filtros" icon="pi pi-filter-slash" severity="secondary" [text]="true" (onClick)="cleanformFilter()" [disabled]="searching()" />
+            <div class="flex gap-2">
+                <p-button label="Fechar" severity="secondary" [text]="true" (onClick)="hideDialog()" /><button pButton type="submit" form="purchase-report-filter" label="Consultar" icon="pi pi-search" [disabled]="searching()"></button>
+            </div></div></ng-template></p-dialog
+><app-printPurchase #printComponent />

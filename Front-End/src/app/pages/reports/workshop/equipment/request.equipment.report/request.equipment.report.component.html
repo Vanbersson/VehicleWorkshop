@@ -1,30 +1,186 @@
-<div class="layout-card">
-    <p-toast />
-    <div class="layout-card-title">
-        <span class="text-500 font-medium">Requisições</span>
-        <p-button icon="pi pi-filter-slash" [outlined]="true" label="Limpar" />
+<div class="report-page">
+    <header class="report-header">
+        <div class="report-title">
+            <span class="report-icon"><i class="pi pi-clipboard" aria-hidden="true"></i></span>
+            <div>
+                <span class="eyebrow">OFICINA · RELATÓRIOS</span>
+                <h1>Relatório de Requisições</h1>
+                <p>Consulte empréstimos e kits, acompanhe os status e confira os materiais de cada requisição.</p>
+            </div>
+        </div>
+    </header>
+    <section class="report-panel mb-5" aria-labelledby="request-filters">
+        <div class="report-heading">
+            <div>
+                <span class="eyebrow">CONSULTA DE REQUISIÇÕES</span>
+                <h2 id="request-filters">Filtros do relatório</h2>
+            </div>
+        </div>
+        @if (mechanicError()) {
+            <div class="report-error" role="alert">{{ mechanicError() }}<p-button label="Recarregar mecânicos" icon="pi pi-refresh" [text]="true" (onClick)="loadMechanics()" /></div>
+        }
+        <form [formGroup]="form" (ngSubmit)="consult()">
+            <fieldset class="filter-fields" [disabled]="loading()">
+                <div class="filter-grid">
+                    <div class="field"><label for="req-start">Data inicial da requisição</label><p-datepicker inputId="req-start" formControlName="start" dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body" placeholder="dd/mm/aaaa" fluid /></div>
+                    <div class="field"><label for="req-end">Data final da requisição</label><p-datepicker inputId="req-end" formControlName="end" dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body" placeholder="dd/mm/aaaa" fluid /></div>
+                    <div class="field">
+                        <label for="req-mechanicId">Mecânico</label
+                        ><p-select inputId="req-mechanicId" formControlName="mechanicId" [options]="mechanics()" optionLabel="name" optionValue="id" [filter]="true" filterBy="name" [showClear]="true" placeholder="Todos" appendTo="body" fluid />
+                    </div>
+                    <div class="field">
+                        <label for="req-status">Status</label><p-select inputId="req-status" formControlName="status" [options]="statuses" optionLabel="label" optionValue="value" [showClear]="true" placeholder="Todos" appendTo="body" fluid />
+                    </div>
+                    <div class="field">
+                        <label for="req-type">Tipo de requisição</label><p-select inputId="req-type" formControlName="type" [options]="types" optionLabel="label" optionValue="value" [showClear]="true" placeholder="Todos" appendTo="body" fluid />
+                    </div>
+                    <div class="field"><label for="req-category">Categoria do material</label><p-select inputId="req-category" formControlName="category" [options]="categories" [showClear]="true" placeholder="Todos" appendTo="body" fluid /></div>
+                    <div class="field"><label for="req-id">Número da requisição</label><p-inputNumber inputId="req-id" formControlName="id" [useGrouping]="false" [min]="1" [maxFractionDigits]="0" fluid /></div>
+                </div>
+            </fieldset>
+            <div class="flex flex-wrap gap-2 mt-5">
+                <p-button type="submit" label="Consultar" icon="pi pi-search" [loading]="loading()" /><p-button label="Limpar consulta" icon="pi pi-filter-slash" severity="secondary" [text]="true" (onClick)="clear()" [disabled]="loading()" />
+            </div>
+        </form>
+    </section>
+    @if (error()) {
+        <div class="report-error" role="alert">{{ error() }}</div>
+    }
+    <div class="summary-grid" aria-label="Resumo dos resultados">
+        <div>
+            <span>Total de requisições</span><strong>{{ summary().total }}</strong>
+        </div>
+        <div>
+            <span>Abertas</span><strong>{{ summary().open }}</strong>
+        </div>
+        <div>
+            <span>Entregues / concluídas</span><strong>{{ summary().delivered }}</strong>
+        </div>
+        <div>
+            <span>Devolvidas</span><strong>{{ summary().returned }}</strong>
+        </div>
     </div>
-    <p-table  showGridlines>
-        <ng-template #header>
-            <tr>
-                <th style="width: 10%;">Requisição</th>
-                <th style="width: 10%;">Tipo</th>
-                <th style="width: 60%;">Mecânico</th>
-                <th style="width: 10%;">Entrega</th>
-                <th style="width: 10%;">Devolução</th>
-                <th></th>
-            </tr>
-        </ng-template>
-        <ng-template #body>
-            <tr>
-                <td>102</td>
-                <td>FERRAMENTA</td>
-                <td>MISAEL</td>
-                <td>11/09/2026 15:01</td>
-                <td>21/09/2026 15:01</td>
-                <td><p-button icon="pi pi-pencil" [text]="true" severity="secondary" size="small" /></td>
-            </tr>
-        </ng-template>
-
-    </p-table>
+    <section class="report-panel" aria-labelledby="request-results">
+        <div class="report-heading">
+            <div>
+                <span class="eyebrow">RESULTADOS DA CONSULTA</span>
+                <h2 id="request-results">
+                    Requisições <span class="record-count">{{ visibleRows().length }}</span>
+                </h2>
+            </div>
+            <div class="flex gap-2 flex-wrap">
+                <p-button label="Exportar CSV" icon="pi pi-download" severity="secondary" [outlined]="true" [disabled]="loading() || !visibleRows().length" (onClick)="exportCsv()" /><p-button
+                    label="Imprimir"
+                    icon="pi pi-print"
+                    severity="secondary"
+                    [outlined]="true"
+                    [disabled]="loading() || !visibleRows().length"
+                    (onClick)="print()"
+                />
+            </div>
+        </div>
+        <div class="result-search mb-4">
+            <input #searchInput pInputText type="search" [value]="search()" (input)="search.set(searchInput.value)" placeholder="Buscar requisição, mecânico ou solicitante" aria-label="Pesquisar nos resultados" class="w-full" /><span
+                class="text-muted-color text-sm"
+                >Resumo, CSV e impressão incluem todos os resultados da busca, em todas as páginas.</span
+            >
+        </div>
+        <p-table
+            [value]="visibleRows()"
+            [loading]="loading()"
+            dataKey="id"
+            [rowHover]="true"
+            [paginator]="true"
+            [rows]="10"
+            [rowsPerPageOptions]="[10, 25, 50]"
+            [showCurrentPageReport]="true"
+            currentPageReportTemplate="{first}–{last} de {totalRecords} requisições"
+            [tableStyle]="{ 'min-width': '76rem' }"
+            sortField="id"
+            [sortOrder]="-1"
+            size="small"
+            ><ng-template #header
+                ><tr>
+                    <th pSortableColumn="id">Requisição <p-sortIcon field="id" /></th>
+                    <th pSortableColumn="requestDate">Data <p-sortIcon field="requestDate" /></th>
+                    <th pSortableColumn="mechanicName">Mecânico <p-sortIcon field="mechanicName" /></th>
+                    <th>Tipo</th>
+                    <th>Categoria</th>
+                    <th>Status</th>
+                    <th>Solicitante</th>
+                    <th class="text-right">Ação</th>
+                </tr></ng-template
+            ><ng-template #body let-row
+                ><tr>
+                    <td>
+                        <span class="record-code">#{{ row.id }}</span>
+                    </td>
+                    <td>{{ row.requestDate ? (row.requestDate | date: 'dd/MM/yyyy HH:mm') : '—' }}</td>
+                    <td class="font-semibold">{{ row.mechanicName }}</td>
+                    <td>{{ typeLabel(row.requestType) }}</td>
+                    <td>{{ row.categoryType }}</td>
+                    <td><p-tag [value]="statusLabel(row.status)" [severity]="severity(row.status)" [rounded]="true" /></td>
+                    <td>{{ row.requestUserName || '—' }}</td>
+                    <td class="text-right"><p-button label="Detalhes" icon="pi pi-eye" severity="secondary" [text]="true" size="small" [ariaLabel]="'Consultar requisição ' + row.id" (onClick)="openDetails(row)" /></td></tr></ng-template
+            ><ng-template #emptymessage
+                ><tr>
+                    <td colspan="8">
+                        <div class="report-empty">
+                            <span class="report-icon"><i class="pi pi-search" aria-hidden="true"></i></span>
+                            <h3>{{ error() ? 'Consulta indisponível' : searched() ? 'Nenhuma requisição encontrada' : 'Seu relatório começa aqui' }}</h3>
+                            <p>{{ error() ? 'Tente consultar novamente.' : searched() ? 'Ajuste os filtros ou o termo de busca.' : 'Selecione os filtros e clique em Consultar.' }}</p>
+                        </div>
+                    </td>
+                </tr></ng-template
+            ></p-table
+        >
+    </section>
 </div>
+<p-dialog [(visible)]="detailVisible" [header]="'Requisição #' + selected()?.id" [modal]="true" [draggable]="false" [style]="{ width: '76rem', maxWidth: '96vw' }" [breakpoints]="{ '960px': '94vw' }"
+    ><div class="detail-summary">
+        <div>
+            <span>Mecânico</span><strong>{{ selected()?.mechanicName }}</strong>
+        </div>
+        <div>
+            <span>Tipo</span><strong>{{ selected() ? typeLabel(selected()!.requestType) : '' }}</strong>
+        </div>
+        <div>
+            <span>Status</span><strong>{{ selected() ? statusLabel(selected()!.status) : '' }}</strong>
+        </div>
+    </div>
+    <p class="detail-notes">{{ selected()?.requestInformation || 'Sem observações na requisição.' }}</p>
+    @if (detailError()) {
+        <div class="report-error" role="alert">{{ detailError() }}<p-button label="Tentar novamente" [text]="true" (onClick)="openDetails(selected()!)" /></div>
+    }
+    <p-table [value]="detailRows()" [loading]="detailLoading()" [tableStyle]="{ 'min-width': '65rem' }" [paginator]="true" [rows]="10" size="small"
+        ><ng-template #header
+            ><tr>
+                <th>Material</th>
+                <th>Qtd. entregue</th>
+                <th>Entrega</th>
+                <th>Entregue por</th>
+                <th>Qtd. devolvida</th>
+                <th>Devolução</th>
+                <th>Recebido por</th>
+                <th>Observações</th>
+            </tr></ng-template
+        ><ng-template #body let-item
+            ><tr>
+                <td>{{ item.materialDescription || 'Material #' + item.materialId }}</td>
+                <td>{{ item.deliveryQuantity }}</td>
+                <td>{{ item.deliveryDate ? (item.deliveryDate | date: 'dd/MM/yyyy HH:mm') : '—' }}</td>
+                <td>{{ item.deliveryUserName || '—' }}</td>
+                <td>{{ item.returnQuantity }}</td>
+                <td>{{ item.returnDate ? (item.returnDate | date: 'dd/MM/yyyy HH:mm') : '—' }}</td>
+                <td>{{ item.returnUserName || '—' }}</td>
+                <td>
+                    <div class="detail-notes">{{ item.deliveryInformation || '—' }}<br />{{ item.returnInformation }}</div>
+                </td>
+            </tr></ng-template
+        ><ng-template #emptymessage
+            ><tr>
+                <td colspan="8" class="text-center p-5">{{ detailError() ? 'Materiais indisponíveis.' : 'Nenhum material registrado nesta requisição.' }}</td>
+            </tr></ng-template
+        ></p-table
+    ><ng-template #footer><p-button label="Fechar" severity="secondary" [text]="true" (onClick)="detailVisible = false" /></ng-template
+></p-dialog>

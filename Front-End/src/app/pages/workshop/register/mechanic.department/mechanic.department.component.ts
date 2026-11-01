@@ -1,6 +1,6 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { lastValueFrom } from 'rxjs';
 import { HttpResponse } from '@angular/common/http';
 
@@ -9,7 +9,9 @@ import { InputNumberModule } from 'primeng/inputnumber';
 import { InputGroupModule } from 'primeng/inputgroup';
 import { InputIconModule } from 'primeng/inputicon';
 import { ButtonModule } from 'primeng/button';
-import { TableModule } from 'primeng/table';
+import { TagModule } from 'primeng/tag';
+import { SelectModule } from 'primeng/select';
+import { Table, TableModule } from 'primeng/table';
 import { IconFieldModule } from 'primeng/iconfield';
 import { DialogModule } from 'primeng/dialog';
 import { ToastModule } from 'primeng/toast';
@@ -26,156 +28,177 @@ import { MechanicDepartment } from '@/app/models/workshop/mechanic.department';
 import { MechanicDepartmentService } from '@/app/services/workshop/mechanic.department.service';
 
 @Component({
-  selector: 'app-mechanic-department',
-  imports: [CommonModule, ReactiveFormsModule, ToastModule, InputTextModule, InputNumberModule,
-    InputGroupModule, IconFieldModule, TableModule, RadioButtonModule,
-    ButtonModule, InputIconModule, DialogModule],
-  templateUrl: './mechanic.department.component.html',
-  styleUrl: './mechanic.department.component.scss',
-  providers: [MessageService]
+    selector: 'app-mechanic-department',
+    imports: [CommonModule, FormsModule, TagModule, SelectModule, ReactiveFormsModule, ToastModule, InputTextModule, InputNumberModule, InputGroupModule, IconFieldModule, TableModule, RadioButtonModule, ButtonModule, InputIconModule, DialogModule],
+    templateUrl: './mechanic.department.component.html',
+    styleUrl: './mechanic.department.component.scss',
+    providers: [MessageService]
 })
 export default class MechanicDepartmentComponent implements OnInit {
-  visibleDialog: boolean = false;
-  enabled = StatusEnabDisabEnum.ENABLED;
-  disabled = StatusEnabDisabEnum.DISABLED;
+    readonly loadingDepartments = signal(false);
+    readonly loadError = signal('');
+    selectedStatus: StatusEnabDisabEnum | null = null;
+    readonly statusOptions = [
+        { label: StatusEnabDisabEnum.ENABLED, value: StatusEnabDisabEnum.ENABLED },
+        { label: StatusEnabDisabEnum.DISABLED, value: StatusEnabDisabEnum.DISABLED }
+    ];
+    clearFilters(table: Table, input: HTMLInputElement): void {
+        this.selectedStatus = null;
+        input.value = '';
+        table.clear();
+    }
+    visibleDialog: boolean = false;
+    enabled = StatusEnabDisabEnum.ENABLED;
+    disabled = StatusEnabDisabEnum.DISABLED;
 
-  departments = signal<MechanicDepartment[]>([]);
+    departments = signal<MechanicDepartment[]>([]);
 
-  depatment!: MechanicDepartment;
-  isNewDep: boolean = true;
+    depatment!: MechanicDepartment;
+    isNewDep: boolean = true;
 
-  formDep = new FormGroup({
-    id: new FormControl<number | null>({ value: null, disabled: true }),
-    status: new FormControl<StatusEnabDisabEnum>(StatusEnabDisabEnum.ENABLED, Validators.required),
-    description: new FormControl<string>("", Validators.required),
-  });
-
-  constructor(
-    private storageService: StorageService,
-    private loadingService: LoadingService,
-    private departmentService: MechanicDepartmentService,
-    private messageService: MessageService) { }
-
-  ngOnInit(): void {
-    this.init();
-  }
-
-  private async init() {
-    //open Load
-    this.loadingService.show();
-    this.departments.set(await this.listAll());
-    //Close Load
-    this.loadingService.hide();
-  }
-
-  private showDialog() {
-    this.visibleDialog = true;
-  }
-
-  showNewPay() {
-    this.isNewDep = true;
-    this.depatment = new ClientCategory();
-    this.cleanForm();
-    this.showDialog();
-  }
-
-  hideDialog() {
-    this.visibleDialog = false;
-  }
-
-  private cleanForm() {
-    this.formDep.patchValue({
-      id: null,
-      description: "",
-      status: StatusEnabDisabEnum.ENABLED
+    formDep = new FormGroup({
+        id: new FormControl<number | null>({ value: null, disabled: true }),
+        status: new FormControl<StatusEnabDisabEnum>(StatusEnabDisabEnum.ENABLED, Validators.required),
+        description: new FormControl<string>('', Validators.required)
     });
-  }
-  edit(dep: MechanicDepartment) {
-    this.depatment = dep;
-    this.isNewDep = false;
-    this.cleanForm();
-    this.formDep.patchValue({
-      id: dep.id,
-      description: dep.description,
-      status: dep.status
-    });
-    this.showDialog();
-  }
-  save() {
-    if (this.isNewDep) {
-      this.savePay();
-    } else {
-      this.updatePay();
-    }
-  }
 
-  private async savePay() {
-    const { value, valid } = this.formDep;
-    if (!valid) {
-      return;
-    }
-    this.depatment.companyId = this.storageService.companyId;
-    this.depatment.resaleId = this.storageService.resaleId;
-    this.depatment.status = value.status!;
-    this.depatment.description = value.description!;
+    constructor(
+        private storageService: StorageService,
+        private loadingService: LoadingService,
+        private departmentService: MechanicDepartmentService,
+        private messageService: MessageService
+    ) {}
 
-    //open Load
-    this.loadingService.show();
-    const resultSave = await this.saveDep(this.depatment);
-    //Close Load
-    this.loadingService.hide();
-    if (resultSave.status == 201 && resultSave.body?.status == StatusSuccessError.succes) {
-      this.messageService.add({ severity: 'success', summary: resultSave.body.header, detail: resultSave.body.message, icon: 'pi pi-check' });
-      this.depatment = resultSave.body.data;
-      this.formDep.get("id")?.setValue(this.depatment.id);
-      this.isNewDep = false;
-      this.init();
+    ngOnInit(): void {
+        this.init();
     }
-    if (resultSave.status == 201 && resultSave.body?.status == StatusSuccessError.error) {
-      this.messageService.add({ severity: 'info', summary: resultSave.body.header, detail: resultSave.body.message, icon: 'pi pi-info-circle' });
+
+    async init(): Promise<void> {
+        if (this.loadingDepartments()) return;
+        this.loadingDepartments.set(true);
+        this.loadingService.show();
+        try {
+            this.departments.set(await this.listAll());
+        } finally {
+            this.loadingDepartments.set(false);
+            this.loadingService.hide();
+        }
     }
-  }
-  private async updatePay() {
-    const { value, valid } = this.formDep;
-    if (!valid) {
-      return;
+
+    private showDialog() {
+        this.visibleDialog = true;
     }
-    this.depatment.status = value.status!;
-    this.depatment.description = value.description!;
-    //open Load
-    this.loadingService.show();
-    const resultSave = await this.updateDep(this.depatment);
-    //Close Load
-    this.loadingService.hide();
-    if (resultSave.status == 200 && resultSave.body?.status == StatusSuccessError.succes) {
-      this.messageService.add({ severity: 'success', summary: resultSave.body.header, detail: resultSave.body.message, icon: 'pi pi-check' });
-      this.init();
+
+    showNewPay() {
+        this.isNewDep = true;
+        this.depatment = new ClientCategory();
+        this.cleanForm();
+        this.showDialog();
     }
-    if (resultSave.status == 200 && resultSave.body?.status == StatusSuccessError.error) {
-      this.messageService.add({ severity: 'info', summary: resultSave.body.header, detail: resultSave.body.message, icon: 'pi pi-info-circle' });
+
+    hideDialog() {
+        this.visibleDialog = false;
     }
-  }
-  private async listAll(): Promise<MechanicDepartment[]> {
-    try {
-      return await lastValueFrom(this.departmentService.listAll());
-    } catch (error: any) {
-      return [];
+
+    private cleanForm() {
+        this.formDep.reset({
+            id: null,
+            description: '',
+            status: StatusEnabDisabEnum.ENABLED
+        });
     }
-  }
-  private async saveDep(dep: MechanicDepartment): Promise<HttpResponse<MessageResponse>> {
-    try {
-      return await lastValueFrom(this.departmentService.save(dep));
-    } catch (error: any) {
-      this.messageService.add({ severity: 'error', summary: 'Erro', detail: error.error.message, icon: 'pi pi-times' });
-      return error;
+    edit(dep: MechanicDepartment) {
+        this.depatment = dep;
+        this.isNewDep = false;
+        this.cleanForm();
+        this.formDep.patchValue({
+            id: dep.id,
+            description: dep.description,
+            status: dep.status
+        });
+        this.showDialog();
     }
-  }
-  private async updateDep(dep: MechanicDepartment): Promise<HttpResponse<MessageResponse>> {
-    try {
-      return await lastValueFrom(this.departmentService.update(dep));
-    } catch (error: any) {
-      this.messageService.add({ severity: 'error', summary: 'Erro', detail: error.error.message, icon: 'pi pi-times' });
-      return error;
+    save() {
+        if (this.formDep.invalid) {
+            this.formDep.markAllAsTouched();
+            return;
+        }
+        if (this.isNewDep) {
+            this.savePay();
+        } else {
+            this.updatePay();
+        }
     }
-  }
+
+    private async savePay() {
+        const { value, valid } = this.formDep;
+        if (!valid) {
+            return;
+        }
+        this.depatment.companyId = this.storageService.companyId;
+        this.depatment.resaleId = this.storageService.resaleId;
+        this.depatment.status = value.status!;
+        this.depatment.description = value.description!;
+
+        //open Load
+        this.loadingService.show();
+        const resultSave = await this.saveDep(this.depatment);
+        //Close Load
+        this.loadingService.hide();
+        if (resultSave.status == 201 && resultSave.body?.status == StatusSuccessError.succes) {
+            this.messageService.add({ severity: 'success', summary: resultSave.body.header, detail: resultSave.body.message, icon: 'pi pi-check' });
+            this.depatment = resultSave.body.data;
+            this.formDep.get('id')?.setValue(this.depatment.id);
+            this.isNewDep = false;
+            this.init();
+        }
+        if (resultSave.status == 201 && resultSave.body?.status == StatusSuccessError.error) {
+            this.messageService.add({ severity: 'info', summary: resultSave.body.header, detail: resultSave.body.message, icon: 'pi pi-info-circle' });
+        }
+    }
+    private async updatePay() {
+        const { value, valid } = this.formDep;
+        if (!valid) {
+            return;
+        }
+        this.depatment.status = value.status!;
+        this.depatment.description = value.description!;
+        //open Load
+        this.loadingService.show();
+        const resultSave = await this.updateDep(this.depatment);
+        //Close Load
+        this.loadingService.hide();
+        if (resultSave.status == 200 && resultSave.body?.status == StatusSuccessError.succes) {
+            this.messageService.add({ severity: 'success', summary: resultSave.body.header, detail: resultSave.body.message, icon: 'pi pi-check' });
+            this.init();
+        }
+        if (resultSave.status == 200 && resultSave.body?.status == StatusSuccessError.error) {
+            this.messageService.add({ severity: 'info', summary: resultSave.body.header, detail: resultSave.body.message, icon: 'pi pi-info-circle' });
+        }
+    }
+    private async listAll(): Promise<MechanicDepartment[]> {
+        this.loadError.set('');
+        try {
+            return await lastValueFrom(this.departmentService.listAll());
+        } catch (error: any) {
+            this.loadError.set('Não foi possível carregar os departamentos.');
+            return [];
+        }
+    }
+    private async saveDep(dep: MechanicDepartment): Promise<HttpResponse<MessageResponse>> {
+        try {
+            return await lastValueFrom(this.departmentService.save(dep));
+        } catch (error: any) {
+            this.messageService.add({ severity: 'error', summary: 'Erro', detail: error.error.message, icon: 'pi pi-times' });
+            return error;
+        }
+    }
+    private async updateDep(dep: MechanicDepartment): Promise<HttpResponse<MessageResponse>> {
+        try {
+            return await lastValueFrom(this.departmentService.update(dep));
+        } catch (error: any) {
+            this.messageService.add({ severity: 'error', summary: 'Erro', detail: error.error.message, icon: 'pi pi-times' });
+            return error;
+        }
+    }
 }

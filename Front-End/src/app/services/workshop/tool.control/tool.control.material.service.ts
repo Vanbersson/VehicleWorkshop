@@ -13,7 +13,9 @@ export class ToolControlMaterialService {
     private storage = inject(StorageService);
     private http = inject(HttpClient);
 
-    private companyResale: string = this.storage.companyId + "/" + this.storage.resaleId;
+    private get companyResale(): string {
+        return this.storage.companyId + '/' + this.storage.resaleId;
+    }
 
     save(mat: ToolControlMaterial): Observable<HttpResponse<MessageResponse>> {
         return this.http.post<MessageResponse>(`${environment.apiuUrl}/workshop/tool/control/material/save`, mat, { headers: this.myHeaders(), observe: 'response' });
@@ -25,10 +27,10 @@ export class ToolControlMaterialService {
         return this.http.get<MessageResponse>(`${environment.apiuUrl}/workshop/tool/control/material/${this.companyResale}/filter/id/${id}`, { headers: this.myHeaders(), observe: 'response' });
     }
     listAll(): Observable<ToolControlMaterial[]> {
-        return this.http.get<ToolControlMaterial[]>(environment.apiuUrl + "/workshop/tool/control/material/" + this.companyResale + "/all", { headers: this.myHeaders() });
+        return this.http.get<ToolControlMaterial[]>(environment.apiuUrl + '/workshop/tool/control/material/' + this.companyResale + '/all', { headers: this.myHeaders() });
     }
     listAllEnabled(): Observable<ToolControlMaterial[]> {
-        return this.http.get<ToolControlMaterial[]>(environment.apiuUrl + "/workshop/tool/control/material/" + this.companyResale + "/all/enabled", { headers: this.myHeaders() });
+        return this.http.get<ToolControlMaterial[]>(environment.apiuUrl + '/workshop/tool/control/material/' + this.companyResale + '/all/enabled', { headers: this.myHeaders() });
     }
     saveImage(data: FormData): Observable<HttpResponse<MessageResponse>> {
         return this.http.post<MessageResponse>(`${environment.apiuUrl}/workshop/tool/control/material/save/image`, data, { headers: this.myHeaders(), observe: 'response' });
@@ -38,7 +40,7 @@ export class ToolControlMaterialService {
     }
     private myHeaders(): HttpHeaders {
         const httpOptions = new HttpHeaders({
-            'Authorization': 'Bearer ' + this.storage.token,
+            Authorization: 'Bearer ' + this.storage.token
         });
         return httpOptions;
     }

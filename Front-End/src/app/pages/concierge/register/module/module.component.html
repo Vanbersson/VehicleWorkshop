@@ -1,161 +1,203 @@
-<div class="layout-card">
-    <!-- Info -->
+<div class="module-page">
     <p-toast />
-    <div class="layout-card-title">
-        <span>Módulo Portaria</span>
-    </div>
-    <p-tabs value="0">
-        <p-tablist>
-            <p-tab value="0">Checklist Entrada</p-tab>
-        </p-tablist>
-        <p-tabpanels>
-            <p-tabpanel value="0">
-                <form [formGroup]="formChecklist">
-                <div class="grid grid-cols-12 gap-2">
-                    <div class="col-span-12 md:col-span-2">
-                        <label for="coneid">CheckLIst 1 - Descrição</label>
-                        <div class="flex gap-2">
-                            <p-checkbox inputId="id1" value="yes" formControlName="checklist1Enabled" />
-                            <input pInputText formControlName="checklist1Desc" />
+    <header class="module-header">
+        <div class="module-title">
+            <span class="module-icon"><i class="pi pi-building" aria-hidden="true"></i></span>
+            <div>
+                <span class="module-eyebrow">PORTARIA · CONFIGURAÇÕES</span>
+                <h1>Módulo Portaria</h1>
+                <p class="text-muted-color">Configure os itens verificados na entrada dos veículos da oficina.</p>
+            </div>
+        </div>
+    </header>
+    <section class="module-panel" aria-labelledby="checklist-title">
+        <div class="panel-heading">
+            <div>
+                <span class="module-eyebrow">INSPEÇÃO DE VEÍCULOS</span>
+                <h2 id="checklist-title">Checklist de entrada <span class="record-count">20 itens</span></h2>
+            </div>
+            <span class="panel-caption"><i class="pi pi-list-check" aria-hidden="true"></i>Personalize a conferência da portaria</span>
+        </div>
+        <div class="checklist-intro">
+            <i class="pi pi-info-circle" aria-hidden="true"></i>
+            <p>Marque os itens que devem aparecer no checklist e informe uma descrição para cada verificação.</p>
+        </div>
+        @if (loading()) {
+            <p role="status" class="text-muted-color">Carregando configurações do checklist...</p>
+        } @else if (!loaded()) {
+            <div class="load-error" role="alert">
+                <p>Não foi possível carregar as configurações do checklist.</p>
+                <p-button label="Tentar novamente" icon="pi pi-refresh" severity="secondary" [outlined]="true" (onClick)="init()" />
+            </div>
+        }
+        <form [formGroup]="formChecklist" (ngSubmit)="save()">
+            <fieldset class="checklist-fields" [disabled]="loading() || saving() || !loaded()">
+                <div class="checklist-grid">
+                    <article class="checklist-item" [class.item-enabled]="formChecklist.controls.checklist1Enabled.value?.includes(yes)">
+                        <div class="item-heading">
+                            <span class="item-number">01</span>
+                            <div class="item-toggle"><p-checkbox inputId="checklist-1-enabled" [value]="yes" formControlName="checklist1Enabled" /><label for="checklist-1-enabled">Item 1 ativo</label></div>
                         </div>
-                    </div>
-                    <div class="col-span-12 md:col-span-2">
-                        <label for="coneid">CheckLIst 2 - Descrição</label>
-                        <div class="flex gap-2">
-                            <p-checkbox value="yes" formControlName="checklist2Enabled" />
-                            <input pInputText formControlName="checklist2Desc" />
+                        <label class="field-label" for="checklist-1-description">Descrição do item</label
+                        ><input pInputText id="checklist-1-description" formControlName="checklist1Desc" placeholder="Informe o que deve ser verificado" class="w-full" />
+                    </article>
+                    <article class="checklist-item" [class.item-enabled]="formChecklist.controls.checklist2Enabled.value?.includes(yes)">
+                        <div class="item-heading">
+                            <span class="item-number">02</span>
+                            <div class="item-toggle"><p-checkbox inputId="checklist-2-enabled" [value]="yes" formControlName="checklist2Enabled" /><label for="checklist-2-enabled">Item 2 ativo</label></div>
                         </div>
-                    </div>
-                    <div class="col-span-12 md:col-span-2">
-                        <label for="coneid">CheckLIst 3 - Descrição</label>
-                        <div class="flex gap-2">
-                            <p-checkbox value="yes" formControlName="checklist3Enabled" />
-                            <input pInputText formControlName="checklist3Desc" />
+                        <label class="field-label" for="checklist-2-description">Descrição do item</label
+                        ><input pInputText id="checklist-2-description" formControlName="checklist2Desc" placeholder="Informe o que deve ser verificado" class="w-full" />
+                    </article>
+                    <article class="checklist-item" [class.item-enabled]="formChecklist.controls.checklist3Enabled.value?.includes(yes)">
+                        <div class="item-heading">
+                            <span class="item-number">03</span>
+                            <div class="item-toggle"><p-checkbox inputId="checklist-3-enabled" [value]="yes" formControlName="checklist3Enabled" /><label for="checklist-3-enabled">Item 3 ativo</label></div>
                         </div>
-                    </div>
-                    <div class="col-span-12 md:col-span-2">
-                        <label for="coneid">CheckLIst 4 - Descrição</label>
-                        <div class="flex gap-2">
-                            <p-checkbox [value]="yes" formControlName="checklist4Enabled" />
-                            <input pInputText formControlName="checklist4Desc" />
+                        <label class="field-label" for="checklist-3-description">Descrição do item</label
+                        ><input pInputText id="checklist-3-description" formControlName="checklist3Desc" placeholder="Informe o que deve ser verificado" class="w-full" />
+                    </article>
+                    <article class="checklist-item" [class.item-enabled]="formChecklist.controls.checklist4Enabled.value?.includes(yes)">
+                        <div class="item-heading">
+                            <span class="item-number">04</span>
+                            <div class="item-toggle"><p-checkbox inputId="checklist-4-enabled" [value]="yes" formControlName="checklist4Enabled" /><label for="checklist-4-enabled">Item 4 ativo</label></div>
                         </div>
-                    </div>
-                    <div class="col-span-12 md:col-span-2">
-                        <label for="coneid">CheckLIst 5 - Descrição</label>
-                        <div class="flex gap-2">
-                            <p-checkbox [value]="yes" formControlName="checklist5Enabled" />
-                            <input pInputText formControlName="checklist5Desc" />
+                        <label class="field-label" for="checklist-4-description">Descrição do item</label
+                        ><input pInputText id="checklist-4-description" formControlName="checklist4Desc" placeholder="Informe o que deve ser verificado" class="w-full" />
+                    </article>
+                    <article class="checklist-item" [class.item-enabled]="formChecklist.controls.checklist5Enabled.value?.includes(yes)">
+                        <div class="item-heading">
+                            <span class="item-number">05</span>
+                            <div class="item-toggle"><p-checkbox inputId="checklist-5-enabled" [value]="yes" formControlName="checklist5Enabled" /><label for="checklist-5-enabled">Item 5 ativo</label></div>
                         </div>
-                    </div>
-                    <div class="col-span-12 md:col-span-2">
-                        <label for="coneid">CheckLIst 6 - Descrição</label>
-                        <div class="flex gap-2">
-                            <p-checkbox [value]="yes" formControlName="checklist6Enabled" />
-                            <input pInputText formControlName="checklist6Desc" />
+                        <label class="field-label" for="checklist-5-description">Descrição do item</label
+                        ><input pInputText id="checklist-5-description" formControlName="checklist5Desc" placeholder="Informe o que deve ser verificado" class="w-full" />
+                    </article>
+                    <article class="checklist-item" [class.item-enabled]="formChecklist.controls.checklist6Enabled.value?.includes(yes)">
+                        <div class="item-heading">
+                            <span class="item-number">06</span>
+                            <div class="item-toggle"><p-checkbox inputId="checklist-6-enabled" [value]="yes" formControlName="checklist6Enabled" /><label for="checklist-6-enabled">Item 6 ativo</label></div>
                         </div>
-                    </div>
-                    <div class="col-span-12 md:col-span-2">
-                        <label for="coneid">CheckLIst 7 - Descrição</label>
-                        <div class="flex gap-2">
-                            <p-checkbox [value]="yes" formControlName="checklist7Enabled" />
-                            <input pInputText formControlName="checklist7Desc" />
+                        <label class="field-label" for="checklist-6-description">Descrição do item</label
+                        ><input pInputText id="checklist-6-description" formControlName="checklist6Desc" placeholder="Informe o que deve ser verificado" class="w-full" />
+                    </article>
+                    <article class="checklist-item" [class.item-enabled]="formChecklist.controls.checklist7Enabled.value?.includes(yes)">
+                        <div class="item-heading">
+                            <span class="item-number">07</span>
+                            <div class="item-toggle"><p-checkbox inputId="checklist-7-enabled" [value]="yes" formControlName="checklist7Enabled" /><label for="checklist-7-enabled">Item 7 ativo</label></div>
                         </div>
-                    </div>
-                    <div class="col-span-12 md:col-span-2">
-                        <label for="coneid">CheckLIst 8 - Descrição</label>
-                        <div class="flex gap-2">
-                            <p-checkbox [value]="yes" formControlName="checklist8Enabled" />
-                            <input pInputText formControlName="checklist8Desc" />
+                        <label class="field-label" for="checklist-7-description">Descrição do item</label
+                        ><input pInputText id="checklist-7-description" formControlName="checklist7Desc" placeholder="Informe o que deve ser verificado" class="w-full" />
+                    </article>
+                    <article class="checklist-item" [class.item-enabled]="formChecklist.controls.checklist8Enabled.value?.includes(yes)">
+                        <div class="item-heading">
+                            <span class="item-number">08</span>
+                            <div class="item-toggle"><p-checkbox inputId="checklist-8-enabled" [value]="yes" formControlName="checklist8Enabled" /><label for="checklist-8-enabled">Item 8 ativo</label></div>
                         </div>
-                    </div>
-                    <div class="col-span-12 md:col-span-2">
-                        <label for="coneid">CheckLIst 9 - Descrição</label>
-                        <div class="flex gap-2">
-                            <p-checkbox [value]="yes" formControlName="checklist9Enabled" />
-                            <input pInputText formControlName="checklist9Desc" />
+                        <label class="field-label" for="checklist-8-description">Descrição do item</label
+                        ><input pInputText id="checklist-8-description" formControlName="checklist8Desc" placeholder="Informe o que deve ser verificado" class="w-full" />
+                    </article>
+                    <article class="checklist-item" [class.item-enabled]="formChecklist.controls.checklist9Enabled.value?.includes(yes)">
+                        <div class="item-heading">
+                            <span class="item-number">09</span>
+                            <div class="item-toggle"><p-checkbox inputId="checklist-9-enabled" [value]="yes" formControlName="checklist9Enabled" /><label for="checklist-9-enabled">Item 9 ativo</label></div>
                         </div>
-                    </div>
-                    <div class="col-span-12 md:col-span-2">
-                        <label for="coneid">CheckLIst 10 - Descrição</label>
-                        <div class="flex gap-2">
-                            <p-checkbox [value]="yes" formControlName="checklist10Enabled" />
-                            <input pInputText formControlName="checklist10Desc" />
+                        <label class="field-label" for="checklist-9-description">Descrição do item</label
+                        ><input pInputText id="checklist-9-description" formControlName="checklist9Desc" placeholder="Informe o que deve ser verificado" class="w-full" />
+                    </article>
+                    <article class="checklist-item" [class.item-enabled]="formChecklist.controls.checklist10Enabled.value?.includes(yes)">
+                        <div class="item-heading">
+                            <span class="item-number">10</span>
+                            <div class="item-toggle"><p-checkbox inputId="checklist-10-enabled" [value]="yes" formControlName="checklist10Enabled" /><label for="checklist-10-enabled">Item 10 ativo</label></div>
                         </div>
-                    </div>
-                    <div class="col-span-12 md:col-span-2">
-                        <label for="coneid">CheckLIst 11 - Descrição</label>
-                        <div class="flex gap-2">
-                            <p-checkbox [value]="yes" formControlName="checklist11Enabled" />
-                            <input pInputText formControlName="checklist11Desc" />
+                        <label class="field-label" for="checklist-10-description">Descrição do item</label
+                        ><input pInputText id="checklist-10-description" formControlName="checklist10Desc" placeholder="Informe o que deve ser verificado" class="w-full" />
+                    </article>
+                    <article class="checklist-item" [class.item-enabled]="formChecklist.controls.checklist11Enabled.value?.includes(yes)">
+                        <div class="item-heading">
+                            <span class="item-number">11</span>
+                            <div class="item-toggle"><p-checkbox inputId="checklist-11-enabled" [value]="yes" formControlName="checklist11Enabled" /><label for="checklist-11-enabled">Item 11 ativo</label></div>
                         </div>
-                    </div>
-                    <div class="col-span-12 md:col-span-2">
-                        <label for="coneid">CheckLIst 12 - Descrição</label>
-                        <div class="flex gap-2">
-                            <p-checkbox [value]="yes" formControlName="checklist12Enabled" />
-                            <input pInputText formControlName="checklist12Desc" />
+                        <label class="field-label" for="checklist-11-description">Descrição do item</label
+                        ><input pInputText id="checklist-11-description" formControlName="checklist11Desc" placeholder="Informe o que deve ser verificado" class="w-full" />
+                    </article>
+                    <article class="checklist-item" [class.item-enabled]="formChecklist.controls.checklist12Enabled.value?.includes(yes)">
+                        <div class="item-heading">
+                            <span class="item-number">12</span>
+                            <div class="item-toggle"><p-checkbox inputId="checklist-12-enabled" [value]="yes" formControlName="checklist12Enabled" /><label for="checklist-12-enabled">Item 12 ativo</label></div>
                         </div>
-                    </div>
-                    <div class="col-span-12 md:col-span-2">
-                        <label for="coneid">CheckLIst 13 - Descrição</label>
-                        <div class="flex gap-2">
-                            <p-checkbox [value]="yes" formControlName="checklist13Enabled" />
-                            <input pInputText formControlName="checklist13Desc" />
+                        <label class="field-label" for="checklist-12-description">Descrição do item</label
+                        ><input pInputText id="checklist-12-description" formControlName="checklist12Desc" placeholder="Informe o que deve ser verificado" class="w-full" />
+                    </article>
+                    <article class="checklist-item" [class.item-enabled]="formChecklist.controls.checklist13Enabled.value?.includes(yes)">
+                        <div class="item-heading">
+                            <span class="item-number">13</span>
+                            <div class="item-toggle"><p-checkbox inputId="checklist-13-enabled" [value]="yes" formControlName="checklist13Enabled" /><label for="checklist-13-enabled">Item 13 ativo</label></div>
                         </div>
-                    </div>
-                    <div class="col-span-12 md:col-span-2">
-                        <label for="coneid">CheckLIst 14 - Descrição</label>
-                        <div class="flex gap-2">
-                            <p-checkbox [value]="yes" formControlName="checklist14Enabled" />
-                            <input pInputText formControlName="checklist14Desc" />
+                        <label class="field-label" for="checklist-13-description">Descrição do item</label
+                        ><input pInputText id="checklist-13-description" formControlName="checklist13Desc" placeholder="Informe o que deve ser verificado" class="w-full" />
+                    </article>
+                    <article class="checklist-item" [class.item-enabled]="formChecklist.controls.checklist14Enabled.value?.includes(yes)">
+                        <div class="item-heading">
+                            <span class="item-number">14</span>
+                            <div class="item-toggle"><p-checkbox inputId="checklist-14-enabled" [value]="yes" formControlName="checklist14Enabled" /><label for="checklist-14-enabled">Item 14 ativo</label></div>
                         </div>
-                    </div>
-                    <div class="col-span-12 md:col-span-2">
-                        <label for="coneid">CheckLIst 15 - Descrição</label>
-                        <div class="flex gap-2">
-                            <p-checkbox [value]="yes" formControlName="checklist15Enabled" />
-                            <input pInputText formControlName="checklist15Desc" />
+                        <label class="field-label" for="checklist-14-description">Descrição do item</label
+                        ><input pInputText id="checklist-14-description" formControlName="checklist14Desc" placeholder="Informe o que deve ser verificado" class="w-full" />
+                    </article>
+                    <article class="checklist-item" [class.item-enabled]="formChecklist.controls.checklist15Enabled.value?.includes(yes)">
+                        <div class="item-heading">
+                            <span class="item-number">15</span>
+                            <div class="item-toggle"><p-checkbox inputId="checklist-15-enabled" [value]="yes" formControlName="checklist15Enabled" /><label for="checklist-15-enabled">Item 15 ativo</label></div>
                         </div>
-                    </div>
-                    <div class="col-span-12 md:col-span-2">
-                        <label for="coneid">CheckLIst 16 - Descrição</label>
-                        <div class="flex gap-2">
-                            <p-checkbox [value]="yes" formControlName="checklist16Enabled" />
-                            <input pInputText formControlName="checklist16Desc" />
+                        <label class="field-label" for="checklist-15-description">Descrição do item</label
+                        ><input pInputText id="checklist-15-description" formControlName="checklist15Desc" placeholder="Informe o que deve ser verificado" class="w-full" />
+                    </article>
+                    <article class="checklist-item" [class.item-enabled]="formChecklist.controls.checklist16Enabled.value?.includes(yes)">
+                        <div class="item-heading">
+                            <span class="item-number">16</span>
+                            <div class="item-toggle"><p-checkbox inputId="checklist-16-enabled" [value]="yes" formControlName="checklist16Enabled" /><label for="checklist-16-enabled">Item 16 ativo</label></div>
                         </div>
-                    </div>
-                    <div class="col-span-12 md:col-span-2">
-                        <label for="coneid">CheckLIst 17 - Descrição</label>
-                        <div class="flex gap-2">
-                            <p-checkbox [value]="yes" formControlName="checklist17Enabled" />
-                            <input pInputText formControlName="checklist17Desc" />
+                        <label class="field-label" for="checklist-16-description">Descrição do item</label
+                        ><input pInputText id="checklist-16-description" formControlName="checklist16Desc" placeholder="Informe o que deve ser verificado" class="w-full" />
+                    </article>
+                    <article class="checklist-item" [class.item-enabled]="formChecklist.controls.checklist17Enabled.value?.includes(yes)">
+                        <div class="item-heading">
+                            <span class="item-number">17</span>
+                            <div class="item-toggle"><p-checkbox inputId="checklist-17-enabled" [value]="yes" formControlName="checklist17Enabled" /><label for="checklist-17-enabled">Item 17 ativo</label></div>
                         </div>
-                    </div>
-                    <div class="col-span-12 md:col-span-2">
-                        <label for="coneid">CheckLIst 18 - Descrição</label>
-                        <div class="flex gap-2">
-                            <p-checkbox [value]="yes" formControlName="checklist18Enabled" />
-                            <input pInputText formControlName="checklist18Desc" />
+                        <label class="field-label" for="checklist-17-description">Descrição do item</label
+                        ><input pInputText id="checklist-17-description" formControlName="checklist17Desc" placeholder="Informe o que deve ser verificado" class="w-full" />
+                    </article>
+                    <article class="checklist-item" [class.item-enabled]="formChecklist.controls.checklist18Enabled.value?.includes(yes)">
+                        <div class="item-heading">
+                            <span class="item-number">18</span>
+                            <div class="item-toggle"><p-checkbox inputId="checklist-18-enabled" [value]="yes" formControlName="checklist18Enabled" /><label for="checklist-18-enabled">Item 18 ativo</label></div>
                         </div>
-                    </div>
-                    <div class="col-span-12 md:col-span-2">
-                        <label for="coneid">CheckLIst 19 - Descrição</label>
-                        <div class="flex gap-2">
-                            <p-checkbox [value]="yes" formControlName="checklist19Enabled" />
-                            <input pInputText formControlName="checklist19Desc" />
+                        <label class="field-label" for="checklist-18-description">Descrição do item</label
+                        ><input pInputText id="checklist-18-description" formControlName="checklist18Desc" placeholder="Informe o que deve ser verificado" class="w-full" />
+                    </article>
+                    <article class="checklist-item" [class.item-enabled]="formChecklist.controls.checklist19Enabled.value?.includes(yes)">
+                        <div class="item-heading">
+                            <span class="item-number">19</span>
+                            <div class="item-toggle"><p-checkbox inputId="checklist-19-enabled" [value]="yes" formControlName="checklist19Enabled" /><label for="checklist-19-enabled">Item 19 ativo</label></div>
                         </div>
-                    </div>
-                    <div class="col-span-12 md:col-span-2">
-                        <label for="coneid">CheckLIst 20 - Descrição</label>
-                        <div class="flex gap-2">
-                            <p-checkbox [value]="yes" formControlName="checklist20Enabled" />
-                            <input pInputText formControlName="checklist20Desc" />
+                        <label class="field-label" for="checklist-19-description">Descrição do item</label
+                        ><input pInputText id="checklist-19-description" formControlName="checklist19Desc" placeholder="Informe o que deve ser verificado" class="w-full" />
+                    </article>
+                    <article class="checklist-item" [class.item-enabled]="formChecklist.controls.checklist20Enabled.value?.includes(yes)">
+                        <div class="item-heading">
+                            <span class="item-number">20</span>
+                            <div class="item-toggle"><p-checkbox inputId="checklist-20-enabled" [value]="yes" formControlName="checklist20Enabled" /><label for="checklist-20-enabled">Item 20 ativo</label></div>
                         </div>
-                    </div>
+                        <label class="field-label" for="checklist-20-description">Descrição do item</label
+                        ><input pInputText id="checklist-20-description" formControlName="checklist20Desc" placeholder="Informe o que deve ser verificado" class="w-full" />
+                    </article>
                 </div>
-            </form>
-            </p-tabpanel>
-        </p-tabpanels>
-        <p-button label="Salvar" (onClick)="save()" />
-    </p-tabs>
+            </fieldset>
+            <footer class="module-footer">
+                <span class="text-muted-color text-sm">As configurações serão aplicadas ao checklist de entrada.</span><p-button type="submit" label="Salvar configurações" icon="pi pi-check" [loading]="saving()" [disabled]="loading() || !loaded()" />
+            </footer>
+        </form>
+    </section>
 </div>

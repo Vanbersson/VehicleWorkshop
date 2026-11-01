@@ -29,6 +29,9 @@
     .layout-topbar-action:hover { background: var(--surface-hover); color: var(--p-primary-color); border-color: var(--surface-border); }
     .layout-topbar-action i { font-size: 1.15rem; }
     .layout-topbar-action > span { display: none; }
+    .topbar-notification-icon { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 1.35rem; height: 1.35rem; flex-shrink: 0; }
+    .topbar-notification-badge { position: absolute; top: -.65rem; right: -.8rem; display: inline-flex; justify-content: center; align-items: center; min-width: 1.1rem; height: 1.1rem; padding: 0 .2rem; border: 2px solid var(--surface-card); border-radius: 1rem; background: var(--p-red-500); color: #fff; font-size: .6rem; font-weight: 700; line-height: 1; pointer-events: none; white-space: nowrap; }
+
     .layout-topbar-action:focus-visible, .topbar-user-button:focus-visible, .layout-topbar-logo:focus-visible { @include focused(); }
     .layout-menu-button { background: var(--surface-ground); color: var(--text-color); }
     .layout-topbar-actions { margin-left: auto; display: flex; align-items: center; gap: .75rem; min-width: 0; }

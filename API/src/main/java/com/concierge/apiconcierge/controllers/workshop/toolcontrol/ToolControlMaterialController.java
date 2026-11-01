@@ -30,7 +30,7 @@ public class ToolControlMaterialController {
             MessageResponse response = this.service.save(mat);
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (Exception ex) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new MessageResponseDto(ex.getMessage()));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new MessageResponseDto(ex.getMessage()));
         }
     }
 
@@ -42,7 +42,7 @@ public class ToolControlMaterialController {
             MessageResponse response = this.service.update(mat);
             return ResponseEntity.status(HttpStatus.OK).body(response);
         } catch (Exception ex) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new MessageResponseDto(ex.getMessage()));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new MessageResponseDto(ex.getMessage()));
         }
     }
 
@@ -54,7 +54,7 @@ public class ToolControlMaterialController {
             MessageResponse response = this.service.filterId(companyId, resaleId, id);
             return ResponseEntity.status(HttpStatus.OK).body(response);
         } catch (Exception ex) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new MessageResponseDto(ex.getMessage()));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new MessageResponseDto(ex.getMessage()));
         }
     }
 
@@ -65,7 +65,7 @@ public class ToolControlMaterialController {
             List<Map<String, Object>> result = this.service.listAll(companyId, resaleId);
             return ResponseEntity.status(HttpStatus.OK).body(result);
         } catch (Exception ex) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new MessageResponseDto(ex.getMessage()));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new MessageResponseDto(ex.getMessage()));
         }
     }
 
@@ -76,7 +76,7 @@ public class ToolControlMaterialController {
             List<Map<String, Object>> result = this.service.listAllEnabled(companyId, resaleId);
             return ResponseEntity.status(HttpStatus.OK).body(result);
         } catch (Exception ex) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new MessageResponseDto(ex.getMessage()));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new MessageResponseDto(ex.getMessage()));
         }
     }
 
@@ -87,7 +87,7 @@ public class ToolControlMaterialController {
             MessageResponse response = this.service.saveImage(file, local);
             return ResponseEntity.status(HttpStatus.OK).body(response);
         } catch (Exception ex) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new MessageResponseDto(ex.getMessage()));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new MessageResponseDto(ex.getMessage()));
         }
     }
 
@@ -97,7 +97,7 @@ public class ToolControlMaterialController {
             MessageResponse response = this.service.deleteImage(local);
             return ResponseEntity.status(HttpStatus.OK).body(response);
         } catch (Exception ex) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new MessageResponseDto(ex.getMessage()));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new MessageResponseDto(ex.getMessage()));
         }
     }
 }

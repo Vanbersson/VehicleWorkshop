@@ -52,7 +52,19 @@ describe('VisitMaintenanceComponent registration flow', () => {
         expect(component.visibleDateVisit).toBeTrue();
         await component.saveComplete();
         expect(service.registerUpdate.calls.mostRecent().args[0].status).toBe(StatusVisitEnum.CLOSE);
+        expect(TestBed.inject(Router).navigate).not.toHaveBeenCalled();
+        expect(component.visibleDateVisit).toBeFalse();
+        await component.onCompletionDialogHide();
         expect(TestBed.inject(Router).navigate).toHaveBeenCalledWith(['/crm/visit']);
+        await component.onCompletionDialogHide();
+        expect(TestBed.inject(Router).navigate).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not navigate when the completion dialog is cancelled', async () => {
+        component.openDateVisit();
+        component.visibleDateVisit = false;
+        await component.onCompletionDialogHide();
+        expect(TestBed.inject(Router).navigate).not.toHaveBeenCalled();
     });
 
     it('stays on the registration screen when completing the visit fails', async () => {

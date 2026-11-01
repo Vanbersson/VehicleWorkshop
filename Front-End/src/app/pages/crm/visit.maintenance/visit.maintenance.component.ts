@@ -73,6 +73,7 @@ interface IProductsInterest {
 })
 export default class VisitMaintenanceComponent implements OnInit {
     private visit: Visit | null = null;
+    private navigateAfterCompletion = false;
     private previousContactType = ContactTypeEnum.IN_PERSON;
     saving = signal(false);
     initializing = signal(true);
@@ -303,7 +304,6 @@ export default class VisitMaintenanceComponent implements OnInit {
         try {
             this.loadingService.show();
             const result = await lastValueFrom(this.visit?.id ? this.visitService.registerUpdate(payload) : this.visitService.registerNew(payload));
-            this.loadingService.hide();
             if (!result.body?.id) throw new Error('O servidor não retornou o registro salvo.');
             this.visit = result.body;
             this.formVisit.markAsPristine();
@@ -315,6 +315,7 @@ export default class VisitMaintenanceComponent implements OnInit {
             this.messageService.add({ severity: 'error', summary: 'Erro ao salvar visita', detail });
             return false;
         } finally {
+            this.loadingService.hide();
             this.saving.set(false);
         }
     }
@@ -325,9 +326,15 @@ export default class VisitMaintenanceComponent implements OnInit {
             return;
         }
         if (await this.persist(true)) {
+            this.navigateAfterCompletion = true;
             this.visibleDateVisit = false;
-            await this.router.navigate(['/crm/visit']);
         }
+    }
+
+    async onCompletionDialogHide(): Promise<void> {
+        if (!this.navigateAfterCompletion) return;
+        this.navigateAfterCompletion = false;
+        await this.router.navigate(['/crm/visit']);
     }
 
     formatDateTime(date: Date): string {

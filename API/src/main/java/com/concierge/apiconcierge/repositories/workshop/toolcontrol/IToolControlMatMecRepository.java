@@ -18,7 +18,7 @@ public interface IToolControlMatMecRepository extends JpaRepository<ToolControlM
 
 
     @Query(value = "SELECT matmec.* FROM tb_tool_control_request as req " +
-            "INNER JOIN tb_tool_control_mat_mec AS matmec ON req.id=matmec.request_id AND req.company_id=?1 \n" +
+            "INNER JOIN tb_tool_control_mat_mec AS matmec ON req.id=matmec.request_id AND req.company_id=matmec.company_id AND req.resale_id=matmec.resale_id AND req.company_id=?1 \n" +
             "AND req.resale_id=?2 AND matmec.material_id=?3 AND matmec.return_quantity=0 AND matmec.return_user_id IS NULL AND matmec.return_date IS NULL;", nativeQuery = true)
     List<ToolControlMatMec> filterMatIdDevPend(Integer companyId, Integer resaleId, Integer materialId);
 

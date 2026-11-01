@@ -81,7 +81,10 @@
                         <span class="brand-name">{{ brand.name | uppercase }}</span>
                     </td>
                     <td><p-tag [value]="brand.status" [severity]="brand.status === enabled ? 'success' : 'secondary'" [icon]="brand.status === enabled ? 'pi pi-check-circle' : 'pi pi-minus-circle'" [rounded]="true" /></td>
-                    <td class="text-right"><p-button icon="pi pi-pencil" label="Editar" [text]="true" size="small" [ariaLabel]="'Editar marca ' + brand.name" (onClick)="edit(brand)" /></td></tr
+                    <td class="text-right">
+                        <p-button icon="pi pi-pencil" label="Editar" severity="secondary" [text]="true" size="small" [ariaLabel]="'Editar marca ' + brand.name" (onClick)="edit(brand)" />
+                        </td>
+                        </tr
             ></ng-template>
             <ng-template #emptymessage
                 ><tr>

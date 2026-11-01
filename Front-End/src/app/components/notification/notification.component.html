@@ -1,10 +1,11 @@
 <p-toast />
 <button type="button" class="layout-topbar-action" [attr.aria-label]="'Abrir notificações: ' + listMessage().length + ' disponíveis'" [attr.aria-expanded]="panelVisible()" title="Notificações" (click)="op.toggle($event)">
-    @if (listMessage().length) {
-        <p-overlaybadge [value]="listMessage().length > 99 ? '99+' : listMessage().length"><i class="pi pi-bell" aria-hidden="true"></i></p-overlaybadge>
-    } @else {
+    <div class="topbar-notification-icon">
         <i class="pi pi-bell" aria-hidden="true"></i>
-    }
+        @if (listMessage().length) {
+            <span class="topbar-notification-badge" aria-hidden="true">{{ listMessage().length > 99 ? '99+' : listMessage().length }}</span>
+        }
+    </div>
     <span>Notificações</span>
 </button>
 

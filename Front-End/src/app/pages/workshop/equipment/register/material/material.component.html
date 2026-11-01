@@ -1,181 +1,306 @@
-<div class="layout-card">
-    <p-toast />
-    <div class="layout-card-title">
-        <span>Material</span>
-        <p-button icon="pi pi-plus" [outlined]="true" label="Material" (onClick)="showNewMaterial()" />
-    </div>
-    <p-table #dt dataKey="id" [value]="listMat()" [showCurrentPageReport]="true" showGridlines
-        currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} Cadastros"
-        [globalFilterFields]="['id','description']" [tableStyle]="{ 'min-width': '50rem' }" [paginator]="true"
-        [rows]="10" [rowsPerPageOptions]="[10, 25, 50]" size="small">
-        <ng-template pTemplate="caption">
-            <div class="flex justify-between">
-                <p-iconField iconPosition="left">
-                    <p-inputIcon>
-                        <i class="pi pi-search"></i>
-                    </p-inputIcon>
-                    <input pInputText type="text" (input)="dt.filterGlobal($event.target.value, 'contains')" placeholder="Pesquisar" />
-                </p-iconField>
+<p-toast />
+<div class="materials-page">
+    <header class="materials-header">
+        <div class="materials-title">
+            <span class="materials-icon"><i class="pi pi-box" aria-hidden="true"></i></span>
+            <div>
+                <span class="materials-eyebrow">CONTROLE DE EQUIPAMENTOS</span>
+                <h1>Materiais</h1>
+                <p>Consulte o cadastro e acompanhe as quantidades disponíveis para empréstimo e kits.</p>
             </div>
-        </ng-template>
-        <ng-template pTemplate="header">
-            <tr>
-                <th pSortableColumn="id" style="width:10%">Código<p-sortIcon
-                        field="id"></p-sortIcon></th>
-                <th pSortableColumn="status" style="width:10%">Status<p-sortIcon
-                        field="status"></p-sortIcon></th>
-                <th pSortableColumn="categoryId" style="width:10%">Categoria<p-sortIcon
-                        field="categoryId"></p-sortIcon></th>
-                <th pSortableColumn="description"  style="width:40%">Descrição<p-sortIcon
-                        field="description"></p-sortIcon></th>
-                <th pSortableColumn="quantityAvailableLoan" style="width:10%">Empréstimo<p-sortIcon
-                        field="quantityAvailableLoan"></p-sortIcon></th>
-                <th pSortableColumn="quantityAvailableKit" style="width:10%">Kit<p-sortIcon
-                        field="quantityAvailableKit"></p-sortIcon></th>
-                <th pSortableColumn="validityDay" style="width:10%">Validade<p-sortIcon
-                        field="validityDay"></p-sortIcon></th>
-                <th></th>
-            </tr>
-        </ng-template>
-        <ng-template pTemplate="body" let-mat>
-            <tr>
-                <td>{{mat.id}}</td>
-                <td>
-                    <i class="pi " [ngClass]="{
-                        'pi-times-circle text-red-500':mat.status == disabled,
-                        'pi-check-circle text-green-500':mat.status == enabled}">
-                    </i> {{mat.status | uppercase}}
-                </td>
-                <td>{{filterCategoriesDesc(mat.categoryId) | uppercase }}</td>
-                <td>{{mat.description | uppercase}}</td>
-                <td>{{mat.quantityAvailableLoan}}</td>
-                 <td>{{mat.quantityAvailableKit}}</td>
-                <td>@if (mat.validityDay != null) { {{mat.validityDay}} }</td>
-                <td>
-                    <p-button icon="pi pi-pencil"  [text]="true" severity="secondary" size="small" (onClick)="editMat(mat.id)"/>
-                </td>
-            </tr>
-        </ng-template>
-    </p-table>
+        </div>
+        <p-button icon="pi pi-plus" label="Novo material" [disabled]="loading()" (onClick)="showNewMaterial()" />
+    </header>
+    <section class="materials-panel" aria-labelledby="materialsListTitle">
+        <div class="materials-heading">
+            <div>
+                <span class="materials-eyebrow">CADASTRO DE MATERIAIS</span>
+                <h2 id="materialsListTitle">
+                    Materiais cadastrados <span class="material-count">{{ loading() ? '…' : listMat().length }}</span>
+                </h2>
+            </div>
+            <p-button label="Atualizar" icon="pi pi-refresh" severity="secondary" [text]="true" [loading]="loading()" (onClick)="init()" />
+        </div>
+        @if (loadError()) {
+            <div class="mx-5 mb-4 p-3 rounded-lg bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-200 flex items-center gap-2" role="alert">
+                <i class="pi pi-exclamation-circle" aria-hidden="true"></i><span>{{ loadError() }}</span>
+            </div>
+        }
+        <p-table
+            #dt
+            dataKey="id"
+            [value]="listMat()"
+            [loading]="loading()"
+            [showCurrentPageReport]="true"
+            currentPageReportTemplate="{first}–{last} de {totalRecords} materiais"
+            [globalFilterFields]="['id', 'description', 'numberCA']"
+            [tableStyle]="{ 'min-width': '58rem' }"
+            [paginator]="true"
+            [rows]="10"
+            [rowsPerPageOptions]="[10, 25, 50]"
+            [rowHover]="true"
+            size="small"
+            sortField="description"
+            [sortOrder]="1">
+            <ng-template #caption>
+                <div class="materials-filters">
+                    <div class="filter-search">
+                        <label for="materialSearch">Pesquisar material</label
+                        ><p-iconfield>
+                            <p-inputicon styleClass="pi pi-search" />
+                            <input id="materialSearch" pInputText type="search" [(ngModel)]="search" (input)="dt.filterGlobal(search, 'contains')" placeholder="Código, descrição ou C.A."/>
+                        </p-iconfield>
+                    </div>
+                    <div>
+                        <label for="materialStatusFilter">Status</label
+                        ><p-select
+                            inputId="materialStatusFilter"
+                            [options]="[enabled, disabled]"
+                            [(ngModel)]="statusFilter"
+                            (onChange)="dt.filter(statusFilter, 'status', 'equals')"
+                            [showClear]="true"
+                            placeholder="Todos os status"
+                            appendTo="body"
+                            fluid
+                        />
+                    </div>
+                    <div>
+                        <label for="materialCategoryFilter">Categoria</label
+                        ><p-select
+                            inputId="materialCategoryFilter"
+                            [options]="listCat()"
+                            optionLabel="description"
+                            optionValue="id"
+                            [(ngModel)]="categoryFilter"
+                            (onChange)="dt.filter(categoryFilter, 'categoryId', 'equals')"
+                            [showClear]="true"
+                            [filter]="true"
+                            filterBy="description"
+                            placeholder="Todas as categorias"
+                            appendTo="body"
+                            fluid
+                        />
+                    </div>
+                    <p-button label="Limpar filtros" icon="pi pi-filter-slash" severity="secondary" [text]="true" (onClick)="search = ''; statusFilter = null; categoryFilter = null; dt.clear()" />
+                </div>
+            </ng-template>
+            <ng-template #header
+                ><tr>
+                    <th pSortableColumn="id" style="width: 7rem">Código <p-sortIcon field="id" /></th>
+                    <th pSortableColumn="description">Material <p-sortIcon field="description" /></th>
+                    <th pSortableColumn="status">Status <p-sortIcon field="status" /></th>
+                    <th>Categoria / uso</th>
+                    <th pSortableColumn="quantityAvailableLoan" class="text-right">Empréstimo <p-sortIcon field="quantityAvailableLoan" /></th>
+                    <th pSortableColumn="quantityAvailableKit" class="text-right">Kit <p-sortIcon field="quantityAvailableKit" /></th>
+                    <th pSortableColumn="validityDay">Validade <p-sortIcon field="validityDay" /></th>
+                    <th style="width: 4rem">
+                        Ação
+                    </th>
+                </tr>
+                </ng-template>
+            <ng-template #body let-mat>
+                <tr>
+                    <td class="font-semibold">#{{ mat.id }}</td>
+                    <td>
+                        <div class="flex items-center gap-3">
+                            <img *ngIf="mat.photoUrl" [src]="mat.photoUrl" class="material-photo" alt="Foto do material" loading="lazy" /><span *ngIf="!mat.photoUrl" class="material-photo material-placeholder"
+                                ><i class="pi pi-box" aria-hidden="true"></i
+                            ></span>
+                            <div>
+                                <strong>{{ mat.description }}</strong>
+                                <div *ngIf="mat.numberCA" class="text-muted-color text-xs mt-1">C.A. {{ mat.numberCA }}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="material-status" [class.active]="mat.status === enabled"><i class="pi" [ngClass]="mat.status === enabled ? 'pi-check-circle' : 'pi-ban'" aria-hidden="true"></i>{{ mat.status }}</span>
+                    </td>
+                    <td>
+                        <span>{{ filterCategoriesDesc(mat.categoryId) || 'Não informada' }}</span
+                        ><small class="block text-muted-color mt-1">{{ mat.type === LOAN ? 'Empréstimo' : mat.type === KIT ? 'Kit mecânico' : 'Empréstimo e kit' }}</small>
+                    </td>
+                    <td class="text-right">
+                        <strong class="stock-quantity" [class.stock-empty]="mat.quantityAvailableLoan <= 0">{{ mat.quantityAvailableLoan | number: '1.2-2' }}</strong
+                        ><small class="block text-muted-color mt-1">disponível</small>
+                    </td>
+                    <td class="text-right">
+                        <strong class="stock-quantity" [class.stock-empty]="mat.quantityAvailableKit <= 0">{{ mat.quantityAvailableKit | number: '1.2-2' }}</strong
+                        ><small class="block text-muted-color mt-1">disponível</small>
+                    </td>
+                    <td>{{ mat.validityDay != null ? mat.validityDay + ' dias' : 'Não definida' }}</td>
+                    <td>
+                        <p-button icon="pi pi-pencil" [text]="true" label="Editar" [rounded]="true" severity="secondary" size="small" [ariaLabel]="'Editar material ' + mat.description" (onClick)="editMat(mat.id)" />
+                    </td>
+                </tr
+            ></ng-template>
+            <ng-template #emptymessage
+                ><tr>
+                    <td colspan="8">
+                        <div class="materials-empty"><i class="pi pi-box" aria-hidden="true"></i><strong>Nenhum material encontrado</strong><span>Revise os filtros ou cadastre um novo material.</span></div>
+                    </td>
+                </tr></ng-template
+            >
+        </p-table>
+    </section>
 </div>
-
-<p-dialog header="Cadastro" [(visible)]="visibleDialog" [modal]="true" [style]="{width: '50rem'}">
-    <form [formGroup]="formMat" (ngSubmit)="save()">
-        <div class="grid grid-cols-12 gap-4">
-            <div class="col-span-12 mt-2 layout-dialog-img">  
-                <img *ngIf="photoMat()" class="layout-img-large" [src]="photoMat()" alt="photo material" width="140" height="140" loading="lazy" />
+<p-dialog styleClass="material-dialog" [draggable]="false" [(visible)]="visibleDialog" [closable]="!saving()" [modal]="true" [breakpoints]="{ '1199px': '90vw', '575px': '96vw' }" [style]="{ width: '62rem', 'max-height': '92vh' }">
+    <ng-template #header
+        ><div class="flex items-center gap-3">
+            <span class="materials-icon"><i class="pi pi-box" aria-hidden="true"></i></span>
+            <div>
+                <span class="materials-eyebrow">CONTROLE DE EQUIPAMENTOS</span>
+                <h2 class="text-xl font-semibold m-0 mt-1">{{ isNewMaterial ? 'Novo material' : 'Editar material' }}</h2>
             </div>
-            <div class="col-span-12 md:col-span-6">
-                <label for="description">Descrição</label>
-                <input pInputText class="w-full" id="description" formControlName="description" />
-                <small class="block text-sm text-red-500" *ngIf="formMat.get('description')?.invalid">Campo obrigatório</small>
-            </div>
-            <div class="col-span-12 md:col-span-4">
-                <label for="categoryId">Categoria</label>
-                <p-select [options]="listCat()" optionLabel="description" placeholder="Selecione" formControlName="categories" [style]="{'text-transform':'uppercase'}" fluid/>
-                <small class="block text-sm text-red-500" *ngIf="formMat.get('categories')?.invalid">Campo obrigatório</small>
-            </div>
-            <div class="col-span-12 md:col-span-2">
-                <label for="validityDayId">Dias valid.</label>
-                <p-inputNumber [useGrouping]="false" formControlName="validityDay" fluid/>
-            </div>
-            <div class="col-span-10 md:col-span-4 flex items-center">
-                <button pButton type="button" label="Selecionar imagem" (click)="onSelectFile()" fluid></button>
-            </div>
-            <div class="col-span-2 md:col-span-2 flex items-center">
-                <button type="button" pButton icon="pi pi-trash" severity="danger" (click)="deleteFile()" ></button>
-            </div>
-            <div class="col-span-12 md:col-span-6 flex flex-col gap-2 border border-gray-300 rounded-md p-3">
-                <span>Tipo requisição</span>
-                <div class="flex gap-2">
-                    <div class="flex items-center">
-                        <p-radioButton inputId="typeLoanId" name="type" [value]="LOAN" formControlName="type"></p-radioButton>
-                        <label for="typeLoanId" class="ml-2">Empréstimo</label>
+        </div></ng-template
+    >
+    <p class="text-muted-color mt-0 mb-5">Preencha a identificação e confira as quantidades do material.</p>
+    <form id="material-registration-form" [formGroup]="formMat" (ngSubmit)="save()">
+        <fieldset [disabled]="saving()" class="border-0 p-0 m-0 min-w-0">
+            <section class="material-section mb-4">
+                <div class="flex flex-wrap items-center gap-5">
+                    <div class="flex items-center justify-center w-28 h-28 rounded-xl bg-surface-100 dark:bg-surface-800 overflow-hidden shrink-0">
+                        <img *ngIf="photoMat()" [src]="photoMat()" alt="Foto do material" class="w-full h-full object-cover" /><i *ngIf="!photoMat()" class="pi pi-image text-3xl text-muted-color" aria-hidden="true"></i>
                     </div>
-                    <div class="flex items-center">
-                        <p-radioButton inputId="typeKitId" name="type" [value]="KIT" formControlName="type"></p-radioButton>
-                        <label for="typeKitId" class="ml-2">Kit Mec.</label>
-                    </div>
-                    <div class="flex items-center">
-                        <p-radioButton inputId="typeAmbosId" name="type" [value]="BOTH" formControlName="type"></p-radioButton>
-                        <label for="typeAmbosId" class="ml-2">Ambos</label>
+                    <div>
+                        <span class="materials-eyebrow">FOTO DO MATERIAL</span>
+                        <p class="text-muted-color text-sm mt-2 mb-3">Uma imagem facilita a identificação nas entregas.</p>
+                        <div class="flex flex-wrap gap-2">
+                            <p-button type="button" label="Selecionar foto" icon="pi pi-image" severity="secondary" [outlined]="true" size="small" (onClick)="onSelectFile()" /><p-button
+                                type="button"
+                                label="Remover"
+                                icon="pi pi-trash"
+                                severity="danger"
+                                [text]="true"
+                                size="small"
+                                [disabled]="!photoMat()"
+                                (onClick)="deleteFile()"
+                            />
+                        </div>
                     </div>
                 </div>
-            </div>            
-            <div class="col-span-6 p-0">
-                <div class="grid grid-cols-12 gap-2 border border-gray-300 rounded-md p-3">
-                    <div class="col-span-12">
-                        <label for="">Empréstimo</label>
-                        <div class="flex flex-col items-center w-full border-b border-surface-200 dark:border-surface-700 "></div>
+            </section>
+            <section class="material-section mb-4">
+                <span class="materials-eyebrow">01 · IDENTIFICAÇÃO</span>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                    <div>
+                        <label for="materialDescription">Descrição *</label
+                        ><input pInputText id="materialDescription" formControlName="description" placeholder="Nome do material" class="w-full" [invalid]="formMat.controls.description.touched && formMat.controls.description.invalid" /><small
+                            *ngIf="formMat.controls.description.touched && formMat.controls.description.invalid"
+                            class="text-red-500"
+                            >Informe a descrição.</small
+                        >
                     </div>
-                    <div class="col-span-6 flex flex-col">
-                        <label for="quantityAccountingId">Contábil</label>
-                        <p-inputNumber *ngIf="editQuantityLoan" [minFractionDigits]="2" formControlName="quantityAccountingLoan" fluid/>
-                        <p-inputGroup *ngIf="!editQuantityLoan">
-                            <p-inputNumber [minFractionDigits]="2" formControlName="quantityAccountingLoan" fluid/>
-                            <button type="button" pButton icon="pi pi-lock" class="p-button-warn" (click)="confirmEditQuant()"></button>
-                        </p-inputGroup>
-                        <small class="block text-sm text-red-500" *ngIf="formMat.get('quantityAccountingLoan')?.invalid">Campo obrigatório</small>
+                    <div>
+                        <label for="materialCategory">Categoria *</label
+                        ><p-select
+                            inputId="materialCategory"
+                            [options]="listCat()"
+                            optionLabel="description"
+                            formControlName="categories"
+                            placeholder="Selecione a categoria"
+                            [filter]="true"
+                            filterBy="description"
+                            appendTo="body"
+                            [invalid]="formMat.controls.categories.touched && formMat.controls.categories.invalid"
+                            fluid
+                        /><small *ngIf="formMat.controls.categories.touched && formMat.controls.categories.invalid" class="text-red-500">Selecione a categoria.</small>
                     </div>
-                    <div class="col-span-6 flex flex-col">
-                        <label for="quantityAvailableId">Disponível</label>
-                        <p-inputNumber [minFractionDigits]="2" formControlName="quantityAvailableLoan" fluid/>
+                    <div><label for="materialCa">Número do C.A.</label><p-inputNumber inputId="materialCa" [useGrouping]="false" formControlName="numberCA" placeholder="Certificado de aprovação" fluid /></div>
+                    <div><label for="materialValidity">Validade em dias</label><p-inputNumber inputId="materialValidity" [useGrouping]="false" formControlName="validityDay" placeholder="Não definida" fluid /></div>
+                </div>
+            </section>
+            <section class="material-section mb-4">
+                <span class="materials-eyebrow">02 · UTILIZAÇÃO E STATUS</span>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mt-4">
+                    <fieldset class="border-0 p-0 m-0 min-w-0">
+                        <legend class="font-semibold text-sm mb-3">Tipo de requisição *</legend>
+                        <div class="flex flex-wrap gap-4">
+                            <div class="flex items-center gap-2"><p-radioButton inputId="materialLoan" name="type" [value]="LOAN" formControlName="type" /><label for="materialLoan" class="!mb-0">Empréstimo</label></div>
+                            <div class="flex items-center gap-2"><p-radioButton inputId="materialKit" name="type" [value]="KIT" formControlName="type" /><label for="materialKit" class="!mb-0">Kit mecânico</label></div>
+                            <div class="flex items-center gap-2"><p-radioButton inputId="materialBoth" name="type" [value]="BOTH" formControlName="type" /><label for="materialBoth" class="!mb-0">Ambos</label></div>
+                        </div>
+                    </fieldset>
+                    <fieldset class="border-0 p-0 m-0">
+                        <legend class="font-semibold text-sm mb-3">Status *</legend>
+                        <div class="flex flex-wrap gap-4">
+                            <div class="flex items-center gap-2">
+                                <p-radioButton inputId="materialEnabled" name="status" [value]="enabled" formControlName="status" /><label for="materialEnabled" class="!mb-0">{{ enabled }}</label>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <p-radioButton inputId="materialDisabled" name="status" [value]="disabled" formControlName="status" /><label for="materialDisabled" class="!mb-0">{{ disabled }}</label>
+                            </div>
+                        </div>
+                    </fieldset>
+                </div>
+            </section>
+            <section>
+                <span class="materials-eyebrow">03 · QUANTIDADES</span>
+                <p class="text-muted-color text-sm mt-2 mb-3">Use o cadeado para solicitar a edição das quantidades contábeis.</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="material-section">
+                        <h3 class="font-semibold m-0 mb-4">Empréstimo</h3>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label for="accountingLoan">Contábil</label
+                                ><p-inputgroup
+                                    ><p-inputNumber inputId="accountingLoan" [minFractionDigits]="2" formControlName="quantityAccountingLoan" fluid /><button
+                                        *ngIf="!editQuantityLoan"
+                                        pButton
+                                        type="button"
+                                        icon="pi pi-lock"
+                                        severity="secondary"
+                                        aria-label="Solicitar edição da quantidade contábil de Empréstimo"
+                                        (click)="confirmEditQuant()"
+                                    ></button></p-inputgroup
+                                ><small *ngIf="formMat.controls.quantityAccountingLoan.touched && formMat.controls.quantityAccountingLoan.invalid" class="text-red-500">Informe a quantidade.</small>
+                            </div>
+                            <div><label for="availableLoan">Disponível</label><p-inputNumber inputId="availableLoan" [minFractionDigits]="2" formControlName="quantityAvailableLoan" fluid /></div>
+                        </div>
+                    </div>
+                    <div class="material-section">
+                        <h3 class="font-semibold m-0 mb-4">Kit mecânico</h3>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label for="accountingKit">Contábil</label
+                                ><p-inputgroup
+                                    ><p-inputNumber inputId="accountingKit" [minFractionDigits]="2" formControlName="quantityAccountingKit" fluid /><button
+                                        *ngIf="!editQuantityKit"
+                                        pButton
+                                        type="button"
+                                        icon="pi pi-lock"
+                                        severity="secondary"
+                                        aria-label="Solicitar edição da quantidade contábil de Kit mecânico"
+                                        (click)="confirmEditQuant()"
+                                    ></button></p-inputgroup
+                                ><small *ngIf="formMat.controls.quantityAccountingKit.touched && formMat.controls.quantityAccountingKit.invalid" class="text-red-500">Informe a quantidade.</small>
+                            </div>
+                            <div><label for="availableKit">Disponível</label><p-inputNumber inputId="availableKit" [minFractionDigits]="2" formControlName="quantityAvailableKit" fluid /></div>
+                        </div>
                     </div>
                 </div>
-            </div>
-            <div class="col-span-6 p-0">
-                <div class="grid grid-cols-12 gap-2 border border-gray-300 rounded-md p-3">
-                    <div class="col-span-12">
-                        <label for="">Kit Mecânico</label>
-                        <div class="flex flex-col items-center w-full border-b border-surface-200 dark:border-surface-700 "></div>
-                    </div>
-                    
-                    <div class="col-span-6 flex flex-col">
-                        <label for="quantityAccountingId">Contábil</label>
-                        <p-inputNumber *ngIf="editQuantityKit" [minFractionDigits]="2" formControlName="quantityAccountingKit" fluid/>
-                        <p-inputGroup *ngIf="!editQuantityKit">
-                            <p-inputNumber [minFractionDigits]="2" formControlName="quantityAccountingKit" fluid/>
-                            <button type="button" pButton icon="pi pi-lock" class="p-button-warn" (click)="confirmEditQuant()"></button>
-                        </p-inputGroup>
-                        <small class="block text-sm text-red-500" *ngIf="formMat.get('quantityAccountingKit')?.invalid">Campo obrigatório</small>
-                    </div>
-                    <div class="col-span-6 flex flex-col">
-                        <label for="quantityAvailableId">Disponível</label>
-                        <p-inputNumber [minFractionDigits]="2" formControlName="quantityAvailableKit" fluid/>
-                    </div>
-                </div>
-            </div>      
-            <div class="col-span-12 md:col-span-6">
-                <label for="">Status</label>
-                <div class="flex items-center gap-2 border border-gray-300 rounded-md p-3">
-                    <div class="flex align-center">
-                        <p-radioButton inputId="st1" name="status" [value]="enabled" formControlName="status"></p-radioButton>
-                        <label for="st1" class="ml-2">{{enabled}}</label>
-                    </div>
-                    <div class="flex align-items-center">
-                        <p-radioButton inputId="st2" name="status" [value]="disabled" formControlName="status"></p-radioButton>
-                        <label for="st2" class="ml-2">{{disabled}}</label>
-                    </div>
-                </div>
-            </div>
-            <div class="col-span-12 md:col-span-4 m-0">
-                 <label for="numberCAId">Nº CA</label>
-                <p-inputNumber [useGrouping]="false" formControlName="numberCA" fluid/>
-            </div>
-        </div>
-        <div class="flex flex-col items-center w-full border-b border-surface-200 dark:border-surface-700 mt-4"></div>
-        <div class="flex justify-end gap-2 mt-4">
-            <button pButton type="button" pRipple label="Fechar" icon="pi pi-times" class="p-button-text" (click)=" hideDialog()"></button>
-            <button pButton type="submit" pRipple label="Salvar" icon="pi pi-check" class="p-button-text"></button>
-        </div>
+            </section>
+        </fieldset>
     </form>
+    <ng-template #footer
+        ><div class="flex flex-wrap items-center justify-between gap-3 w-full">
+            <span class="text-muted-color text-sm">Os campos com * são obrigatórios.</span>
+            <div class="flex gap-2">
+                <p-button type="button" label="Cancelar" [disabled]="saving()" severity="secondary" [outlined]="true" (onClick)="hideDialog()" /><button
+                    pButton
+                    type="submit"
+                    form="material-registration-form"
+                    label="Salvar material"
+                    icon="pi pi-check"
+                    [loading]="saving()"
+                    [disabled]="saving()"
+                ></button>
+            </div></div
+    ></ng-template>
 </p-dialog>
+
 <!-- Comfirm -->
- <p-confirmDialog #cd>
-    <ng-template  pTemplate="headless"
-        let-message
-        let-onAccept="onAccept"
-        let-onReject="onReject">
+<p-confirmDialog #cd>
+    <ng-template pTemplate="headless" let-message let-onAccept="onAccept" let-onReject="onReject">
         <div class="bg-surface-0 dark:bg-surface-900 rounded-xl p-8 flex flex-col items-center shadow-xl">
             <div class="bg-primary rounded-full w-24 h-24 flex items-center justify-center">
                 <i class="pi pi-question !text-5xl text-white"></i>
@@ -190,4 +315,4 @@
             </div>
         </div>
     </ng-template>
-</p-confirmDialog> 
+</p-confirmDialog>

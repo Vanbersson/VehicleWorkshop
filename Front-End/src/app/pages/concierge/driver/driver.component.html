@@ -87,7 +87,10 @@
                     <td>{{ person.rg }}</td>
                     <td>{{ person.cnhCategory | uppercase }}</td>
                     <td><p-tag [value]="person.status" [severity]="person.status === enabled ? 'success' : 'secondary'" [icon]="person.status === enabled ? 'pi pi-check-circle' : 'pi pi-minus-circle'" [rounded]="true" /></td>
-                    <td class="text-right"><p-button icon="pi pi-pencil" label="Editar" [text]="true" size="small" [ariaLabel]="'Editar motorista ' + person.name" (onClick)="edit(person.id)" /></td></tr
+                    <td class="text-right">
+                        <p-button icon="pi pi-pencil" label="Editar" severity="secondary" [text]="true" size="small" [ariaLabel]="'Editar motorista ' + person.name" (onClick)="edit(person.id)" />
+                        </td>
+                        </tr
             ></ng-template>
             <ng-template #emptymessage
                 ><tr>
@@ -105,7 +108,7 @@
                                 }}
                             </p>
                             @if (!listDriver().length && !loadError()) {
-                                <p-button label="Cadastrar primeiro motorista" icon="pi pi-plus" [outlined]="true" (onClick)="newDriver()" />
+                                <p-button label="Cadastrar primeiro motorista"  icon="pi pi-plus" [outlined]="true" (onClick)="newDriver()" />
                             }
                         </div>
                     </td></tr

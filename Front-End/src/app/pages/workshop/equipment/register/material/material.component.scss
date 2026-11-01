@@ -1,69 +1,206 @@
 :host {
-    .layout-card-title {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 1rem;
+    display: block
+}
 
-        span {
-            display: flex;
-            align-items: center;
-            font-size: 1.5rem;
-            font-weight: 600;
-            color: var(--color-text-primary);
-        }
+.materials-page {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem
+}
+
+.materials-header,
+.materials-title,
+.materials-heading,
+.materials-filters {
+    display: flex;
+    align-items: center;
+    gap: 1rem
+}
+
+.materials-header,
+.materials-heading {
+    justify-content: space-between;
+    flex-wrap: wrap
+}
+
+.materials-icon {
+    display: grid;
+    place-items: center;
+    width: 3.5rem;
+    height: 3.5rem;
+    border-radius: 1rem;
+    background: var(--p-primary-50);
+    color: var(--p-primary-600);
+    font-size: 1.5rem;
+    flex-shrink: 0
+}
+
+.materials-eyebrow {
+    font-size: .7rem;
+    letter-spacing: .12em;
+    font-weight: 700;
+    color: var(--p-text-muted-color)
+}
+
+.materials-title h1 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    margin: .25rem 0
+}
+
+.materials-title p {
+    margin: 0;
+    color: var(--p-text-muted-color)
+}
+
+.materials-panel {
+    background: var(--p-content-background);
+    border: 1px solid var(--p-content-border-color);
+    border-radius: 1rem;
+    overflow: hidden
+}
+
+.materials-heading {
+    padding: 1.25rem 1.5rem
+}
+
+.materials-heading h2 {
+    font-size: 1.15rem;
+    font-weight: 600;
+    margin: .35rem 0
+}
+
+.material-count {
+    font-size: .8rem;
+    padding: .2rem .65rem;
+    background: var(--p-surface-100);
+    border-radius: 2rem;
+    color: var(--p-text-muted-color)
+}
+
+.materials-filters {
+    display: grid;
+    grid-template-columns: minmax(15rem, 2fr) minmax(10rem, 1fr) minmax(12rem, 1fr) auto;
+    align-items: end;
+    gap: 1rem;
+    padding: .5rem 0
+}
+
+.materials-filters label {
+    display: block;
+    font-size: .8rem;
+    font-weight: 600;
+    margin-bottom: .5rem
+}
+
+.materials-filters input {
+    width: 100%
+}
+
+.material-status.active {
+    background: color-mix(in srgb, var(--p-green-500) 12%, transparent);
+    color: var(--p-green-600)
+}
+
+.stock-quantity {
+    font-variant-numeric: tabular-nums
+}
+
+.stock-empty {
+    color: var(--p-text-muted-color)
+}
+
+@media(max-width:1100px) {
+    .materials-filters {
+        grid-template-columns: repeat(2, minmax(0, 1fr))
+    }
+}
+
+.material-photo {
+    width: 2.75rem;
+    height: 2.75rem;
+    object-fit: cover;
+    border-radius: .65rem;
+    flex-shrink: 0
+}
+
+.material-placeholder {
+    display: grid;
+    place-items: center;
+    background: var(--p-surface-100);
+    color: var(--p-text-muted-color)
+}
+
+.material-status {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    border-radius: 2rem;
+    padding: .3rem .6rem;
+    background: var(--p-surface-100);
+    font-size: .75rem;
+    white-space: nowrap
+}
+
+.materials-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: .65rem;
+    padding: 3rem 1rem;
+    color: var(--p-text-muted-color);
+    text-align: center
+}
+
+.materials-empty i {
+    font-size: 2rem
+}
+
+@media(max-width:640px) {
+    .materials-title {
+        align-items: flex-start
     }
 
-
-
-    .layout-dialog-img {
-        width: 100%;
-        height: 200px;
-        background-color: var(--color-grey-200);
-        border-radius: 8px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        margin-bottom: 1rem;
-
-        img {
-            width: 150px;
-            height: 150px;
-            object-fit: cover;
-        }
-
+    .materials-title h1 {
+        font-size: 1.4rem
     }
 
-    .layout-img-small {
-        background-color: var(--color-grey-200);
-        border-radius: 100%;
-        object-fit: cover;
+    .materials-filters {
+        grid-template-columns: 1fr
     }
 
-    .layout-img-large {
-        background-color: var(--color-grey-200);
-        border-radius: 6px;
-        object-fit: cover;
+    .materials-filters>* {
+        width: 100%
     }
 
-    ::ng-deep {
-
-        .p-inputgroup .p-inputtext,
-        .p-fluid .p-inputgroup .p-inputtext,
-        .p-inputgroup .p-inputwrapper,
-        .p-inputgroup .p-inputwrapper>.p-component {
-            flex: 1 1 auto;
-            width: 100%;
-            border-bottom-right-radius: 0;
-            border-top-right-radius: 0;
-        }
-
-        .p-button.p-button-secondary,
-        .p-button-group.p-button-secondary>.p-button,
-        .p-splitbutton.p-button-secondary>.p-button {
-            background-color: var(--color-grey-300);
-            color: var(--color-text-primary);
-            border: 1px solid var(--color-grey-300);
-        }
+    .materials-filters input {
+        width: 100%
     }
+
+    .materials-heading {
+        padding: 1rem
+    }
+}
+
+.material-section {
+    padding: 1.1rem;
+    border: 1px solid var(--p-content-border-color);
+    border-radius: .85rem
+}
+
+:host ::ng-deep .material-dialog {
+    border-radius: 1rem;
+    overflow: hidden
+}
+
+:host ::ng-deep .material-dialog label {
+    display: block;
+    font-size: .85rem;
+    font-weight: 600;
+    margin-bottom: .5rem
+}
+
+:host ::ng-deep .material-dialog .p-dialog-footer {
+    border-top: 1px solid var(--p-content-border-color);
+    padding-top: 1rem
 }

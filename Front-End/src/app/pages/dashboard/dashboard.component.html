@@ -9,8 +9,8 @@
             </div>
         </div>
         <div class="header-actions">
-            <span class="period-label"><i class="pi pi-calendar" aria-hidden="true"></i>{{ yearNow() - 1 }} – {{ yearNow() }}</span
-            ><p-button label="Atualizar" icon="pi pi-refresh" severity="secondary" [outlined]="true" (onClick)="refreshDashboard()" [loading]="loadingDashboard()" />
+            <span class="period-label"><i class="pi pi-calendar" aria-hidden="true"></i>{{ yearNow() - 1 }} – {{ yearNow() }}</span            >
+            <p-button label="Atualizar" icon="pi pi-refresh" severity="secondary" [outlined]="true" (onClick)="refreshDashboard()" [loading]="loadingDashboard()" />
         </div>
     </header>
 
@@ -25,15 +25,15 @@
             <div class="stat-heading">
                 <span>Veículos em atendimento</span><span class="stat-icon blue"><i class="pi pi-car" aria-hidden="true"></i></span>
             </div>
-            <strong class="stat-value">{{ loadingDashboard() ? '…' : (countVehicle().at(0) ?? '—') }}</strong
-            ><span class="stat-description">Veículos presentes na oficina</span>
+            <strong class="stat-value">{{ loadingDashboard() ? '…' : (countVehicle().at(0) ?? '—') }}</strong>
+            <span class="stat-description">Veículos presentes na oficina</span>
         </article>
         <article class="stat-card">
             <div class="stat-heading">
                 <span>Saída autorizada</span><span class="stat-icon green"><i class="pi pi-check-circle" aria-hidden="true"></i></span>
             </div>
-            <strong class="stat-value">{{ loadingDashboard() ? '…' : (countVehicle().at(1) ?? '—') }}</strong
-            ><span class="stat-description">Veículos liberados para saída</span>
+            <strong class="stat-value">{{ loadingDashboard() ? '…' : (countVehicle().at(1) ?? '—') }}</strong>
+            <span class="stat-description">Veículos liberados para saída</span>
         </article>
         <article class="stat-card">
             <div class="stat-heading">
@@ -63,7 +63,7 @@
             <div class="client-selection">
                 <i class="pi pi-building" aria-hidden="true"></i><span>{{ clientName ? (clientName | uppercase) : 'Todos os clientes' }}</span>
             </div>
-            <app-filterclient [isDisabled]="loadingDashboard()" (outputClient)="selectClientCompany.set($event)" />
+            <app-filterclient [isDisabled]="loadingDashboard()" [highlighted]="true" (outputClient)="selectClientCompany.set($event)" />
             @if (isSearchClient) {
                 <p-button label="Limpar filtro" icon="pi pi-filter-slash" severity="secondary" [text]="true" (onClick)="init()" [disabled]="loadingDashboard()" />
             }

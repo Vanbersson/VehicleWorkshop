@@ -85,7 +85,10 @@
                     <td>
                         <span class="text-muted-color">{{ group.ufs ? group.ufs.split(',').join(', ') : 'Não informadas' }}</span>
                     </td>
-                    <td class="text-right"><p-button icon="pi pi-pencil" label="Editar" [text]="true" size="small" [ariaLabel]="'Editar grupo ' + group.description" (onClick)="edit(group)" /></td></tr
+                    <td class="text-right">
+                        <p-button icon="pi pi-pencil" label="Editar" severity="secondary" [text]="true" size="small" [ariaLabel]="'Editar grupo ' + group.description" (onClick)="edit(group)" />
+                        </td>
+                        </tr
             ></ng-template>
             <ng-template #emptymessage
                 ><tr>

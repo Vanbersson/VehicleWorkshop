@@ -92,7 +92,10 @@
                         } @else {
                             <div class="visit-client-search">
                                 <div class="flex-1"><label for="clientCode">Código</label><p-inputNumber inputId="clientCode" formControlName="clientId" [useGrouping]="false" [readonly]="true" fluid /></div>
-                                <div><span class="block mb-2">Buscar cliente *</span><app-filterclient [isDisabled]="saving() || initializing()" (outputClient)="onSelectClient($event)" /></div>
+                                <div>
+                                    <span class="block mb-2">Buscar cliente *</span>
+                                    <app-filterclient [highlighted]="true" [isDisabled]="saving() || initializing()" (outputClient)="onSelectClient($event)" />
+                                </div>
                             </div>
                             <label for="clientName">Cliente selecionado</label>
                             <input pInputText id="clientName" formControlName="clientName" readonly class="w-full" />
@@ -213,7 +216,7 @@
         </ng-template>
     </fieldset>
 </div>
-<p-dialog header="Concluir registro da visita" [modal]="true" [(visible)]="visibleDateVisit" [style]="{ width: '32rem', maxWidth: '95vw' }" [closable]="!saving()" [closeOnEscape]="!saving()">
+<p-dialog header="Concluir registro da visita" [modal]="true" [(visible)]="visibleDateVisit" (onHide)="onCompletionDialogHide()" [style]="{ width: '32rem', maxWidth: '95vw' }" [closable]="!saving()" [closeOnEscape]="!saving()">
     <div class="visit-confirmation mb-4">
         <span class="visit-icon small"><i class="pi pi-check" aria-hidden="true"></i></span>
         <div>

@@ -1,6 +1,6 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, computed, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormGroup, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormGroup, FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { lastValueFrom } from 'rxjs';
 import { HttpResponse } from '@angular/common/http';
 
@@ -9,7 +9,8 @@ import { InputTextModule } from 'primeng/inputtext';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { InputNumberModule } from 'primeng/inputnumber';
-import { TableModule } from 'primeng/table';
+import { TagModule } from 'primeng/tag';
+import { Table, TableModule } from 'primeng/table';
 import { ToastModule } from 'primeng/toast';
 import { DialogModule } from 'primeng/dialog';
 import { ButtonModule } from 'primeng/button';
@@ -27,180 +28,202 @@ import { GroupPartService } from '@/app/services/parts/group.part';
 import { MessageResponse } from '@/app/models/message-response';
 import { StatusSuccessError } from '@/app/models/status-suc-err';
 
-
 @Component({
-  selector: 'app-grouppart',
-  standalone: true,
-  imports: [CommonModule, InputTextModule, IconFieldModule, SelectModule, RadioButtonModule, InputIconModule,
-    ButtonModule, InputNumberModule, ReactiveFormsModule, TableModule, ToastModule, DialogModule],
-  templateUrl: './grouppart.component.html',
-  styleUrl: './grouppart.component.scss',
-  providers: [MessageService]
+    selector: 'app-grouppart',
+    standalone: true,
+    imports: [CommonModule, FormsModule, TagModule, InputTextModule, IconFieldModule, SelectModule, RadioButtonModule, InputIconModule, ButtonModule, InputNumberModule, ReactiveFormsModule, TableModule, ToastModule, DialogModule],
+    templateUrl: './grouppart.component.html',
+    styleUrl: './grouppart.component.scss',
+    providers: [MessageService]
 })
 export default class GrouppartComponent implements OnInit {
-  private isNewGroup: boolean = true;
-  private group!: GroupPart;
+    readonly loadingGroups = signal(false);
+    readonly loadError = signal('');
+    selectedStatus: StatusEnabDisabEnum | null = null;
+    readonly statusOptions = [
+        { label: StatusEnabDisabEnum.ENABLED, value: StatusEnabDisabEnum.ENABLED },
+        { label: StatusEnabDisabEnum.DISABLED, value: StatusEnabDisabEnum.DISABLED }
+    ];
+    readonly groupRows = computed(() => this.listGroups().map((group) => ({ ...group, brandName: this.searchBrand(group.brandId) })));
+    clearFilters(table: Table, input: HTMLInputElement): void {
+        this.selectedStatus = null;
+        input.value = '';
+        table.clear();
+    }
+    isNewGroup: boolean = true;
+    private group!: GroupPart;
 
-  pecas = GroupPartTypeEnum.PECAS;
-  acessorio = GroupPartTypeEnum.ACESSORIO;
-  lubrificates = GroupPartTypeEnum.LUBRIFICANTE;
-  combustiveis = GroupPartTypeEnum.COMBUSTIVEIS;
-  outros = GroupPartTypeEnum.OUTROS;
+    pecas = GroupPartTypeEnum.PECAS;
+    acessorio = GroupPartTypeEnum.ACESSORIO;
+    lubrificates = GroupPartTypeEnum.LUBRIFICANTE;
+    combustiveis = GroupPartTypeEnum.COMBUSTIVEIS;
+    outros = GroupPartTypeEnum.OUTROS;
 
-  enabled = StatusEnabDisabEnum.ENABLED;
-  disabled = StatusEnabDisabEnum.DISABLED;
+    enabled = StatusEnabDisabEnum.ENABLED;
+    disabled = StatusEnabDisabEnum.DISABLED;
 
-  formGroup = new FormGroup({
-    status: new FormControl<StatusEnabDisabEnum>(StatusEnabDisabEnum.ENABLED),
-    type: new FormControl<GroupPartTypeEnum>(GroupPartTypeEnum.OUTROS),
-    description: new FormControl<string>('', [Validators.required, Validators.maxLength(100)]),
-    brand: new FormControl<Brand | null>(null,Validators.required)
-  });
-
-  brands = signal<Brand[]>([]);
-  listGroups = signal<GroupPart[]>([]);
-  dialogVisible: boolean = false;
-
-  constructor(
-    private storageService: StorageService,
-    private brandService: BrandService,
-    private groupService: GroupPartService,
-    private messageService: MessageService,
-    private loadingService: LoadingService) { }
-
-  ngOnInit(): void {
-    this.init();
-  }
-  private async init() {
-    this.loadingService.show();
-    this.listGroups.set(await this.listAll());
-    this.brands.set( await this.brandListAllEnabled()) ;
-    this.loadingService.hide();
-  }
-  showNewGroup() {
-    this.isNewGroup = true;
-    this.group = new GroupPart();
-    this.cleanForm();
-    this.showDialog();
-  }
-  showDialog() {
-    this.dialogVisible = true;
-  }
-  hideDialog() {
-    this.dialogVisible = false;
-  }
-  searchBrand(id: number): string {
-    return this.brands().find(b => b.id == id)?.name!;
-  }
-  private cleanForm() {
-    this.formGroup.patchValue({
-      type: GroupPartTypeEnum.OUTROS,
-      description: '',
-      status: this.enabled,
-      brand: null
+    formGroup = new FormGroup({
+        status: new FormControl<StatusEnabDisabEnum>(StatusEnabDisabEnum.ENABLED),
+        type: new FormControl<GroupPartTypeEnum>(GroupPartTypeEnum.OUTROS),
+        description: new FormControl<string>('', [Validators.required, Validators.maxLength(100)]),
+        brand: new FormControl<Brand | null>(null, Validators.required)
     });
-  }
-  edit(g: GroupPart) {
-    this.isNewGroup = false;
-    this.group = g;
-    this.cleanForm();
-    this.showDialog();
 
-    this.formGroup.patchValue({
-      brand: this.brands().find(b => b.id == g.brandId),
-      description: this.group.description,
-      type: this.group.type,
-      status: this.group.status,
-    });
-  }
-  save() {
-    if (this.isNewGroup) {
-      this.saveNewGroup();
-    } else {
-      this.saveUpdateGroup();
-    }
-  }
+    brands = signal<Brand[]>([]);
+    listGroups = signal<GroupPart[]>([]);
+    dialogVisible: boolean = false;
 
-  private async saveNewGroup() {
-    const { value, valid } = this.formGroup;
-    if (!valid) {
-      return;
+    constructor(
+        private storageService: StorageService,
+        private brandService: BrandService,
+        private groupService: GroupPartService,
+        private messageService: MessageService,
+        private loadingService: LoadingService
+    ) {}
+
+    ngOnInit(): void {
+        this.init();
+    }
+    async init(): Promise<void> {
+        if (this.loadingGroups()) return;
+        this.loadingGroups.set(true);
+        this.loadingService.show();
+        try {
+            this.listGroups.set(await this.listAll());
+            this.brands.set(await this.brandListAllEnabled());
+        } finally {
+            this.loadingGroups.set(false);
+            this.loadingService.hide();
+        }
+    }
+    showNewGroup() {
+        this.isNewGroup = true;
+        this.group = new GroupPart();
+        this.cleanForm();
+        this.showDialog();
+    }
+    showDialog() {
+        this.dialogVisible = true;
+    }
+    hideDialog() {
+        this.dialogVisible = false;
+    }
+    searchBrand(id: number | null): string {
+        return this.brands().find((brand) => brand.id === id)?.name ?? (id === null ? '—' : 'Marca #' + id);
+    }
+    private cleanForm() {
+        this.formGroup.reset({
+            type: GroupPartTypeEnum.OUTROS,
+            description: '',
+            status: this.enabled,
+            brand: null
+        });
+    }
+    edit(g: GroupPart) {
+        this.isNewGroup = false;
+        this.group = g;
+        this.cleanForm();
+        this.showDialog();
+
+        this.formGroup.patchValue({
+            brand: this.brands().find((b) => b.id == g.brandId),
+            description: this.group.description,
+            type: this.group.type,
+            status: this.group.status
+        });
+    }
+    save() {
+        if (this.formGroup.invalid) {
+            this.formGroup.markAllAsTouched();
+            return;
+        }
+        if (this.isNewGroup) {
+            this.saveNewGroup();
+        } else {
+            this.saveUpdateGroup();
+        }
     }
 
-    this.group.companyId = this.storageService.companyId;
-    this.group.resaleId = this.storageService.resaleId;
-    this.group.type = value.type!;
-    this.group.brandId = value.brand!.id;
-    this.group.description = value.description!;
-    this.group.status = value.status!;
+    private async saveNewGroup() {
+        const { value, valid } = this.formGroup;
+        if (!valid) {
+            return;
+        }
 
-    this.loadingService.show();
-    const result = await this.saveNew(this.group);
-    this.loadingService.hide();
-    if (result.status == 201 && result.body?.status == StatusSuccessError.succes) {
-      this.messageService.add({ severity: 'success', summary: result.body.header, detail: result.body.message, icon: 'pi pi-check' });
-      this.hideDialog();
-      this.init();
+        this.group.companyId = this.storageService.companyId;
+        this.group.resaleId = this.storageService.resaleId;
+        this.group.type = value.type!;
+        this.group.brandId = value.brand!.id;
+        this.group.description = value.description!;
+        this.group.status = value.status!;
+
+        this.loadingService.show();
+        const result = await this.saveNew(this.group);
+        this.loadingService.hide();
+        if (result.status == 201 && result.body?.status == StatusSuccessError.succes) {
+            this.messageService.add({ severity: 'success', summary: result.body.header, detail: result.body.message, icon: 'pi pi-check' });
+            this.hideDialog();
+            this.init();
+        }
+        if (result.status == 201 && result.body?.status == StatusSuccessError.error) {
+            this.messageService.add({ severity: 'info', summary: result.body.header, detail: result.body.message, icon: 'pi pi-info-circle' });
+        }
     }
-    if (result.status == 201 && result.body?.status == StatusSuccessError.error) {
-      this.messageService.add({ severity: 'info', summary: result.body.header, detail: result.body.message, icon: 'pi pi-info-circle' });
-    }
-  }
-  private async saveUpdateGroup() {
-    const { value, valid } = this.formGroup;
-    if (!valid) {
-      return;
+    private async saveUpdateGroup() {
+        const { value, valid } = this.formGroup;
+        if (!valid) {
+            return;
+        }
+
+        this.group.type = value.type!;
+        this.group.brandId = value.brand!.id;
+        this.group.description = value.description!;
+        this.group.status = value.status!;
+
+        this.loadingService.show();
+        const result = await this.saveUpdate(this.group);
+        this.loadingService.hide();
+        if (result.status == 200 && result.body?.status == StatusSuccessError.succes) {
+            this.messageService.add({ severity: 'success', summary: result.body.header, detail: result.body.message, icon: 'pi pi-check' });
+            this.hideDialog();
+        }
+        if (result.status == 200 && result.body?.status == StatusSuccessError.error) {
+            this.messageService.add({ severity: 'info', summary: result.body.header, detail: result.body.message, icon: 'pi pi-info-circle' });
+        }
+        this.init();
     }
 
-    this.group.type = value.type!;
-    this.group.brandId = value.brand!.id;
-    this.group.description = value.description!;
-    this.group.status = value.status!;
-
-    this.loadingService.show();
-    const result = await this.saveUpdate(this.group);
-    this.loadingService.hide();
-    if (result.status == 200 && result.body?.status == StatusSuccessError.succes) {
-      this.messageService.add({ severity: 'success', summary: result.body.header, detail: result.body.message, icon: 'pi pi-check' });
-      this.hideDialog();
+    private async saveNew(group: GroupPart): Promise<HttpResponse<MessageResponse>> {
+        try {
+            return await lastValueFrom(this.groupService.save(group));
+        } catch (error: any) {
+            this.messageService.add({ severity: 'error', summary: 'Erro', detail: error.error.message, icon: 'pi pi-times' });
+            return error;
+        }
     }
-    if (result.status == 200 && result.body?.status == StatusSuccessError.error) {
-      this.messageService.add({ severity: 'info', summary: result.body.header, detail: result.body.message, icon: 'pi pi-info-circle' });
+    private async saveUpdate(group: GroupPart): Promise<HttpResponse<MessageResponse>> {
+        try {
+            return await lastValueFrom(this.groupService.update(group));
+        } catch (error: any) {
+            this.messageService.add({ severity: 'error', summary: 'Erro', detail: error.error.message, icon: 'pi pi-times' });
+            return error;
+        }
     }
-    this.init();
-  }
-
-  private async saveNew(group: GroupPart): Promise<HttpResponse<MessageResponse>> {
-    try {
-      return await lastValueFrom(this.groupService.save(group));
-    } catch (error: any) {
-      this.messageService.add({ severity: 'error', summary: 'Erro', detail: error.error.message, icon: 'pi pi-times' });
-      return error;
+    private async listAll(): Promise<GroupPart[]> {
+        this.loadError.set('');
+        try {
+            return await lastValueFrom(this.groupService.listAll());
+        } catch (error: any) {
+            this.loadError.set('Não foi possível carregar os grupos de peças.');
+            return [];
+        }
     }
-  }
-  private async saveUpdate(group: GroupPart): Promise<HttpResponse<MessageResponse>> {
-    try {
-      return await lastValueFrom(this.groupService.update(group));
-    } catch (error: any) {
-      this.messageService.add({ severity: 'error', summary: 'Erro', detail: error.error.message, icon: 'pi pi-times' });
-      return error;
+    private async brandListAllEnabled(): Promise<Brand[]> {
+        try {
+            return await lastValueFrom(this.brandService.listAllEnabled());
+        } catch (error: any) {
+            this.messageService.add({ severity: 'error', summary: 'Erro', detail: error.error.message, icon: 'pi pi-times' });
+            return [];
+        }
     }
-  }
-  private async listAll(): Promise<GroupPart[]> {
-    try {
-      return await lastValueFrom(this.groupService.listAll());
-    } catch (error: any) {
-      this.messageService.add({ severity: 'error', summary: 'Erro', detail: error.error.message, icon: 'pi pi-times' });
-      return [];
-    }
-  }
-  private async brandListAllEnabled(): Promise<Brand[]> {
-    try {
-      return await lastValueFrom(this.brandService.listAllEnabled());
-    } catch (error: any) {
-      this.messageService.add({ severity: 'error', summary: 'Erro', detail: error.error.message, icon: 'pi pi-times' });
-      return [];
-    }
-  }
-
 }

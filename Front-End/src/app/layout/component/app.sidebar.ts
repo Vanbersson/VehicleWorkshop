@@ -11,13 +11,7 @@ import { LayoutService } from '@/app/layout/service/layout.service';
     template: `
         <aside class="layout-sidebar" aria-label="Menu lateral">
             <div class="sidebar-heading">
-                <div class="sidebar-brand">
-                    <span class="sidebar-brand-icon"><i class="pi pi-truck" aria-hidden="true"></i></span>
-                    <div>
-                        <strong>ATENA <span>TRUCK</span></strong
-                        ><small>Gestão da sua oficina</small>
-                    </div>
-                </div>
+                <div class="sidebar-brand"><strong>Menu</strong></div>
                 <button type="button" class="sidebar-close" aria-label="Fechar menu lateral" (click)="closeMenu()"><i class="pi pi-times" aria-hidden="true"></i></button>
             </div>
             <nav class="sidebar-navigation" aria-label="Navegação principal"><app-menu /></nav>

@@ -34,7 +34,9 @@
                 </div>
                 <i class="pi pi-calendar text-primary" aria-hidden="true"></i>
             </div>
-            <p-datepicker [ngModel]="selectedDay()" (ngModelChange)="selectDay($event)" [inline]="true" [disabled]="saving()" dateFormat="dd/mm/yy" ariaLabel="Dia da agenda" fluid />
+            <div class="flex w-full justify-center">
+                <p-datepicker [ngModel]="selectedDay()" (ngModelChange)="selectDay($event)" [inline]="true" [disabled]="saving()" dateFormat="dd/mm/yy" ariaLabel="Dia da agenda" fluid />
+            </div>
             <div class="selected-date">
                 <i class="pi pi-calendar-clock" aria-hidden="true"></i>
                 <div>
@@ -71,9 +73,8 @@
                     <div>
                         <label for="agendaClient">Cliente *</label>
                         <div class="client-picker">
-                            <input pInputText id="agendaClient" [value]="form.controls.client.value?.name || ''" readonly placeholder="Selecione pelo filtro" class="w-full" /><app-filterclient
-                                [isDisabled]="saving()"
-                                (outputClient)="selectClient($event)"
+                            <input pInputText id="agendaClient" [value]="form.controls.client.value?.name || ''" readonly placeholder="Selecione pelo filtro" class="w-full" />
+                            <app-filterclient [isDisabled]="saving()" [highlighted]="true" (outputClient)="selectClient($event)"
                             />
                         </div>
                         @if (submitted() && !form.controls.client.value?.id) {

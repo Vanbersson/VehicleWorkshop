@@ -73,215 +73,80 @@ public class ToolControlMaterialService implements IToolControlMaterialService {
         try {
             MessageResponse response = this.validation.update(mat);
             if (ConstantsMessage.SUCCESS.equals(response.getStatus())) {
-                ToolControlMaterial resultSaveMat;
-                ToolControlCategory category = this.categoryRepository.filterId(mat.getCompanyId(), mat.getResaleId(), mat.getCategoryId());
-                if (category.getType() == TypeCategory.Ferramenta) {
-                    if (mat.getType() == TypeRequest.Loan) {
-                        //Emprestimo
-                        mat.setQuantityAvailableLoan(this.calQuantityAvailableMatMec(mat));
-                        this.repository.save(mat);
-                        response.setData(mat);
-                    } else if (mat.getType() == TypeRequest.Kit) {
-                        //Kit mecânico
-                    } else if (mat.getType() == TypeRequest.Ambos) {
-                        //Ambos
-                        mat.setQuantityAvailableLoan(this.calQuantityAvailableMatMec(mat));
-                        this.repository.save(mat);
-                        response.setData(mat);
-                    }
-                } else if (category.getType() == TypeCategory.EPI) {
-                    //Epi não alterar a quantidade disponivel
-                    mat.setQuantityAvailableLoan(mat.getQuantityAccountingLoan());
-                    this.repository.save(mat);
-                    response.setData(mat);
-                } else if (category.getType() == TypeCategory.Uniforme) {
-                    //Uniforme não altera a quantidade disponivel
-                    mat.setQuantityAvailableLoan(mat.getQuantityAccountingLoan());
-                    this.repository.save(mat);
-                    response.setData(mat);
-                } else if (category.getType() == TypeCategory.Outro) {
-                    mat.setQuantityAvailableLoan(this.calQuantityAvailableMatMec(mat));
-                    this.repository.save(mat);
-                    response.setData(mat);
-                }
+                ToolControlMaterial existing = repository.filterId(mat.getCompanyId(),mat.getResaleId(),mat.getId());
+                if(existing==null) return failure("Material não encontrado nesta revenda.");
+                ToolControlCategory category = categoryRepository.filterId(mat.getCompanyId(),mat.getResaleId(),mat.getCategoryId());
+                BigDecimal loan = (category.getType()==TypeCategory.EPI || category.getType()==TypeCategory.Uniforme)
+                    ? mat.getQuantityAccountingLoan() : calQuantityAvailableMatMec(mat);
+                BigDecimal kitPending = repositoryKitMec.filterMatIdDevPend(mat.getCompanyId(),mat.getResaleId(),mat.getId()).stream()
+                    .map(item -> BigDecimal.valueOf((double)item.getQuantityReq()).subtract(BigDecimal.valueOf((double)item.getQuantityRet())))
+                    .reduce(BigDecimal.ZERO,BigDecimal::add);
+                BigDecimal kit = mat.getQuantityAccountingKit().subtract(kitPending);
+                if(loan.signum()<0 || kit.signum()<0) return failure("Quantidade contábil menor que a quantidade em uso.");
+                if((mat.getType()==TypeRequest.Kit && mat.getQuantityAccountingLoan().subtract(loan).signum()>0)
+                    || (mat.getType()==TypeRequest.Loan && kitPending.signum()>0)) return failure("Existem materiais em uso no tipo de requisição que está sendo removido.");
+                if(mat.getStatus()==com.concierge.apiconcierge.models.enums.StatusEnableDisable.Desabilitado
+                    && (mat.getQuantityAccountingLoan().subtract(loan).signum()>0 || kitPending.signum()>0)) return failure("Não é possível desabilitar material em uso.");
+                mat.setQuantityAvailableLoan(loan); mat.setQuantityAvailableKit(kit);
+                response.setData(repository.save(mat));
             }
             return response;
-        } catch (Exception ex) {
-            throw new ToolControlException(ex.getMessage());
-        }
+        } catch(Exception ex) {throw new ToolControlException(ex.getMessage());}
     }
-
-    @SneakyThrows
     @Override
-    public MessageResponse filterId(Integer companyId, Integer resaleId, Integer id) {
-        try {
-            MessageResponse response = this.validation.filterId(companyId, resaleId, id);
-            if (response.getStatus().equals(ConstantsMessage.SUCCESS)) {
-                ToolControlMaterial resultMat = this.repository.filterId(companyId, resaleId, id);
-                response.setData(resultMat);
-            }
-            return response;
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+    public MessageResponse filterId(Integer companyId,Integer resaleId,Integer id) {
+        MessageResponse response=validation.filterId(companyId,resaleId,id);
+        if(ConstantsMessage.SUCCESS.equals(response.getStatus())) {
+            ToolControlMaterial material=repository.filterId(companyId,resaleId,id);
+            if(material==null) return failure("Material não encontrado nesta revenda.");response.setData(material);
+        } return response;
     }
-
-    @SneakyThrows
     private BigDecimal calQuantityAvailableMatMec(ToolControlMaterial mat) {
-        BigDecimal quantityLoan = this.repositoryMatMec.filterMatIdDevPend(mat.getCompanyId(), mat.getResaleId(), mat.getId())
-                .stream()
-                .map(ToolControlMatMec::getDeliveryQuantity)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-        return mat.getQuantityAccountingLoan().subtract(quantityLoan);
-
-//        return quantityAvailable;
-//
-//        if (quantityAvailable.compareTo(BigDecimal.ZERO) < 0) {
-//            throw new ToolControlException("Quantidade contabil menor que a requisitada.");
-//        }
-//        mat.setQuantityAvailableLoan(quantityAvailable);
-//        return mat;
-//        BigDecimal quantityLoan = this.repositoryMatMec.filterMatIdDevPend(mat.getCompanyId(), mat.getResaleId(), mat.getId())
-//                .stream()
-//                .mapToDouble(ToolControlMatMec::getDeliveryQuantity)
-//                .sum();
-//        BigDecimal qtd = mat.getQuantityAccountingLoan() - quantityLoan;
-//        if (qtd < 0.0) {
-//            throw new ToolControlException("Quantidade contabil menor que a requisitada.");
-//        }
-//        mat.setQuantityAvailableLoan(mat.getQuantityAccountingLoan() - quantityLoan);
-//        return mat;
+        BigDecimal pending=repositoryMatMec.filterMatIdDevPend(mat.getCompanyId(),mat.getResaleId(),mat.getId()).stream()
+            .map(ToolControlMatMec::getDeliveryQuantity).reduce(BigDecimal.ZERO,BigDecimal::add);
+        return mat.getQuantityAccountingLoan().subtract(pending);
     }
-
-    @SneakyThrows
     @Override
-    public List<Map<String, Object>> listAll(Integer companyId, Integer resaleId) {
-        try {
-            MessageResponse response = this.validation.listAll(companyId, resaleId);
-            if (response.getStatus().equals(ConstantsMessage.SUCCESS)) {
-                List<ToolControlMaterial> list = this.repository.listAll(companyId, resaleId);
-                List<Map<String, Object>> result = new ArrayList<>();
-                for (ToolControlMaterial item : list) {
-                    result.add(this.loadMat(item));
-                }
-                return result;
-            }
-            return List.of();
-        } catch (Exception ex) {
-            throw new ToolControlException(ex.getMessage());
-        }
+    public List<Map<String,Object>> listAll(Integer companyId,Integer resaleId) {
+        if(!ConstantsMessage.SUCCESS.equals(validation.listAll(companyId,resaleId).getStatus())) return List.of();
+        return repository.listAll(companyId,resaleId).stream().map(this::loadMat).toList();
     }
-
-    @SneakyThrows
     @Override
-    public List<Map<String, Object>> listAllEnabled(Integer companyId, Integer resaleId) {
-        try {
-            MessageResponse response = this.validation.listAllEnabled(companyId, resaleId);
-            if (response.getStatus().equals(ConstantsMessage.SUCCESS)) {
-                List<ToolControlMaterial> resultList = this.repository.listAllEnabled(companyId, resaleId);
-                List<Map<String, Object>> responseList = new ArrayList<>();
-                for (ToolControlMaterial mat : resultList) {
-                    Map<String, Object> map = new HashMap<>();
-                    map.put("id", mat.getId());
-                    map.put("description", mat.getDescription());
-                    map.put("categoryId", mat.getCategoryId());
-                    map.put("quantityAvailableLoan", mat.getQuantityAvailableLoan());
-                    map.put("quantityAvailableKit", mat.getQuantityAvailableKit());
-                    map.put("validityDay", mat.getValidityDay());
-                    map.put("photoUrl", mat.getPhotoUrl());
-                    map.put("type",mat.getType());
-                    map.put("numberCA",mat.getNumberCA());
-                    responseList.add(map);
-                }
-                return responseList;
-            }
-            return List.of();
-        } catch (Exception ex) {
-            throw new ToolControlException(ex.getMessage());
-        }
+    public List<Map<String,Object>> listAllEnabled(Integer companyId,Integer resaleId) {
+        if(!ConstantsMessage.SUCCESS.equals(validation.listAllEnabled(companyId,resaleId).getStatus())) return List.of();
+        return repository.listAllEnabled(companyId,resaleId).stream().map(this::loadMat).toList();
     }
-
-    @SneakyThrows
     @Override
-    public MessageResponse saveImage(MultipartFile file, String local) {
+    public MessageResponse saveImage(MultipartFile file,String local) {
         try {
-            MessageResponse response = new MessageResponse();
-            response.setStatus(ConstantsMessage.SUCCESS);
-            response.setHeader("Imagem");
-            response.setMessage("Salvo com sucesso.");
-
-            // Segurança básica
-            if (local.contains("..") || local.isBlank()) {
-                response.setStatus(ConstantsMessage.ERROR);
-                response.setMessage("Caminho inválido.");
-                return response;
-            }
-
-            // Nome do arquivo
-            Path filePath = Paths.get(UPLOAD_DIR + local);
-
-            // Cria diretórios se necessário
-            Files.createDirectories(filePath.getParent());
-
-            // Salva ou substitui se existir)
-            Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
-
-            // URL pública
-            String url = "/images/" + local;
-
-            // Retornar o caminho do arquivo salvo
-            Map<String, String> map = new HashMap<>();
-            map.put("url", url);
-
-            response.setData(map);
-            return response;
-        } catch (Exception e) {
-            throw new Exception(e.getMessage());
-        }
+            Path target=imagePath(local);
+            if(file==null || file.isEmpty() || file.getSize()>5L*1024*1024) return failure("Imagem vazia ou maior que 5 MB.");
+            java.awt.image.BufferedImage image;
+            try(java.io.InputStream input=file.getInputStream()){image=javax.imageio.ImageIO.read(input);}
+            if(image==null) return failure("Arquivo de imagem inválido.");
+            java.awt.image.BufferedImage jpeg=new java.awt.image.BufferedImage(image.getWidth(),image.getHeight(),java.awt.image.BufferedImage.TYPE_INT_RGB);
+            java.awt.Graphics2D graphics=jpeg.createGraphics();
+            try{graphics.setColor(java.awt.Color.WHITE);graphics.fillRect(0,0,jpeg.getWidth(),jpeg.getHeight());graphics.drawImage(image,0,0,null);}finally{graphics.dispose();}
+            Files.createDirectories(target.getParent());
+            if(!javax.imageio.ImageIO.write(jpeg,"jpg",target.toFile())) return failure("Falha ao gravar a imagem.");
+            MessageResponse response=success("Imagem salva com sucesso.");response.setData(Map.of("url","/images/"+local));return response;
+        } catch(Exception ex) {return failure("Não foi possível salvar a imagem.");}
     }
-
-    @SneakyThrows
     @Override
     public MessageResponse deleteImage(String local) {
-        try {
-            MessageResponse response = new MessageResponse();
-            response.setStatus(ConstantsMessage.SUCCESS);
-            response.setHeader("Imagem");
-            response.setMessage("Excluído com sucesso.");
-
-            Path basePath = Paths.get(UPLOAD_DIR).toAbsolutePath().normalize();
-
-            Path filePath = basePath.resolve(local).normalize();
-
-            // Proteção contra path traversal
-            if (!filePath.startsWith(basePath) || local.isBlank()) {
-                response.setStatus(ConstantsMessage.ERROR);
-                response.setMessage("Caminho inválido.");
-                return response;
-            }
-
-            if (!Files.exists(filePath) || !Files.isRegularFile(filePath)) {
-                response.setStatus(ConstantsMessage.ERROR);
-                response.setMessage("Imagem não encontrada.");
-                return response;
-            }
-
-            Files.delete(filePath);
-            return response;
-        } catch (Exception e) {
-            throw new Exception(e.getMessage());
-        }
+        try {Path target=imagePath(local);Files.deleteIfExists(target);return success("Imagem excluída com sucesso.");}
+        catch(Exception ex){return failure("Não foi possível excluir a imagem.");}
     }
-
-    private Map<String, Object> loadMat(ToolControlMaterial mat) {
-        Map<String, Object> map = new HashMap<>();
-        map.put("id", mat.getId());
-        map.put("status", mat.getStatus());
-        map.put("description", mat.getDescription());
-        map.put("categoryId", mat.getCategoryId());
-        map.put("quantityAvailableLoan", mat.getQuantityAvailableLoan());
-        map.put("quantityAvailableKit", mat.getQuantityAvailableKit());
-        map.put("validityDay", mat.getValidityDay());
-        return map;
+    private MessageResponse success(String message){MessageResponse response=new MessageResponse();response.setStatus(ConstantsMessage.SUCCESS);response.setHeader("Material");response.setMessage(message);return response;}
+    private MessageResponse failure(String message){MessageResponse response=success(message);response.setStatus(ConstantsMessage.ERROR);return response;}
+    private Path imagePath(String local) {
+        if(local==null || !local.matches("[1-9][0-9]*/[1-9][0-9]*/workshop/equipment/reg/material/[1-9][0-9]*/image1\\.jpg")) throw new IllegalArgumentException("Caminho inválido.");
+        String[] parts=local.split("/");
+        if(repository.filterId(Integer.valueOf(parts[0]),Integer.valueOf(parts[1]),Integer.valueOf(parts[6]))==null) throw new IllegalArgumentException("Material não encontrado.");
+        Path base=Paths.get(UPLOAD_DIR).toAbsolutePath().normalize();Path target=base.resolve(local).normalize();
+        if(!target.startsWith(base)) throw new IllegalArgumentException("Caminho inválido.");return target;
+    }
+    private Map<String,Object> loadMat(ToolControlMaterial mat) {
+        Map<String,Object> map=new HashMap<>();map.put("companyId",mat.getCompanyId());map.put("resaleId",mat.getResaleId());map.put("id",mat.getId());map.put("status",mat.getStatus());map.put("type",mat.getType());map.put("description",mat.getDescription());map.put("categoryId",mat.getCategoryId());map.put("photoUrl",mat.getPhotoUrl());map.put("numberCA",mat.getNumberCA());map.put("quantityAccountingLoan",mat.getQuantityAccountingLoan());map.put("quantityAvailableLoan",mat.getQuantityAvailableLoan());map.put("quantityAccountingKit",mat.getQuantityAccountingKit());map.put("quantityAvailableKit",mat.getQuantityAvailableKit());map.put("validityDay",mat.getValidityDay());return map;
     }
 }

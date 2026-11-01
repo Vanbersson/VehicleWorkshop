@@ -107,7 +107,10 @@
                     </td>
                     <td>{{ (purchase.responsibleUserName | uppercase) || 'Não informado' }}</td>
                     <td><p-tag [value]="purchase.type" severity="secondary" [rounded]="true" /></td>
-                    <td class="text-right"><p-button label="Editar" icon="pi pi-pencil" [text]="true" size="small" [ariaLabel]="'Editar pedido de compra ' + purchase.id" (onClick)="edit(purchase.id)" /></td></tr
+                    <td class="text-right">
+                        <p-button label="Editar" icon="pi pi-pencil" [text]="true" severity="secondary" size="small" [ariaLabel]="'Editar pedido de compra ' + purchase.id" (onClick)="edit(purchase.id)" />
+                        </td>
+                        </tr
             ></ng-template>
             <ng-template #emptymessage
                 ><tr>
