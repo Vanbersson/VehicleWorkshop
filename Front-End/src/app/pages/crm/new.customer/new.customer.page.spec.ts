@@ -4,12 +4,15 @@ import { TestBed } from '@angular/core/testing';
 import { provideZonelessChangeDetection } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { of } from 'rxjs';
-import NewCustomerComponent from './new.customer.component';
+import AttendanceMaintenanceComponent from './attendance.maintenance/attendance.maintenance.component';
+import { ActivatedRoute, convertToParamMap } from '@angular/router';
+import { AttendanceProposalPrintService } from '@/app/services/crm/attendance.proposal.print.service';
+import { SalespersonService } from '@/app/services/salesperson/salesperson.service';
 import { CustomerAttendanceService } from '@/app/services/crm/customer.attendance.service';
 import { AttendanceStatus, CustomerAttendance } from '@/app/models/crm/customer.attendance';
 import { Visit } from '@/app/models/crm/visit/visit';
 
-describe('Attendance editor dialog rendering', () => {
+describe('Attendance page rendering', () => {
     it('renders the original visit and binds the documents field inside the Stepper panel', async () => {
         const attendance: CustomerAttendance = {
             id: 1,
@@ -29,13 +32,22 @@ describe('Attendance editor dialog rendering', () => {
         service.list.and.returnValue(of([attendance]));
         service.detail.and.returnValue(of({ attendance, visit }));
         TestBed.configureTestingModule({
-            imports: [NewCustomerComponent],
-            providers: [provideZonelessChangeDetection(), provideRouter([]), { provide: ClientCompanyService, useValue: {} }, { provide: StorageService, useValue: {} }, { provide: CustomerAttendanceService, useValue: service }]
+            imports: [AttendanceMaintenanceComponent],
+            providers: [
+                provideZonelessChangeDetection(),
+                provideRouter([]),
+                { provide: ActivatedRoute, useValue: { paramMap: of(convertToParamMap({ id: '1' })) } },
+                { provide: AttendanceProposalPrintService, useValue: {} },
+                { provide: SalespersonService, useValue: {} },
+                { provide: ClientCompanyService, useValue: {} },
+                { provide: StorageService, useValue: {} },
+                { provide: CustomerAttendanceService, useValue: service }
+            ]
         });
-        const fixture = TestBed.createComponent(NewCustomerComponent);
+        const fixture = TestBed.createComponent(AttendanceMaintenanceComponent);
         fixture.detectChanges();
         await fixture.whenStable();
-        await fixture.componentInstance.open(attendance);
+
         fixture.detectChanges();
         await fixture.whenStable();
         expect(fixture.nativeElement.textContent).toContain('Visita que originou o atendimento');

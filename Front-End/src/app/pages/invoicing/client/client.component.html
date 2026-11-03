@@ -9,46 +9,66 @@
                 <p class="text-muted-color">Gerencie os dados, contatos e documentos de clientes e fornecedores.</p>
             </div>
         </div>
-        <div class="header-actions"><app-filter-client-apollo
-                (outputClient)="importClientCompanyApollo.set($event)" /><p-button icon="pi pi-plus"
-                label="Novo cliente" (onClick)="newClient()" /></div>
+        <div class="header-actions"><app-filter-client-apollo (outputClient)="importClientCompanyApollo.set($event)" /><p-button icon="pi pi-plus" label="Novo cliente" (onClick)="newClient()" /></div>
     </header>
     <section class="clients-panel" aria-labelledby="clientsListTitle">
         <div class="list-heading">
             <div>
                 <span class="clients-eyebrow">CLIENTES E FORNECEDORES</span>
                 <h2 id="clientsListTitle">
-                    Clientes cadastrados <span class="record-count">{{ loadingClients() ? '…' : clients().length
-                        }}</span>
+                    Clientes cadastrados <span class="record-count">{{ loadingClients() ? '…' : clients().length }}</span>
                 </h2>
             </div>
-            <p-button icon="pi pi-refresh" label="Atualizar" [text]="true" severity="secondary"
-                (onClick)="loadClients()" [loading]="loadingClients()" />
+            <p-button icon="pi pi-refresh" label="Atualizar" [text]="true" severity="secondary" (onClick)="loadClients()" [loading]="loadingClients()" />
         </div>
         @if (loadError()) {
-        <div class="list-error" role="alert">
-            <i class="pi pi-exclamation-circle" aria-hidden="true"></i><span>{{ loadError() }}</span>
-        </div>
+            <div class="list-error" role="alert">
+                <i class="pi pi-exclamation-circle" aria-hidden="true"></i><span>{{ loadError() }}</span>
+            </div>
         }
-        <p-table #clientTable [value]="clients()" [loading]="loadingClients()" [rowHover]="true" [paginator]="true"
-            [rows]="10" [rowsPerPageOptions]="[10, 25, 50]" [showCurrentPageReport]="true"
+        <p-table
+            #clientTable
+            [value]="clients()"
+            [loading]="loadingClients()"
+            [rowHover]="true"
+            [paginator]="true"
+            [rows]="10"
+            [rowsPerPageOptions]="[10, 25, 50]"
+            [showCurrentPageReport]="true"
             currentPageReportTemplate="{first}–{last} de {totalRecords} clientes"
-            [globalFilterFields]="['id', 'status', 'fantasia', 'name', 'cnpj', 'cpf']" sortField="id" [sortOrder]="-1"
-            dataKey="id" size="small" [tableStyle]="{ 'min-width': '58rem' }">
+            [globalFilterFields]="['id', 'status', 'fantasia', 'name', 'cnpj', 'cpf']"
+            sortField="id"
+            [sortOrder]="-1"
+            dataKey="id"
+            size="small"
+            [tableStyle]="{ 'min-width': '58rem' }"
+        >
             <ng-template #caption>
                 <div class="list-toolbar">
-                    <p-iconfield iconPosition="left" class="client-search"><p-inputicon><i class="pi pi-search"
-                                aria-hidden="true"></i></p-inputicon><input #searchInput pInputText type="search"
+                    <p-iconfield iconPosition="left" class="client-search"
+                        ><p-inputicon><i class="pi pi-search" aria-hidden="true"></i></p-inputicon
+                        ><input
+                            #searchInput
+                            pInputText
+                            type="search"
                             aria-label="Pesquisar clientes por nome, código, CPF ou CNPJ"
                             (input)="clientTable.filterGlobal(searchInput.value, 'contains')"
-                            placeholder="Buscar nome, código, CPF ou CNPJ" class="w-full" /></p-iconfield>
+                            placeholder="Buscar nome, código, CPF ou CNPJ"
+                            class="w-full"
+                    /></p-iconfield>
                     <div class="list-filters">
-                        <p-select [(ngModel)]="selectedStatus" [options]="statusOptions" optionLabel="label"
-                            optionValue="value" placeholder="Todos os status" ariaLabel="Filtrar clientes por status"
-                            [showClear]="true" (onChange)="clientTable.filter(selectedStatus, 'status', 'equals')"
-                            appendTo="body" class="status-filter" /><p-button label="Limpar filtros"
-                            icon="pi pi-filter-slash" severity="secondary" [text]="true"
-                            (onClick)="clearFilters(clientTable, searchInput)" />
+                        <p-select
+                            [(ngModel)]="selectedStatus"
+                            [options]="statusOptions"
+                            optionLabel="label"
+                            optionValue="value"
+                            placeholder="Todos os status"
+                            ariaLabel="Filtrar clientes por status"
+                            [showClear]="true"
+                            (onChange)="clientTable.filter(selectedStatus, 'status', 'equals')"
+                            appendTo="body"
+                            class="status-filter"
+                        /><p-button label="Limpar filtros" icon="pi pi-filter-slash" severity="secondary" [text]="true" (onClick)="clearFilters(clientTable, searchInput)" />
                     </div>
                 </div>
             </ng-template>
@@ -69,20 +89,14 @@
                     </td>
                     <td>
                         <div class="client-cell">
-                            <span class="client-avatar"><i
-                                    [class]="client.fisjur === juridica ? 'pi pi-building' : 'pi pi-user'"
-                                    aria-hidden="true"></i></span><strong>{{ client.name }}</strong>
+                            <span class="client-avatar"><i [class]="client.fisjur === juridica ? 'pi pi-building' : 'pi pi-user'" aria-hidden="true"></i></span><strong>{{ client.name }}</strong>
                         </div>
                     </td>
                     <td>{{ client.fantasia || 'Não informado' }}</td>
-                    <td><p-tag [value]="client.status" [severity]="client.status === enabled ? 'success' : 'secondary'"
-                            [icon]="client.status === enabled ? 'pi pi-check-circle' : 'pi pi-minus-circle'"
-                            [rounded]="true" /></td>
-                    <td>{{ client.cnpj ? maskCNPJ(client.cnpj) : client.cpf ? maskCPF(client.cpf) : 'Não informado' }}
-                    </td>
+                    <td><p-tag [value]="client.status" [severity]="client.status === enabled ? 'success' : 'secondary'" [icon]="client.status === enabled ? 'pi pi-check-circle' : 'pi pi-minus-circle'" [rounded]="true" /></td>
+                    <td>{{ client.cnpj ? maskCNPJ(client.cnpj) : client.cpf ? maskCPF(client.cpf) : 'Não informado' }}</td>
                     <td class="text-right">
-                        <p-button icon="pi pi-pencil" label="Editar" [text]="true" severity="secondary" size="small"
-                            (onClick)="editClient(client)" [ariaLabel]="'Editar cliente ' + client.name" />
+                        <p-button icon="pi pi-pencil" label="Editar" [text]="true" severity="secondary" size="small" (onClick)="editClient(client)" [ariaLabel]="'Editar cliente ' + client.name" />
                     </td>
                 </tr>
             </ng-template>
@@ -90,23 +104,28 @@
                 <tr>
                     <td colspan="6">
                         <div class="list-empty">
-                            <span class="clients-icon"><i class="pi"
-                                    [ngClass]="loadError() ? 'pi-exclamation-circle' : clients().length ? 'pi-search' : 'pi-address-book'"
-                                    aria-hidden="true"></i></span>
-                            <h3>{{ loadError() ? 'Não foi possível carregar os clientes' : clients().length ? 'Nenhum
-                                cliente encontrado' : 'Organize sua base de clientes' }}</h3>
+                            <span class="clients-icon"><i class="pi" [ngClass]="loadError() ? 'pi-exclamation-circle' : clients().length ? 'pi-search' : 'pi-address-book'" aria-hidden="true"></i></span>
+                            <h3>
+                                {{
+                                    loadError()
+                                        ? 'Não foi possível carregar os clientes'
+                                        : clients().length
+                                          ? 'Nenhum
+                                cliente encontrado'
+                                          : 'Organize sua base de clientes'
+                                }}
+                            </h3>
                             <p class="text-muted-color">
                                 {{
-                                loadError()
-                                ? 'Clique em Atualizar para tentar novamente.'
-                                : clients().length
-                                ? 'Experimente outro termo ou limpe os filtros para visualizar os registros.'
-                                : 'Cadastre um cliente para organizar sua base de clientes.'
+                                    loadError()
+                                        ? 'Clique em Atualizar para tentar novamente.'
+                                        : clients().length
+                                          ? 'Experimente outro termo ou limpe os filtros para visualizar os registros.'
+                                          : 'Cadastre um cliente para organizar sua base de clientes.'
                                 }}
                             </p>
                             @if (!clients().length && !loadError()) {
-                            <p-button label="Cadastrar primeiro cliente" icon="pi pi-plus" [outlined]="true"
-                                (onClick)="newClient()" />
+                                <p-button label="Cadastrar primeiro cliente" icon="pi pi-plus" [outlined]="true" (onClick)="newClient()" />
                             }
                         </div>
                     </td>
@@ -117,9 +136,7 @@
 </div>
 
 <!-- Dialog Add or Alter cliente -->
-<p-dialog [header]="isClientNew() ? 'Novo cliente' : 'Editar cliente'" [(visible)]="visibleDialog" [modal]="true"
-    [maximizable]="true" [draggable]="false" [style]="{ width: '76rem', maxWidth: '96vw' }"
-    [breakpoints]="{ '640px': '96vw' }">
+<p-dialog [header]="isClientNew() ? 'Novo cliente' : 'Editar cliente'" [(visible)]="visibleDialog" [modal]="true" [maximizable]="true" [draggable]="false" [style]="{ width: '76rem', maxWidth: '96vw' }" [breakpoints]="{ '640px': '96vw' }">
     <form id="client-form" [formGroup]="formClient" (ngSubmit)="save()">
         <div class="grid grid-cols-12 gap-4">
             <div class="col-span-12 dialog-intro">
@@ -131,13 +148,11 @@
                 <span class="field-label">Status</span>
                 <div class="choice-box">
                     <div class="flex align-center">
-                        <p-radioButton inputId="st1" name="status" [value]="enabled"
-                            formControlName="status"></p-radioButton>
+                        <p-radioButton inputId="st1" name="status" [value]="enabled" formControlName="status"></p-radioButton>
                         <label for="st1" class="ml-2">{{ enabled }}</label>
                     </div>
                     <div class="flex align-center">
-                        <p-radioButton inputId="st2" name="status" [value]="disabled"
-                            formControlName="status"></p-radioButton>
+                        <p-radioButton inputId="st2" name="status" [value]="disabled" formControlName="status"></p-radioButton>
                         <label for="st2" class="ml-2">{{ disabled }}</label>
                     </div>
                 </div>
@@ -146,18 +161,15 @@
                 <span class="field-label">Tipo de pessoa</span>
                 <div class="choice-box">
                     <div class="flex align-items-center">
-                        <p-radioButton inputId="pfi" name="fisjur" [value]="fisica" formControlName="fisjur"
-                            (onClick)="changeType()"></p-radioButton>
+                        <p-radioButton inputId="pfi" name="fisjur" [value]="fisica" formControlName="fisjur" (onClick)="changeType()"></p-radioButton>
                         <label for="pfi" class="ml-2">{{ fisica }}</label>
                     </div>
                     <div class="flex align-items-center">
-                        <p-radioButton inputId="pju" name="fisjur" [value]="juridica" formControlName="fisjur"
-                            (onClick)="changeType()"></p-radioButton>
+                        <p-radioButton inputId="pju" name="fisjur" [value]="juridica" formControlName="fisjur" (onClick)="changeType()"></p-radioButton>
                         <label for="pju" class="ml-2">{{ juridica }}</label>
                     </div>
                     <div class="flex align-items-center">
-                        <p-radioButton inputId="pou" name="fisjur" [value]="outras" formControlName="fisjur"
-                            (onClick)="changeType()"></p-radioButton>
+                        <p-radioButton inputId="pou" name="fisjur" [value]="outras" formControlName="fisjur" (onClick)="changeType()"></p-radioButton>
                         <label for="pou" class="ml-2">{{ outras }}</label>
                     </div>
                 </div>
@@ -175,54 +187,36 @@
                     <div class="tab-content">
                         <div class="section-heading">
                             <h2>Dados gerais</h2>
-                            <p>Identifique o cliente e organize sua classificação comercial. Campos com * são
-                                obrigatórios.</p>
+                            <p>Identifique o cliente e organize sua classificação comercial. Campos com * são obrigatórios.</p>
                         </div>
                         <div class="grid grid-cols-12 gap-4">
                             <div class="col-span-12 sm:col-span-4 lg:col-span-2">
                                 <label for="clientId">Código</label>
-                                <p-inputNumber mode="decimal" [useGrouping]="false" inputId="clientId"
-                                    formControlName="id" placeholder="Automático" fluid />
+                                <p-inputNumber mode="decimal" [useGrouping]="false" inputId="clientId" formControlName="id" placeholder="Automático" fluid />
                             </div>
                             <div class="col-span-4 sm:col-span-2 lg:col-span-10">
                                 <label for="ClientNameId">Nome *</label>
-                                <input id="ClientNameId" type="text" class="w-full"
-                                    [style]="{ 'text-transform': 'uppercase' }" pInputText formControlName="name" />
-                                <small class="block text-sm text-red-500"
-                                    *ngIf="formClient.get('name')?.invalid && formClient.get('name')?.touched">Campo
-                                    obrigatório</small>
+                                <input id="ClientNameId" type="text" class="w-full" [style]="{ 'text-transform': 'uppercase' }" pInputText formControlName="name" />
+                                <small class="block text-sm text-red-500" *ngIf="formClient.get('name')?.invalid && formClient.get('name')?.touched">Campo obrigatório</small>
                             </div>
                             <div class="col-span-12 sm:col-span-6 lg:col-span-3">
                                 <label for="ClientFantasiaId">Apelido/Fantasia</label>
-                                <input id="ClientFantasiaId" type="text" class="w-full"
-                                    [style]="{ 'text-transform': 'uppercase' }" pInputText formControlName="fantasia" />
+                                <input id="ClientFantasiaId" type="text" class="w-full" [style]="{ 'text-transform': 'uppercase' }" pInputText formControlName="fantasia" />
                             </div>
                             <div class="col-span-12 sm:col-span-6 lg:col-span-3">
                                 <label for="client-region">Regiões</label>
-                                <p-select appendTo="body" [options]="regions()" optionLabel="description"
-                                    [filter]="true" [style]="{ 'text-transform': 'uppercase' }" placeholder="Selecione"
-                                    formControlName="region" inputId="client-region" fluid />
-                                <small class="block text-sm text-red-500"
-                                    *ngIf="formClient.get('region')?.invalid && formClient.get('region')?.touched">Campo
-                                    obrigatório</small>
+                                <p-select appendTo="body" [options]="regions()" optionLabel="description" [filter]="true" [style]="{ 'text-transform': 'uppercase' }" placeholder="Selecione" formControlName="region" inputId="client-region" fluid />
+                                <small class="block text-sm text-red-500" *ngIf="formClient.get('region')?.invalid && formClient.get('region')?.touched">Campo obrigatório</small>
                             </div>
                             <div class="col-span-12 sm:col-span-6 lg:col-span-3">
                                 <label for="client-category">Categoria *</label>
-                                <p-select appendTo="body" [options]="categories()" optionLabel="description"
-                                    [style]="{ 'text-transform': 'uppercase' }" placeholder="Selecione"
-                                    formControlName="category" inputId="client-category" fluid />
-                                <small class="block text-sm text-red-500"
-                                    *ngIf="formClient.get('category')?.invalid && formClient.get('category')?.touched">Campo
-                                    obrigatório</small>
+                                <p-select appendTo="body" [options]="categories()" optionLabel="description" [style]="{ 'text-transform': 'uppercase' }" placeholder="Selecione" formControlName="category" inputId="client-category" fluid />
+                                <small class="block text-sm text-red-500" *ngIf="formClient.get('category')?.invalid && formClient.get('category')?.touched">Campo obrigatório</small>
                             </div>
                             <div class="col-span-12 sm:col-span-6 lg:col-span-3">
                                 <label for="client-role">Cliente/Fornecedor *</label>
-                                <p-select appendTo="body" [options]="clifor" optionLabel="type"
-                                    [style]="{ 'text-transform': 'uppercase' }" placeholder="Selecione"
-                                    formControlName="clifor" inputId="client-role" fluid />
-                                <small class="block text-sm text-red-500"
-                                    *ngIf="formClient.get('clifor')?.invalid && formClient.get('clifor')?.touched">Campo
-                                    obrigatório</small>
+                                <p-select appendTo="body" [options]="clifor" optionLabel="type" [style]="{ 'text-transform': 'uppercase' }" placeholder="Selecione" formControlName="clifor" inputId="client-role" fluid />
+                                <small class="block text-sm text-red-500" *ngIf="formClient.get('clifor')?.invalid && formClient.get('clifor')?.touched">Campo obrigatório</small>
                             </div>
 
                             <div class="col-span-12 section-heading">
@@ -231,24 +225,20 @@
                             </div>
                             <div class="col-span-4 sm:col-span-2 lg:col-span-1">
                                 <label for="DddPhoneId">DDD</label>
-                                <p-inputMask inputId="DddPhoneId" mask="99" [unmask]="true" formControlName="dddPhone"
-                                    fluid />
+                                <p-inputMask inputId="DddPhoneId" mask="99" [unmask]="true" formControlName="dddPhone" fluid />
                             </div>
                             <div class="col-span-8 sm:col-span-4 lg:col-span-5">
                                 <label for="PhoneId">Telefone</label>
-                                <p-inputMask inputId="PhoneId" mask="9999-9999" [unmask]="true" formControlName="phone"
-                                    fluid />
+                                <p-inputMask inputId="PhoneId" mask="9999-9999" [unmask]="true" formControlName="phone" fluid />
                             </div>
 
                             <div class="col-span-4 sm:col-span-2 lg:col-span-1">
                                 <label for="DddPCellponeId">DDD</label>
-                                <p-inputMask inputId="DddPCellponeId" mask="99" [unmask]="true"
-                                    formControlName="dddCellphone" fluid />
+                                <p-inputMask inputId="DddPCellponeId" mask="99" [unmask]="true" formControlName="dddCellphone" fluid />
                             </div>
                             <div class="col-span-8 sm:col-span-4 lg:col-span-5">
                                 <label for="CellphoneId">Celular</label>
-                                <p-inputMask inputId="CellphoneId" mask="99999-9999" [unmask]="true"
-                                    formControlName="cellphone" fluid />
+                                <p-inputMask inputId="CellphoneId" mask="99999-9999" [unmask]="true" formControlName="cellphone" fluid />
                             </div>
 
                             <div class="col-span-12 section-heading">
@@ -258,58 +248,38 @@
                             <div class="col-span-12 sm:col-span-4 lg:col-span-2">
                                 <label for="ClientzipCode">CEP *</label>
                                 <p-inputGroup>
-                                    <p-inputMask inputId="ClientzipCode" mask="99999-999" [unmask]="true"
-                                        formControlName="zipCode" fluid />
-                                    <button type="button" pButton icon="pi pi-search" severity="secondary"
-                                        aria-label="Consultar endereço pelo CEP" (click)="searchCEP()"></button>
+                                    <p-inputMask inputId="ClientzipCode" mask="99999-999" [unmask]="true" formControlName="zipCode" fluid />
+                                    <button type="button" pButton icon="pi pi-search" severity="secondary" aria-label="Consultar endereço pelo CEP" (click)="searchCEP()"></button>
                                 </p-inputGroup>
-                                <small class="block text-sm text-red-500"
-                                    *ngIf="formClient.get('zipCode')?.invalid && formClient.get('zipCode')?.touched">Campo
-                                    obrigatório</small>
+                                <small class="block text-sm text-red-500" *ngIf="formClient.get('zipCode')?.invalid && formClient.get('zipCode')?.touched">Campo obrigatório</small>
                             </div>
                             <div class="col-span-12 md:col-span-8">
                                 <label for="Clientaddress">Logradouro *</label>
-                                <input id="Clientaddress" type="text" class="w-full"
-                                    [style]="{ 'text-transform': 'uppercase' }" pInputText formControlName="address" />
-                                <small class="block text-sm text-red-500"
-                                    *ngIf="formClient.get('address')?.invalid && formClient.get('address')?.touched">Campo
-                                    obrigatório</small>
+                                <input id="Clientaddress" type="text" class="w-full" [style]="{ 'text-transform': 'uppercase' }" pInputText formControlName="address" />
+                                <small class="block text-sm text-red-500" *ngIf="formClient.get('address')?.invalid && formClient.get('address')?.touched">Campo obrigatório</small>
                             </div>
                             <div class="col-span-12 sm:col-span-4 lg:col-span-2">
                                 <label for="ClientAddressNumber">Nº</label>
-                                <p-inputNumber inputId="ClientAddressNumber" [useGrouping]="false"
-                                    formControlName="addressNumber" fluid />
+                                <p-inputNumber inputId="ClientAddressNumber" [useGrouping]="false" formControlName="addressNumber" fluid />
                             </div>
                             <div class="col-span-4 sm:col-span-2 lg:col-span-1">
                                 <label for="ClientState">UF *</label>
-                                <p-inputMask inputId="ClientState" [style]="{ 'text-transform': 'uppercase' }" mask="aa"
-                                    [unmask]="true" formControlName="state" fluid />
-                                <small class="block text-sm text-red-500"
-                                    *ngIf="formClient.get('state')?.invalid && formClient.get('state')?.touched">Campo
-                                    obrigatório</small>
+                                <p-inputMask inputId="ClientState" [style]="{ 'text-transform': 'uppercase' }" mask="aa" [unmask]="true" formControlName="state" fluid />
+                                <small class="block text-sm text-red-500" *ngIf="formClient.get('state')?.invalid && formClient.get('state')?.touched">Campo obrigatório</small>
                             </div>
                             <div class="col-span-12 md:col-span-6">
                                 <label for="ClientCity">Cidade *</label>
-                                <input id="ClientCity" type="text" class="w-full"
-                                    [style]="{ 'text-transform': 'uppercase' }" pInputText formControlName="city" />
-                                <small class="block text-sm text-red-500"
-                                    *ngIf="formClient.get('city')?.invalid && formClient.get('city')?.touched">Campo
-                                    obrigatório</small>
+                                <input id="ClientCity" type="text" class="w-full" [style]="{ 'text-transform': 'uppercase' }" pInputText formControlName="city" />
+                                <small class="block text-sm text-red-500" *ngIf="formClient.get('city')?.invalid && formClient.get('city')?.touched">Campo obrigatório</small>
                             </div>
                             <div class="col-span-12 md:col-span-5">
                                 <label for="ClientNeighborhood">Bairro *</label>
-                                <input id="ClientNeighborhood" type="text" class="w-full"
-                                    [style]="{ 'text-transform': 'uppercase' }" pInputText
-                                    formControlName="neighborhood" />
-                                <small class="block text-sm text-red-500"
-                                    *ngIf="formClient.get('neighborhood')?.invalid && formClient.get('neighborhood')?.touched">Campo
-                                    obrigatório</small>
+                                <input id="ClientNeighborhood" type="text" class="w-full" [style]="{ 'text-transform': 'uppercase' }" pInputText formControlName="neighborhood" />
+                                <small class="block text-sm text-red-500" *ngIf="formClient.get('neighborhood')?.invalid && formClient.get('neighborhood')?.touched">Campo obrigatório</small>
                             </div>
                             <div class="col-span-12">
                                 <label for="ClientAddressComplement">Complemento</label>
-                                <input id="ClientAddressComplement" type="text" class="w-full"
-                                    [style]="{ 'text-transform': 'uppercase' }" pInputText
-                                    formControlName="addressComplement" />
+                                <input id="ClientAddressComplement" type="text" class="w-full" [style]="{ 'text-transform': 'uppercase' }" pInputText formControlName="addressComplement" />
                             </div>
                         </div>
                     </div>
@@ -323,50 +293,38 @@
                         <div class="grid grid-cols-12 gap-4">
                             <div class="col-span-12 md:col-span-6">
                                 <label for="emailHomeId">E-mail casa</label>
-                                <input id="emailHomeId" type="email" class="w-full"
-                                    [style]="{ 'text-transform': 'lowercase' }" pInputText
-                                    formControlName="emailHome" />
+                                <input id="emailHomeId" type="email" class="w-full" [style]="{ 'text-transform': 'lowercase' }" pInputText formControlName="emailHome" />
                             </div>
                             <div class="col-span-12 md:col-span-6">
                                 <label for="emailWorkId">E-mail trabalho</label>
-                                <input id="emailWorkId" type="email" class="w-full"
-                                    [style]="{ 'text-transform': 'lowercase' }" pInputText
-                                    formControlName="emailWork" />
+                                <input id="emailWorkId" type="email" class="w-full" [style]="{ 'text-transform': 'lowercase' }" pInputText formControlName="emailWork" />
                             </div>
                             <div class="col-span-12">
                                 <h2 class="mb-4">Pessoa de contato</h2>
                                 <div class="contact-panel grid grid-cols-12 gap-4">
                                     <div class="col-span-12 sm:col-span-6 lg:col-span-4">
                                         <label for="contactNameId">Nome</label>
-                                        <input id="contactNameId" type="text" class="w-full"
-                                            [style]="{ 'text-transform': 'uppercase' }" pInputText
-                                            formControlName="contactName" />
+                                        <input id="contactNameId" type="text" class="w-full" [style]="{ 'text-transform': 'uppercase' }" pInputText formControlName="contactName" />
                                     </div>
                                     <div class="col-span-12 sm:col-span-6 lg:col-span-8">
                                         <label for="contactEmailId">E-Mail</label>
-                                        <input id="contactEmailId" type="email" class="w-full"
-                                            [style]="{ 'text-transform': 'lowercase' }" pInputText
-                                            formControlName="contactEmail" />
+                                        <input id="contactEmailId" type="email" class="w-full" [style]="{ 'text-transform': 'lowercase' }" pInputText formControlName="contactEmail" />
                                     </div>
                                     <div class="col-span-4 sm:col-span-2 lg:col-span-1">
                                         <label for="contactDDDPhoneId">DDD</label>
-                                        <p-inputMask inputId="contactDDDPhoneId" mask="99" [unmask]="true"
-                                            formControlName="contactDDDPhone" fluid />
+                                        <p-inputMask inputId="contactDDDPhoneId" mask="99" [unmask]="true" formControlName="contactDDDPhone" fluid />
                                     </div>
                                     <div class="col-span-8 sm:col-span-4 lg:col-span-5">
                                         <label for="contactPhoneId">Telefone</label>
-                                        <p-inputMask inputId="contactPhoneId" mask="9999-9999" [unmask]="true"
-                                            formControlName="contactPhone" fluid />
+                                        <p-inputMask inputId="contactPhoneId" mask="9999-9999" [unmask]="true" formControlName="contactPhone" fluid />
                                     </div>
                                     <div class="col-span-4 sm:col-span-2 lg:col-span-1">
                                         <label for="contactDDDCellphoneId">DDD</label>
-                                        <p-inputMask inputId="contactDDDCellphoneId" mask="99" [unmask]="true"
-                                            formControlName="contactDDDCellphone" fluid />
+                                        <p-inputMask inputId="contactDDDCellphoneId" mask="99" [unmask]="true" formControlName="contactDDDCellphone" fluid />
                                     </div>
                                     <div class="col-span-8 sm:col-span-4 lg:col-span-5">
                                         <label for="contactCellphoneId">Celular</label>
-                                        <p-inputMask inputId="contactCellphoneId" mask="9999-9999" [unmask]="true"
-                                            formControlName="contactCellphone" fluid />
+                                        <p-inputMask inputId="contactCellphoneId" mask="9999-9999" [unmask]="true" formControlName="contactCellphone" fluid />
                                     </div>
                                 </div>
                             </div>
@@ -383,20 +341,15 @@
                             <div class="col-span-12 sm:col-span-6 lg:col-span-3">
                                 <label for="ClientCnpj">CNPJ *</label>
                                 @if (editCNPJCPF()) {
-                                <p-inputMask mask="99.999.999/9999-99" [unmask]="true" inputId="ClientCnpj"
-                                    formControlName="cnpj" fluid />
+                                    <p-inputMask mask="99.999.999/9999-99" [unmask]="true" inputId="ClientCnpj" formControlName="cnpj" fluid />
                                 }
                                 @if (!editCNPJCPF()) {
-                                <p-inputGroup>
-                                    <p-inputMask mask="99.999.999/9999-99" [unmask]="true" inputId="ClientCnpj"
-                                        formControlName="cnpj" fluid />
-                                    <button type="button" pButton icon="pi pi-lock" class="p-button-secondary"
-                                        aria-label="Permitir alteração do CNPJ" (click)="confirm('CNPJ')"></button>
-                                </p-inputGroup>
+                                    <p-inputGroup>
+                                        <p-inputMask mask="99.999.999/9999-99" [unmask]="true" inputId="ClientCnpj" formControlName="cnpj" fluid />
+                                        <button type="button" pButton icon="pi pi-lock" class="p-button-secondary" aria-label="Permitir alteração do CNPJ" (click)="confirm('CNPJ')"></button>
+                                    </p-inputGroup>
                                 }
-                                <small class="block text-sm text-red-500"
-                                    *ngIf="formClient.get('cnpj')?.invalid && formClient.get('cnpj')?.touched">Campo
-                                    obrigatório</small>
+                                <small class="block text-sm text-red-500" *ngIf="formClient.get('cnpj')?.invalid && formClient.get('cnpj')?.touched">Campo obrigatório</small>
                             </div>
                             <div class="col-span-12 sm:col-span-6 lg:col-span-3">
                                 <label for="client-ie">Inscrição estadual</label>
@@ -417,19 +370,13 @@
                         </div>
                         <div class="grid grid-cols-12 gap-4">
                             <div class="col-span-12 sm:col-span-6 lg:col-span-3">
-                                <label for="ClientCpf">CPF{{ formClient.controls.fisjur.value === fisica ? ' *' : ''
-                                    }}</label>
-                                <p-inputMask *ngIf="editCNPJCPF()" mask="999.999.999-99" [unmask]="true"
-                                    inputId="ClientCpf" formControlName="cpf" fluid />
+                                <label for="ClientCpf">CPF{{ formClient.controls.fisjur.value === fisica ? ' *' : '' }}</label>
+                                <p-inputMask *ngIf="editCNPJCPF()" mask="999.999.999-99" [unmask]="true" inputId="ClientCpf" formControlName="cpf" fluid />
                                 <p-inputGroup *ngIf="!editCNPJCPF()">
-                                    <p-inputMask mask="999.999.999-99" [unmask]="true" inputId="ClientCpf"
-                                        formControlName="cpf" fluid />
-                                    <button type="button" pButton icon="pi pi-lock" class="p-button-secondary"
-                                        aria-label="Permitir alteração do CPF" (click)="confirm('CPF')"></button>
+                                    <p-inputMask mask="999.999.999-99" [unmask]="true" inputId="ClientCpf" formControlName="cpf" fluid />
+                                    <button type="button" pButton icon="pi pi-lock" class="p-button-secondary" aria-label="Permitir alteração do CPF" (click)="confirm('CPF')"></button>
                                 </p-inputGroup>
-                                <small class="block text-sm text-red-500"
-                                    *ngIf="formClient.get('cpf')?.invalid && formClient.get('cpf')?.touched">Campo
-                                    obrigatório</small>
+                                <small class="block text-sm text-red-500" *ngIf="formClient.get('cpf')?.invalid && formClient.get('cpf')?.touched">Campo obrigatório</small>
                             </div>
                             <div class="col-span-12 sm:col-span-6 lg:col-span-3">
                                 <label for="ClientRg">RG</label>
@@ -441,9 +388,7 @@
                             </div>
                             <div class="col-span-12 sm:col-span-6 lg:col-span-3">
                                 <label for="buttondisplay">Data de nascimento</label>
-                                <p-datepicker appendTo="body" [showOnFocus]="false" [showIcon]="true"
-                                    inputId="buttondisplay" dateFormat="dd/mm/yy" (onInput)="applyDateMask($event)"
-                                    formControlName="dateBirth" fluid />
+                                <p-datepicker appendTo="body" [showOnFocus]="false" [showIcon]="true" inputId="buttondisplay" dateFormat="dd/mm/yy" (onInput)="applyDateMask($event)" formControlName="dateBirth" fluid />
                             </div>
                         </div>
                     </div>
@@ -451,9 +396,7 @@
             </p-tabpanels>
         </p-tabs>
     </form>
-    <ng-template #footer><p-button type="button" label="Fechar" severity="secondary" [text]="true"
-            (onClick)="hideDialog()" /><button pButton type="submit" form="client-form" label="Salvar cliente"
-            icon="pi pi-check"></button></ng-template>
+    <ng-template #footer><p-button type="button" label="Fechar" severity="secondary" [text]="true" (onClick)="hideDialog()" /><button pButton type="submit" form="client-form" label="Salvar cliente" icon="pi pi-check"></button></ng-template>
 </p-dialog>
 
 <p-confirmDialog>

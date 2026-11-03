@@ -33,6 +33,80 @@ class CustomerAttendanceServiceTest {
     @Mock IPermissionUserRepository permissionRepository;
     @InjectMocks CustomerAttendanceService service;
 
+    @Test void createsDirectAttendanceWithoutCreatingOrCompletingAVisit() {
+        Salesperson salesperson = new Salesperson(); salesperson.setId(700); salesperson.setName("Seller"); salesperson.setStatus(StatusEnableDisable.Habilitado);
+        when(salespersonRepository.findByCompanyIdAndResaleIdAndId(1, 2, 700)).thenReturn(salesperson);
+        var client = new com.concierge.apiconcierge.models.clientcompany.ClientCompany();
+        client.setId(88); client.setName("Client"); client.setStatus(StatusEnableDisable.Habilitado);
+        when(clientRepository.filterId(1, 2, 88)).thenReturn(client);
+        when(repository.saveAndFlush(any())).thenAnswer(invocation -> { CustomerAttendance a = invocation.getArgument(0); a.setId(10); return a; });
+        var created = service.create(new com.concierge.apiconcierge.dtos.crm.attendance.AttendanceCreateDto(88, 700, " Notes "), "user");
+        assertEquals(10, created.id()); assertNull(created.visitId()); assertNull(created.dateVisit());
+        assertEquals(88, created.clientId()); assertEquals("Client", created.clientName());
+        assertEquals(AttendanceStatus.DOCUMENTS_PENDING, created.status()); assertEquals("Notes", created.notes());
+        verifyNoInteractions(visitRepository);
+    }
+
+    @Test void rejectsDirectAttendanceForAnotherSalesperson() {
+        assertThrows(BusinessException.class, () -> service.create(new com.concierge.apiconcierge.dtos.crm.attendance.AttendanceCreateDto(88, 701, ""), "user"));
+        verify(repository, never()).saveAndFlush(any());
+        verifyNoInteractions(clientRepository, visitRepository);
+    }
+
+    @Test void rejectsDirectAttendanceForAnInvalidClientOrSalesperson() {
+        var request = new com.concierge.apiconcierge.dtos.crm.attendance.AttendanceCreateDto(88, 700, "");
+        assertThrows(BusinessException.class, () -> service.create(request, "user"));
+        Salesperson salesperson = new Salesperson(); salesperson.setId(700); salesperson.setStatus(StatusEnableDisable.Habilitado);
+        when(salespersonRepository.findByCompanyIdAndResaleIdAndId(1, 2, 700)).thenReturn(salesperson);
+        assertThrows(BusinessException.class, () -> service.create(request, "user"));
+        var client = new com.concierge.apiconcierge.models.clientcompany.ClientCompany(); client.setStatus(StatusEnableDisable.Desabilitado);
+        when(clientRepository.filterId(1, 2, 88)).thenReturn(client);
+        assertThrows(BusinessException.class, () -> service.create(request, "user"));
+        verify(repository, never()).saveAndFlush(any());
+    }
+
+    @Test void loadsDirectAttendanceWithoutLookingUpAVisit() {
+        CustomerAttendance a = attendance(1, 700); a.setCompanyId(1); a.setResaleId(2); a.setVisitId(null);
+        when(repository.findByCompanyIdAndResaleIdAndId(1, 2, 1)).thenReturn(Optional.of(a));
+        var detail = service.detail(1, "user");
+        assertNull(detail.visit()); assertEquals(1, detail.attendance().id());
+        verifyNoInteractions(visitRepository);
+    }
+
+    @Test void permission400AloneDoesNotAllowCreatingForAnotherSalesperson() {
+        lenient().when(permissionRepository.findPermissionId(1, 2, 9, 400)).thenReturn(new PermissionUser());
+        assertThrows(BusinessException.class, () -> service.create(new com.concierge.apiconcierge.dtos.crm.attendance.AttendanceCreateDto(88, 701, ""), "user"));
+        verify(repository, never()).saveAndFlush(any());
+    }
+
+    @Test void permission402AllowsCreatingForAnotherSalespersonWithoutSalespersonAssociation() {
+        when(permissionRepository.findPermissionId(1, 2, 9, 402)).thenReturn(new PermissionUser());
+        Salesperson seller = new Salesperson(); seller.setId(701); seller.setName("Seller"); seller.setStatus(StatusEnableDisable.Habilitado);
+        when(salespersonRepository.findByCompanyIdAndResaleIdAndId(1, 2, 701)).thenReturn(seller);
+        var client = new com.concierge.apiconcierge.models.clientcompany.ClientCompany(); client.setId(88); client.setName("Client"); client.setStatus(StatusEnableDisable.Habilitado);
+        when(clientRepository.filterId(1, 2, 88)).thenReturn(client);
+        when(repository.saveAndFlush(any())).thenAnswer(invocation -> invocation.getArgument(0));
+        var created = service.create(new com.concierge.apiconcierge.dtos.crm.attendance.AttendanceCreateDto(88, 701, ""), "user");
+        assertEquals(701, created.salespersonId());
+        verify(salespersonRepository, never()).findByCompanyIdAndResaleIdAndUserId(any(), any(), any());
+    }
+
+    @Test void creationOptionsShowOnlyOwnSellerWithout402AndAllEnabledSellersWith402() {
+        Salesperson own = new Salesperson(); own.setId(700); own.setStatus(StatusEnableDisable.Habilitado);
+        Salesperson other = new Salesperson(); other.setId(701); other.setStatus(StatusEnableDisable.Habilitado);
+        Salesperson disabled = new Salesperson(); disabled.setId(702); disabled.setStatus(StatusEnableDisable.Desabilitado);
+        when(salespersonRepository.findByCompanyIdAndResaleId(1, 2)).thenReturn(List.of(own, other, disabled));
+        assertEquals(List.of(700), service.creationSalespersons("user").stream().map(person -> person.id()).toList());
+        when(permissionRepository.findPermissionId(1, 2, 9, 402)).thenReturn(new PermissionUser());
+        assertEquals(List.of(700, 701), service.creationSalespersons("user").stream().map(person -> person.id()).toList());
+    }
+
+    @Test void permission402DoesNotGrantAccessToAnotherSellersAttendance() {
+        lenient().when(permissionRepository.findPermissionId(1, 2, 9, 402)).thenReturn(new PermissionUser());
+        when(repository.findByCompanyIdAndResaleIdAndId(1, 2, 1)).thenReturn(Optional.of(attendance(1, 701)));
+        assertThrows(BusinessException.class, () -> service.authorizedAttendance(1, "user"));
+    }
+
     @BeforeEach void prepareUser() {
         User user = new User(); user.setName("Operador"); user.setId(9); user.setCompanyId(1); user.setResaleId(2); user.setStatus(StatusEnableDisable.Habilitado);
         Salesperson salesperson = new Salesperson(); salesperson.setId(700); salesperson.setStatus(StatusEnableDisable.Habilitado);

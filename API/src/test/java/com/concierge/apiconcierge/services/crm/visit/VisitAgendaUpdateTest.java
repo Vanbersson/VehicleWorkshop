@@ -30,11 +30,12 @@ class VisitAgendaUpdateTest {
     SalespersonVisitAgendaUpdateDto data() { return new SalespersonVisitAgendaUpdateDto(42, new Date(2000000), 8, "Vendedor", 9, "Cliente", "12345678000190", "", "  Novo horario  "); }
     @BeforeEach void setup() {
         user = new User(); user.setId(7); user.setCompanyId(1); user.setResaleId(2); user.setStatus(StatusEnableDisable.Habilitado);
-        visit = new SalespersonVisit(); visit.setId(42); visit.setCompanyId(1); visit.setResaleId(2); visit.setStatus(StatusVisitEnum.agendado); visit.setUserIdRegister(7); visit.setDateRegister(new Date(1000));
+        visit = new SalespersonVisit(); visit.setId(42); visit.setSalespersonId(8); visit.setCompanyId(1); visit.setResaleId(2); visit.setStatus(StatusVisitEnum.agendado); visit.setUserIdRegister(7); visit.setDateRegister(new Date(1000));
         when(userRepository.loginEmail("user")).thenReturn(user);
         lenient().when(repository.findForCompletion(1, 2, 42)).thenReturn(visit);
         Salesperson seller = new Salesperson(); seller.setId(8); seller.setName("Vendedor cadastrado"); seller.setStatus(StatusEnableDisable.Habilitado);
         lenient().when(salespersonRepository.findByCompanyIdAndResaleIdAndId(1, 2, 8)).thenReturn(seller);
+        lenient().when(salespersonRepository.findByCompanyIdAndResaleIdAndUserId(1, 2, 7)).thenReturn(seller);
     }
     @Test void updatesOnlyTheScheduleAndPreservesRegistrationAndScope() {
         assertNotNull(service.agendaUpdate(data(), "user"));
@@ -53,7 +54,7 @@ class VisitAgendaUpdateTest {
         assertThrows(ResourcesNotFoundException.class, () -> service.agendaUpdate(data(), "user")); verify(repository, never()).save(any());
     }
     @Test void rejectsUnrelatedUsersWithoutPermission() {
-        visit.setUserIdRegister(99);
+        visit.setUserIdRegister(99); visit.setSalespersonId(99);
         assertThrows(BusinessException.class, () -> service.agendaUpdate(data(), "user")); verify(repository, never()).save(any());
     }
     @Test void rejectsDisabledUsers() {

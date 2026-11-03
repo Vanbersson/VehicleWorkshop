@@ -4,7 +4,7 @@ import { of, Subject, throwError } from 'rxjs';
 import { MessageService } from 'primeng/api';
 import VisitScheduleComponent from './visit.schedule.component';
 import { VisitService } from '@/app/services/crm/visit/visit.service';
-import { SalespersonService } from '@/app/services/salesperson/salesperson.service';
+
 import { Salesperson } from '@/app/models/crm/salesperson';
 import { ClientCompany } from '@/app/models/client.company';
 import { VisitAgenda } from '@/app/models/crm/visit/visit.agenda';
@@ -18,26 +18,20 @@ import { StatusVisitEnum } from '@/app/models/crm/visit/status.visit.enum';
 describe('VisitScheduleComponent', () => {
     let component: VisitScheduleComponent;
     let visits: jasmine.SpyObj<VisitService>;
-    let people: jasmine.SpyObj<SalespersonService>;
+
     const client = Object.assign(new ClientCompany(), { id: 3, name: 'Cliente' });
     const salesperson = Object.assign(new Salesperson(), { id: 7, name: 'Vendedor', status: StatusEnabDisabEnum.ENABLED });
 
     beforeEach(() => {
-        visits = jasmine.createSpyObj<VisitService>('VisitService', ['agendaNew', 'agendaUpdate', 'visitFilterId', 'listAllAgenda', 'listOverdueAgenda']);
-        people = jasmine.createSpyObj<SalespersonService>('SalespersonService', ['filterType']);
+        visits = jasmine.createSpyObj<VisitService>('VisitService', ['agendaNew', 'agendaUpdate', 'visitFilterId', 'listAllAgenda', 'listOverdueAgenda', 'agendaSalespersons']);
+
         visits.agendaNew.and.returnValue(of(new HttpResponse({ status: 201, body: Object.assign(new MessageResponse(), { status: StatusSuccessError.succes }) })));
         visits.agendaUpdate.and.returnValue(of(new HttpResponse({ status: 200, body: Object.assign(new MessageResponse(), { status: StatusSuccessError.succes }) })));
         visits.listAllAgenda.and.returnValue(of([]));
         visits.listOverdueAgenda.and.returnValue(of([]));
-        people.filterType.and.returnValue(of([salesperson]));
+        visits.agendaSalespersons.and.returnValue(of([salesperson]));
         TestBed.configureTestingModule({
-            providers: [
-                VisitScheduleComponent,
-                { provide: Location, useValue: { getState: () => ({}) } },
-                { provide: VisitService, useValue: visits },
-                { provide: SalespersonService, useValue: people },
-                { provide: MessageService, useValue: { add: jasmine.createSpy('add') } }
-            ]
+            providers: [VisitScheduleComponent, { provide: Location, useValue: { getState: () => ({}) } }, { provide: VisitService, useValue: visits }, { provide: MessageService, useValue: { add: jasmine.createSpy('add') } }]
         });
         component = TestBed.inject(VisitScheduleComponent);
     });
@@ -168,13 +162,24 @@ describe('VisitScheduleComponent', () => {
     });
 
     it('loads only enabled salespeople and reports agenda loading errors', async () => {
-        people.filterType.and.returnValue(of([salesperson, new Salesperson()]));
+        visits.agendaSalespersons.and.returnValue(of([salesperson, new Salesperson()]));
         await component.loadSalespersons();
         expect(component.salespersons()).toEqual([salesperson]);
+        expect(component.form.controls.salesperson.value).toBe(salesperson);
+        expect(visits.agendaSalespersons).toHaveBeenCalled();
         visits.listAllAgenda.and.returnValue(throwError(() => new Error('Offline')));
         await component.loadAppointments();
         expect(component.loadError()).toBe('Offline');
         expect(component.loading()).toBeFalse();
+    });
+
+    it('does not populate the seller list when the authorized seller lookup fails', async () => {
+        visits.agendaSalespersons.and.returnValue(throwError(() => new Error('Not authorized')));
+        await component.loadSalespersons();
+        expect(component.salespersons()).toEqual([]);
+        expect(component.form.controls.salesperson.value).toBeNull();
+        expect(component.salespersonError()).toBe('Not authorized');
+        expect(component.loadingSalespersons()).toBeFalse();
     });
 
     it('synchronizes the calendar when the form date changes directly', () => {

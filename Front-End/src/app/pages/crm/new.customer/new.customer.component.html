@@ -10,6 +10,7 @@
             </div>
         </div>
         <div class="heading-actions">
+            <p-button label="Novo atendimento" icon="pi pi-plus" routerLink="/crm/new/customer/maintenance/new" [disabled]="saving()" />
             <p-button label="Visitas" icon="pi pi-arrow-left" [outlined]="true" severity="secondary" routerLink="/crm/visit" /><p-button
                 label="Atualizar"
                 icon="pi pi-refresh"
@@ -20,6 +21,11 @@
             />
         </div>
     </header>
+    @if (createdAttendanceId) {
+        <div class="completion-note" role="status">
+            <i class="pi pi-check-circle" aria-hidden="true"></i><span>Atendimento #{{ createdAttendanceId }} criado com sucesso.</span>
+        </div>
+    }
     @if (highlightedVisitId) {
         <div class="completion-note" role="status">
             <i class="pi pi-check-circle" aria-hidden="true"></i><span>Visita #{{ highlightedVisitId }} concluída. Acompanhe o atendimento gerado abaixo.</span>
@@ -104,7 +110,7 @@
                             <i class="pi pi-user" aria-hidden="true"></i><span style="text-transform: capitalize">{{ item.salespersonName }}</span>
                         </div>
                         <div class="card-detail">
-                            <i class="pi pi-calendar" aria-hidden="true"></i><span>Visita #{{ item.visitId }} · {{ item.dateVisit ? (item.dateVisit | date: 'dd/MM/yyyy HH:mm') : 'Data não informada' }}</span>
+                            <i class="pi pi-calendar" aria-hidden="true"></i><span>{{ item.visitId ? 'Visita #' + item.visitId : 'Atendimento sem visita' }}{{ item.dateVisit ? ' · ' + (item.dateVisit | date: 'dd/MM/yyyy HH:mm') : '' }}</span>
                         </div>
                         <div class="flex items-center justify-between gap-3 rounded-lg bg-surface-100 dark:bg-surface-800 p-3 my-3">
                             <span class="text-sm text-muted-color">Total em orçamento</span>
@@ -129,10 +135,18 @@
                         <div class="card-footer">
                             <small class="text-muted-color">Criado em {{ item.dateCreated | date: 'dd/MM/yyyy' }}</small>
                             @if (item.status !== CANCELLED) {
-                                <p-button label="Editar" icon="pi pi-pencil" [text]="true" size="small" (onClick)="open(item)" [disabled]="saving()" [ariaLabel]="'Editar atendimento de ' + item.clientName" />
+                                <p-button label="Editar" icon="pi pi-pencil" [text]="true" size="small" [routerLink]="['/crm/new/customer/maintenance', item.id]" [disabled]="saving()" [ariaLabel]="'Editar atendimento de ' + item.clientName" />
                                 <p-button label="Cancelar" icon="pi pi-ban" severity="danger" [text]="true" size="small" (onClick)="openCancellation(item)" [disabled]="saving()" [ariaLabel]="'Cancelar atendimento de ' + item.clientName" />
                             } @else {
-                                <p-button label="Consultar" icon="pi pi-eye" [text]="true" size="small" (onClick)="open(item)" [disabled]="saving()" [ariaLabel]="'Consultar atendimento cancelado de ' + item.clientName" />
+                                <p-button
+                                    label="Consultar"
+                                    icon="pi pi-eye"
+                                    [text]="true"
+                                    size="small"
+                                    [routerLink]="['/crm/new/customer/maintenance', item.id]"
+                                    [disabled]="saving()"
+                                    [ariaLabel]="'Consultar atendimento cancelado de ' + item.clientName"
+                                />
                             }
                         </div>
                     </article>
@@ -141,7 +155,7 @@
                         <div class="attendance-empty">
                             <span class="attendance-icon"><i class="pi pi-inbox" aria-hidden="true"></i></span>
                             <h2>Nenhum atendimento nesta consulta</h2>
-                            <p class="text-muted-color">{{ queryMode() === 'CANCELLED' ? 'Use código, cliente ou vendedor para localizar um atendimento cancelado.' : 'Ajuste os filtros ou conclua uma visita para gerar um novo atendimento.' }}</p>
+                            <p class="text-muted-color">{{ queryMode() === 'CANCELLED' ? 'Use código, cliente ou vendedor para localizar um atendimento cancelado.' : 'Ajuste os filtros ou clique em Novo atendimento para começar sem visita.' }}</p>
                             <p-button label="Ver visitas" icon="pi pi-arrow-right" [outlined]="true" routerLink="/crm/visit" />
                         </div>
                     }
@@ -153,247 +167,6 @@
         }
     </section>
 </div>
-
-<p-dialog
-    [header]="(readOnly() ? 'Consultar atendimento cancelado #' : 'Editar atendimento #') + (editing()?.id ?? '')"
-    [visible]="dialogVisible"
-    (visibleChange)="closeEditor($event)"
-    [modal]="true"
-    [closable]="!saving()"
-    [closeOnEscape]="!saving()"
-    [draggable]="false"
-    [style]="{ width: '74rem', maxWidth: '96vw' }"
->
-    @if (loadingDetail()) {
-        <div class="py-8" role="status">
-            <p-skeleton height="5rem" />
-            <div class="mt-4"><p-skeleton height="12rem" /></div>
-            <p class="text-muted-color">Carregando atendimento e visita de origem…</p>
-        </div>
-    } @else if (detailError()) {
-        <p class="attendance-error" role="alert">{{ detailError() }}</p>
-        <p-button label="Tentar novamente" icon="pi pi-refresh" (onClick)="open(editing()!)" />
-    } @else if (originVisit()) {
-        @if (readOnly()) {
-            <div class="rounded-xl border border-red-200 dark:border-red-900 p-4 mb-5" role="status">
-                <strong>Atendimento cancelado — somente consulta</strong>
-                <p class="whitespace-pre-wrap break-words">{{ editing()?.cancellationReason || 'Motivo não informado' }}</p>
-                <small class="text-muted-color">{{ editing()?.cancelledAt | date: 'dd/MM/yyyy HH:mm' }}{{ editing()?.cancelledByName ? ' · ' + editing()?.cancelledByName : '' }}</small>
-            </div>
-        }
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 rounded-xl bg-surface-100 dark:bg-surface-800 p-4 mb-5">
-            <div>
-                <span class="text-sm text-muted-color">Cliente</span><strong class="block break-words">{{ selectedClientName() | uppercase }}</strong
-                ><small class="text-muted-color">{{ selectedClientId() ? 'Código ' + selectedClientId() : 'Cliente sem cadastro' }}</small>
-                @if (!readOnly()) {
-                    <div class="mt-2">
-                        <app-filterclient buttonLabel="Selecionar empresa" [highlighted]="true" [isDisabled]="saving() || loadingDetail()" (outputClient)="selectAttendanceClient($event)" />
-                    </div>
-                }
-            </div>
-            <div>
-                <span class="text-sm text-muted-color">Vendedor responsável</span><strong class="block">{{ editing()?.salespersonName | uppercase }}</strong
-                ><small class="text-muted-color">Criado em {{ editing()?.dateCreated | date: 'dd/MM/yyyy HH:mm' }}</small>
-            </div>
-            <div>
-                <span class="text-sm text-muted-color block mb-2">Etapa salva</span><p-tag [value]="stageFor(editing()!.status).label" [icon]="stageFor(editing()!.status).icon" [severity]="stageFor(editing()!.status).severity" [rounded]="true" />
-            </div>
-        </div>
-        <p class="text-muted-color text-sm mb-5">
-            {{ readOnly() ? 'Selecione uma etapa para consultar as informações salvas. O atendimento cancelado não pode ser alterado.' : 'Selecione uma etapa para consultar ou editar. Use Salvar etapa para atualizar o andamento do atendimento.' }}
-        </p>
-        <form [formGroup]="form">
-            <fieldset [disabled]="saving()" class="attendance-fields">
-                <p-stepper [value]="activeEditStep()">
-                    <p-step-list class="overflow-x-auto" aria-label="Etapas do atendimento">
-                        @for (flow of workflow; track flow.value; let index = $index) {
-                            <p-step #step [value]="index + 1" [disabled]="saving()">
-                                <ng-template #content let-active="active" let-value="value">
-                                    <button
-                                        type="button"
-                                        role="tab"
-                                        class="inline-flex flex-col items-center gap-2 bg-transparent border-0 p-2 cursor-pointer min-w-28"
-                                        [id]="step.id()"
-                                        [attr.aria-controls]="step.ariaControls()"
-                                        [attr.aria-selected]="active"
-                                        [disabled]="saving()"
-                                        (click)="selectEditStep(value)"
-                                    >
-                                        <span class="p-step-number"><i [class]="flow.icon" aria-hidden="true"></i></span><span class="text-sm font-medium" [class.text-primary]="active">{{ flow.label }}</span>
-                                    </button>
-                                </ng-template>
-                            </p-step>
-                        }
-                    </p-step-list>
-                    <p-step-panels>
-                        @for (flow of workflow; track flow.value; let index = $index) {
-                            <p-step-panel [value]="index + 1"
-                                ><ng-template #content><ng-container [ngTemplateOutlet]="attendanceStepContent" /></ng-template
-                            ></p-step-panel>
-                        }
-                    </p-step-panels>
-                </p-stepper>
-                <ng-template #attendanceStepContent>
-                    <div class="py-4">
-                        @switch (activeEditStep()) {
-                            @case (1) {
-                                <h2 class="text-xl font-semibold mb-4">Visita que originou o atendimento</h2>
-                                <dl class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div>
-                                        <dt class="text-sm text-muted-color">Visita</dt>
-                                        <dd class="m-0 font-semibold">#{{ originVisit()?.id }} · {{ originVisit()?.status | uppercase }}</dd>
-                                    </div>
-                                    <div>
-                                        <dt class="text-sm text-muted-color">Realizada em</dt>
-                                        <dd class="m-0">{{ originVisit()?.dateVisit ? (originVisit()?.dateVisit | date: 'dd/MM/yyyy HH:mm') : 'Não informado' }}</dd>
-                                    </div>
-                                    <div>
-                                        <dt class="text-sm text-muted-color">Cliente visitado</dt>
-                                        <dd class="m-0">{{ originVisit()?.clientName | uppercase }}</dd>
-                                    </div>
-                                    <div>
-                                        <dt class="text-sm text-muted-color">Vendedor da visita</dt>
-                                        <dd class="m-0">{{ originVisit()?.salespersonName | uppercase }}</dd>
-                                    </div>
-                                    <div>
-                                        <dt class="text-sm text-muted-color">CNPJ / CPF</dt>
-                                        <dd class="m-0">{{ originVisit()?.clientCNPJ || originVisit()?.clientCPF || 'Não informado' }}</dd>
-                                    </div>
-                                    <div>
-                                        <dt class="text-sm text-muted-color">Contato</dt>
-                                        <dd class="m-0 break-words">{{ originVisit()?.contactType }}{{ originVisit()?.contact ? ' · ' + originVisit()?.contact : '' }}</dd>
-                                    </div>
-                                    <div>
-                                        <dt class="text-sm text-muted-color">Registrada por</dt>
-                                        <dd class="m-0">{{ originVisit()?.userNameRegister || 'Não informado' }} · {{ originVisit()?.dateRegister | date: 'dd/MM/yyyy HH:mm' }}</dd>
-                                    </div>
-                                    <div>
-                                        <dt class="text-sm text-muted-color">Agendamento</dt>
-                                        <dd class="m-0">{{ originVisit()?.agendaDate ? (originVisit()?.agendaDate | date: 'dd/MM/yyyy HH:mm') : 'Sem agendamento' }}</dd>
-                                    </div>
-                                    <div>
-                                        <dt class="text-sm text-muted-color">Motivos da visita</dt>
-                                        <dd class="m-0 whitespace-pre-wrap">{{ describeVisitValues(originVisit()?.reasonVisit, visitReasons) || 'Não informado' }}{{ originVisit()?.reasonVisitInfo ? ' · ' + originVisit()?.reasonVisitInfo : '' }}</dd>
-                                    </div>
-                                    <div>
-                                        <dt class="text-sm text-muted-color">Produtos de interesse</dt>
-                                        <dd class="m-0 whitespace-pre-wrap">{{ describeVisitValues(originVisit()?.products, visitProducts) || 'Não informado' }}{{ originVisit()?.productsInfo ? ' · ' + originVisit()?.productsInfo : '' }}</dd>
-                                    </div>
-                                    <div class="md:col-span-2">
-                                        <dt class="text-sm text-muted-color">Observações da visita</dt>
-                                        <dd class="m-0 whitespace-pre-wrap break-words">{{ originVisit()?.salespersonInfo || 'Nenhuma observação.' }}</dd>
-                                    </div>
-                                    @if (originVisit()?.agendaInfo) {
-                                        <div class="md:col-span-2">
-                                            <dt class="text-sm text-muted-color">Observações do agendamento</dt>
-                                            <dd class="m-0 whitespace-pre-wrap break-words">{{ originVisit()?.agendaInfo }}</dd>
-                                        </div>
-                                    }
-                                    @if (originVisit()?.latitude || originVisit()?.longitude) {
-                                        <div>
-                                            <dt class="text-sm text-muted-color">Localização registrada</dt>
-                                            <dd class="m-0">{{ originVisit()?.latitude }}, {{ originVisit()?.longitude }}</dd>
-                                        </div>
-                                    }
-                                </dl>
-                            }
-                            @case (2) {
-                                <h2 class="text-xl font-semibold mb-3">Documentos</h2>
-                                <p class="text-muted-color mb-5">Confira os documentos do cliente e registre as pendências ou conferências realizadas.</p>
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
-                                    <div>
-                                        <label>CNPJ informado na visita</label>
-                                        <p>{{ originVisit()?.clientCNPJ || 'Não informado' }}</p>
-                                    </div>
-                                    <div>
-                                        <label>CPF informado na visita</label>
-                                        <p>{{ originVisit()?.clientCPF || 'Não informado' }}</p>
-                                    </div>
-                                </div>
-                                <p-attendance-documents [attendance]="editing()" />
-                                <label for="attendanceDocuments" class="mt-5 block">Observações sobre os documentos</label><textarea pTextarea id="attendanceDocuments" formControlName="documentsNotes" rows="6" maxlength="2000" fluid></textarea
-                                ><small class="text-muted-color">{{ form.controls.documentsNotes.value.length }}/2000 caracteres</small>
-                            }
-                            @case (3) {
-                                <h2 class="text-xl font-semibold mb-3">Proposta comercial</h2>
-                                <p class="text-muted-color mb-5">Registre as condições comerciais combinadas com o cliente.</p>
-                                <label for="attendanceProposal">Descrição da proposta</label
-                                ><textarea pTextarea id="attendanceProposal" formControlName="proposalNotes" rows="7" maxlength="2000" placeholder="Escopo, condições, prazos e detalhes comerciais" fluid></textarea
-                                ><small class="text-muted-color">{{ form.controls.proposalNotes.value.length }}/2000 caracteres</small>
-                                @if (!readOnly()) {
-                                    <div class="mt-4">
-                                        <p-button label="Imprimir proposta" icon="pi pi-print" severity="secondary" [outlined]="true" (onClick)="printProposal()" [disabled]="saving() || !form.controls.proposalNotes.value.trim()" />
-                                    </div>
-                                }
-                            }
-                            @case (4) {
-                                <h2 class="text-xl font-semibold mb-3">Orçamento do atendimento</h2>
-                                <p class="text-muted-color mb-5">Consulte ou edite os produtos, quantidades, preços e descontos do orçamento.</p>
-                                <div class="rounded-xl bg-surface-100 dark:bg-surface-800 p-5 mb-5">
-                                    <span class="text-muted-color block">Total em orçamento</span
-                                    ><strong class="block text-2xl text-primary mt-2">{{ editing()?.quoteTotal != null ? (editing()?.quoteTotal | currency: 'BRL') : 'Sem orçamento salvo' }}</strong>
-                                </div>
-                                <p-button [label]="readOnly() ? 'Consultar orçamento' : 'Abrir orçamento'" icon="pi pi-file-edit" (onClick)="openEditingBudget()" [disabled]="saving()" />
-                            }
-                            @case (5) {
-                                <h2 class="text-xl font-semibold mb-3">Enviar para aprovação</h2>
-                                <p class="text-muted-color mb-5">{{ readOnly() ? 'Histórico da solicitação de aprovação deste atendimento.' : 'Ao salvar esta etapa, o atendimento ficará marcado como aguardando aprovação.' }}</p>
-                                @if (!readOnly()) {
-                                    <p-tag value="Aguardando aprovação" severity="warn" icon="pi pi-clock" />
-                                }
-                                <p class="mt-5 text-muted-color">
-                                    {{
-                                        editing()?.approvalRequestedAt
-                                            ? 'Última solicitação: ' + (editing()?.approvalRequestedAt | date: 'dd/MM/yyyy HH:mm')
-                                            : readOnly()
-                                              ? 'Nenhuma solicitação de aprovação registrada.'
-                                              : 'A solicitação será registrada ao salvar esta etapa.'
-                                    }}
-                                </p>
-                            }
-                            @case (6) {
-                                <h2 class="text-xl font-semibold mb-3">Concluir atendimento</h2>
-                                <p class="text-muted-color mb-5">{{ readOnly() ? 'Informações registradas antes do cancelamento.' : 'Confira as informações e salve para marcar o atendimento como concluído.' }}</p>
-                                <dl class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div>
-                                        <dt class="text-muted-color">Total em orçamento</dt>
-                                        <dd class="m-0 font-semibold">{{ editing()?.quoteTotal != null ? (editing()?.quoteTotal | currency: 'BRL') : 'Sem orçamento' }}</dd>
-                                    </div>
-                                    <div>
-                                        <dt class="text-muted-color">Data da conclusão</dt>
-                                        <dd class="m-0">{{ editing()?.completedAt ? (editing()?.completedAt | date: 'dd/MM/yyyy HH:mm') : readOnly() ? 'Não concluído' : 'Será registrada ao concluir' }}</dd>
-                                    </div>
-                                    <div class="md:col-span-2">
-                                        <dt class="text-muted-color">Proposta comercial</dt>
-                                        <dd class="m-0 whitespace-pre-wrap break-words">{{ form.controls.proposalNotes.value || 'Não informada' }}</dd>
-                                    </div>
-                                </dl>
-                            }
-                        }
-                    </div>
-                </ng-template>
-                <div>
-                    <label for="attendanceNotes">Observações gerais do atendimento</label><textarea pTextarea id="attendanceNotes" formControlName="notes" rows="3" maxlength="2000" fluid></textarea
-                    ><small class="text-muted-color">{{ form.controls.notes.value.length }}/2000 caracteres</small>
-                </div>
-                @if (saveError()) {
-                    <p class="attendance-error" role="alert">{{ saveError() }}</p>
-                }
-            </fieldset>
-        </form>
-    }
-    <ng-template #footer>
-        <p-button label="Fechar" severity="secondary" [text]="true" (onClick)="closeEditor(false)" [disabled]="saving()" />
-        @if (!readOnly() && originVisit() && !detailError() && !loadingDetail()) {
-            @if (activeEditStep() < workflow.length) {
-                <p-button label="Salvar e avançar" icon="pi pi-arrow-right" severity="secondary" [outlined]="true" (onClick)="save(false, activeEditStep() + 1)" [disabled]="saving()" />
-            }
-            <p-button [label]="activeEditStep() === 5 ? 'Marcar como aguardando aprovação' : activeEditStep() === 6 ? 'Concluir atendimento' : 'Salvar etapa'" icon="pi pi-check" (onClick)="save(activeEditStep() >= 5)" [loading]="saving()" />
-        }
-    </ng-template>
-</p-dialog>
-
-<p-attendance-quote [attendance]="budgetAttendance()" [(visible)]="budgetVisible" (saved)="budgetSaved($event)" />
 
 <p-dialog header="Cancelar atendimento" [(visible)]="cancellationVisible" [modal]="true" [closable]="!saving()" [closeOnEscape]="!saving()" [draggable]="false" [style]="{ width: '32rem', maxWidth: '95vw' }">
     <p class="font-semibold">{{ cancelling()?.clientName | uppercase }}</p>

@@ -6,7 +6,7 @@ import { of, Subject, throwError } from 'rxjs';
 import { MessageService } from 'primeng/api';
 import VisitMaintenanceComponent from './visit.maintenance.component';
 import { VisitService } from '@/app/services/crm/visit/visit.service';
-import { SalespersonService } from '@/app/services/salesperson/salesperson.service';
+
 import { UserService } from '@/app/services/user/user.service';
 import { LoadingService } from '@/app/services/loading/loading.service';
 import { Visit } from '@/app/models/crm/visit/visit';
@@ -21,14 +21,15 @@ describe('VisitMaintenanceComponent registration flow', () => {
 
     beforeEach(() => {
         state = {};
-        service = jasmine.createSpyObj<VisitService>('VisitService', ['registerNew', 'registerUpdate']);
+        service = jasmine.createSpyObj<VisitService>('VisitService', ['registerNew', 'registerUpdate', 'registerSalespersons']);
+        service.registerSalespersons.and.returnValue(of([salesperson]));
         service.registerNew.and.callFake((v) => of(new HttpResponse({ status: 201, body: Object.assign(new Visit(), v, { id: 42 }) })));
         service.registerUpdate.and.callFake((v) => of(new HttpResponse({ status: 200, body: v })));
         TestBed.configureTestingModule({
             providers: [
                 VisitMaintenanceComponent,
                 { provide: VisitService, useValue: service },
-                { provide: SalespersonService, useValue: { filterType: () => of([salesperson]) } },
+
                 { provide: UserService, useValue: { getUser: () => of(new HttpResponse({ status: 200, body: { id: 1 } })) } },
                 { provide: LoadingService, useValue: { show: () => {}, hide: () => {} } },
                 { provide: Location, useValue: { getState: () => state } },
@@ -133,6 +134,7 @@ describe('VisitMaintenanceComponent registration flow', () => {
         // Wait for salesperson loading and form restoration.
         await Promise.resolve();
         await Promise.resolve();
+        expect(service.registerSalespersons).toHaveBeenCalled();
         expect(component.selectClient()?.id).toBe(9);
         expect(component.formVisit.controls.contact.value).toBe('teste@example.com');
         expect(component.formVisit.controls.reasonVisit.value?.map((v) => v.id)).toEqual([1]);

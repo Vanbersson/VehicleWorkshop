@@ -12,14 +12,10 @@ import java.io.Serializable;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(of = "id")
-@SecondaryTable(name = "tb_company",pkJoinColumns = @PrimaryKeyJoinColumn(name = "id"))
 @Entity
 @Table(name = "tb_resale")
-public class Resale implements Serializable {
+public class Resale  {
 
-    private static final long serialVersionUID = 3L;
-
-    @JoinColumn(referencedColumnName = "id")
     @Column(name = "company_id")
     private Integer companyId;
 
@@ -31,10 +27,17 @@ public class Resale implements Serializable {
 
     private String name;
 
+    private String fantasia;
+
+    @Column(name = "logo_url")
+    private String logoUrl;
+
     private String cnpj;
 
     @Column(name = "ie", length = 30)
     private String ie;
+
+    private String im;
 
     private String email;
 

@@ -70,7 +70,10 @@
                                     <div class="sm:col-span-5">
                                         <label for="vehiclePlateId">Placa</label>
                                         @if (formVehicle.controls.vehicleNew.value === yes) {
-                                            <div class="flex items-center gap-2 rounded-lg bg-surface-50 dark:bg-surface-900 p-3 text-muted-color text-sm"><i class="pi pi-info-circle" aria-hidden="true"></i>Veículo sem placa.</div>
+                                            <div class="flex items-center gap-2 rounded-lg bg-surface-50 dark:bg-surface-900 p-3 text-muted-color text-sm">
+                                                <i class="pi pi-info-circle" aria-hidden="true"></i>
+                                                Veículo sem placa.
+                                            </div>
                                         } @else {
                                             <p-inputMask inputId="vehiclePlateId" mask="***-****" [unmask]="true" class="uppercase" formControlName="vehiclePlate" placeholder="ABC-1234" fluid />
                                         }
@@ -78,16 +81,19 @@
                                             <small class="block text-sm text-red-500 mt-1" role="alert">Campo obrigatório</small>
                                         }
                                     </div>
-                                    <div class="sm:col-span-4"><label for="vehicleFleetId">Frota</label><input pInputText id="vehicleFleetId" formControlName="vehicleFleet" class="w-full" maxlength="10" placeholder="Número da frota" /></div>
+                                    <div class="sm:col-span-4">
+                                        <label for="vehicleFleetId">Frota</label>
+                                        <input pInputText id="vehicleFleetId" formControlName="vehicleFleet" class="w-full" maxlength="10" placeholder="Número da frota" />
+                                    </div>
                                     <div class="sm:col-span-6">
                                         <fieldset class="border border-surface rounded-lg p-3 m-0">
                                             <legend class="text-sm font-semibold px-1">Veículo sem placa</legend>
                                             <div class="flex items-center flex-wrap gap-5">
                                                 <div class="flex items-center gap-2">
-                                                    <p-radioButton inputId="vehicle-new-yes" [value]="yes" formControlName="vehicleNew" (onClick)="placaRequiredRemove()" /><label for="vehicle-new-yes" class="!mb-0">Sim</label>
+                                                    <p-radioButton inputId="vehicle-new-yes" name="vehicleNew" [value]="yes" formControlName="vehicleNew" (onClick)="placaRequiredRemove()" /><label for="vehicle-new-yes" class="!mb-0">Sim</label>
                                                 </div>
                                                 <div class="flex items-center gap-2">
-                                                    <p-radioButton inputId="vehicle-new-no" [value]="not" formControlName="vehicleNew" (onClick)="placaRequiredAdd()" /><label for="vehicle-new-no" class="!mb-0">Não</label>
+                                                    <p-radioButton inputId="vehicle-new-no" name="vehicleNew" [value]="not" formControlName="vehicleNew" (onClick)="placaRequiredAdd()" /><label for="vehicle-new-no" class="!mb-0">Não</label>
                                                 </div>
                                             </div>
                                         </fieldset>
@@ -203,8 +209,14 @@
                                         <fieldset class="border border-surface rounded-lg p-3 m-0">
                                             <legend class="text-sm font-semibold px-1">Possui ordem de serviço</legend>
                                             <div class="flex items-center flex-wrap gap-5">
-                                                <div class="flex items-center gap-2"><p-radioButton inputId="service-order-yes" [value]="yes" formControlName="vehicleServiceOrder" /><label for="service-order-yes" class="!mb-0">Sim</label></div>
-                                                <div class="flex items-center gap-2"><p-radioButton inputId="service-order-no" [value]="not" formControlName="vehicleServiceOrder" /><label for="service-order-no" class="!mb-0">Não</label></div>
+                                                <div class="flex items-center gap-2">
+                                                    <p-radioButton inputId="service-order-yes" name="vehicleServiceOrder" [value]="yes" formControlName="vehicleServiceOrder" />
+                                                    <label for="service-order-yes" class="!mb-0">Sim</label>
+                                                </div>
+                                                <div class="flex items-center gap-2">
+                                                    <p-radioButton inputId="service-order-no" name="vehicleServiceOrder" [value]="not" formControlName="vehicleServiceOrder" />
+                                                    <label for="service-order-no" class="!mb-0">Não</label>
+                                                </div>
                                             </div>
                                         </fieldset>
                                     </div>

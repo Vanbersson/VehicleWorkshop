@@ -56,7 +56,10 @@ VALUES
 (154,'Receber notificações de saída veículo','Portaria'),
 (300,'Alterar quantidade material','Oficina'),
 (400,'Lista as visitas de todos os vendedores','CRM'),
-(401,'Lista as agendas de todos os vendedores','CRM');
+(401,'Lista as agendas de todos os vendedores','CRM'),
+(402,'Criar atendimento para todos os vendedores','CRM'),
+(403,'Criar agendamento para todos os vendedores','CRM'),
+(404,'Registrar visita para todos os vendedores','CRM');
 
 INSERT INTO `tb_menu`
 (`id`, `description`)

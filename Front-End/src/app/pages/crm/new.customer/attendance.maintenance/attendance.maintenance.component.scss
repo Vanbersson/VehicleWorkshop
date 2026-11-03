@@ -1,0 +1,10 @@
+:host { display: block; }
+.attendance-page { max-width: 95rem; margin: 0 auto; }
+.attendance-heading, .attendance-actions { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem; }
+.attendance-heading h1 { font-size: clamp(1.5rem, 2.5vw, 2rem); font-weight: 700; margin: .4rem 0; }
+.eyebrow { font-size: .65rem; font-weight: 700; letter-spacing: .08em; color: var(--p-text-muted-color); }
+.attendance-panel { border: 1px solid var(--p-content-border-color); background: var(--p-content-background); border-radius: 1rem; padding: clamp(1rem, 2vw, 2rem); min-width: 0; }
+.attendance-fields { border: 0; padding: 0; margin: 0; min-width: 0; }
+.attendance-actions { justify-content: flex-end; border-top: 1px solid var(--p-content-border-color); padding-top: 1rem; margin: 1.5rem 0 0; }
+.attendance-error { color: var(--p-red-600); border: 1px solid currentColor; padding: 1rem; border-radius: .75rem; }
+label { display: block; font-weight: 600; margin-bottom: .5rem; }

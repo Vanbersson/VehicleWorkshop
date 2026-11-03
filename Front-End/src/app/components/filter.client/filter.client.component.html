@@ -9,7 +9,7 @@
     (onClick)="showDialogFilterClientCompany()"
     [disabled]="isDisabled"
 />
-<p-dialog [(visible)]="dialogVisibleClientCompany" [modal]="true" [maximizable]="true" [style]="{ width: '70rem', maxWidth: '96vw' }" [draggable]="false" [resizable]="false" (onHide)="hideDialogFilterClientCompany()">
+<p-dialog [(visible)]="dialogVisibleClientCompany" [modal]="false" [maximizable]="true" [style]="{ width: '70rem', maxWidth: '96vw' }" (onHide)="hideDialogFilterClientCompany()">
     <ng-template #header
         ><div class="filter-heading">
             <span class="filter-symbol"><i class="pi pi-building" aria-hidden="true"></i></span>

@@ -21,6 +21,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import static com.concierge.apiconcierge.util.ConstantsPermission.LIST_VISIT_ALL_SALESPERSON;
+import static com.concierge.apiconcierge.util.ConstantsPermission.CREATE_ATTENDANCE_ALL_SALESPERSON;
 
 @Service
 public class CustomerAttendanceService {
@@ -31,6 +32,28 @@ public class CustomerAttendanceService {
     @Autowired private IUserRepository userRepository;
     @Autowired private ISalespersonRepository salespersonRepository;
     @Autowired private IPermissionUserRepository permissionRepository;
+
+    @Transactional
+    public AttendanceResponseDto create(com.concierge.apiconcierge.dtos.crm.attendance.AttendanceCreateDto data, String email) {
+        User user = currentUser(email);
+        Integer ownSalesperson = permittedCreationSalesperson(user);
+        if (ownSalesperson != null && !Objects.equals(ownSalesperson, data.salespersonId())) throw new BusinessException("Voce nao tem permissao para criar atendimento para este vendedor.");
+        Salesperson salesperson = salespersonRepository.findByCompanyIdAndResaleIdAndId(user.getCompanyId(), user.getResaleId(), data.salespersonId());
+        if (salesperson == null || salesperson.getStatus() != StatusEnableDisable.Habilitado) throw new BusinessException("Selecione um vendedor habilitado nesta empresa e revenda.");
+        var client = clientRepository.filterId(user.getCompanyId(), user.getResaleId(), data.clientId());
+        if (client == null || client.getStatus() != StatusEnableDisable.Habilitado) throw new BusinessException("Selecione um cliente habilitado nesta empresa e revenda.");
+        CustomerAttendance attendance = new CustomerAttendance();
+        attendance.setCompanyId(user.getCompanyId());
+        attendance.setResaleId(user.getResaleId());
+        attendance.setClientId(client.getId());
+        attendance.setClientName(client.getName());
+        attendance.setSalespersonId(salesperson.getId());
+        attendance.setSalespersonName(salesperson.getName());
+        attendance.setDateCreated(new Date());
+        attendance.setStatus(com.concierge.apiconcierge.models.crm.attendance.AttendanceStatus.DOCUMENTS_PENDING);
+        attendance.setNotes(data.notes() == null ? "" : data.notes().trim());
+        return AttendanceResponseDto.from(repository.saveAndFlush(attendance));
+    }
 
     // Called while the originating visit is locked by the completion transaction.
     @Transactional
@@ -128,8 +151,8 @@ public class CustomerAttendanceService {
     @Transactional(readOnly = true)
     public com.concierge.apiconcierge.dtos.crm.attendance.AttendanceDetailDto detail(Integer id, String email) {
         CustomerAttendance attendance = authorizedAttendance(id, email);
-        SalespersonVisit visit = visitRepository.findByCompanyIdAndResaleIdAndId(attendance.getCompanyId(), attendance.getResaleId(), attendance.getVisitId());
-        if (visit == null) throw new ResourcesNotFoundException("Visita de origem não encontrada.");
+        SalespersonVisit visit = attendance.getVisitId() == null ? null : visitRepository.findByCompanyIdAndResaleIdAndId(attendance.getCompanyId(), attendance.getResaleId(), attendance.getVisitId());
+        if (attendance.getVisitId() != null && visit == null) throw new ResourcesNotFoundException("Visita de origem não encontrada.");
         java.math.BigDecimal total = quoteRepository.findByCompanyIdAndResaleIdAndAttendanceId(attendance.getCompanyId(), attendance.getResaleId(), attendance.getId()).map(com.concierge.apiconcierge.models.crm.attendance.AttendanceQuote::getTotal).orElse(null);
         return new com.concierge.apiconcierge.dtos.crm.attendance.AttendanceDetailDto(AttendanceResponseDto.from(attendance, total), visit);
     }
@@ -147,6 +170,24 @@ public class CustomerAttendanceService {
         User user = userRepository.loginEmail(email);
         if (user == null || user.getStatus() == StatusEnableDisable.Desabilitado) throw new BusinessException("Usuário Bloqueado.");
         return user;
+    }
+
+    @Transactional(readOnly = true)
+    public List<com.concierge.apiconcierge.dtos.salesperson.ResponseSalespersonDto> creationSalespersons(String email) {
+        User user = currentUser(email);
+        Integer ownSalesperson = permittedCreationSalesperson(user);
+        return salespersonRepository.findByCompanyIdAndResaleId(user.getCompanyId(), user.getResaleId()).stream()
+                .filter(person -> person.getStatus() == StatusEnableDisable.Habilitado)
+                .filter(person -> ownSalesperson == null || Objects.equals(person.getId(), ownSalesperson))
+                .map(person -> new com.concierge.apiconcierge.dtos.salesperson.ResponseSalespersonDto(person.getId(), person.getStatus(), person.getName()))
+                .toList();
+    }
+
+    private Integer permittedCreationSalesperson(User user) {
+        if (permissionRepository.findPermissionId(user.getCompanyId(), user.getResaleId(), user.getId(), CREATE_ATTENDANCE_ALL_SALESPERSON) != null) return null;
+        Salesperson salesperson = salespersonRepository.findByCompanyIdAndResaleIdAndUserId(user.getCompanyId(), user.getResaleId(), user.getId());
+        if (salesperson == null || salesperson.getStatus() != StatusEnableDisable.Habilitado) throw new BusinessException("Vendedor nao habilitado.");
+        return salesperson.getId();
     }
 
     private Integer permittedSalesperson(User user) {

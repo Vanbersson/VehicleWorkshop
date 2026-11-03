@@ -16,7 +16,7 @@ public class CustomerAttendance {
     private Integer companyId;
     @Column(name = "resale_id", nullable = false)
     private Integer resaleId;
-    @Column(name = "visit_id", nullable = false)
+    @Column(name = "visit_id")
     private Integer visitId;
     @Column(name = "client_id")
     private Integer clientId;

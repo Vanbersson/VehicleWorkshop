@@ -1,7 +1,6 @@
 import { Routes } from '@angular/router';
 import { AppLayout } from './app/layout/component/app.layout';
 
-import { Landing } from './app/pages/landing/landing';
 import { Notfound } from './app/pages/notfound/notfound';
 import { authGuard } from './app/guards/auth/auth-guard';
 
@@ -92,6 +91,7 @@ export const appRoutes: Routes = [
                     { path: 'visit/schedule', title: 'Agenda', loadComponent: () => import('./app/pages/crm/visit.schedule/visit.schedule.component') },
                     { path: 'visit', title: 'Visita', loadComponent: () => import('./app/pages/crm/visit/visit.component') },
                     { path: 'visit/maintenance', title: 'Registrar visita', loadComponent: () => import('./app/pages/crm/visit.maintenance/visit.maintenance.component') },
+                    { path: 'new/customer/maintenance/:id', title: 'Atendimento do cliente', loadComponent: () => import('./app/pages/crm/new.customer/attendance.maintenance/attendance.maintenance.component') },
                     { path: 'new/customer', title: 'Atendimento', loadComponent: () => import('./app/pages/crm/new.customer/new.customer.component') },
                     { path: 'report', title: 'Relatório', loadComponent: () => import('./app/pages/crm/report/report.component') },
                     {
@@ -135,7 +135,7 @@ export const appRoutes: Routes = [
             }
         ]
     },
-    { path: 'landing', component: Landing },
+    { path: 'landing', title: 'Nativa | Máquinas, Implementos e Libreparts', loadComponent: () => import('@/app/pages/landingpage/landing.page.component').then((m) => m.LandingPageComponent) },
     { path: 'notfound', component: Notfound },
     { path: 'auth', loadComponent: () => import('./app/pages/login/login') },
     { path: '**', redirectTo: '/notfound' }

@@ -4,7 +4,8 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { MessageService } from 'primeng/api';
 import CompanyComponent from './company.component';
 import { CompanyService } from '@/app/services/company.service';
-import { Company, Resale } from '@/app/models/company';
+import { ICompany as Company } from '@/app/interfaces/conf-company/i.company';
+import { IResale as Resale } from '@/app/interfaces/conf-company/i.resale';
 import { StatusEnabDisabEnum } from '@/app/models/status-enab-disab-enum';
 
 describe('Company and resale registration', () => {

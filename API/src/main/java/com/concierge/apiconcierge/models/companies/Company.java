@@ -13,9 +13,7 @@ import java.io.Serializable;
 @EqualsAndHashCode(of = "id")
 @Entity
 @Table(name = "tb_company")
-public class Company implements Serializable {
-
-    private static final long serialVersionUID = 2l;
+public class Company  {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -25,7 +23,17 @@ public class Company implements Serializable {
 
     private String name;
 
+    private String fantasia;
+
+    @Column(name = "logo_url")
+    private String logoUrl;
+
     private String cnpj;
+
+    @Column(name = "ie", length = 30)
+    private String ie;
+
+    private String im;
 
     private String email;
 

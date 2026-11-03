@@ -6,6 +6,7 @@ import { Visit } from '@/app/models/crm/visit/visit';
 import { VisitAgenda, VisitAgendaNew, VisitAgendaUpdate } from '@/app/models/crm/visit/visit.agenda';
 import { MessageResponse } from '@/app/models/message-response';
 import { environment } from '@/environments/environment';
+import { Salesperson } from '@/app/models/crm/salesperson';
 
 @Injectable({
     providedIn: 'root'
@@ -13,6 +14,14 @@ import { environment } from '@/environments/environment';
 export class VisitService {
     storage = inject(StorageService);
     http = inject(HttpClient);
+
+    agendaSalespersons(): Observable<Salesperson[]> {
+        return this.http.get<Salesperson[]>(`${environment.apiuUrl}/salesperson/visit/agenda/salespersons`, { headers: this.myHeaders() });
+    }
+
+    registerSalespersons(): Observable<Salesperson[]> {
+        return this.http.get<Salesperson[]>(`${environment.apiuUrl}/salesperson/visit/register/salespersons`, { headers: this.myHeaders() });
+    }
 
     registerNew(p: Visit): Observable<HttpResponse<Visit>> {
         return this.http.post<Visit>(`${environment.apiuUrl}/salesperson/visit/register/new`, p, { headers: this.myHeaders(), observe: 'response' });

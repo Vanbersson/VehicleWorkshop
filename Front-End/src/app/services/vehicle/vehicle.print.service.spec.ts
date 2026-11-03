@@ -1,10 +1,10 @@
-﻿import { TestBed } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { buildVehiclePrintHtml, vehiclePrintPhotos, VehiclePrintData, VehiclePrintService, VEHICLE_PRINTER } from './vehicle.print.service';
 import { VehicleEntry } from '@/app/models/vehicle.entry';
 import { ClientCompany } from '@/app/models/client.company';
 import { Driver } from '@/app/models/driver';
-import { Resale } from '@/app/models/company';
+import { IResale as Resale } from '@/app/interfaces/conf-company/i.resale';
 import { YesNotEnum } from '@/app/models/yes.not.enum';
 import { StatusEnabDisabEnum } from '@/app/models/status-enab-disab-enum';
 import { StatusVehicleAuthEnum } from '@/app/models/status.vehicle.auth.enum';

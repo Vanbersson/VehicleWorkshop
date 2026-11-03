@@ -8,6 +8,7 @@ import { CompanyService } from '@/app/services/company.service';
 import { SalespersonService } from '@/app/services/salesperson/salesperson.service';
 import { ClientCompanyService } from '@/app/services/client/client.company.service';
 import { StatusSuccessError } from '@/app/models/status-suc-err';
+import { StorageService } from '@/app/services/storage/storage.service';
 
 const escapeHtml = (value: unknown): string => String(value ?? '').replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]!);
 const field = (label: string, value: unknown): string => `<div class="field"><dt>${escapeHtml(label)}</dt><dd>${escapeHtml(value || 'Não informado')}</dd></div>`;
@@ -42,26 +43,29 @@ const address = (data: PostalAddress | null): string => {
 
 @Injectable({ providedIn: 'root' })
 export class AttendanceProposalPrintService {
+    private readonly storage = inject(StorageService);
     private readonly companies = inject(CompanyService);
     private readonly salespersons = inject(SalespersonService);
     private readonly clients = inject(ClientCompanyService);
 
-    async print(attendance: CustomerAttendance, visit: Visit, onError: (error: unknown) => void): Promise<void> {
-        if (!visit.companyId || !visit.resaleId) throw new Error('Não foi possível identificar a revenda da visita.');
+    async print(attendance: CustomerAttendance, visit: Visit | null, onError: (error: unknown) => void): Promise<void> {
+        const companyId = visit?.companyId ?? this.storage.companyId;
+        const resaleId = visit?.resaleId ?? this.storage.resaleId;
+        if (!companyId || !resaleId) throw new Error('Não foi possível identificar a revenda do atendimento.');
         const [resales, salespersonResponse, clientResponse] = await Promise.all([
-            lastValueFrom(this.companies.resales(visit.companyId)),
+            lastValueFrom(this.companies.resales(companyId)),
             lastValueFrom(this.salespersons.filterId(attendance.salespersonId)),
             attendance.clientId ? lastValueFrom(this.clients.filterId(attendance.clientId)) : Promise.resolve(null)
         ]);
-        const resale = resales.find((item) => item.id === visit.resaleId && item.companyId === visit.companyId);
+        const resale = resales.find((item) => item.id === resaleId && item.companyId === companyId);
         if (!resale) throw new Error('Não foi possível localizar os dados da revenda da visita.');
         const salesperson = salespersonResponse.body;
         if (!salesperson) throw new Error('Não foi possível carregar os dados do vendedor.');
         if (clientResponse && (clientResponse.body?.status !== StatusSuccessError.succes || !clientResponse.body.data)) throw new Error('Não foi possível carregar os dados do cliente.');
         const client: ClientCompany | null = clientResponse?.body?.data ?? null;
-        const clientDocument = client ? client.cnpj || client.cpf : visit.clientCNPJ || visit.clientCPF;
+        const clientDocument = client ? client.cnpj || client.cpf : visit?.clientCNPJ || visit?.clientCPF;
         const printable = `<main>
-            <header><p class="eyebrow">${escapeHtml(resale.name)}</p><h1>Proposta comercial</h1><p class="reference">Atendimento #${attendance.id} · Visita #${attendance.visitId}</p></header>
+            <header><p class="eyebrow">${escapeHtml(resale.name)}</p><h1>Proposta comercial</h1><p class="reference">Atendimento #${attendance.id}${attendance.visitId ? ' · Visita #' + attendance.visitId : ' · Sem visita vinculada'}</p></header>
             <section><h2>Revenda</h2><dl>
                 ${field('Razão social / Nome', resale.name)}${field('CNPJ', document(resale.cnpj))}
                 ${field('Endereço', address(resale))}${field('Telefone', phone(resale.phone))}${field('Celular', phone(resale.cellphone))}${field('E-mail', resale.email)}
@@ -75,7 +79,7 @@ export class AttendanceProposalPrintService {
                 ${field('Telefone', phone(client?.phone, client?.dddPhone))}${field('Celular', phone(client?.cellphone, client?.dddCellphone))}
                 ${field('E-mail', [client?.emailWork, client?.emailHome].filter(Boolean).join(' / '))}
                 ${client?.contactName ? field('Pessoa de contato', client.contactName) : ''}
-                ${!client && visit.contact ? field('Contato informado na visita', visit.contact) : ''}
+                ${!client && visit?.contact ? field('Contato informado na visita', visit.contact) : ''}
             </dl></section>
             <section class="proposal-section"><h2>Descrição da proposta</h2><div class="proposal">${escapeHtml(attendance.proposalNotes)}</div></section>
         </main>`;

@@ -44,7 +44,7 @@ name varchar(255) not null,
 fantasia varchar(255),
 logo_url varchar(255),
 cnpj varchar(14) unique not null,
-ie varchar(20),
+ie varchar(30),
 im varchar(20),
 email varchar(100),
 cellphone varchar(11),
@@ -59,6 +59,10 @@ address_complement varchar(100),
 PRIMARY KEY(id)
 );
 
+ALTER TABLE tb_company
+ADD COLUMN singleton_slot TINYINT GENERATED ALWAYS AS (1) STORED,
+ADD CONSTRAINT uk_company_singleton UNIQUE (singleton_slot);
+
 CREATE TABLE IF NOT EXISTS tb_resale(
 company_id int not null,
 id int not null AUTO_INCREMENT,
@@ -67,7 +71,7 @@ name varchar(255) not null,
 fantasia varchar(255),
 logo_url varchar(255),
 cnpj varchar(14) unique not null,
-ie varchar(20),
+ie varchar(30),
 im varchar(20),
 email varchar(100),
 cellphone varchar(11),

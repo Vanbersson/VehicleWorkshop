@@ -3,7 +3,7 @@ CREATE TABLE IF NOT EXISTS tb_crm_customer_attendance (
     id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
     company_id INT NOT NULL,
     resale_id INT NOT NULL,
-    visit_id INT NOT NULL,
+    visit_id INT NULL,
     client_id INT,
     client_name VARCHAR(255) NOT NULL,
     salesperson_id INT NOT NULL,

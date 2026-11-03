@@ -1,9 +1,13 @@
 ﻿import { StatusEnabDisabEnum } from '@/app/models/status-enab-disab-enum';
-export interface Company {
+export interface ICompany {
     id: number;
     status: StatusEnabDisabEnum;
     name: string;
+    fantasia?: string;
+    logoUrl?: string;
     cnpj: string;
+    ie?: string;
+    im?: string;
     email: string;
     cellphone: string;
     phone: string;
@@ -15,9 +19,5 @@ export interface Company {
     addressNumber: string;
     addressComplement: string;
 }
-export interface Resale extends Company {
-    companyId: number;
-    ie?: string | null;
-}
-export type CompanySave = Omit<Company, 'id'> & { id?: number };
-export type ResaleSave = CompanySave & { companyId: number; ie?: string | null };
+
+export type CompanySave = Omit<ICompany, 'id'> & { id?: number };

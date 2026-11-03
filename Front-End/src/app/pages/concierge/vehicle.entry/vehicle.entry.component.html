@@ -206,15 +206,27 @@
                         <fieldset class="choice-box">
                             <legend>Veículo sem placa</legend>
                             <div class="flex gap-5">
-                                <div class="flex items-center gap-2"><p-radioButton inputId="entry-new-yes" [value]="yes" formControlName="vehicleNew" (onClick)="deleteRequirePlaca()" /><label for="entry-new-yes">Sim</label></div>
-                                <div class="flex items-center gap-2"><p-radioButton inputId="entry-new-no" [value]="not" formControlName="vehicleNew" (onClick)="addRequirePlaca()" /><label for="entry-new-no">Não</label></div>
+                                <div class="flex items-center gap-2">
+                                    <p-radioButton inputId="entry-new-yes" [value]="yes" name="vehicleNew" formControlName="vehicleNew" (onClick)="deleteRequirePlaca()" />
+                                    <label for="entry-new-yes">Sim</label>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <p-radioButton inputId="entry-new-no" [value]="not" name="vehicleNew" formControlName="vehicleNew" (onClick)="addRequirePlaca()" />
+                                    <label for="entry-new-no">Não</label>
+                                </div>
                             </div>
                         </fieldset>
                         <fieldset class="choice-box">
                             <legend>Possui ordem de serviço</legend>
                             <div class="flex gap-5">
-                                <div class="flex items-center gap-2"><p-radioButton inputId="entry-service-yes" [value]="yes" formControlName="vehicleServiceOrder" /><label for="entry-service-yes">Sim</label></div>
-                                <div class="flex items-center gap-2"><p-radioButton inputId="entry-service-no" [value]="not" formControlName="vehicleServiceOrder" /><label for="entry-service-no">Não</label></div>
+                                <div class="flex items-center gap-2">
+                                    <p-radioButton inputId="entry-service-yes" [value]="yes" name="vehicleServiceOrder" formControlName="vehicleServiceOrder" />
+                                    <label for="entry-service-yes">Sim</label>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <p-radioButton inputId="entry-service-no" [value]="not" name="vehicleServiceOrder" formControlName="vehicleServiceOrder" />
+                                    <label for="entry-service-no">Não</label>
+                                </div>
                             </div>
                         </fieldset>
                     </div>

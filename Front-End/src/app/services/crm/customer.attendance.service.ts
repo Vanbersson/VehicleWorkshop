@@ -1,12 +1,13 @@
 import { inject, Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { CustomerAttendance, AttendanceUpdate, AttendanceCancel, AttendanceQueryMode, AttendanceSearch } from '@/app/models/crm/customer.attendance';
+import { CustomerAttendance, AttendanceCreate, AttendanceUpdate, AttendanceCancel, AttendanceQueryMode, AttendanceSearch } from '@/app/models/crm/customer.attendance';
 import { StorageService } from '@/app/services/storage/storage.service';
 import { environment } from '@/environments/environment';
 import { AttendanceQuoteResponse, AttendanceQuoteSave } from '@/app/models/crm/attendance.quote';
 import { AttendanceDetail } from '@/app/models/crm/attendance.detail';
 import { AttendanceDocument } from '@/app/models/crm/attendance.document';
+import { Salesperson } from '@/app/models/crm/salesperson';
 
 @Injectable({ providedIn: 'root' })
 export class CustomerAttendanceService {
@@ -15,6 +16,14 @@ export class CustomerAttendanceService {
 
     list(): Observable<CustomerAttendance[]> {
         return this.http.get<CustomerAttendance[]>(`${environment.apiuUrl}/crm/customer-attendance`, { headers: this.headers() });
+    }
+
+    create(data: AttendanceCreate): Observable<CustomerAttendance> {
+        return this.http.post<CustomerAttendance>(`${environment.apiuUrl}/crm/customer-attendance`, data, { headers: this.headers() });
+    }
+
+    creationSalespersons(): Observable<Salesperson[]> {
+        return this.http.get<Salesperson[]>(`${environment.apiuUrl}/crm/customer-attendance/creation-salespersons`, { headers: this.headers() });
     }
 
     detail(id: number): Observable<AttendanceDetail> {

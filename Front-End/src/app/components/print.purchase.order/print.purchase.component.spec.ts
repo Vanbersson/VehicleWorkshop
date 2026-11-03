@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
 import { MessageService } from 'primeng/api';
 import { CompanyService } from '@/app/services/company.service';
-import { Resale } from '@/app/models/company';
+import { IResale as Resale } from '@/app/interfaces/conf-company/i.resale';
 import { PurchaseOrder } from '@/app/models/parts/purchase.order';
 import { PurchaseOrderItem } from '@/app/models/parts/purchase.order.item/purchase.order.item';
 import { PurchaseOrderItemCons } from '@/app/models/parts/purchase.order.item.cons';

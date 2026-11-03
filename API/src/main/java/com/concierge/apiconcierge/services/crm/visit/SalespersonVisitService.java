@@ -29,6 +29,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 
+import static com.concierge.apiconcierge.util.ConstantsPermission.CREATE_AGENDA_ALL_SALESPERSON;
+import static com.concierge.apiconcierge.util.ConstantsPermission.REGISTER_VISIT_ALL_SALESPERSON;
 import static com.concierge.apiconcierge.util.ConstantsPermission.LIST_AGENDA_ALL_SALESPERSON;
 import static com.concierge.apiconcierge.util.ConstantsPermission.LIST_VISIT_ALL_SALESPERSON;
 
@@ -53,6 +55,8 @@ public class SalespersonVisitService implements ISalespersonVisitService {
         if (userResult.getStatus() == StatusEnableDisable.Desabilitado) {
             throw new BusinessException("Usuário Bloqueado.");
         }
+        Salesperson assigned = authorizeAssignment(userResult, v.getSalespersonId(), REGISTER_VISIT_ALL_SALESPERSON);
+        v.setSalespersonName(assigned.getName());
         v.setCompanyId(userResult.getCompanyId());
         v.setResaleId(userResult.getResaleId());
         v.setStatus(StatusVisitEnum.iniciou);
@@ -74,6 +78,9 @@ public class SalespersonVisitService implements ISalespersonVisitService {
         }
         SalespersonVisit existing = this.repository.findForCompletion(userResult.getCompanyId(), userResult.getResaleId(), v.getId());
         if (existing == null) throw new ResourcesNotFoundException("Visita não encontrada.");
+        authorizeAssignment(userResult, existing.getSalespersonId(), REGISTER_VISIT_ALL_SALESPERSON);
+        Salesperson assigned = authorizeAssignment(userResult, v.getSalespersonId(), REGISTER_VISIT_ALL_SALESPERSON);
+        v.setSalespersonName(assigned.getName());
         // Keep the original registration metadata and scope, regardless of request values.
         v.setCompanyId(existing.getCompanyId());
         v.setResaleId(existing.getResaleId());
@@ -105,6 +112,7 @@ public class SalespersonVisitService implements ISalespersonVisitService {
             throw new BusinessException("Usuário Bloqueado.");
         }
 
+        Salesperson assigned = authorizeAssignment(userResult, v.salespersonId(), CREATE_AGENDA_ALL_SALESPERSON);
         SalespersonVisit visit = new SalespersonVisit();
         visit.setCompanyId(userResult.getCompanyId());
         visit.setResaleId(userResult.getResaleId());
@@ -116,7 +124,7 @@ public class SalespersonVisitService implements ISalespersonVisitService {
         visit.setUserNameRegister(userResult.getName());
 
         visit.setSalespersonId(v.salespersonId());
-        visit.setSalespersonName(v.salespersonName());
+        visit.setSalespersonName(assigned.getName());
 
         visit.setClientId(v.clientId());
         visit.setClientName(v.clientName());
@@ -143,14 +151,8 @@ public class SalespersonVisitService implements ISalespersonVisitService {
         SalespersonVisit visit = this.repository.findForCompletion(user.getCompanyId(), user.getResaleId(), v.id());
         if (visit == null) throw new ResourcesNotFoundException("Visita não encontrada.");
         if (visit.getStatus() != StatusVisitEnum.agendado) throw new BusinessException("Somente visitas agendadas podem ter o agendamento alterado.");
-        Salesperson own = this.salespersonRepository.findByCompanyIdAndResaleIdAndUserId(user.getCompanyId(), user.getResaleId(), user.getId());
-        boolean allowed = Objects.equals(visit.getUserIdRegister(), user.getId()) || (own != null && Objects.equals(visit.getSalespersonId(), own.getId()));
-        if (!allowed && this.permissionUser.findPermissionId(user.getCompanyId(), user.getResaleId(), user.getId(), LIST_AGENDA_ALL_SALESPERSON) == null
-                && this.permissionUser.findPermissionId(user.getCompanyId(), user.getResaleId(), user.getId(), LIST_VISIT_ALL_SALESPERSON) == null) {
-            throw new BusinessException("Sem permissão para editar este agendamento.");
-        }
-        Salesperson assigned = this.salespersonRepository.findByCompanyIdAndResaleIdAndId(user.getCompanyId(), user.getResaleId(), v.salespersonId());
-        if (assigned == null || assigned.getStatus() != StatusEnableDisable.Habilitado) throw new BusinessException("Selecione um vendedor habilitado da revenda.");
+        authorizeAssignment(user, visit.getSalespersonId(), CREATE_AGENDA_ALL_SALESPERSON);
+        Salesperson assigned = authorizeAssignment(user, v.salespersonId(), CREATE_AGENDA_ALL_SALESPERSON);
         visit.setAgendaDate(v.dateVisit());
         visit.setAgendaInfo(v.informationAgenda() == null ? "" : v.informationAgenda().trim());
         visit.setSalespersonId(assigned.getId());
@@ -338,4 +340,30 @@ public class SalespersonVisitService implements ISalespersonVisitService {
     }
 
 
+    private Integer permittedCreationSalesperson(User user, Integer permission) {
+        if (permissionUser.findPermissionId(user.getCompanyId(), user.getResaleId(), user.getId(), permission) != null) return null;
+        Salesperson own = salespersonRepository.findByCompanyIdAndResaleIdAndUserId(user.getCompanyId(), user.getResaleId(), user.getId());
+        if (own == null || own.getStatus() != StatusEnableDisable.Habilitado) throw new BusinessException("Vendedor nao habilitado.");
+        return own.getId();
+    }
+
+    private Salesperson authorizeAssignment(User user, Integer salespersonId, Integer permission) {
+        Integer own = permittedCreationSalesperson(user, permission);
+        if (own != null && !Objects.equals(own, salespersonId)) throw new BusinessException("Sem permissao para registrar para este vendedor.");
+        Salesperson assigned = salespersonRepository.findByCompanyIdAndResaleIdAndId(user.getCompanyId(), user.getResaleId(), salespersonId);
+        if (assigned == null || assigned.getStatus() != StatusEnableDisable.Habilitado) throw new BusinessException("Selecione um vendedor habilitado da revenda.");
+        return assigned;
+    }
+
+    @Override
+    public List<com.concierge.apiconcierge.dtos.crm.visit.VisitSalespersonOptionDto> creationSalespersons(boolean agenda, String emailUser) {
+        User user = userRepository.loginEmail(emailUser);
+        if (user == null || user.getStatus() != StatusEnableDisable.Habilitado) throw new BusinessException("Usuario bloqueado.");
+        Integer own = permittedCreationSalesperson(user, agenda ? CREATE_AGENDA_ALL_SALESPERSON : REGISTER_VISIT_ALL_SALESPERSON);
+        return salespersonRepository.findByCompanyIdAndResaleId(user.getCompanyId(), user.getResaleId()).stream()
+                .filter(person -> person.getStatus() == StatusEnableDisable.Habilitado)
+                .filter(person -> own == null || Objects.equals(own, person.getId()))
+                .map(person -> new com.concierge.apiconcierge.dtos.crm.visit.VisitSalespersonOptionDto(person.getId(), person.getStatus(), person.getName(), person.getUserId(), person.getPhotoUrl()))
+                .toList();
+    }
 }

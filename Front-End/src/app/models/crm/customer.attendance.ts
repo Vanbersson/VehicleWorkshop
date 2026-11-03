@@ -11,7 +11,7 @@ export enum AttendanceStatus {
 
 export interface CustomerAttendance {
     id: number;
-    visitId: number;
+    visitId: number | null;
     clientId: number | null;
     clientName: string;
     salespersonId: number;
@@ -39,6 +39,12 @@ export interface AttendanceUpdate {
     version: number;
     documentsNotes?: string;
     proposalNotes?: string;
+}
+
+export interface AttendanceCreate {
+    clientId: number;
+    salespersonId: number;
+    notes: string;
 }
 
 export interface AttendanceCancel {

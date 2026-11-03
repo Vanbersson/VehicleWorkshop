@@ -12,6 +12,8 @@ import java.util.List;
 
 public interface ISalespersonVisitService {
 
+    List<com.concierge.apiconcierge.dtos.crm.visit.VisitSalespersonOptionDto> creationSalespersons(boolean agenda, String emailUser);
+
     SalespersonVisit registerNew(SalespersonVisit v, String emailUser);
 
     SalespersonVisit registerUpdate(SalespersonVisit v, String emailUser);

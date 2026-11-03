@@ -1,0 +1,242 @@
+﻿<a class="skip" href="#conteudo">Pular para o conteúdo</a>
+<div class="announcement">
+    IMPLEMENTOS. PEÇAS. SERVIÇOS. <span>Uma parceria completa para sua operação.</span><a href="tel:+558135211030">(81) 3521-1030 <i class="pi pi-arrow-up-right" aria-hidden="true"></i></a>
+</div>
+<header>
+    <a href="#inicio" aria-label="Nativa — início"><img src="images/nativa/logo.png" width="152" height="48" alt="Nativa Máquinas e Implementos" /></a>
+    <button class="menu-toggle" (click)="toggleMenu()" [attr.aria-expanded]="menuOpen()" aria-controls="navigation" aria-label="Abrir ou fechar menu">
+        <i class="pi" [class.pi-bars]="!menuOpen()" [class.pi-times]="menuOpen()" aria-hidden="true"></i>
+    </button>
+    <nav id="navigation" [class.open]="menuOpen()">
+        @for (item of navigation; track item.id) {
+            <a [href]="'#' + item.id" (click)="closeMenu()">{{ item.label }}</a>
+        }
+        <a class="btn" href="https://wa.me/558135211030" target="_blank" rel="noopener noreferrer">Vamos conversar <i class="pi pi-arrow-up-right" aria-hidden="true"></i></a>
+    </nav>
+</header>
+<main id="conteudo">
+    <section id="inicio" class="hero">
+        <div class="hero-top px-[6%] pt-16 max-md:pt-11 flex justify-between gap-10">
+            <div>
+                <p class="eyebrow text-[10px] tracking-[1.7px] font-bold mb-6"><span class="dot inline-block size-[7px] bg-[#00acfd] rounded-full mr-2"></span> REPRESENTANTE AUTORIZADO LIBRELATO</p>
+                <h1>A estrada é sua.<br />O próximo passo<br />é <em>com a Nativa.</em></h1>
+                <p class="hero-copy mt-6 max-w-[440px]">
+                    Da escolha do implemento ao cuidado com cada peça.<br class="hidden md:block" />
+                    Estamos juntos em todos os quilômetros.
+                </p>
+                <div class="flex flex-wrap gap-5 items-center mt-7">
+                    <a class="btn" href="#implementos">Explore nossas soluções <i class="pi pi-arrow-down" aria-hidden="true"></i></a
+                    ><a class="link inline-flex items-center gap-6 border-b py-2 text-xs font-bold" href="#oficina">Conheça a oficina <i class="pi pi-arrow-up-right" aria-hidden="true"></i></a>
+                </div>
+            </div>
+            <div class="hero-note self-center border-l border-[#c3d5e5] pl-8 mr-[5%] max-lg:hidden">
+                <span class="text-6xl font-light">↗</span>
+                <p>Quem move o Brasil<br />precisa de uma<br /><strong>parceria à altura.</strong></p>
+                <span class="eyebrow text-[10px] tracking-[1.7px] font-bold mb-6">DESDE 1982</span>
+            </div>
+        </div>
+        <div class="hero-visual relative mt-2 pt-[70px] max-md:pt-10 max-md:mt-6">
+            <span class="hero-word absolute top-0 left-[4%] text-[13.2vw] leading-none font-black tracking-[-.7vw] text-[#d4e5f1]" aria-hidden="true">MOVIMENTO</span
+            ><img src="images/nativa/implemento.webp" alt="Linha de implementos rodoviários Librelato" width="1920" height="550" fetchpriority="high" /><span
+                class="visual-label absolute right-[5%] bottom-[20%] text-[9px] leading-relaxed tracking-[2px] max-lg:hidden"
+                >ENGENHARIA LIBRELATO.<br />PARCERIA NATIVA.</span
+            >
+        </div>
+        <div class="hero-strip flex justify-between gap-5 flex-wrap bg-[#001f41] text-white px-[6%] py-6 text-xs">
+            <span><i class="pi pi-verified" aria-hidden="true"></i> Implementos Librelato</span><span><i class="pi pi-box" aria-hidden="true"></i> Loja Libreparts</span><span><i class="pi pi-wrench" aria-hidden="true"></i> Oficina autorizada</span
+            ><a href="#sobre">Continue explorando <i class="pi pi-arrow-down" aria-hidden="true"></i></a>
+        </div>
+    </section>
+    <section id="sobre" class="section">
+        <div class="grid md:grid-cols-[1fr_2fr] gap-10">
+            <p class="eyebrow text-[10px] tracking-[1.7px] font-bold mb-6">01 — A NATIVA</p>
+            <div>
+                <h2>Mais que entregar implementos.<br /><span class="muted">Fazer parte do seu caminho.</span></h2>
+                <div class="grid md:grid-cols-2 gap-8 mt-8">
+                    <p>Desde 1982, a Nativa Máquinas e Implementos está ao lado de quem transporta. Unimos a força da Librelato ao atendimento próximo de quem conhece sua operação.</p>
+                    <p>Da compra ao pós-venda, você encontra implementos, peças genuínas e uma oficina autorizada em um só lugar. Uma parceria para seguir com confiança.</p>
+                </div>
+            </div>
+        </div>
+        <div class="grid lg:grid-cols-2 gap-5 mt-12" aria-label="Fotos das instalações da Nativa">
+            <figure class="relative overflow-hidden rounded-xl m-0 min-h-72 lg:min-h-[480px]">
+                <img class="absolute inset-0 w-full h-full object-cover" src="images/nativa/nativa-oficina.jpg" alt="Pátio da Nativa com galpões de manutenção e veículos em atendimento" width="1920" height="1080" loading="lazy" />
+                <figcaption class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#001f41] to-transparent px-7 pb-7 pt-20 text-white">
+                    <span class="text-[10px] tracking-[1.7px]">NOSSA ESTRUTURA</span>
+                    <h3 class="mt-2">Aqui, sua operação encontra apoio.</h3>
+                </figcaption>
+            </figure>
+            <div class="grid sm:grid-cols-2 lg:grid-cols-1 gap-5">
+                <figure class="relative overflow-hidden rounded-xl m-0 h-60">
+                    <img class="w-full h-full object-cover" src="images/nativa/nativa-servicos.jpg" alt="Área de corte e dobra da Nativa com máquinas e equipamentos" width="1920" height="1080" loading="lazy" />
+                    <figcaption class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#001f41] to-transparent px-6 pb-5 pt-14 text-white text-sm font-semibold">Estrutura para corte e dobra</figcaption>
+                </figure>
+                <figure class="relative overflow-hidden rounded-xl m-0 h-60">
+                    <img class="w-full h-full object-cover object-center" src="images/nativa/nativa-alinhamento.jpeg" alt="Equipamento de alinhamento de chassi nas instalações da Nativa" width="768" height="1024" loading="lazy" />
+                    <figcaption class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#001f41] to-transparent px-6 pb-5 pt-14 text-white text-sm font-semibold">Cuidado com seu implemento</figcaption>
+                </figure>
+            </div>
+        </div>
+        <div class="territory">
+            <div><strong>1982</strong><span>O INÍCIO DA NOSSA HISTÓRIA</span></div>
+            <div class="min-w-0">
+                <span>PRESENTES NO NORDESTE</span>
+                <div class="flex flex-wrap gap-3 mt-4">
+                    @for (state of states; track state) {
+                        <span class="state">{{ state }}</span>
+                    }
+                </div>
+            </div>
+            <div><strong>360°</strong><span>IMPLEMENTOS · PEÇAS · SERVIÇOS</span></div>
+        </div>
+    </section>
+    <section id="implementos" class="section catalog">
+        <div class="flex flex-wrap justify-between items-end gap-6 mb-10">
+            <div>
+                <p class="eyebrow text-[10px] tracking-[1.7px] font-bold mb-6">02 — IMPLEMENTOS LIBRELATO</p>
+                <h2>Feitos para carregar.<br /><span class="muted">Escolhidos para ir além.</span></h2>
+            </div>
+            <a class="link inline-flex items-center gap-6 border-b py-2 text-xs font-bold" href="https://librelato.com.br/implementos" target="_blank" rel="noopener noreferrer"
+                >Conheça a linha completa <i class="pi pi-arrow-up-right" aria-hidden="true"></i
+            ></a>
+        </div>
+        <div class="grid lg:grid-cols-3 gap-5">
+            @for (product of products; track product.name) {
+                <article class="product bg-white rounded-xl overflow-hidden">
+                    <div class="flex justify-between p-6">
+                        <span class="eyebrow text-[10px] tracking-[1.7px] font-bold mb-6">{{ product.category }}</span
+                        ><span class="text-xs">{{ product.number }} / 03</span>
+                    </div>
+                    <div class="product-photo overflow-hidden bg-[#008bd2] aspect-[1.4]"><img [src]="product.image" [alt]="product.name + ' Librelato'" loading="lazy" width="900" height="700" /></div>
+                    <div class="p-7">
+                        <h3>{{ product.name }}</h3>
+                        <p>{{ product.description }}</p>
+                        <a class="link inline-flex items-center gap-6 border-b py-2 text-xs font-bold mt-5" [href]="product.contact" target="_blank" rel="noopener noreferrer"
+                            >Consultar com a Nativa <i class="pi pi-arrow-up-right" aria-hidden="true"></i
+                        ></a>
+                    </div>
+                </article>
+            }
+        </div>
+        <p class="text-xs mt-6 muted">Imagens de referência. Consulte configurações e disponibilidade com a equipe Nativa.</p>
+    </section>
+    <section id="pecas" class="section">
+        <div class="parts-panel bg-[#eef6fb] rounded-[18px] overflow-hidden grid lg:grid-cols-2">
+            <div class="p-8 md:p-14">
+                <p class="eyebrow text-[10px] tracking-[1.7px] font-bold mb-6">03 — LOJA LIBREPARTS</p>
+                <div class="inline-flex max-w-full bg-[#001f41] rounded-lg p-6 mb-9">
+                    <img class="w-64 max-w-full h-auto object-contain" src="images/nativa/libreparts-oficial.png" alt="Logo oficial Libreparts" width="261" height="42" loading="lazy" />
+                </div>
+                <h2>A peça certa.<br />A confiança de sempre.</h2>
+                <p class="max-w-md">Componentes genuínos para cuidar do seu implemento, com a orientação de quem entende do assunto. Encontre a reposição que sua operação precisa.</p>
+                <div class="flex flex-wrap gap-3 my-7"><span class="pill">Peças genuínas</span><span class="pill">Atendimento especializado</span></div>
+                <a class="btn" href="https://wa.me/558135211030?text=Ol%C3%A1!%20Gostaria%20de%20consultar%20pe%C3%A7as%20Libreparts." target="_blank" rel="noopener noreferrer"
+                    >Consulte sua peça <i class="pi pi-arrow-up-right" aria-hidden="true"></i></a
+                ><a class="block mt-5 text-sm underline underline-offset-4" href="https://lojalibrelato.com.br/categoria-produto/lojas-libreparts/" target="_blank" rel="noopener noreferrer">Explorar catálogo Libreparts</a>
+            </div>
+            <div class="parts-image relative min-h-[450px] max-md:min-h-[350px] bg-[#008bd2]">
+                <img src="images/nativa/pecas.jpg" alt="Lanternas e componentes de reposição para implementos" loading="lazy" width="600" height="900" /><span>ORIGINAL EM CADA DETALHE.</span>
+            </div>
+        </div>
+        <div class="flex flex-wrap justify-between items-end gap-4 mt-14 mb-7">
+            <div>
+                <p class="eyebrow text-[10px] tracking-[1.7px] font-bold mb-3">PE?AS PARA O SEU IMPLEMENTO</p>
+                <h3>Qualidade em cada componente.</h3>
+            </div>
+            <span class="text-xs muted">Consulte aplica??o e disponibilidade com nossa equipe.</span>
+        </div>
+        <div class="grid sm:grid-cols-2 xl:grid-cols-4 gap-5">
+            @for (part of parts; track part.name) {
+                <article class="group rounded-xl border border-[#d9e1e8] overflow-hidden bg-white flex flex-col">
+                    <div class="bg-[#f3f5f7] p-7 h-60 flex items-center justify-center">
+                        <img class="max-h-full max-w-full object-contain motion-safe:transition-transform motion-safe:duration-300 motion-safe:group-hover:scale-105" [src]="part.image" [alt]="part.alt" loading="lazy" width="400" height="300" />
+                    </div>
+                    <div class="p-6 flex flex-col flex-1">
+                        <span class="text-[9px] tracking-[1.5px] font-bold text-[#006da5]">{{ part.category }}</span>
+                        <h4 class="text-xl font-semibold mt-3 mb-6">{{ part.name }}</h4>
+                        <a class="inline-flex justify-between items-center gap-4 mt-auto pt-4 border-t border-[#d9e1e8] text-xs font-bold" [href]="part.contact" target="_blank" rel="noopener noreferrer"
+                            >Consultar pe?a <i class="pi pi-arrow-up-right" aria-hidden="true"></i
+                        ></a>
+                    </div>
+                </article>
+            }
+        </div>
+    </section>
+    <section id="oficina" class="section workshop">
+        <div class="grid lg:grid-cols-2 gap-12 items-center">
+            <div class="workshop-photo relative">
+                <img src="images/nativa/nativa-alinhamento.jpeg" alt="Estrutura de alinhamento de chassi na oficina Nativa" loading="lazy" width="768" height="1024" />
+                <div class="photo-caption absolute bottom-6 left-6 right-6 p-6 bg-[#ffffff] text-[#001f41] flex gap-5 items-center text-[9px]">
+                    <i class="pi pi-wrench" aria-hidden="true"></i>
+                    <div>OFICINA AUTORIZADA<strong>Seu implemento em boas mãos.</strong></div>
+                </div>
+            </div>
+            <div>
+                <p class="eyebrow text-[10px] tracking-[1.7px] font-bold mb-6">04 — QUEM CUIDA, MANTÉM EM MOVIMENTO</p>
+                <h2>A próxima viagem<br />começa no cuidado<br /><span class="accent">com cada detalhe.</span></h2>
+                <p class="my-6">Manutenção e reparos com a atenção que seu equipamento merece. Conheça os serviços da nossa oficina.</p>
+                <div class="services">
+                    @for (service of services; track service.title) {
+                        <details>
+                            <summary>{{ service.title }}<i class="pi pi-plus" aria-hidden="true"></i></summary>
+                            <p>{{ service.description }}</p>
+                        </details>
+                    }
+                </div>
+                <a
+                    class="link inline-flex items-center gap-6 border-b py-2 text-xs font-bold mt-7"
+                    href="https://wa.me/558135211030?text=Ol%C3%A1!%20Gostaria%20de%20consultar%20os%20servi%C3%A7os%20da%20oficina."
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >Converse com nossa oficina <i class="pi pi-arrow-up-right" aria-hidden="true"></i
+                ></a>
+            </div>
+        </div>
+    </section>
+    <section id="contato" class="section">
+        <div class="contact-heading relative">
+            <p class="eyebrow text-[10px] tracking-[1.7px] font-bold mb-6">SEU PRÓXIMO CAPÍTULO NA ESTRADA</p>
+            <h2>Vamos seguir<br /><em>juntos?</em> <span aria-hidden="true">↗</span></h2>
+            <a class="btn" href="https://wa.me/558135211030" target="_blank" rel="noopener noreferrer"><i class="pi pi-whatsapp" aria-hidden="true"></i> Fale com a Nativa</a>
+        </div>
+        <div class="grid md:grid-cols-3 gap-8 mt-12 pt-8 border-t border-[#d9e1e8]">
+            <div>
+                <p class="eyebrow text-[10px] tracking-[1.7px] font-bold mb-6">FALE COM A EQUIPE</p>
+                <a class="text-2xl font-semibold" href="tel:+558135211030">(81) 3521-1030</a>
+                <p>Implementos, peças e oficina.</p>
+            </div>
+            <div>
+                <p class="eyebrow text-[10px] tracking-[1.7px] font-bold mb-6">VENHA NOS VISITAR</p>
+                <p>Rua Via Pedro Rossi, nº 382<br />Cabo de Santo Agostinho · PE</p>
+                <a
+                    class="link inline-flex items-center gap-6 border-b py-2 text-xs font-bold"
+                    href="https://www.google.com/maps/search/?api=1&query=Nativa+Maquinas+Implementos+Rua+Via+Pedro+Rossi+382+Cabo+de+Santo+Agostinho"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >Traçar rota <i class="pi pi-arrow-up-right" aria-hidden="true"></i
+                ></a>
+            </div>
+            <div>
+                <p class="eyebrow text-[10px] tracking-[1.7px] font-bold mb-6">NOSSA PARCERIA</p>
+                <div class="inline-flex bg-[#001f41] rounded-lg px-6 py-5"><img class="w-48 h-auto object-contain" src="images/nativa/librelato-logo.png" alt="Logo oficial Librelato" width="186" height="36" loading="lazy" /></div>
+                <p>Implementos para levar você mais longe.</p>
+            </div>
+        </div>
+    </section>
+</main>
+<footer>
+    <img src="images/nativa/logo.png" width="140" height="44" alt="Nativa" />
+    <p>© {{ year }} Nativa Máquinas e Implementos.</p>
+    <a routerLink="/auth">Área interna <i class="pi pi-arrow-up-right" aria-hidden="true"></i></a><a href="#inicio" aria-label="Voltar ao início"><i class="pi pi-arrow-up" aria-hidden="true"></i></a>
+</footer>
+<a
+    class="whatsapp group fixed bottom-[max(1rem,env(safe-area-inset-bottom))] right-4 md:right-6 z-35 inline-flex items-center gap-3 rounded-full bg-[#001f41] p-2 pr-5 border border-white/25 shadow-[0_8px_30px_rgba(0,31,65,0.3)] hover:bg-[#003464] motion-safe:transition-all motion-safe:duration-200 motion-safe:hover:-translate-y-1"
+    href="https://wa.me/558135211030?text=Ol%C3%A1!%20Vim%20pelo%20site%20e%20gostaria%20de%20falar%20com%20a%20Nativa."
+    target="_blank"
+    rel="noopener noreferrer"
+    aria-label="Fale com a Nativa pelo WhatsApp (abre em nova aba)"
+>
+    <span class="grid size-12 shrink-0 place-items-center rounded-full bg-[#25d366] text-[#001f41] text-3xl"><i class="pi pi-whatsapp" aria-hidden="true"></i></span>
+    <span class="flex flex-col items-start leading-tight"><span class="text-[9px] uppercase tracking-[1.4px] text-[#9cdfff]">Atendimento Nativa</span><span class="text-sm font-bold mt-1">Como podemos ajudar?</span></span>
+    <i class="pi pi-arrow-up-right ml-1 text-xs text-[#9cdfff]" aria-hidden="true"></i>
+</a>

@@ -3,5 +3,5 @@ import { Visit } from '@/app/models/crm/visit/visit';
 
 export interface AttendanceDetail {
     attendance: CustomerAttendance;
-    visit: Visit;
+    visit: Visit | null;
 }

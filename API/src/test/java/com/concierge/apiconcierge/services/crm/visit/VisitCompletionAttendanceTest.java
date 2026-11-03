@@ -18,12 +18,19 @@ class VisitCompletionAttendanceTest {
     @Mock ISalespersonVisitRepository repository;
     @Mock IUserRepository userRepository;
     @Mock CustomerAttendanceService attendanceService;
+    @Mock com.concierge.apiconcierge.repositories.salesperson.ISalespersonRepository salespersonRepository;
+    @Mock com.concierge.apiconcierge.repositories.permission.IPermissionUserRepository permissionUser;
     @InjectMocks SalespersonVisitService service;
+    @org.junit.jupiter.api.BeforeEach void authorizeOwnSeller() {
+        var seller = new com.concierge.apiconcierge.models.salesperson.Salesperson(); seller.setId(7); seller.setStatus(StatusEnableDisable.Habilitado);
+        when(salespersonRepository.findByCompanyIdAndResaleIdAndUserId(1, 2, null)).thenReturn(seller);
+        when(salespersonRepository.findByCompanyIdAndResaleIdAndId(1, 2, 7)).thenReturn(seller);
+    }
 
     @Test void completionGeneratesAttendanceAndPreservesTheOriginalTenant() {
         User user = new User(); user.setCompanyId(1); user.setResaleId(2); user.setStatus(StatusEnableDisable.Habilitado);
-        SalespersonVisit existing = new SalespersonVisit(); existing.setId(42); existing.setCompanyId(1); existing.setResaleId(2);
-        SalespersonVisit incoming = new SalespersonVisit(); incoming.setId(42); incoming.setCompanyId(999); incoming.setStatus(StatusVisitEnum.concluído);
+        SalespersonVisit existing = new SalespersonVisit(); existing.setSalespersonId(7); existing.setId(42); existing.setCompanyId(1); existing.setResaleId(2);
+        SalespersonVisit incoming = new SalespersonVisit(); incoming.setSalespersonId(7); incoming.setId(42); incoming.setCompanyId(999); incoming.setStatus(StatusVisitEnum.concluído);
         when(userRepository.loginEmail("user")).thenReturn(user);
         when(repository.findForCompletion(1, 2, 42)).thenReturn(existing);
         when(repository.save(incoming)).thenReturn(incoming);
@@ -34,8 +41,8 @@ class VisitCompletionAttendanceTest {
 
     @Test void savingADraftDoesNotGenerateAttendance() {
         User user = new User(); user.setCompanyId(1); user.setResaleId(2); user.setStatus(StatusEnableDisable.Habilitado);
-        SalespersonVisit existing = new SalespersonVisit(); existing.setCompanyId(1); existing.setResaleId(2);
-        SalespersonVisit incoming = new SalespersonVisit(); incoming.setId(42); incoming.setStatus(StatusVisitEnum.iniciou);
+        SalespersonVisit existing = new SalespersonVisit(); existing.setSalespersonId(7); existing.setCompanyId(1); existing.setResaleId(2);
+        SalespersonVisit incoming = new SalespersonVisit(); incoming.setSalespersonId(7); incoming.setId(42); incoming.setStatus(StatusVisitEnum.iniciou);
         when(userRepository.loginEmail("user")).thenReturn(user);
         when(repository.findForCompletion(1, 2, 42)).thenReturn(existing);
         when(repository.save(incoming)).thenReturn(incoming);

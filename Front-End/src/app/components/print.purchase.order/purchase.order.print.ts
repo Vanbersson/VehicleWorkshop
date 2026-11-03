@@ -1,4 +1,4 @@
-import { Resale } from '@/app/models/company';
+import { IResale as Resale } from '@/app/interfaces/conf-company/i.resale';
 import { PurchaseOrder } from '@/app/models/parts/purchase.order';
 import { PurchaseOrderItem } from '@/app/models/parts/purchase.order.item/purchase.order.item';
 import { PurchaseOrderItemCons } from '@/app/models/parts/purchase.order.item.cons';

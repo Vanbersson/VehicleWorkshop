@@ -31,6 +31,16 @@ public class SalespersonVisitController {
     @Autowired
     private ISalespersonVisitService service;
 
+    @GetMapping("/agenda/salespersons")
+    public List<com.concierge.apiconcierge.dtos.crm.visit.VisitSalespersonOptionDto> agendaSalespersons(HttpServletRequest request) {
+        return service.creationSalespersons(true, getEmail(request));
+    }
+
+    @GetMapping("/register/salespersons")
+    public List<com.concierge.apiconcierge.dtos.crm.visit.VisitSalespersonOptionDto> registerSalespersons(HttpServletRequest request) {
+        return service.creationSalespersons(false, getEmail(request));
+    }
+
     @PostMapping("/register/new")
     public ResponseEntity<SalespersonVisit> registerNew(@Valid @RequestBody SalespersonVisitRegisterNewDto data, HttpServletRequest request) {
         String emailUser = this.getEmail(request);

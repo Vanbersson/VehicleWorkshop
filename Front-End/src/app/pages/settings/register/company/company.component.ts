@@ -12,9 +12,11 @@ import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
-import { Company, Resale } from '@/app/models/company';
+
 import { CompanyService } from '@/app/services/company.service';
 import { StatusEnabDisabEnum } from '@/app/models/status-enab-disab-enum';
+import { ICompany, CompanySave } from '@/app/interfaces/conf-company/i.company';
+import { IResale } from '@/app/interfaces/conf-company/i.resale';
 const requiredText = () => new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.pattern(/\S/), Validators.maxLength(255)] });
 @Component({
     selector: 'p-company',
@@ -25,9 +27,9 @@ const requiredText = () => new FormControl('', { nonNullable: true, validators: 
     providers: [MessageService]
 })
 export default class CompanyComponent implements OnInit {
-    readonly companies = signal<Company[]>([]);
-    readonly resales = signal<Resale[]>([]);
-    readonly selectedCompany = signal<Company | null>(null);
+    readonly companies = signal<ICompany[]>([]);
+    readonly resales = signal<IResale[]>([]);
+    readonly selectedCompany = signal<ICompany | null>(null);
     readonly loading = signal(false);
     readonly loadingResales = signal(false);
     readonly saving = signal(false);
@@ -88,7 +90,7 @@ export default class CompanyComponent implements OnInit {
             this.loading.set(false);
         }
     }
-    async selectCompany(company: Company): Promise<void> {
+    async selectCompany(company: ICompany): Promise<void> {
         const request = ++this.resaleRequest;
         this.selectedCompany.set(company);
         this.resales.set([]);
@@ -103,7 +105,7 @@ export default class CompanyComponent implements OnInit {
             if (request === this.resaleRequest) this.loadingResales.set(false);
         }
     }
-    open(kind: 'company' | 'resale', item?: Company): void {
+    open(kind: 'company' | 'resale', item?: ICompany | IResale): void {
         if (this.saving() || this.loading() || (kind === 'resale' && !this.selectedCompany())) return;
         if (kind === 'company' && !item && (this.companies().length > 0 || this.loadError())) return;
         this.dialogKind = kind;
@@ -127,7 +129,7 @@ export default class CompanyComponent implements OnInit {
         }
         const company = this.selectedCompany();
         if (this.dialogKind === 'resale' && !company) return;
-        const data = { ...this.form.getRawValue(), ...(this.editingId ? { id: this.editingId } : {}) };
+        const data: CompanySave = { ...this.form.getRawValue(), ...(this.editingId ? { id: this.editingId } : {}) };
         for (const key of Object.keys(data) as (keyof typeof data)[]) {
             if (typeof data[key] === 'string') (data as Record<string, unknown>)[key] = (data[key] as string).trim();
         }

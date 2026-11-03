@@ -23,14 +23,11 @@ import { ClientCompany } from '@/app/models/client.company';
 
 import { Visit } from '@/app/models/crm/visit/visit';
 import { ContactTypeEnum } from '@/app/models/crm/visit/contact.type.enum';
-import { SalespersonService } from '@/app/services/salesperson/salesperson.service';
 import { lastValueFrom } from 'rxjs';
 import { Salesperson } from '@/app/models/crm/salesperson';
 import { UserService } from '@/app/services/user/user.service';
 import { HttpResponse } from '@angular/common/http';
 import { User } from '@/app/models/user';
-import { ISalespersonType } from '@/app/interfaces/salesperson/i.salesperson.type';
-import { YesNotEnum } from '@/app/models/yes.not.enum';
 import { LoadingService } from '@/app/services/loading/loading.service';
 import { VisitService } from '@/app/services/crm/visit/visit.service';
 import { StatusVisitEnum } from '@/app/models/crm/visit/status.visit.enum';
@@ -119,7 +116,6 @@ export default class VisitMaintenanceComponent implements OnInit {
         private visitService: VisitService,
         private loadingService: LoadingService,
         private userService: UserService,
-        private salespersonService: SalespersonService,
         private messageService: MessageService,
         private location: Location
     ) {}
@@ -136,8 +132,7 @@ export default class VisitMaintenanceComponent implements OnInit {
     private async init(): Promise<void> {
         this.loadingService.show();
         try {
-            const types: ISalespersonType = { typeSalesPart: YesNotEnum.NOT, typeSalesService: YesNotEnum.NOT, typeSalesVehicle: YesNotEnum.YES };
-            this.salespersons.set(await this.filterTypeSalesperson(types));
+            this.salespersons.set(await this.loadAuthorizedSalespersons());
             if (this.visit) {
                 const v = this.visit;
                 this.previousContactType = v.contactType;
@@ -351,9 +346,9 @@ export default class VisitMaintenanceComponent implements OnInit {
         return datePipe.transform(date, "yyyy-MM-dd'T'HH:mm:ss.SSS") + timezone;
     }
 
-    private async filterTypeSalesperson(types: ISalespersonType): Promise<Salesperson[]> {
+    private async loadAuthorizedSalespersons(): Promise<Salesperson[]> {
         try {
-            return await lastValueFrom(this.salespersonService.filterType(types));
+            return await lastValueFrom(this.visitService.registerSalespersons());
         } catch (error: any) {
             this.messageService.add({ severity: 'error', summary: 'Erro', detail: error?.error?.emessage ?? 'Não foi possível carregar os dados. Tente novamente.', icon: 'pi pi-times' });
             return [];

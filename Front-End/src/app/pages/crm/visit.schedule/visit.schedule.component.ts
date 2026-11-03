@@ -15,13 +15,10 @@ import { TableModule } from 'primeng/table';
 import { DialogModule } from 'primeng/dialog';
 import { FilterClientComponent } from '@/app/components/filter.client/filter.client.component';
 import { VisitService } from '@/app/services/crm/visit/visit.service';
-import { SalespersonService } from '@/app/services/salesperson/salesperson.service';
 import { Salesperson } from '@/app/models/crm/salesperson';
 import { ClientCompany } from '@/app/models/client.company';
 import { StatusEnabDisabEnum } from '@/app/models/status-enab-disab-enum';
 import { StatusSuccessError } from '@/app/models/status-suc-err';
-import { ISalespersonType } from '@/app/interfaces/salesperson/i.salesperson.type';
-import { YesNotEnum } from '@/app/models/yes.not.enum';
 import { VisitAgenda } from '@/app/models/crm/visit/visit.agenda';
 import { StatusVisitEnum } from '@/app/models/crm/visit/status.visit.enum';
 
@@ -72,7 +69,6 @@ export default class VisitScheduleComponent implements OnInit {
 
     constructor(
         private visitService: VisitService,
-        private salespersonService: SalespersonService,
         private messageService: MessageService,
         private location: Location
     ) {
@@ -200,10 +196,9 @@ export default class VisitScheduleComponent implements OnInit {
         this.loadingSalespersons.set(true);
         this.salespersonError.set('');
         try {
-            const types: ISalespersonType = { typeSalesPart: YesNotEnum.NOT, typeSalesService: YesNotEnum.NOT, typeSalesVehicle: YesNotEnum.YES };
-
-            const people = await lastValueFrom(this.salespersonService.filterType(types));
+            const people = await lastValueFrom(this.visitService.agendaSalespersons());
             this.salespersons.set(people.filter((person) => person.status === StatusEnabDisabEnum.ENABLED));
+            if (!this.form.controls.salesperson.value && this.salespersons().length === 1) this.form.controls.salesperson.setValue(this.salespersons()[0]);
         } catch (error: unknown) {
             this.salespersonError.set(this.errorMessage(error, 'Não foi possível carregar os vendedores.'));
         } finally {

@@ -1,89 +1,125 @@
-<div class="layout-card">
+<div class="regions-page">
     <p-toast />
-    <div class="flex justify-center gap-4">
-        <div class=" flex flex-col  items-center border border-gray-300 rounded-md gap-2 p-2 mb-2">
-            <span class="text-2xl font-semibold">O que você quer ver?</span>
-            <div class="flex gap-2">
-                <div class="flex items-center">
-                    <p-checkbox inputId="salesperson1" [binary]="true"
-                        (onChange)="onCheckboxChangeSalesperson($event)" />
-                    <label for="salesperson1" class="ml-2"> Vendedores </label>
-                </div>
-                <div class="flex items-center">
-                    <p-checkbox inputId="client1" [binary]="true" (onChange)="onCheckboxChangeClient($event)" />
-                    <label for="client1" class="ml-2"> Clientes </label>
-                </div>
-                <div class="flex items-center">
-                    <p-checkbox inputId="agenda1" [binary]="true" (onChange)="onCheckboxChangeAgenda($event)" />
-                    <label for="agenda1" class="ml-2"> Agendas </label>
-                </div>
-                <div class="flex items-center">
-                    <p-checkbox inputId="customer1" [binary]="true" (onChange)="onCheckboxChangeCustomer($event)" />
-                    <label for="customer1" class="ml-2"> Atendimentos </label>
-                </div>
+    <header class="regions-heading">
+        <div class="heading-title">
+            <span class="heading-icon"><i class="pi pi-map" aria-hidden="true"></i></span>
+            <div>
+                <span class="text-xs font-bold tracking-widest text-muted-color">ACOMPANHAMENTO COMERCIAL</span>
+                <h1 class="text-2xl md:text-3xl font-bold my-1">Regiões comerciais</h1>
+                <p class="text-muted-color mt-1 mb-0">Explore os pontos no mapa e acompanhe a presença da equipe na região.</p>
             </div>
         </div>
-    </div>
-
-    <div class="map-container">
-        <div class="sidebar">
-            <div class="flex justify-center ">
-                <input pInputText class="w-full" placeholder="Pesquisar" [(ngModel)]="inputSearch" (keydown.enter)="searchMap()"  />
+        <span class="inline-flex items-center gap-2 text-sm text-muted-color"><i class="pi pi-info-circle" aria-hidden="true"></i>Dados demonstrativos</span>
+    </header>
+    <section class="layer-panel" aria-labelledby="layers-title">
+        <div class="section-heading">
+            <div>
+                <h2 class="text-base font-semibold m-0" id="layers-title">O que você quer visualizar?</h2>
+                <p class="text-muted-color mt-1 mb-0">Combine as categorias para explorar o mapa.</p>
             </div>
-            <div class="flex flex-col items-center w-full border-b border-surface-300 dark:border-surface-700 mb-2 mt-2"></div>
-            @for(item of locationsShow(); track item.id){
-            <div #details class="location-details" [class.active]="selectMap()?.id === item.id" (click)="changeLocation(item)">
-                @if(item.type == SALESPERSON){
-                <div class="flex gap-2 items-center">
-                    <i class="pi pi-car"></i>
-                    <span class="text-lg font-semibold">{{item.name}}</span>
-                </div>
-                <div class="flex gap-2 items-center">
-                    <i class="pi pi-user"></i>
-                    <p>{{item.description}}</p>
-                </div>
-                }
-                @if(item.type == CLIENT){
-                <div class="flex gap-2 items-center">
-                    <i class="pi pi-building"></i>
-                    <span class="text-lg font-semibold">{{item.name}}</span>
-                </div>
-                @if(item.cnpj){
-                <div class="flex">
-                    <p>CNPJ: {{item.cnpj}}</p>
-                </div>
-                }
-                @if(item.cpf){
-                <div class="flex">
-                    <p>CPF: {{item.cpf}}</p>
-                </div>
-                }
-
-                }
-                @if(item.type == AGENDA){
-                <div class="flex gap-2 items-center">
-                    <i class="pi pi-calendar-clock"></i>
-                    <span class="text-lg font-semibold">{{item.name}}</span>
-                </div>
-                <p>{{item.description}}</p>
-                <p>{{item.dateAgenda | date:'dd/MM/yyyy HH:mm'}}</p>
-                }
-            </div>
-            <div class="flex flex-col items-center w-full border-b border-surface-300 dark:border-surface-700"></div>
-            }
+            <p-button label="Limpar filtros" icon="pi pi-filter-slash" severity="secondary" [text]="true" (onClick)="clearFilters()" />
         </div>
-        <google-map [mapId]="mapId" height="650px" width="100%" [center]="center" [zoom]="zoom" [options]="mapOptions"
-            (mapClick)="addAdvancedMarker($event)">
-            @for (item of locationsShow(); track item.id) {
-            <map-advanced-marker 
-            [title]="item.name"
-            [position]="{
-                lat:item.latitude,
-                lng: item.longitude}" 
-                [options]="advancedMarkerOptions" 
-                (mapClick)="changeLocation(item)" />
-            }
-        </google-map>
-    </div>
-
+        <div class="layer-grid">
+            <div class="layer-option" [class.enabled]="showSalesperson">
+                <span class="layer-icon"><i class="pi pi-car" aria-hidden="true"></i></span
+                ><label for="regionsSalesperson"
+                    >Vendedores <small>{{ countLocations(SALESPERSON) }} pontos</small></label
+                >
+                <p-checkbox inputId="regionsSalesperson" [binary]="true" [(ngModel)]="showSalesperson" (onChange)="updateLocationsShow()" />
+            </div>
+            <div class="layer-option" [class.enabled]="showClient">
+                <span class="layer-icon"><i class="pi pi-building" aria-hidden="true"></i></span
+                ><label for="regionsClient"
+                    >Clientes <small>{{ countLocations(CLIENT) }} pontos</small></label
+                >
+                <p-checkbox inputId="regionsClient" [binary]="true" [(ngModel)]="showClient" (onChange)="updateLocationsShow()" />
+            </div>
+            <div class="layer-option" [class.enabled]="showAgenda">
+                <span class="layer-icon"><i class="pi pi-calendar" aria-hidden="true"></i></span
+                ><label for="regionsAgenda"
+                    >Agendamentos <small>{{ countLocations(AGENDA) }} pontos</small></label
+                >
+                <p-checkbox inputId="regionsAgenda" [binary]="true" [(ngModel)]="showAgenda" (onChange)="updateLocationsShow()" />
+            </div>
+            <div class="layer-option" [class.enabled]="showCustomer">
+                <span class="layer-icon"><i class="pi pi-briefcase" aria-hidden="true"></i></span
+                ><label for="regionsCustomer"
+                    >Atendimentos <small>{{ countLocations(CUSTOMER_SERVICE) }} pontos</small></label
+                >
+                <p-checkbox inputId="regionsCustomer" [binary]="true" [(ngModel)]="showCustomer" (onChange)="updateLocationsShow()" />
+            </div>
+        </div>
+    </section>
+    <section class="regions-workspace" aria-label="Explorar regiões">
+        <aside class="locations-panel" aria-labelledby="locations-title">
+            <div class="locations-heading">
+                <div class="section-heading mb-4">
+                    <h2 class="text-base font-semibold m-0" id="locations-title">Pontos no mapa</h2>
+                    <span class="rounded-full bg-surface-100 dark:bg-surface-800 px-2 py-1 text-xs" aria-live="polite">{{ locationsShow().length }}</span>
+                </div>
+                <p-iconfield
+                    ><p-inputicon styleClass="pi pi-search" /><input
+                        pInputText
+                        class="w-full text-sm"
+                        type="search"
+                        [(ngModel)]="inputSearch"
+                        (ngModelChange)="searchMap()"
+                        placeholder="Nome, documento ou descrição"
+                        aria-label="Pesquisar pontos no mapa"
+                /></p-iconfield>
+            </div>
+            <div class="locations-list">
+                @for (item of locationsShow(); track item.id) {
+                    <button type="button" class="location-card" [class.active]="selectMap()?.id === item.id" [attr.aria-pressed]="selectMap()?.id === item.id" (click)="changeLocation(item)">
+                        <span class="flex justify-between items-center text-muted-color"
+                            ><span class="rounded-full bg-surface-100 dark:bg-surface-800 px-2 py-1 text-xs">{{ locationLabel(item.type) }}</span
+                            ><i class="pi pi-arrow-up-right" aria-hidden="true"></i
+                        ></span>
+                        <strong>{{ item.name }}</strong>
+                        @if (item.cnpj || item.cpf) {
+                            <span class="location-meta">{{ item.cnpj ? 'CNPJ: ' + item.cnpj : 'CPF: ' + item.cpf }}</span>
+                        }
+                        @if (item.description) {
+                            <span class="location-meta">{{ item.description }}</span>
+                        }
+                        @if (item.dateAgenda) {
+                            <span class="inline-flex items-center gap-2 text-sm text-muted-color"><i class="pi pi-calendar" aria-hidden="true"></i>{{ item.dateAgenda | date: 'dd/MM/yyyy HH:mm' }}</span>
+                        }
+                    </button>
+                } @empty {
+                    <div class="px-4 py-12 text-center text-muted-color" role="status">
+                        <i class="pi pi-map-marker block text-2xl mb-4" aria-hidden="true"></i><strong>Nenhum ponto encontrado</strong>
+                        <p class="text-muted-color mt-1 mb-0">{{ hasSelectedLayers() ? 'Revise a busca ou selecione outra categoria.' : 'Selecione uma categoria para visualizar os pontos.' }}</p>
+                    </div>
+                }
+            </div>
+        </aside>
+        <div class="map-panel min-w-0 flex flex-col">
+            <div class="map-heading">
+                <div>
+                    <h2 class="text-base font-semibold m-0">Mapa da região</h2>
+                    <p class="text-muted-color mt-1 mb-0">Clique em um ponto para ver sua localização.</p>
+                </div>
+                <p-button label="Visão geral" icon="pi pi-expand" severity="secondary" [text]="true" (onClick)="resetMap()" />
+            </div>
+            <div class="map-canvas">
+                <google-map class="block h-full" [mapId]="mapId" height="100%" width="100%" [center]="center" [zoom]="zoom" [options]="mapOptions">
+                    @for (item of locationsShow(); track item.id) {
+                        <map-advanced-marker [title]="item.name" [position]="{ lat: item.latitude, lng: item.longitude }" [options]="advancedMarkerOptions" (mapClick)="changeLocation(item)" />
+                    }
+                </google-map>
+            </div>
+            <div class="map-selection" aria-live="polite">
+                <i class="pi pi-map-marker" aria-hidden="true"></i>
+                @if (selectMap(); as selected) {
+                    <div>
+                        <strong class="block text-color mb-1">{{ selected.name }}</strong
+                        ><span class="block break-words">{{ locationLabel(selected.type) }} · {{ selected.latitude | number: '1.4-4' }}, {{ selected.longitude | number: '1.4-4' }}</span>
+                    </div>
+                } @else {
+                    <span>Selecione um card ou um marcador para destacar um ponto no mapa.</span>
+                }
+            </div>
+        </div>
+    </section>
 </div>

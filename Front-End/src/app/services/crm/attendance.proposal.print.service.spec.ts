@@ -5,7 +5,7 @@ import { AttendanceProposalPrintService } from './attendance.proposal.print.serv
 import { CompanyService } from '@/app/services/company.service';
 import { SalespersonService } from '@/app/services/salesperson/salesperson.service';
 import { ClientCompanyService } from '@/app/services/client/client.company.service';
-import { Resale } from '@/app/models/company';
+import { IResale as Resale } from '@/app/interfaces/conf-company/i.resale';
 import { Salesperson } from '@/app/models/crm/salesperson';
 import { ClientCompany } from '@/app/models/client.company';
 import { Visit } from '@/app/models/crm/visit/visit';

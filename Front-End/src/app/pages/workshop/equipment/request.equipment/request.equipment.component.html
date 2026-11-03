@@ -49,7 +49,7 @@
                         <p-button label="Limpar filtros" icon="pi pi-filter-slash" severity="secondary" [text]="true" (onClick)="search = ''; dt1.clear(); cleanSelected()" /><p-button
                             [label]="'Devolver selecionados (' + selectedMaterials.length + ')'"
                             icon="pi pi-reply"
-                            severity="secondary"
+                            severity="danger"
                             [outlined]="true"
                             [disabled]="!selectedMaterials.length || loading()"
                             (onClick)="returnMaterial()"
@@ -59,7 +59,7 @@
             <ng-template #header
                 ><tr>
                     <th style="width: 3rem"></th>
-                    <th>Colaborador</th>
+                    <th pSortableColumn="name">Colaborador <p-sortIcon field="name" /></th>
                     <th class="text-right">Materiais em uso</th>
                 </tr></ng-template
             >
@@ -80,15 +80,48 @@
             <ng-template #expandedrow let-mec
                 ><tr>
                     <td colspan="3" class="expanded-cell">
-                        <p-table [value]="mec.materials" dataKey="matmecId" [(selection)]="selectedMaterials" [tableStyle]="{ 'min-width': '60rem' }" size="small" [rowHover]="true">
+                        <p-table
+                            #materialsTable
+                            [value]="mec.materials"
+                            dataKey="matmecId"
+                            [(selection)]="selectedMaterials"
+                            [globalFilterFields]="['materialDesc', 'materialId', 'categoryDesc', 'requestId', 'deliveryInformation']"
+                            [paginator]="mec.materials.length > 5"
+                            [rows]="5"
+                            [rowsPerPageOptions]="[5, 10, 25]"
+                            [showCurrentPageReport]="true"
+                            currentPageReportTemplate="{first} a {last} de {totalRecords} materiais"
+                            sortField="deliveryDate"
+                            [sortOrder]="-1"
+                            [tableStyle]="{ 'min-width': '52rem' }"
+                            size="small"
+                            [rowHover]="true"
+                        >
+                            <ng-template #caption>
+                                <div class="list-filters">
+                                    <div>
+                                        <strong>Materiais de {{ mec.name | titlecase }}</strong>
+                                        <p class="text-sm text-muted-color m-0 mt-1">Selecione os itens para devolver ou consulte a requisição.</p>
+                                    </div>
+                                    <p-iconfield
+                                        ><p-inputicon styleClass="pi pi-search" /><input
+                                            #materialSearch
+                                            pInputText
+                                            type="search"
+                                            (input)="materialsTable.filterGlobal(materialSearch.value, 'contains')"
+                                            placeholder="Buscar material ou requisição"
+                                            [attr.aria-label]="'Buscar materiais de ' + mec.name"
+                                    /></p-iconfield>
+                                </div>
+                            </ng-template>
                             <ng-template #header
                                 ><tr>
                                     <th style="width: 3rem"></th>
-                                    <th>Requisição</th>
-                                    <th>Entregue em</th>
-                                    <th>Categoria</th>
-                                    <th>Material</th>
-                                    <th>Quantidade</th>
+                                    <th pSortableColumn="requestId">Requisição <p-sortIcon field="requestId" /></th>
+                                    <th pSortableColumn="deliveryDate">Entregue em <p-sortIcon field="deliveryDate" /></th>
+                                    <th pSortableColumn="categoryDesc">Categoria <p-sortIcon field="categoryDesc" /></th>
+                                    <th pSortableColumn="materialDesc">Material <p-sortIcon field="materialDesc" /></th>
+                                    <th pSortableColumn="deliveryQuantity">Quantidade <p-sortIcon field="deliveryQuantity" /></th>
                                     <th>Informações</th>
                                     <th style="width: 3rem"></th></tr
                             ></ng-template>
@@ -102,17 +135,23 @@
                                     <td>{{ mat.categoryDesc || '—' }}</td>
                                     <td>
                                         <div class="flex items-center gap-2">
-                                            <img *ngIf="mat.materialPhoto" class="layout-img-small" [src]="mat.materialPhoto" alt="Foto do material" /><span>{{ mat.materialDesc || 'Material ' + mat.materialId }}</span>
+                                            <img *ngIf="mat.materialPhoto" class="layout-img-small" [src]="mat.materialPhoto" alt="" loading="lazy" /><span *ngIf="!mat.materialPhoto" class="avatar-placeholder"
+                                                ><i class="pi pi-box" aria-hidden="true"></i
+                                            ></span>
+                                            <div>
+                                                <strong>{{ mat.materialDesc || 'Material ' + mat.materialId }}</strong>
+                                                <div class="text-sm text-muted-color">Código {{ mat.materialId }}</div>
+                                            </div>
                                         </div>
                                     </td>
-                                    <td>{{ mat.deliveryQuantity | number: '1.2-2' }}</td>
-                                    <td>{{ mat.deliveryInformation || '—' }}</td>
+                                    <td class="text-right font-semibold whitespace-nowrap">{{ mat.deliveryQuantity | number: '1.0-2' }}</td>
+                                    <td class="max-w-64 whitespace-normal break-words">{{ mat.deliveryInformation || '—' }}</td>
                                     <td><p-button icon="pi pi-eye" [text]="true" severity="secondary" ariaLabel="Consultar requisição" (onClick)="showDialogDetails(mat.requestId)" /></td></tr
                             ></ng-template>
                             <ng-template #emptymessage
                                 ><tr>
                                     <td colspan="8">
-                                        <div class="empty-state"><i class="pi pi-check-circle"></i><strong>Nenhum material em uso</strong><span>Este colaborador não possui materiais pendentes de devolução.</span></div>
+                                        <div class="empty-state"><i class="pi pi-check-circle"></i><strong>Nenhum material encontrado</strong><span>Revise a busca ou atualize a lista de materiais.</span></div>
                                     </td>
                                 </tr></ng-template
                             >
@@ -608,7 +647,7 @@
             ><ng-template #header
                 ><tr>
                     <th style="width: 5rem">Nº</th>
-                    <th>Colaborador</th>
+                    <th pSortableColumn="name">Colaborador <p-sortIcon field="name" /></th>
                     <th>Tipo</th>
                     <th>Solicitação</th>
                 </tr></ng-template

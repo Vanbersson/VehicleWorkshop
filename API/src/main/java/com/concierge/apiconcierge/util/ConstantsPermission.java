@@ -24,6 +24,11 @@ public class ConstantsPermission {
     //WORKSHOP
     public static final Integer EDIT_QTD_MATERIAL = 300;
 
+    public static final Integer CREATE_ATTENDANCE_ALL_SALESPERSON = 402;
+
+    public static final Integer CREATE_AGENDA_ALL_SALESPERSON = 403;
+    public static final Integer REGISTER_VISIT_ALL_SALESPERSON = 404;
+
     //CRM
     public static final Integer  LIST_VISIT_ALL_SALESPERSON = 400;
     public static final Integer  LIST_AGENDA_ALL_SALESPERSON = 401;

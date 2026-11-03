@@ -16,8 +16,18 @@ public class CustomerAttendanceController {
     @Autowired private TokenService tokenService;
     @Autowired private CustomerAttendanceService service;
 
+    @PostMapping
+    public AttendanceResponseDto create(@Valid @RequestBody com.concierge.apiconcierge.dtos.crm.attendance.AttendanceCreateDto data, HttpServletRequest request) {
+        return service.create(data, email(request));
+    }
+
     @GetMapping
     public List<AttendanceResponseDto> list(HttpServletRequest request) { return service.list(email(request)); }
+
+    @GetMapping("/creation-salespersons")
+    public List<com.concierge.apiconcierge.dtos.salesperson.ResponseSalespersonDto> creationSalespersons(HttpServletRequest request) {
+        return service.creationSalespersons(email(request));
+    }
 
     @GetMapping("/{id}")
     public com.concierge.apiconcierge.dtos.crm.attendance.AttendanceDetailDto detail(@PathVariable Integer id, HttpServletRequest request) {

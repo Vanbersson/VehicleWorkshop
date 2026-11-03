@@ -4,7 +4,7 @@ import printJS from 'print-js';
 import { VehicleEntry } from '@/app/models/vehicle.entry';
 import { ClientCompany } from '@/app/models/client.company';
 import { Driver } from '@/app/models/driver';
-import { Resale } from '@/app/models/company';
+import { IResale } from '@/app/interfaces/conf-company/i.resale';
 import { YesNotEnum } from '@/app/models/yes.not.enum';
 import { CompanyService } from '@/app/services/company.service';
 
@@ -35,7 +35,7 @@ export function vehiclePrintPhotos(data: VehiclePrintData): PrintPhoto[] {
         return source ? [{ label: `Consultor · Foto ${index}`, source }] : [];
     });
 }
-export function buildVehiclePrintHtml(data: VehiclePrintData, resale: Resale, photos: PrintPhoto[]): string {
+export function buildVehiclePrintHtml(data: VehiclePrintData, resale: IResale, photos: PrintPhoto[]): string {
     const v = data.vehicle;
     let html = '<main><header><h1>Dados do veículo</h1></header>';
     html += section('Revenda', field('Nome', resale.name) + field('CNPJ', documentNumber(resale.cnpj)), 'resale-block');
