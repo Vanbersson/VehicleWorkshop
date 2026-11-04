@@ -600,6 +600,86 @@ FOREIGN KEY(salesperson_id) REFERENCES tb_salesperson(id),
 FOREIGN KEY(client_id) REFERENCES tb_client_company(id),
 primary key(id)
 );
+
+
+
+
+CREATE TABLE IF NOT EXISTS tb_crm_attendance_quote_item (
+id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+quote_id INT NOT NULL,
+item_position INT NOT NULL,
+product_name VARCHAR(255) NOT NULL,
+quantity DECIMAL(12,3) NOT NULL,
+unit_price DECIMAL(15,2) NOT NULL,
+discount_type VARCHAR(16) NOT NULL,
+discount_value DECIMAL(15,2) NOT NULL,
+subtotal DECIMAL(19,2) NOT NULL,
+discount_amount DECIMAL(19,2) NOT NULL,
+total DECIMAL(19,2) NOT NULL,
+CONSTRAINT fk_quote_item_header FOREIGN KEY (quote_id) REFERENCES tb_crm_attendance_quote(id)
+);
+
+CREATE TABLE IF NOT EXISTS tb_crm_customer_attendance (
+company_id INT NOT NULL,
+resale_id INT NOT NULL,
+id INT NOT NULL AUTO_INCREMENT,
+visit_id INT NULL,
+client_id INT,
+client_name VARCHAR(255) NOT NULL,
+salesperson_id INT NOT NULL,
+salesperson_name VARCHAR(255) NOT NULL,
+date_created DATETIME(6) NOT NULL,
+date_visit DATETIME(6),
+status VARCHAR(32) NOT NULL,
+notes VARCHAR(2000),
+cancellation_reason VARCHAR(2000),
+cancelled_at DATETIME(6),
+cancelled_by_id INT,
+cancelled_by_name VARCHAR(255),
+documents_notes VARCHAR(2000),
+proposal_notes VARCHAR(2000),
+approval_requested_at DATETIME(6),
+completed_at DATETIME(6),
+version BIGINT,
+FOREIGN KEY(company_id) REFERENCES tb_company(id),
+FOREIGN KEY(resale_id) REFERENCES tb_resale(id),
+FOREIGN KEY(visit_id) REFERENCES  tb_salesperson_visit(id),
+FOREIGN KEY(client_id) REFERENCES tb_client_company(id),
+FOREIGN KEY(salesperson_id) REFERENCES tb_salesperson(id),
+FOREIGN KEY(cancelled_by_id) REFERENCES tb_user(id),
+PRIMARY KEY(id)
+);
+
+CREATE TABLE IF NOT EXISTS tb_crm_attendance_quote (
+company_id INT NOT NULL,
+resale_id INT NOT NULL,
+id INT NOT NULL AUTO_INCREMENT,
+attendance_id INT NOT NULL,
+date_created DATETIME(6) NOT NULL,
+date_updated DATETIME(6) NOT NULL,
+notes VARCHAR(2000),
+subtotal DECIMAL(19,2) NOT NULL,
+discount_total DECIMAL(19,2) NOT NULL,
+total DECIMAL(19,2) NOT NULL,
+version BIGINT,
+FOREIGN KEY(company_id) REFERENCES tb_company(id),
+FOREIGN KEY(resale_id) REFERENCES tb_resale(id),
+PRIMARY KEY(id),
+CONSTRAINT uk_attendance_quote UNIQUE (attendance_id),
+CONSTRAINT fk_quote_attendance FOREIGN KEY (attendance_id) REFERENCES tb_crm_customer_attendance(id)
+);
+
+CREATE TABLE IF NOT EXISTS tb_crm_attendance_document (
+id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+attendance_id INT NOT NULL,
+file_name VARCHAR(255) NOT NULL,
+content_type VARCHAR(100) NOT NULL,
+file_size BIGINT NOT NULL,
+created_at DATETIME(6) NOT NULL,
+file_path VARCHAR(1024) NOT NULL,
+INDEX idx_attendance_document (attendance_id, created_at),
+CONSTRAINT fk_attendance_document FOREIGN KEY (attendance_id) REFERENCES tb_crm_customer_attendance(id)
+);
 -- FIM MENU CRM
 
 CREATE TABLE IF NOT EXISTS tb_vehicle_entry(

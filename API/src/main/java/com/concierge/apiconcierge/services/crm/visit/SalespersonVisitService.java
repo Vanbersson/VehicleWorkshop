@@ -147,10 +147,12 @@ public class SalespersonVisitService implements ISalespersonVisitService {
     @org.springframework.transaction.annotation.Transactional
     public MessageResponse agendaUpdate(SalespersonVisitAgendaUpdateDto v, String emailUser) {
         User user = this.userRepository.loginEmail(emailUser);
-        if (user == null || user.getStatus() == StatusEnableDisable.Desabilitado) throw new BusinessException("Usuário bloqueado.");
+        if (user == null || user.getStatus() == StatusEnableDisable.Desabilitado)
+            throw new BusinessException("Usuário bloqueado.");
         SalespersonVisit visit = this.repository.findForCompletion(user.getCompanyId(), user.getResaleId(), v.id());
         if (visit == null) throw new ResourcesNotFoundException("Visita não encontrada.");
-        if (visit.getStatus() != StatusVisitEnum.agendado) throw new BusinessException("Somente visitas agendadas podem ter o agendamento alterado.");
+        if (visit.getStatus() != StatusVisitEnum.agendado)
+            throw new BusinessException("Somente visitas agendadas podem ter o agendamento alterado.");
         authorizeAssignment(user, visit.getSalespersonId(), CREATE_AGENDA_ALL_SALESPERSON);
         Salesperson assigned = authorizeAssignment(user, v.salespersonId(), CREATE_AGENDA_ALL_SALESPERSON);
         visit.setAgendaDate(v.dateVisit());
@@ -175,11 +177,10 @@ public class SalespersonVisitService implements ISalespersonVisitService {
             throw new BusinessException("Usuário Bloqueado.");
         }
         Salesperson salespersonResult = this.salespersonRepository.findByCompanyIdAndResaleIdAndUserId(userResult.getCompanyId(), userResult.getResaleId(), userResult.getId());
-        if (salespersonResult == null) {
-            throw new BusinessException("Vendedor Não encontrado.");
-        }
-        if (salespersonResult.getStatus() == StatusEnableDisable.Desabilitado) {
-            throw new BusinessException("Vendedor Bloqueado.");
+        if (salespersonResult != null) {
+            if (salespersonResult.getStatus() == StatusEnableDisable.Desabilitado) {
+                throw new BusinessException("Vendedor Bloqueado.");
+            }
         }
         //Permissão para listar todos os vendedores
         PermissionUser permission = this.permissionUser.findPermissionId(userResult.getCompanyId(), userResult.getResaleId(), userResult.getId(), LIST_VISIT_ALL_SALESPERSON);
@@ -191,7 +192,7 @@ public class SalespersonVisitService implements ISalespersonVisitService {
                             || v.getStatus() == StatusVisitEnum.iniciou)
                     .map(v -> new SalespersonVisitResponseDto(v.getId(), v.getSalespersonName(), v.getStatus(), v.getDateRegister(), v.getDateVisit(), v.getAgendaDate(), v.getClientName()))
                     .toList();
-        } else {
+        } else if(salespersonResult != null) {
             //Lista visitas do usuário logado
             return this.repository.findAll()
                     .stream()
@@ -201,6 +202,7 @@ public class SalespersonVisitService implements ISalespersonVisitService {
                     .map(v -> new SalespersonVisitResponseDto(v.getId(), v.getSalespersonName(), v.getStatus(), v.getDateRegister(), v.getDateVisit(), v.getAgendaDate(), v.getClientName()))
                     .toList();
         }
+        return List.of();
     }
 
     @Override
@@ -209,14 +211,14 @@ public class SalespersonVisitService implements ISalespersonVisitService {
         if (user.getStatus() == StatusEnableDisable.Desabilitado) {
             throw new BusinessException("Usuário Bloqueado.");
         }
-        Salesperson salesperson = this.salespersonRepository.findByCompanyIdAndResaleIdAndUserId(user.getCompanyId(), user.getResaleId(), user.getId());
-        if (salesperson == null) {
-            throw new ResourcesNotFoundException("Vendedor Não encontrado.");
-        }
-        if (salesperson.getStatus() == StatusEnableDisable.Desabilitado) {
-            throw new BusinessException("Vendedor Bloqueado.");
-        }
         PermissionUser permission = this.permissionUser.findPermissionId(user.getCompanyId(), user.getResaleId(), user.getId(), LIST_AGENDA_ALL_SALESPERSON);
+        Salesperson salesperson = this.salespersonRepository.findByCompanyIdAndResaleIdAndUserId(user.getCompanyId(), user.getResaleId(), user.getId());
+        if (salesperson != null) {
+            if (salesperson.getStatus() == StatusEnableDisable.Desabilitado) {
+                throw new BusinessException("Vendedor Bloqueado.");
+            }
+        }
+
         Date now = new Date();
         return this.repository.findAll().stream()
                 .filter(v -> Objects.equals(v.getCompanyId(), user.getCompanyId()) && Objects.equals(v.getResaleId(), user.getResaleId()))
@@ -235,12 +237,12 @@ public class SalespersonVisitService implements ISalespersonVisitService {
             throw new BusinessException("Usuário Bloqueado.");
         }
         Salesperson salespersonResult = this.salespersonRepository.findByCompanyIdAndResaleIdAndUserId(userResult.getCompanyId(), userResult.getResaleId(), userResult.getId());
-        if (salespersonResult == null) {
-            throw new BusinessException("Vendedor Não encontrado.");
+        if (salespersonResult != null) {
+            if (salespersonResult.getStatus() == StatusEnableDisable.Desabilitado) {
+                throw new BusinessException("Vendedor Bloqueado.");
+            }
         }
-        if (salespersonResult.getStatus() == StatusEnableDisable.Desabilitado) {
-            throw new BusinessException("Vendedor Bloqueado.");
-        }
+
         if (day == null) {
             throw new BusinessException("Informe o dia da agenda.");
         }
@@ -285,80 +287,33 @@ public class SalespersonVisitService implements ISalespersonVisitService {
                 ))
                 .toList();
 
-        //////////////////////
-        //Lista visitas de todos os vendedores
-//        if (permission != null) {
-//            return this.repository.findAll()
-//                    .stream()
-//                    .filter(v -> v.getSalespersonId() == salespersonResult.getId() && v.getStatus() == StatusVisitEnum.agendado)
-//                    .filter(v -> {
-//                        Date agenda = v.getAgendaDate();
-//
-//                        return agenda != null
-//                                && !agenda.before(inicio)
-//                                && agenda.before(fim);
-//                    })
-//                    .map(v -> new SalespersonVisitAgendaResponseDto(
-//                            v.getId(),
-//                            v.getAgendaDate(),
-//                            v.getSalespersonId(),
-//                            v.getSalespersonName(),
-//                            v.getClientId(),
-//                            v.getClientName(),
-//                            v.getClientCNPJ(),
-//                            v.getClientCPF(),
-//                            v.getAgendaInfo()
-//                    ))
-//                    .toList();
-//        } else {
-//            //Lista visitas do usuário logado
-//            return this.repository.findAll()
-//                    .stream()
-//                    .filter(v -> v.getSalespersonId() == salespersonResult.getId() && v.getStatus() == StatusVisitEnum.agendado)
-//                    .filter(v -> {
-//                        Date agenda = v.getAgendaDate();
-//
-//                        return agenda != null
-//                                && !agenda.before(inicio)
-//                                && agenda.before(fim);
-//                    })
-//                    .map(v -> new SalespersonVisitAgendaResponseDto(
-//                            v.getId(),
-//                            v.getAgendaDate(),
-//                            v.getSalespersonId(),
-//                            v.getSalespersonName(),
-//                            v.getClientId(),
-//                            v.getClientName(),
-//                            v.getClientCNPJ(),
-//                            v.getClientCPF(),
-//                            v.getAgendaInfo()
-//                    ))
-//                    .toList();
-//        }
-
-
     }
 
 
     private Integer permittedCreationSalesperson(User user, Integer permission) {
-        if (permissionUser.findPermissionId(user.getCompanyId(), user.getResaleId(), user.getId(), permission) != null) return null;
+        if (permissionUser.findPermissionId(user.getCompanyId(), user.getResaleId(), user.getId(), permission) != null)
+            return null;
         Salesperson own = salespersonRepository.findByCompanyIdAndResaleIdAndUserId(user.getCompanyId(), user.getResaleId(), user.getId());
-        if (own == null || own.getStatus() != StatusEnableDisable.Habilitado) throw new BusinessException("Vendedor nao habilitado.");
+        if (own == null || own.getStatus() != StatusEnableDisable.Habilitado)
+            throw new BusinessException("Vendedor nao habilitado.");
         return own.getId();
     }
 
     private Salesperson authorizeAssignment(User user, Integer salespersonId, Integer permission) {
         Integer own = permittedCreationSalesperson(user, permission);
-        if (own != null && !Objects.equals(own, salespersonId)) throw new BusinessException("Sem permissao para registrar para este vendedor.");
+        if (own != null && !Objects.equals(own, salespersonId))
+            throw new BusinessException("Sem permissao para registrar para este vendedor.");
         Salesperson assigned = salespersonRepository.findByCompanyIdAndResaleIdAndId(user.getCompanyId(), user.getResaleId(), salespersonId);
-        if (assigned == null || assigned.getStatus() != StatusEnableDisable.Habilitado) throw new BusinessException("Selecione um vendedor habilitado da revenda.");
+        if (assigned == null || assigned.getStatus() != StatusEnableDisable.Habilitado)
+            throw new BusinessException("Selecione um vendedor habilitado da revenda.");
         return assigned;
     }
 
     @Override
     public List<com.concierge.apiconcierge.dtos.crm.visit.VisitSalespersonOptionDto> creationSalespersons(boolean agenda, String emailUser) {
         User user = userRepository.loginEmail(emailUser);
-        if (user == null || user.getStatus() != StatusEnableDisable.Habilitado) throw new BusinessException("Usuario bloqueado.");
+        if (user == null || user.getStatus() != StatusEnableDisable.Habilitado)
+            throw new BusinessException("Usuario bloqueado.");
         Integer own = permittedCreationSalesperson(user, agenda ? CREATE_AGENDA_ALL_SALESPERSON : REGISTER_VISIT_ALL_SALESPERSON);
         return salespersonRepository.findByCompanyIdAndResaleId(user.getCompanyId(), user.getResaleId()).stream()
                 .filter(person -> person.getStatus() == StatusEnableDisable.Habilitado)
