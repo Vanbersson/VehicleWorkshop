@@ -40,14 +40,15 @@
             [rows]="10"
             [rowsPerPageOptions]="[10, 25, 50]"
             [showCurrentPageReport]="true"
-            [tableStyle]="{ 'min-width': '90rem' }"
-        >
-            <ng-template #caption
-                ><div class="list-toolbar">
-                    <p-iconfield iconPosition="left" class="vehicle-search"
-                        ><p-inputicon><i class="pi pi-search" aria-hidden="true"></i></p-inputicon
-                        ><input #searchInput pInputText type="search" class="w-full" placeholder="Buscar placa, modelo, frota ou empresa" aria-label="Pesquisar entradas de veículos" (input)="tableFilter1.filterGlobal(searchInput.value, 'contains')"
-                    /></p-iconfield>
+            [tableStyle]="{ 'min-width': '90rem' }">
+            <ng-template #caption>
+                <div class="list-toolbar">
+                    <p-iconfield iconPosition="left" class="vehicle-search">
+                        <p-inputicon>
+                            <i class="pi pi-search" aria-hidden="true"></i>
+                        </p-inputicon>
+                        <input #searchInput pInputText type="search" class="w-full" placeholder="Buscar placa, modelo, frota ou empresa" aria-label="Pesquisar entradas de veículos" (input)="tableFilter1.filterGlobal(searchInput.value, 'contains')"/>
+                    </p-iconfield>
                     <div class="list-filters">
                         <p-select
                             [(ngModel)]="selectedAuthorization"
@@ -124,8 +125,8 @@
                             <p-columnFilter type="text" field="attendantUserName" display="menu"></p-columnFilter>
                         </div>
                     </th>
-                    <th style="min-width: 5rem">
-                        <div class="flex items-center justify-between">
+                    <th style="min-width: 5rem">Liberação
+                        <!-- <div class="flex items-center justify-between">
                             Liberação
                             <p-columnFilter field="authExitStatus" matchMode="equals" display="menu">
                                 <ng-template #filter let-value let-filter="filterCallback">
@@ -147,11 +148,11 @@
                                     </p-select>
                                 </ng-template>
                             </p-columnFilter>
-                        </div>
+                        </div> -->
                     </th>
-                    <th>Ação</th>
+                    <th>Ações</th>
                     <th style="min-width: 5rem">
-                        <div class="flex items-center justify-between">Liberar</div>
+                        <!-- <div class="flex items-center justify-between">Liberar</div> -->
                     </th>
                 </tr>
             </ng-template>
@@ -194,7 +195,9 @@
                             <span class="text-500">{{ vehicle.attendantUserName | uppercase }}</span>
                         }
                     </td>
-                    <td><p-tag [value]="authorizationLabel(vehicle.authExitStatus)" [severity]="getSeverityAuth(vehicle.authExitStatus)" [rounded]="true" /></td>
+                    <td>
+                        <p-tag [value]="authorizationLabel(vehicle.authExitStatus)" [severity]="getSeverityAuth(vehicle.authExitStatus)" [rounded]="true" />
+                    </td>
                     <td>
                         <p-button type="button" icon="pi pi-pencil" label="Editar" [ariaLabel]="'Editar veículo ' + vehicle.vehiclePlate" [text]="true" size="small" severity="secondary" (onClick)="editVeiculo(vehicle.id)"></p-button>
                     </td>

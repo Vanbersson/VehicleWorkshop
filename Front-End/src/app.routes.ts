@@ -5,6 +5,8 @@ import { Notfound } from './app/pages/notfound/notfound';
 import { authGuard } from './app/guards/auth/auth-guard';
 
 export const appRoutes: Routes = [
+    { path: 'public/proposals/:token', title: 'Aprovação da proposta', data: { kind: 'proposals' }, loadComponent: () => import('@/app/pages/crm/approvalpage/approval.page.component') },
+    { path: 'public/orders/:token', title: 'Aprovação do pedido', data: { kind: 'orders' }, loadComponent: () => import('@/app/pages/crm/approvalpage/approval.page.component') },
     {
         path: '',
         component: AppLayout,

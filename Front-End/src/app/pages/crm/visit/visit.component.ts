@@ -18,7 +18,6 @@ import { VisitService } from '@/app/services/crm/visit/visit.service';
 import { StatusVisitEnum } from '@/app/models/crm/visit/status.visit.enum';
 import { lastValueFrom } from 'rxjs';
 import { HttpErrorResponse } from '@angular/common/http';
-import { LoadingService } from '@/app/services/loading/loading.service';
 
 @Component({
     selector: 'app-visit',
@@ -47,8 +46,7 @@ export default class VisitComponent implements OnInit {
     constructor(
         private visitService: VisitService,
         private messageService: MessageService,
-        private router: Router,
-        private loadingService: LoadingService
+        private router: Router
     ) {}
 
     ngOnInit(): void {
@@ -77,7 +75,6 @@ export default class VisitComponent implements OnInit {
     async completeScheduling(id: number): Promise<void> {
         if (this.openingId() !== null) return;
         this.openingId.set(id);
-        this.loadingService.show();
         try {
             const result = await lastValueFrom(this.visitService.visitFilterId(id));
             if (!result.body) throw new Error('O servidor não retornou os dados da visita.');
@@ -85,7 +82,6 @@ export default class VisitComponent implements OnInit {
         } catch (error: unknown) {
             this.messageService.add({ severity: 'error', summary: 'Erro ao abrir visita', detail: this.errorMessage(error, 'Não foi possível abrir a visita. Tente novamente.') });
         } finally {
-            this.loadingService.hide();
             this.openingId.set(null);
         }
     }

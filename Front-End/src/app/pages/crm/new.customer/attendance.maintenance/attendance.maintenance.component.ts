@@ -1,3 +1,7 @@
+import { AttendanceLogsComponent } from '@/app/pages/crm/new.customer/attendance.logs/attendance.logs.component';
+import { AttendancePaymentComponent } from '@/app/pages/crm/new.customer/attendance.payment/attendance.payment.component';
+import { parseAttendanceDate, serializeAttendanceDate } from '@/app/models/crm/attendance.date';
+import { InputTextModule } from 'primeng/inputtext';
 import { FilterClientComponent } from '@/app/components/filter.client/filter.client.component';
 import { ClientCompany } from '@/app/models/client.company';
 import { StatusEnabDisabEnum } from '@/app/models/status-enab-disab-enum';
@@ -10,6 +14,7 @@ import { lastValueFrom } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
 import { TagModule } from 'primeng/tag';
 import { SelectModule } from 'primeng/select';
+import { DatePickerModule } from 'primeng/datepicker';
 
 import { TextareaModule } from 'primeng/textarea';
 
@@ -32,7 +37,25 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 @Component({
     selector: 'p-attendance-maintenance',
     standalone: true,
-    imports: [CommonModule, RouterModule, ReactiveFormsModule, ButtonModule, TagModule, SelectModule, TextareaModule, SkeletonModule, ToastModule, AttendanceQuoteComponent, StepperModule, FilterClientComponent, AttendanceDocumentsComponent],
+    imports: [
+        AttendanceLogsComponent,
+        InputTextModule,
+        CommonModule,
+        RouterModule,
+        ReactiveFormsModule,
+        DatePickerModule,
+        ButtonModule,
+        TagModule,
+        SelectModule,
+        TextareaModule,
+        SkeletonModule,
+        ToastModule,
+        AttendanceQuoteComponent,
+        StepperModule,
+        FilterClientComponent,
+        AttendancePaymentComponent,
+        AttendanceDocumentsComponent
+    ],
     templateUrl: './attendance.maintenance.component.html',
     styleUrl: './attendance.maintenance.component.scss',
     providers: [MessageService]
@@ -44,6 +67,7 @@ export default class AttendanceMaintenanceComponent implements OnInit {
     readonly createError = signal('');
 
     readonly loadingSalespersons = signal(false);
+    readonly salespersonsError = signal('');
 
     readonly salespersons = signal<Salesperson[]>([]);
 
@@ -92,6 +116,8 @@ export default class AttendanceMaintenanceComponent implements OnInit {
     readonly budgetAttendance = signal<CustomerAttendance | null>(null);
 
     readonly form = new FormGroup({
+        expectedDeliveryDate: new FormControl<Date | null>(null),
+        salespersonId: new FormControl<number | null>(null, Validators.required),
         status: new FormControl(AttendanceStatus.VISIT_COMPLETED, { nonNullable: true, validators: [Validators.required] }),
         notes: new FormControl('', { nonNullable: true, validators: [Validators.maxLength(2000)] }),
         documentsNotes: new FormControl('', { nonNullable: true, validators: [Validators.maxLength(2000)] }),
@@ -105,10 +131,10 @@ export default class AttendanceMaintenanceComponent implements OnInit {
     }
 
     private resetEditForm(item: CustomerAttendance): void {
-        const status = item.status === AttendanceStatus.PAYMENT_PENDING ? AttendanceStatus.APPROVAL_PENDING : item.status;
+        const status = item.status === AttendanceStatus.APPROVAL_PENDING ? AttendanceStatus.COMMERCIAL_PROPOSAL : item.status === AttendanceStatus.DOCUMENTS_PENDING ? AttendanceStatus.QUOTATION : item.status;
         this.selectedClientId.set(item.clientId);
         this.selectedClientName.set(item.clientName);
-        this.form.reset({ status, notes: item.notes ?? '', documentsNotes: item.documentsNotes ?? '', proposalNotes: item.proposalNotes ?? '' });
+        this.form.reset({ expectedDeliveryDate: parseAttendanceDate(item.expectedDeliveryDate), salespersonId: item.salespersonId, status, notes: item.notes ?? '', documentsNotes: item.documentsNotes ?? '', proposalNotes: item.proposalNotes ?? '' });
         if (item.status === this.CANCELLED) this.form.disable({ emitEvent: false });
         else this.form.enable({ emitEvent: false });
         const index = this.workflow.findIndex((step) => step.value === status);
@@ -183,11 +209,22 @@ export default class AttendanceMaintenanceComponent implements OnInit {
         this.saveError.set('');
         try {
             const status = nextStep ? this.workflow[nextStep - 1].value : this.form.controls.status.value;
-            const result = await lastValueFrom(this.service.update({ id: item.id, version: item.version, ...this.form.getRawValue(), status, ...(this.selectedClientId() !== item.clientId ? { clientId: this.selectedClientId()! } : {}) }));
+            const result = await lastValueFrom(
+                this.service.update({
+                    id: item.id,
+                    version: item.version,
+                    ...this.form.getRawValue(),
+                    expectedDeliveryDate: serializeAttendanceDate(this.form.controls.expectedDeliveryDate.value),
+                    salespersonId: this.form.controls.salespersonId.value!,
+                    status,
+                    ...(this.selectedClientId() !== item.clientId ? { clientId: this.selectedClientId()! } : {})
+                })
+            );
             if (!result?.id) throw new Error('O servidor não confirmou a atualização.');
             this.editing.set(result);
             this.selectedClientId.set(result.clientId);
             this.selectedClientName.set(result.clientName);
+            this.form.controls.salespersonId.setValue(result.salespersonId);
             this.form.controls.status.setValue(result.status);
             this.form.markAsPristine();
             if (nextStep) this.activeEditStep.set(nextStep);
@@ -210,14 +247,17 @@ export default class AttendanceMaintenanceComponent implements OnInit {
         if (error instanceof HttpErrorResponse) return error.error?.emessage || error.error?.message || fallback;
         return error instanceof Error ? error.message : fallback;
     }
+
     constructor(
         private service: CustomerAttendanceService,
         private route: ActivatedRoute,
         private router: Router,
         private messages: MessageService,
         private proposalPrinter: AttendanceProposalPrintService
-    ) {}
+    ) { }
+
     ngOnInit(): void {
+
         this.route.paramMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
             ++this.detailRequest;
             this.editing.set(null);
@@ -227,9 +267,12 @@ export default class AttendanceMaintenanceComponent implements OnInit {
             this.isNew.set(params.get('id') === 'new');
             const id = Number(params.get('id'));
             this.attendanceId = Number.isSafeInteger(id) && id > 0 ? id : null;
+
             if (this.isNew()) void this.loadSalespersons();
-            else if (this.attendanceId) void this.loadDetail();
-            else this.detailError.set('Código de atendimento inválido.');
+            else if (this.attendanceId) {
+                void this.loadDetail();
+                void this.loadSalespersons();
+            } else this.detailError.set('Código de atendimento inválido.');
         });
     }
     async loadSalespersons(): Promise<void> {
@@ -240,11 +283,15 @@ export default class AttendanceMaintenanceComponent implements OnInit {
         this.salespersons.set([]);
         this.loadingSalespersons.set(true);
         try {
+            
             const people = await lastValueFrom(this.service.creationSalespersons());
+
             this.salespersons.set(people.filter((person) => person.status === StatusEnabDisabEnum.ENABLED));
             if (this.salespersons().length === 1) this.createForm.controls.salespersonId.setValue(this.salespersons()[0].id);
         } catch (error: unknown) {
-            this.createError.set(this.errorMessage(error, 'Não foi possível carregar os vendedores. Feche e tente novamente.'));
+            const message = this.errorMessage(error, 'Falha ao carregar vendedores. Tente novamente.');
+            if (this.isNew()) this.createError.set(message);
+            else this.salespersonsError.set(message);
         } finally {
             this.loadingSalespersons.set(false);
         }
@@ -276,6 +323,7 @@ export default class AttendanceMaintenanceComponent implements OnInit {
         this.saveError.set('');
         try {
             const detail = await lastValueFrom(this.service.detail(id));
+            console.log('Detail loaded:', detail);
             if (request !== this.detailRequest || this.destroyRef.destroyed) return;
             if (detail?.attendance?.id !== id || (detail.attendance.visitId != null && detail.visit?.id !== detail.attendance.visitId)) throw new Error('O servidor não retornou os dados de origem deste atendimento.');
             this.editing.set(detail.attendance);

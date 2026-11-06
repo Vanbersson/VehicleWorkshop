@@ -63,7 +63,7 @@
             <div class="client-selection">
                 <i class="pi pi-building" aria-hidden="true"></i><span>{{ clientName ? (clientName | uppercase) : 'Todos os clientes' }}</span>
             </div>
-            <app-filterclient [isDisabled]="loadingDashboard()" [highlighted]="true" (outputClient)="selectClientCompany.set($event)" />
+            <app-filterclient [isDisabled]="loadingDashboard()" [highlighted]="true" (outputClient)="selectClientCompanyEvent($event)" />
             @if (isSearchClient) {
                 <p-button label="Limpar filtro" icon="pi pi-filter-slash" severity="secondary" [text]="true" (onClick)="init()" [disabled]="loadingDashboard()" />
             }

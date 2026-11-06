@@ -55,8 +55,8 @@
                     <p-tab value="3">Motorista</p-tab>
                 </p-tablist>
                 <p-tabpanels>
-                    <p-tabpanel value="0"
-                        ><form [formGroup]="formVehicle" class="maintenance-form flex flex-col gap-5">
+                    <p-tabpanel value="0">
+                        <form [formGroup]="formVehicle" class="maintenance-form flex flex-col gap-5">
                             <section class="border border-surface rounded-xl p-4 sm:p-5" aria-labelledby="vehicle-identification">
                                 <div class="section-heading !mt-0 !pt-0">
                                     <i class="pi pi-car" aria-hidden="true"></i>
@@ -531,9 +531,11 @@
                                         </div>
                                     </div>
                                 </div>
-                            </section></form></p-tabpanel
-                    ><p-tabpanel value="1"
-                        ><form [formGroup]="formConcierge" class="flex flex-col gap-5">
+                            </section>
+                        </form>
+                    </p-tabpanel>
+                    <p-tabpanel value="1">
+                        <form [formGroup]="formConcierge" class="flex flex-col gap-5">
                             <section class="border border-surface rounded-xl p-4 sm:p-5" aria-labelledby="concierge-entry-title">
                                 <div class="flex items-start justify-between flex-wrap gap-3 mb-5">
                                     <div class="flex items-center gap-3">
@@ -699,9 +701,10 @@
                                     </div>
                                 }
                             </section>
-                        </form></p-tabpanel
-                    ><p-tabpanel value="2"
-                        ><form [formGroup]="formClientCompany">
+                        </form>
+                    </p-tabpanel>
+                    <p-tabpanel value="2">
+                        <form [formGroup]="formClientCompany">
                             <section class="border border-surface rounded-xl p-4 sm:p-5" aria-labelledby="owner-title">
                                 <div class="flex items-start justify-between flex-wrap gap-4 mb-5">
                                     <div class="flex items-center gap-3">
@@ -739,9 +742,10 @@
                                     </div>
                                 }
                             </section>
-                        </form></p-tabpanel
-                    ><p-tabpanel value="3"
-                        ><form [formGroup]="formDriver" class="flex flex-col gap-5">
+                        </form>
+                    </p-tabpanel>
+                    <p-tabpanel value="3">
+                        <form [formGroup]="formDriver" class="flex flex-col gap-5">
                             <section class="border border-surface rounded-xl p-4 sm:p-5" aria-labelledby="driverEntry-title">
                                 <div class="flex items-start justify-between flex-wrap gap-4 mb-5">
                                     <div class="flex items-center gap-3">
@@ -879,9 +883,9 @@
                                     <p class="text-sm text-muted-color mt-4 mb-0">Nenhum motorista de saída vinculado a este atendimento.</p>
                                 }
                             </section>
-                        </form></p-tabpanel
-                    ></p-tabpanels
-                >
+                        </form>
+                    </p-tabpanel>
+                    </p-tabpanels>
             </p-tabs>
         </section>
         <footer class="maintenance-actions">
@@ -905,17 +909,19 @@
 </div>
 <p-confirmDialog [style]="{ width: '28rem', maxWidth: '95vw' }" />
 
-<p-dialog [(visible)]="visibleVehiclePlateTogether" [modal]="true" [draggable]="false" [style]="{ width: '80rem', maxWidth: '96vw' }" [breakpoints]="{ '640px': '96vw' }"
-    ><ng-template #header
-        ><div class="flex items-center gap-3">
+<p-dialog [(visible)]="visibleVehiclePlateTogether" [modal]="true" 
+    [draggable]="false" [style]="{ width: '80rem', maxWidth: '96vw' }" 
+    [breakpoints]="{ '640px': '96vw' }">
+    <ng-template #header>
+        <div class="flex items-center gap-3">
             <span class="maintenance-icon"><i class="pi pi-link" aria-hidden="true"></i></span>
             <div>
                 <span class="maintenance-eyebrow">ENTRADA VINCULADA</span>
                 <h2 class="text-lg font-semibold m-0 mt-1">Veículos que entraram juntos</h2>
                 <p class="text-sm text-muted-color m-0 mt-1">Consulte os veículos da mesma entrada e acesse seus atendimentos.</p>
             </div>
-        </div></ng-template
-    >
+        </div>
+    </ng-template>
     <section class="border border-surface rounded-xl p-3 sm:p-4" aria-labelledby="together-list-title">
         <div class="flex items-center justify-between flex-wrap gap-3 mb-4">
             <h3 id="together-list-title" class="text-base font-semibold m-0">
@@ -936,22 +942,27 @@
             [rowsPerPageOptions]="[5, 10, 25]"
             [showCurrentPageReport]="true"
             currentPageReportTemplate="{first}–{last} de {totalRecords} veículos"
-            [globalFilterFields]="['id', 'vehiclePlate', 'modelDescription', 'vehicleFleet', 'numServiceOrder', 'clientCompanyName', 'attendantUserName', 'entryDate', 'exitDate']"
-            ><ng-template #caption
-                ><div class="flex items-center justify-between flex-wrap gap-3">
-                    <p-iconfield iconPosition="left" class="w-full sm:max-w-md"
-                        ><p-inputicon><i class="pi pi-search" aria-hidden="true"></i></p-inputicon
-                        ><input
+            [globalFilterFields]="['id', 'vehiclePlate', 'modelDescription', 'vehicleFleet', 'numServiceOrder', 'clientCompanyName', 'attendantUserName', 'entryDate', 'exitDate']">
+            <ng-template #caption>
+                <div class="flex items-center justify-between flex-wrap gap-3">
+                    <p-iconfield iconPosition="left" class="w-full sm:max-w-md">
+                        <p-inputicon>
+                            <i class="pi pi-search" aria-hidden="true"></i>
+                            </p-inputicon>
+                        <input
                             #togetherSearch
                             pInputText
                             type="search"
                             class="w-full"
                             placeholder="Buscar placa, modelo, frota ou empresa"
                             aria-label="Pesquisar veículos da mesma entrada"
-                            (input)="togetherTable.filterGlobal(togetherSearch.value, 'contains')" /></p-iconfield
-                    ><p-button type="button" icon="pi pi-filter-slash" label="Limpar filtros" [text]="true" severity="secondary" (onClick)="togetherTable.clear(); togetherSearch.value = ''" /></div></ng-template
-            ><ng-template #header
-                ><tr>
+                            (input)="togetherTable.filterGlobal(togetherSearch.value, 'contains')" />
+                    </p-iconfield>
+                    <p-button type="button" icon="pi pi-filter-slash" label="Limpar filtros" [text]="true" severity="secondary" (onClick)="togetherTable.clear(); togetherSearch.value = ''" />
+                </div>
+                </ng-template>
+            <ng-template #header>
+                <tr>
                     <th pSortableColumn="id" class="whitespace-nowrap">Código <p-sortIcon field="id" /></th>
                     <th pSortableColumn="vehiclePlate" class="whitespace-nowrap">Placa <p-sortIcon field="vehiclePlate" /></th>
                     <th pSortableColumn="modelDescription" class="whitespace-nowrap">Modelo <p-sortIcon field="modelDescription" /></th>
@@ -962,9 +973,10 @@
                     <th pSortableColumn="clientCompanyName" class="whitespace-nowrap">Empresa <p-sortIcon field="clientCompanyName" /></th>
                     <th pSortableColumn="attendantUserName" class="whitespace-nowrap">Consultor <p-sortIcon field="attendantUserName" /></th>
                     <th>Ação</th>
-                </tr></ng-template
-            ><ng-template #body let-vehicle
-                ><tr [class.bg-primary-50]="vehicle.id === formVehicle.controls.id.value" [class.dark:bg-primary-950]="vehicle.id === formVehicle.controls.id.value">
+                </tr>
+            </ng-template>
+            <ng-template #body let-vehicle>
+                <tr [class.bg-primary-50]="vehicle.id === formVehicle.controls.id.value" [class.dark:bg-primary-950]="vehicle.id === formVehicle.controls.id.value">
                     <td class="text-muted-color">#{{ vehicle.id }}</td>
                     <td>
                         <div class="flex flex-col items-start gap-1">
@@ -974,7 +986,7 @@
                                 <strong class="whitespace-nowrap">{{ vehicle.vehiclePlate | uppercase }}</strong>
                             }
                             @if (vehicle.id === formVehicle.controls.id.value) {
-                                <p-tag value="Atual" severity="secondary" [rounded]="true" />
+                                <p-tag value="Atual" severity="success" [rounded]="true" />
                             }
                         </div>
                     </td>

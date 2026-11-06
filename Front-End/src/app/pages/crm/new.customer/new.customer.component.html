@@ -23,45 +23,50 @@
     </header>
     @if (createdAttendanceId) {
         <div class="completion-note" role="status">
-            <i class="pi pi-check-circle" aria-hidden="true"></i><span>Atendimento #{{ createdAttendanceId }} criado com sucesso.</span>
+            <i class="pi pi-check-circle" aria-hidden="true"></i>
+            <span>Atendimento #{{ createdAttendanceId }} criado com sucesso.</span>
         </div>
     }
     @if (highlightedVisitId) {
         <div class="completion-note" role="status">
-            <i class="pi pi-check-circle" aria-hidden="true"></i><span>Visita #{{ highlightedVisitId }} concluída. Acompanhe o atendimento gerado abaixo.</span>
+            <i class="pi pi-check-circle" aria-hidden="true"></i>
+            <span>Visita #{{ highlightedVisitId }} concluída. Acompanhe o atendimento gerado abaixo.</span>
         </div>
     }
     <div class="flex gap-2 flex-wrap mb-5" role="group" aria-label="Tipo de consulta de atendimentos">
-        <p-button label="Não cancelados" icon="pi pi-briefcase" [outlined]="queryMode() !== 'ACTIVE'" [severity]="queryMode() === 'ACTIVE' ? 'primary' : 'secondary'" (onClick)="changeQueryMode('ACTIVE')" [disabled]="saving()" />
+        <p-button label="Em atendimento" icon="pi pi-briefcase" [outlined]="queryMode() !== 'ACTIVE'" [severity]="queryMode() === 'ACTIVE' ? 'primary' : 'secondary'" (onClick)="changeQueryMode('ACTIVE')" [disabled]="saving()" />
         <p-button label="Cancelados" icon="pi pi-ban" [outlined]="queryMode() !== 'CANCELLED'" [severity]="queryMode() === 'CANCELLED' ? 'primary' : 'secondary'" (onClick)="changeQueryMode('CANCELLED')" [disabled]="saving()" />
+        <p-button label="Concluídos" icon="pi pi-check-circle" [outlined]="queryMode() !== 'COMPLETED'" [severity]="queryMode() === 'COMPLETED' ? 'primary' : 'secondary'" (onClick)="changeQueryMode('COMPLETED')" [disabled]="saving()" />
     </div>
     <div class="stage-overview" aria-label="Resumo dos resultados por etapa">
         @for (stage of counts(); track stage.value) {
             <button type="button" class="stage-tile" [class.selected]="statusFilter() === stage.value" [attr.aria-pressed]="statusFilter() === stage.value" (click)="changeStatus(statusFilter() === stage.value ? null : stage.value)">
-                <i [class]="stage.icon" aria-hidden="true"></i><span>{{ stage.label }}</span
-                ><strong>{{ loading() ? '…' : stage.count }}</strong>
+                <i [class]="stage.icon" aria-hidden="true"></i><span>{{ stage.label }}</span>
+                <strong>{{ loading() ? '…' : stage.count }}</strong>
             </button>
         }
     </div>
     <section class="attendance-panel" aria-label="Lista de atendimentos">
-        <h2 class="text-lg font-semibold mb-4">{{ queryMode() === 'CANCELLED' ? 'Consulta de atendimentos cancelados' : 'Consulta de atendimentos não cancelados' }}</h2>
-        <form [formGroup]="queryForm" (ngSubmit)="load()" class="mb-5">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                <div><label for="queryAttendanceCode">Código do atendimento</label><p-inputnumber inputId="queryAttendanceCode" formControlName="id" [useGrouping]="false" [min]="1" [maxFractionDigits]="0" fluid /></div>
-                <div><label for="queryAttendanceClient">Cliente</label><input pInputText id="queryAttendanceClient" formControlName="clientName" maxlength="255" placeholder="Nome do cliente" class="w-full" /></div>
-                <div><label for="queryAttendanceSalesperson">Vendedor</label><input pInputText id="queryAttendanceSalesperson" formControlName="salespersonName" maxlength="255" placeholder="Nome do vendedor" class="w-full" /></div>
-            </div>
-            <div class="flex gap-2">
-                <p-button type="submit" label="Consultar" icon="pi pi-search" [loading]="loading()" [disabled]="saving()" /><p-button
-                    label="Limpar"
-                    icon="pi pi-filter-slash"
-                    severity="secondary"
-                    [text]="true"
-                    (onClick)="clearQuery()"
-                    [disabled]="saving()"
-                />
-            </div>
-        </form>
+        <h2 class="text-lg font-semibold mb-4">{{ queryMode() === 'CANCELLED' ? 'Consulta de atendimentos cancelados' : queryMode() === 'COMPLETED' ? 'Consulta de atendimentos concluídos' : '' }}</h2>
+        @if (queryMode() === 'CANCELLED' || queryMode() === 'COMPLETED') {
+            <form [formGroup]="queryForm" (ngSubmit)="load()" class="mb-5">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                    <div><label for="queryAttendanceCode">Código do atendimento</label><p-inputnumber inputId="queryAttendanceCode" formControlName="id" [useGrouping]="false" [min]="1" [maxFractionDigits]="0" fluid /></div>
+                    <div><label for="queryAttendanceClient">Cliente</label><input pInputText id="queryAttendanceClient" formControlName="clientName" maxlength="255" placeholder="Nome do cliente" class="w-full" /></div>
+                    <div><label for="queryAttendanceSalesperson">Vendedor</label><input pInputText id="queryAttendanceSalesperson" formControlName="salespersonName" maxlength="255" placeholder="Nome do vendedor" class="w-full" /></div>
+                </div>
+                <div class="flex gap-2">
+                    <p-button type="submit" label="Consultar" icon="pi pi-search" [loading]="loading()" [disabled]="saving()" /><p-button
+                        label="Limpar"
+                        icon="pi pi-filter-slash"
+                        severity="secondary"
+                        [text]="true"
+                        (onClick)="clearQuery()"
+                        [disabled]="saving()"
+                    />
+                </div>
+            </form>
+        }
         <div class="attendance-toolbar">
             @if (queryMode() === 'ACTIVE') {
                 <p-select
@@ -92,7 +97,9 @@
                 @for (item of [1, 2, 3]; track item) {
                     <div class="attendance-card">
                         <p-skeleton height="1.5rem" width="50%" />
-                        <div class="my-5"><p-skeleton height="4rem" /></div>
+                        <div class="my-5">
+                            <p-skeleton height="4rem" />
+                        </div>
                         <p-skeleton height="2rem" />
                     </div>
                 }
@@ -105,13 +112,35 @@
                             <span class="eyebrow">ATENDIMENTO #{{ item.id }}</span
                             ><p-tag [value]="stageFor(item.status).label" [icon]="stageFor(item.status).icon" [severity]="stageFor(item.status).severity" [rounded]="true" />
                         </div>
-                        <h2>{{ item.clientName | uppercase }}</h2>
+                        <h2>{{ getClientName(item.clientName) | uppercase }}</h2>
                         <div class="card-detail">
                             <i class="pi pi-user" aria-hidden="true"></i><span style="text-transform: capitalize">{{ item.salespersonName }}</span>
                         </div>
-                        <div class="card-detail">
-                            <i class="pi pi-calendar" aria-hidden="true"></i><span>{{ item.visitId ? 'Visita #' + item.visitId : 'Atendimento sem visita' }}{{ item.dateVisit ? ' · ' + (item.dateVisit | date: 'dd/MM/yyyy HH:mm') : '' }}</span>
+
+                        @let deadline = deliveryDeadline(item);
+                        <div
+                            class="flex flex-wrap items-center justify-between gap-3 rounded-xl border p-3 my-3"
+                            [ngClass]="
+                                deadline.severity === 'danger'
+                                    ? 'border-red-300 bg-red-50 dark:border-red-800 dark:bg-red-950/30'
+                                    : deadline.severity === 'warn'
+                                      ? 'border-amber-300 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/30'
+                                      : deadline.severity === 'info'
+                                        ? 'border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950/30'
+                                        : 'border-surface-200 dark:border-surface-700'
+                            "
+                        >
+                            <div class="flex items-center gap-3">
+                                <i class="pi pi-truck text-lg" aria-hidden="true"></i>
+                                <div>
+                                    <span class="block text-xs text-muted-color">Previsão de entrega</span><strong class="block text-base">{{ item.expectedDeliveryDate ? (item.expectedDeliveryDate | date: 'dd/MM/yyyy') : 'Não informada' }}</strong>
+                                </div>
+                            </div>
+                            @if (item.expectedDeliveryDate) {
+                                <p-tag [value]="deadline.label" [severity]="deadline.severity" [icon]="deadline.severity === 'danger' ? 'pi pi-exclamation-circle' : deadline.severity === 'warn' ? 'pi pi-clock' : 'pi pi-calendar'" [rounded]="true" />
+                            }
                         </div>
+
                         <div class="flex items-center justify-between gap-3 rounded-lg bg-surface-100 dark:bg-surface-800 p-3 my-3">
                             <span class="text-sm text-muted-color">Total em orçamento</span>
                             @if (item.quoteTotal != null) {
@@ -119,6 +148,10 @@
                             } @else {
                                 <span class="text-sm text-muted-color">Sem orçamento</span>
                             }
+                        </div>
+                        <div class="flex items-center justify-between gap-3 rounded-lg border border-surface-200 dark:border-surface-700 p-3 mb-3">
+                            <span class="text-sm text-muted-color"><i class="pi pi-wallet mr-2" aria-hidden="true"></i>Total dos comprovantes</span>
+                            <strong class="text-lg text-primary">{{ item.paymentTotal ?? 0 | currency: 'BRL' }}</strong>
                         </div>
                         @if (item.status === CANCELLED) {
                             <div class="rounded-lg border border-red-200 dark:border-red-900 p-3 mb-3">
@@ -133,6 +166,7 @@
                             <p class="card-notes text-muted-color">Nenhuma observação adicionada.</p>
                         }
                         <div class="card-footer">
+                            <p-attendance-logs [attendanceId]="item.id" />
                             <small class="text-muted-color">Criado em {{ item.dateCreated | date: 'dd/MM/yyyy' }}</small>
                             @if (item.status !== CANCELLED) {
                                 <p-button label="Editar" icon="pi pi-pencil" [text]="true" size="small" [routerLink]="['/crm/new/customer/maintenance', item.id]" [disabled]="saving()" [ariaLabel]="'Editar atendimento de ' + item.clientName" />
@@ -155,7 +189,15 @@
                         <div class="attendance-empty">
                             <span class="attendance-icon"><i class="pi pi-inbox" aria-hidden="true"></i></span>
                             <h2>Nenhum atendimento nesta consulta</h2>
-                            <p class="text-muted-color">{{ queryMode() === 'CANCELLED' ? 'Use código, cliente ou vendedor para localizar um atendimento cancelado.' : 'Ajuste os filtros ou clique em Novo atendimento para começar sem visita.' }}</p>
+                            <p class="text-muted-color">
+                                {{
+                                    queryMode() === 'CANCELLED'
+                                        ? 'Use código, cliente ou vendedor para localizar um atendimento cancelado.'
+                                        : queryMode() === 'COMPLETED'
+                                          ? 'Nenhum atendimento concluído encontrado para os filtros informados.'
+                                          : 'Ajuste os filtros ou clique em Novo atendimento para começar sem visita.'
+                                }}
+                            </p>
                             <p-button label="Ver visitas" icon="pi pi-arrow-right" [outlined]="true" routerLink="/crm/visit" />
                         </div>
                     }

@@ -25,6 +25,8 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class CustomerAttendanceServiceTest {
     @Mock ICustomerAttendanceRepository repository;
+    @Mock com.concierge.apiconcierge.repositories.crm.attendance.IAttendanceLogRepository logRepository;
+    @Mock com.concierge.apiconcierge.repositories.crm.attendance.IAttendanceDocumentRepository documentRepository;
     @Mock com.concierge.apiconcierge.repositories.crm.visit.ISalespersonVisitRepository visitRepository;
     @Mock com.concierge.apiconcierge.repositories.crm.attendance.IAttendanceQuoteRepository quoteRepository;
     @Mock com.concierge.apiconcierge.repositories.clientcompany.IClientCompanyRepository clientRepository;
@@ -43,7 +45,7 @@ class CustomerAttendanceServiceTest {
         var created = service.create(new com.concierge.apiconcierge.dtos.crm.attendance.AttendanceCreateDto(88, 700, " Notes "), "user");
         assertEquals(10, created.id()); assertNull(created.visitId()); assertNull(created.dateVisit());
         assertEquals(88, created.clientId()); assertEquals("Client", created.clientName());
-        assertEquals(AttendanceStatus.DOCUMENTS_PENDING, created.status()); assertEquals("Notes", created.notes());
+        assertEquals(AttendanceStatus.COMMERCIAL_PROPOSAL, created.status()); assertEquals("Notes", created.notes());
         verifyNoInteractions(visitRepository);
     }
 
@@ -293,5 +295,70 @@ class CustomerAttendanceServiceTest {
         assertEquals("Documentos", approval.documentsNotes()); assertEquals("Proposta", approval.proposalNotes()); assertNotNull(approval.approvalRequestedAt());
         var completed = service.update(new AttendanceUpdateDto(1, AttendanceStatus.COMPLETED, "", 0L), "user");
         assertNotNull(completed.completedAt()); assertEquals("Proposta", completed.proposalNotes());
+    }
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.EnumSource(value=AttendanceStatus.class, names={"PAYMENT_PENDING","INVOICING_PENDING","DELIVERY_PENDING"})
+    void savesTheNewWorkflowStages(AttendanceStatus status) {
+        CustomerAttendance a=attendance(1,700);
+        when(repository.findByCompanyIdAndResaleIdAndId(1,2,1)).thenReturn(Optional.of(a));
+        when(repository.saveAndFlush(a)).thenAnswer(invocation->{ a.setVersion(1L);return a; });
+        var result=service.update(new AttendanceUpdateDto(1,status,"Acompanhamento",0L),"user");
+        assertEquals(status,result.status());assertEquals(1L,result.version());assertNull(a.getCompletedAt());
+    }
+
+    @Test void savesAndClearsExpectedDeliveryDateWithoutTimeZoneConversion() {
+        CustomerAttendance a=attendance(1,700);
+        when(repository.findByCompanyIdAndResaleIdAndId(1,2,1)).thenReturn(Optional.of(a));
+        when(repository.saveAndFlush(a)).thenAnswer(invocation->{a.setVersion(a.getVersion()+1);return a;});
+        var date=java.time.LocalDate.of(2026,12,15);
+        var saved=service.update(new AttendanceUpdateDto(1,AttendanceStatus.QUOTATION,"",0L,null,null,null,date),"user");
+        assertEquals(date,a.getExpectedDeliveryDate());assertEquals(date,saved.expectedDeliveryDate());
+        var cleared=service.update(new AttendanceUpdateDto(1,AttendanceStatus.QUOTATION,"",1L,null,null,null,null),"user");
+        assertNull(a.getExpectedDeliveryDate());assertNull(cleared.expectedDeliveryDate());
+    }
+
+    @Test void updatesTheSalespersonIdAndNameWhenReassignmentIsPermitted() {
+        var a=attendance(1,700);when(repository.findByCompanyIdAndResaleIdAndId(1,2,1)).thenReturn(Optional.of(a));
+        doReturn(null).when(permissionRepository).findPermissionId(1,2,9,400);
+        doReturn(new PermissionUser()).when(permissionRepository).findPermissionId(1,2,9,402);
+        var seller=new Salesperson();seller.setId(701);seller.setName("Novo vendedor");seller.setStatus(StatusEnableDisable.Habilitado);
+        when(salespersonRepository.findByCompanyIdAndResaleIdAndId(1,2,701)).thenReturn(seller);
+        when(repository.saveAndFlush(a)).thenReturn(a);
+        var response=service.update(new AttendanceUpdateDto(1,AttendanceStatus.COMMERCIAL_PROPOSAL,"",0L,null,null,null,null,701),"user");
+        assertEquals(701,a.getSalespersonId());assertEquals("Novo vendedor",a.getSalespersonName());assertEquals(701,response.salespersonId());assertEquals("Novo vendedor",response.salespersonName());
+    }
+    @Test void rejectsSalespersonReassignmentWithoutPermission() {
+        var a=attendance(1,700);when(repository.findByCompanyIdAndResaleIdAndId(1,2,1)).thenReturn(Optional.of(a));
+        assertThrows(BusinessException.class,()->service.update(new AttendanceUpdateDto(1,AttendanceStatus.COMMERCIAL_PROPOSAL,"",0L,null,null,null,null,701),"user"));
+        assertEquals(700,a.getSalespersonId());verify(repository,never()).saveAndFlush(any());
+    }
+    @Test void rejectsDisabledOrOutOfScopeSalesperson() {
+        var a=attendance(1,700);when(repository.findByCompanyIdAndResaleIdAndId(1,2,1)).thenReturn(Optional.of(a));doReturn(null).when(permissionRepository).findPermissionId(1,2,9,400);
+        doReturn(new PermissionUser()).when(permissionRepository).findPermissionId(1,2,9,402);
+        var request=new AttendanceUpdateDto(1,AttendanceStatus.COMMERCIAL_PROPOSAL,"",0L,null,null,null,null,701);
+        assertThrows(BusinessException.class,()->service.update(request,"user"));
+        var seller=new Salesperson();seller.setId(701);seller.setStatus(StatusEnableDisable.Desabilitado);when(salespersonRepository.findByCompanyIdAndResaleIdAndId(1,2,701)).thenReturn(seller);
+        assertThrows(BusinessException.class,()->service.update(request,"user"));assertEquals(700,a.getSalespersonId());verify(repository,never()).saveAndFlush(any());
+    }
+
+
+    @Test void listsPaymentTotalsForAuthorizedAttendancesAndDefaultsToZero() {
+        when(repository.search(eq(1), eq(2), nullable(Integer.class), eq(AttendanceStatus.CANCELLED), eq(false), nullable(Integer.class), eq(""), eq(""))).thenReturn(List.of(attendance(1,700),attendance(2,700)));
+        when(documentRepository.findReceiptTotals(List.of(1,2), AttendanceDocumentStage.PAYMENT)).thenReturn(List.of(new com.concierge.apiconcierge.dtos.crm.attendance.QuoteTotalDto(1,new java.math.BigDecimal("125.50"))));
+        var result=service.list("user");
+        assertEquals(new java.math.BigDecimal("125.50"),result.get(0).paymentTotal());
+        assertEquals(java.math.BigDecimal.ZERO,result.get(1).paymentTotal());
+        verify(documentRepository).findReceiptTotals(List.of(1,2),AttendanceDocumentStage.PAYMENT);
+    }
+
+    @Test void readsLogsOnlyAfterAttendanceAuthorization() {
+        var a=attendance(1,700);a.setCompanyId(1);a.setResaleId(2);when(repository.findByCompanyIdAndResaleIdAndId(1,2,1)).thenReturn(Optional.of(a));
+        var log=new AttendanceLog();log.setId(5L);log.setUserName("Operador");log.setAction(AttendanceLogAction.DOCUMENT_REMOVED);log.setFileName("proposta.pdf");
+        when(logRepository.findByCompanyIdAndResaleIdAndAttendanceIdOrderByOccurredAtDescIdDesc(1,2,1)).thenReturn(List.of(log));
+        var entries=service.logs(1,"user");assertEquals(1,entries.size());assertEquals("proposta.pdf",entries.get(0).fileName());assertEquals("Operador",entries.get(0).userName());
+    }
+    @Test void refusesLogsForAnotherSalesperson() {
+        when(repository.findByCompanyIdAndResaleIdAndId(1,2,1)).thenReturn(Optional.of(attendance(1,701)));
+        assertThrows(BusinessException.class,()->service.logs(1,"user"));verifyNoInteractions(logRepository);
     }
 }

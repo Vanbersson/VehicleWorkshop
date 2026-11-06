@@ -1,0 +1,51 @@
+<p-button label="Histórico" icon="pi pi-history" severity="secondary" [text]="true" size="small" (onClick)="open()" [ariaLabel]="'Ver histórico do atendimento ' + attendanceId" />
+<p-dialog [header]="'Histórico do atendimento #' + attendanceId" [(visible)]="visible" [modal]="true" [draggable]="false" [style]="{ width: '46rem', maxWidth: '95vw' }" appendTo="body" (onHide)="close()">
+    <p class="text-muted-color mt-0">Acompanhe as alterações registradas, da mais recente para a mais antiga.</p>
+    @if (loading()) {
+        <p role="status"><i class="pi pi-spin pi-spinner" aria-hidden="true"></i> Carregando histórico...</p>
+    } @else if (error()) {
+        <div role="alert">
+            <p class="text-red-600">{{ error() }}</p>
+            <p-button label="Tentar novamente" icon="pi pi-refresh" [text]="true" (onClick)="open()" />
+        </div>
+    } @else {
+        <ol class="log-list">
+            @for (entry of entries(); track entry.id) {
+                <li>
+                    <span class="event-icon" [class.removed]="entry.action === 'DOCUMENT_REMOVED'"><i class="pi" [ngClass]="entry.action === 'DOCUMENT_REMOVED' ? 'pi-trash' : 'pi-file-plus'" aria-hidden="true"></i></span>
+                    <div class="event-content">
+                        <div class="event-heading">
+                            <strong>{{ actionLabel(entry.action) }}</strong
+                            ><time [attr.datetime]="entry.occurredAt">{{ entry.occurredAt | date: 'dd/MM/yyyy HH:mm:ss' }}</time>
+                        </div>
+                        <span class="stage">{{ stageLabel(entry.stage) }}</span>
+                        @if (entry.fileName) {
+                            <p class="filename">{{ entry.fileName }}</p>
+                        }
+                        @if (entry.action === 'RECEIPT_AMOUNT_CHANGED') {
+                            <p class="text-sm">
+                                Valor anterior: <strong>{{ entry.previousAmount != null ? (entry.previousAmount | currency: 'BRL') : 'Não informado' }}</strong
+                                ><br />Novo valor: <strong>{{ entry.newAmount | currency: 'BRL' }}</strong>
+                            </p>
+                        } @else if (entry.stage === 'PAYMENT_PENDING') {
+                            <p class="text-sm">
+                                Valor do comprovante: <strong>{{ entry.newAmount ?? entry.previousAmount | currency: 'BRL' }}</strong>
+                            </p>
+                        }
+                        <small
+                            ><i class="pi pi-user" aria-hidden="true"></i>
+                            @if (entry.clientId != null) {
+                                Cliente: {{ entry.clientName || 'Cliente #' + entry.clientId }}
+                            } @else {
+                                {{ entry.userName || 'Usuário #' + entry.userId }}
+                            }
+                        </small>
+                    </div>
+                </li>
+            } @empty {
+                <li class="empty"><i class="pi pi-history" aria-hidden="true"></i><strong>Nenhum registro de alteração</strong><span>As próximas ações registradas neste atendimento aparecerão aqui.</span></li>
+            }
+        </ol>
+    }
+    <ng-template #footer><p-button label="Fechar" severity="secondary" (onClick)="close()" /></ng-template>
+</p-dialog>

@@ -6,6 +6,9 @@
             <h1>{{ isNew() ? 'Novo atendimento' : (readOnly() ? 'Consultar atendimento #' : 'Atendimento #') + (editing()?.id ?? '') }}</h1>
             <p class="text-muted-color">{{ isNew() ? 'Selecione o cliente e o vendedor para iniciar.' : 'Acompanhe e atualize as etapas do atendimento.' }}</p>
         </div>
+        @if (editing()?.id) {
+            <p-attendance-logs [attendanceId]="editing()!.id" />
+        }
         <p-button label="Voltar aos atendimentos" icon="pi pi-arrow-left" severity="secondary" [outlined]="true" routerLink="/crm/new/customer" [disabled]="saving()" />
     </header>
     <section class="attendance-panel">
@@ -72,11 +75,6 @@
                     <div>
                         <span class="text-sm text-muted-color">Cliente</span><strong class="block break-words">{{ selectedClientName() | uppercase }}</strong
                         ><small class="text-muted-color">{{ selectedClientId() ? 'Código ' + selectedClientId() : 'Cliente sem cadastro' }}</small>
-                        @if (!readOnly()) {
-                            <div class="mt-2">
-                                <app-filterclient buttonLabel="Selecionar empresa" [highlighted]="true" [isDisabled]="saving() || loadingDetail()" (outputClient)="selectAttendanceClient($event)" />
-                            </div>
-                        }
                     </div>
                     <div>
                         <span class="text-sm text-muted-color">Vendedor responsável</span><strong class="block">{{ editing()?.salespersonName | uppercase }}</strong
@@ -111,8 +109,7 @@
                                                 [disabled]="saving()"
                                                 (click)="selectEditStep(value)"
                                             >
-                                                <span class="p-step-number"><i [class]="flow.icon" aria-hidden="true"></i></span
-                                                ><span class="text-sm font-medium" [class.text-primary]="active">{{ index === 0 && !originVisit() ? 'Origem' : flow.label }}</span>
+                                                <span class="p-step-number"><i [class]="flow.icon" aria-hidden="true"></i></span><span class="text-sm font-medium" [class.text-primary]="active">{{ flow.label }}</span>
                                             </button>
                                         </ng-template>
                                     </p-step>
@@ -121,7 +118,10 @@
                             <p-step-panels>
                                 @for (flow of workflow; track flow.value; let index = $index) {
                                     <p-step-panel [value]="index + 1"
-                                        ><ng-template #content><ng-container [ngTemplateOutlet]="attendanceStepContent" /></ng-template
+                                        ><ng-template #content>
+                                            @if (activeEditStep() === index + 1) {
+                                                <ng-container [ngTemplateOutlet]="attendanceStepContent" />
+                                            }</ng-template
                                     ></p-step-panel>
                                 }
                             </p-step-panels>
@@ -200,61 +200,148 @@
                                         }
                                     }
                                     @case (2) {
-                                        <h2 class="text-xl font-semibold mb-3">Documentos</h2>
-                                        <p class="text-muted-color mb-5">Confira os documentos do cliente e registre as pendências ou conferências realizadas.</p>
-                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
+                                        <div class="proposal-intro">
                                             <div>
-                                                <label>CNPJ informado na visita</label>
-                                                <p>{{ originVisit()?.clientCNPJ || 'Não informado' }}</p>
+                                                <span class="eyebrow">ETAPA COMERCIAL</span>
+                                                <h2>Proposta</h2>
+                                                <p class="text-muted-color m-0">Confira os responsáveis, prepare o orçamento e anexe o documento da proposta.</p>
                                             </div>
-                                            <div>
-                                                <label>CPF informado na visita</label>
-                                                <p>{{ originVisit()?.clientCPF || 'Não informado' }}</p>
-                                            </div>
+                                            <span class="proposal-hint"><i class="pi pi-save" aria-hidden="true"></i> Confirme os dados em Salvar etapa</span>
                                         </div>
-                                        <p-attendance-documents [attendance]="editing()" />
-                                        <label for="attendanceDocuments" class="mt-5 block">Observações sobre os documentos</label
-                                        ><textarea pTextarea id="attendanceDocuments" formControlName="documentsNotes" rows="6" maxlength="2000" fluid></textarea
-                                        ><small class="text-muted-color">{{ form.controls.documentsNotes.value.length }}/2000 caracteres</small>
+                                        <div class="proposal-layout">
+                                            <div class="proposal-main">
+                                                <section class="proposal-card" aria-labelledby="proposalPeopleTitle">
+                                                    <div class="proposal-card-heading">
+                                                        <span class="proposal-icon"><i class="pi pi-users" aria-hidden="true"></i></span>
+                                                        <div>
+                                                            <h3 id="proposalPeopleTitle">Cliente e vendedor</h3>
+                                                            <p>Dados comerciais deste atendimento</p>
+                                                        </div>
+                                                    </div>
+                                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                                        <div class="min-w-0">
+                                                            <label>Cliente *</label>
+                                                            <div class="proposal-client">
+                                                                <strong>{{ selectedClientName() || 'Selecione um cliente' }}</strong
+                                                                ><small class="text-muted-color">{{ selectedClientId() ? 'Código ' + selectedClientId() : 'Cliente sem cadastro' }}</small>
+                                                            </div>
+                                                            @if (!readOnly()) {
+                                                                <app-filterclient buttonLabel="Alterar cliente" [highlighted]="true" [isDisabled]="saving()" (outputClient)="selectAttendanceClient($event)" />
+                                                            }
+                                                        </div>
+                                                        <div class="min-w-0">
+                                                            <label for="proposalSalesperson">Vendedor responsável *</label>
+                                                            <p-select
+                                                                inputId="proposalSalesperson"
+                                                                [options]="salespersons()"
+                                                                optionLabel="name"
+                                                                optionValue="id"
+                                                                formControlName="salespersonId"
+                                                                [filter]="true"
+                                                                filterBy="name"
+                                                                appendTo="body"
+                                                                [loading]="loadingSalespersons()"
+                                                                [readonly]="saving() || loadingSalespersons()"
+                                                                fluid
+                                                            />
+                                                            @if (salespersonsError()) {
+                                                                <p role="alert" class="attendance-error">{{ salespersonsError() }}</p>
+                                                                <p-button label="Recarregar vendedores" (onClick)="loadSalespersons()" />
+                                                            }
+                                                        </div>
+                                                    </div>
+                                                </section>
+                                                <section class="proposal-card" aria-label="Documento da proposta">
+                                                    <p-attendance-documents [attendance]="editing()" stage="PROPOSAL" />
+                                                </section>
+                                            </div>
+                                            <aside class="proposal-card proposal-budget" aria-labelledby="proposalBudgetTitle">
+                                                <div class="proposal-card-heading">
+                                                    <span class="proposal-icon"><i class="pi pi-calculator" aria-hidden="true"></i></span>
+                                                    <div>
+                                                        <h3 id="proposalBudgetTitle">Orçamento</h3>
+                                                        <p>Produtos e condições comerciais</p>
+                                                    </div>
+                                                </div>
+                                                <div class="proposal-total">
+                                                    <span class="text-muted-color">Total do orçamento</span><strong>{{ editing()?.quoteTotal != null ? (editing()?.quoteTotal | currency: 'BRL') : '—' }}</strong
+                                                    ><small class="text-muted-color">{{ editing()?.quoteTotal != null ? 'Orçamento salvo no atendimento' : 'Nenhum orçamento salvo' }}</small>
+                                                </div>
+                                                <p class="text-muted-color text-sm mb-5">Consulte ou ajuste os produtos, quantidades, preços e descontos da proposta.</p>
+                                                <p-button [label]="readOnly() ? 'Consultar orçamento' : 'Abrir orçamento'" icon="pi pi-file-edit" (onClick)="openEditingBudget()" [disabled]="saving()" styleClass="w-full" />
+                                            </aside>
+                                        </div>
                                     }
                                     @case (3) {
-                                        <h2 class="text-xl font-semibold mb-3">Proposta comercial</h2>
-                                        <p class="text-muted-color mb-5">Registre as condições comerciais combinadas com o cliente.</p>
-                                        <label for="attendanceProposal">Descrição da proposta</label
-                                        ><textarea pTextarea id="attendanceProposal" formControlName="proposalNotes" rows="7" maxlength="2000" placeholder="Escopo, condições, prazos e detalhes comerciais" fluid></textarea
-                                        ><small class="text-muted-color">{{ form.controls.proposalNotes.value.length }}/2000 caracteres</small>
-                                        @if (!readOnly()) {
-                                            <div class="mt-4">
-                                                <p-button label="Imprimir proposta" icon="pi pi-print" severity="secondary" [outlined]="true" (onClick)="printProposal()" [disabled]="saving() || !form.controls.proposalNotes.value.trim()" />
+                                        <div class="proposal-intro">
+                                            <div>
+                                                <span class="eyebrow">ACOMPANHAMENTO DO PEDIDO</span>
+                                                <h2>Pedido</h2>
+                                                <p class="text-muted-color m-0">Organize os documentos, acompanhe a assinatura e informe o prazo de entrega.</p>
                                             </div>
-                                        }
+                                            <span class="proposal-hint">
+                                                <i class="pi pi-save" aria-hidden="true"></i>
+                                                Salve a etapa para confirmar as alterações
+                                            </span>
+                                        </div>
+                                        <div class="proposal-layout">
+                                            <section class="proposal-card" aria-label="Documentos e aprovação do pedido">
+                                                <p-attendance-documents [attendance]="editing()" stage="DOCUMENTS" />
+                                            </section>
+                                            <div class="proposal-main">
+                                                <section class="proposal-card" aria-labelledby="orderDeliveryTitle">
+                                                    <div class="proposal-card-heading">
+                                                        <span class="proposal-icon">
+                                                            <i class="pi pi-truck" aria-hidden="true"></i>
+                                                        </span>
+                                                        <div>
+                                                            <h3 id="orderDeliveryTitle">Previsão de entrega</h3>
+                                                            <p>Prazo informado para este pedido</p>
+                                                        </div>
+                                                    </div>
+                                                    <label for="expectedDeliveryDate">Data prevista</label>
+                                                    <p-datepicker
+                                                        inputId="expectedDeliveryDate"
+                                                        formControlName="expectedDeliveryDate"
+                                                        dateFormat="dd/mm/yy"
+                                                        placeholder="Selecione a data"
+                                                        [showIcon]="true"
+                                                        [showButtonBar]="true"
+                                                        [readonlyInput]="true"
+                                                        [disabled]="saving() || readOnly()"
+                                                        appendTo="body"
+                                                        fluid
+                                                    />
+                                                    <p id="orderDeliveryHelp" class="text-sm text-muted-color mt-3 mb-0">Informe a data combinada para a entrega e confirme em Salvar etapa.</p>
+                                                </section>
+                                                <section class="proposal-card" aria-labelledby="orderTotalTitle">
+                                                    <div class="proposal-card-heading">
+                                                        <span class="proposal-icon"><i class="pi pi-shopping-cart" aria-hidden="true"></i></span>
+                                                        <div>
+                                                            <h3 id="orderTotalTitle">Resumo do pedido</h3>
+                                                            <p>Valor definido na proposta</p>
+                                                        </div>
+                                                    </div>
+                                                    <div class="proposal-total">
+                                                        <span class="text-muted-color">Total do pedido</span><strong>{{ editing()?.quoteTotal != null ? (editing()?.quoteTotal | currency: 'BRL') : '—' }}</strong
+                                                        ><small class="text-muted-color">{{ editing()?.quoteTotal != null ? 'Orçamento vinculado ao atendimento' : 'Nenhum orçamento salvo' }}</small>
+                                                    </div>
+                                                </section>
+                                            </div>
+                                        </div>
                                     }
                                     @case (4) {
-                                        <h2 class="text-xl font-semibold mb-3">Orçamento do atendimento</h2>
-                                        <p class="text-muted-color mb-5">Consulte ou edite os produtos, quantidades, preços e descontos do orçamento.</p>
-                                        <div class="rounded-xl bg-surface-100 dark:bg-surface-800 p-5 mb-5">
-                                            <span class="text-muted-color block">Total em orçamento</span
-                                            ><strong class="block text-2xl text-primary mt-2">{{ editing()?.quoteTotal != null ? (editing()?.quoteTotal | currency: 'BRL') : 'Sem orçamento salvo' }}</strong>
-                                        </div>
-                                        <p-button [label]="readOnly() ? 'Consultar orçamento' : 'Abrir orçamento'" icon="pi pi-file-edit" (onClick)="openEditingBudget()" [disabled]="saving()" />
+                                        <section class="proposal-card"><p-attendance-payment [attendance]="editing()" /></section>
                                     }
                                     @case (5) {
-                                        <h2 class="text-xl font-semibold mb-3">Enviar para aprovação</h2>
-                                        <p class="text-muted-color mb-5">{{ readOnly() ? 'Histórico da solicitação de aprovação deste atendimento.' : 'Ao salvar esta etapa, o atendimento ficará marcado como aguardando aprovação.' }}</p>
-                                        @if (!readOnly()) {
-                                            <p-tag value="Aguardando aprovação" severity="warn" icon="pi pi-clock" />
-                                        }
-                                        <p class="mt-5 text-muted-color">
-                                            {{
-                                                editing()?.approvalRequestedAt
-                                                    ? 'Última solicitação: ' + (editing()?.approvalRequestedAt | date: 'dd/MM/yyyy HH:mm')
-                                                    : readOnly()
-                                                      ? 'Nenhuma solicitação de aprovação registrada.'
-                                                      : 'A solicitação será registrada ao salvar esta etapa.'
-                                            }}
-                                        </p>
+                                        <h2 class="text-xl font-semibold mb-3">Faturamento</h2>
+                                        <p class="text-muted-color">Acompanhe o faturamento do pedido e registre os detalhes nas observações gerais.</p>
                                     }
                                     @case (6) {
+                                        <h2 class="text-xl font-semibold mb-3">Entrega</h2>
+                                        <p class="text-muted-color">Acompanhe a entrega do pedido e registre os detalhes nas observações gerais.</p>
+                                    }
+                                    @case (7) {
                                         <h2 class="text-xl font-semibold mb-3">Concluir atendimento</h2>
                                         <p class="text-muted-color mb-5">{{ readOnly() ? 'Informações registradas antes do cancelamento.' : 'Confira as informações e salve para marcar o atendimento como concluído.' }}</p>
                                         <dl class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -275,10 +362,12 @@
                                 }
                             </div>
                         </ng-template>
-                        <div>
-                            <label for="attendanceNotes">Observações gerais do atendimento</label><textarea pTextarea id="attendanceNotes" formControlName="notes" rows="3" maxlength="2000" fluid></textarea
-                            ><small class="text-muted-color">{{ form.controls.notes.value.length }}/2000 caracteres</small>
-                        </div>
+                        @if (activeEditStep() !== 3) {
+                            <div>
+                                <label for="attendanceNotes">Observações gerais do atendimento</label><textarea pTextarea id="attendanceNotes" formControlName="notes" rows="3" maxlength="2000" fluid></textarea
+                                ><small class="text-muted-color">{{ form.controls.notes.value.length }}/2000 caracteres</small>
+                            </div>
+                        }
                         @if (saveError()) {
                             <p class="attendance-error" role="alert">{{ saveError() }}</p>
                         }
@@ -291,7 +380,7 @@
                     @if (activeEditStep() < workflow.length) {
                         <p-button label="Salvar e avançar" icon="pi pi-arrow-right" severity="secondary" [outlined]="true" (onClick)="save(false, activeEditStep() + 1)" [disabled]="saving()" />
                     }
-                    <p-button [label]="activeEditStep() === 5 ? 'Marcar como aguardando aprovação' : activeEditStep() === 6 ? 'Concluir atendimento' : 'Salvar etapa'" icon="pi pi-check" (onClick)="save(activeEditStep() >= 5)" [loading]="saving()" />
+                    <p-button [label]="activeEditStep() === workflow.length ? 'Concluir atendimento' : 'Salvar etapa'" icon="pi pi-check" (onClick)="save(activeEditStep() === workflow.length)" [loading]="saving()" />
                 }
             </footer>
         }

@@ -1,3 +1,4 @@
+import { AttendanceLog } from '@/app/models/crm/attendance.log';
 import { inject, Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
@@ -6,13 +7,17 @@ import { StorageService } from '@/app/services/storage/storage.service';
 import { environment } from '@/environments/environment';
 import { AttendanceQuoteResponse, AttendanceQuoteSave } from '@/app/models/crm/attendance.quote';
 import { AttendanceDetail } from '@/app/models/crm/attendance.detail';
-import { AttendanceDocument } from '@/app/models/crm/attendance.document';
+import { AttendanceDocument, AttendanceDocumentStage, AttendanceDocumentShare } from '@/app/models/crm/attendance.document';
 import { Salesperson } from '@/app/models/crm/salesperson';
 
 @Injectable({ providedIn: 'root' })
 export class CustomerAttendanceService {
     private readonly http = inject(HttpClient);
     private readonly storage = inject(StorageService);
+
+    logs(id: number): Observable<AttendanceLog[]> {
+        return this.http.get<AttendanceLog[]>(`${environment.apiuUrl}/crm/customer-attendance/${id}/logs`, { headers: this.headers() });
+    }
 
     list(): Observable<CustomerAttendance[]> {
         return this.http.get<CustomerAttendance[]>(`${environment.apiuUrl}/crm/customer-attendance`, { headers: this.headers() });
@@ -55,14 +60,54 @@ export class CustomerAttendanceService {
         return this.http.post<AttendanceQuoteResponse>(`${environment.apiuUrl}/crm/customer-attendance/quote`, data, { headers: this.headers() });
     }
 
-    documents(attendanceId: number): Observable<AttendanceDocument[]> {
-        return this.http.get<AttendanceDocument[]>(`${environment.apiuUrl}/crm/customer-attendance/${attendanceId}/documents`, { headers: this.headers() });
+    documents(attendanceId: number, stage: AttendanceDocumentStage = 'DOCUMENTS'): Observable<AttendanceDocument[]> {
+        return this.http.get<AttendanceDocument[]>(`${environment.apiuUrl}/crm/customer-attendance/${attendanceId}/documents`, { headers: this.headers(), params: { stage } });
     }
 
-    uploadDocument(attendanceId: number, file: File): Observable<AttendanceDocument> {
+    uploadDocument(attendanceId: number, file: File, stage: AttendanceDocumentStage = 'DOCUMENTS'): Observable<AttendanceDocument> {
         const data = new FormData();
         data.append('file', file);
+        data.append('stage', stage);
         return this.http.post<AttendanceDocument>(`${environment.apiuUrl}/crm/customer-attendance/${attendanceId}/documents`, data, { headers: this.headers() });
+    }
+
+    uploadPaymentReceipt(attendanceId: number, file: File, receiptAmount: number): Observable<AttendanceDocument> {
+        const data = new FormData();
+        data.append('file', file);
+        data.append('stage', 'PAYMENT');
+        data.append('receiptAmount', receiptAmount.toFixed(2));
+        return this.http.post<AttendanceDocument>(`${environment.apiuUrl}/crm/customer-attendance/${attendanceId}/documents`, data, { headers: this.headers() });
+    }
+    
+    updatePaymentReceiptValue(attendanceId: number, documentId: number, receiptAmount: number): Observable<AttendanceDocument> {
+        return this.http.post<AttendanceDocument>(`${environment.apiuUrl}/crm/customer-attendance/${attendanceId}/documents/${documentId}/payment-value`, { receiptAmount }, { headers: this.headers() });
+    }
+
+    shareOrderDocument(attendanceId: number, documentId: number): Observable<AttendanceDocumentShare> {
+        return this.http.post<AttendanceDocumentShare>(`${environment.apiuUrl}/crm/customer-attendance/${attendanceId}/documents/${documentId}/order-share`, {}, { headers: this.headers() });
+    }
+
+    shareProposalDocument(attendanceId: number, documentId: number): Observable<AttendanceDocumentShare> {
+        return this.http.post<AttendanceDocumentShare>(`${environment.apiuUrl}/crm/customer-attendance/${attendanceId}/documents/${documentId}/share`, {}, { headers: this.headers() });
+    }
+
+    removePaymentReceipt(attendanceId: number, documentId: number): Observable<void> {
+        return this.http.post<void>(`${environment.apiuUrl}/crm/customer-attendance/${attendanceId}/documents/${documentId}/payment-remove`, {}, { headers: this.headers() });
+    }
+    removeOrderDocument(attendanceId: number, documentId: number): Observable<void> {
+        return this.http.post<void>(`${environment.apiuUrl}/crm/customer-attendance/${attendanceId}/documents/${documentId}/order-remove`, null, { headers: this.headers() });
+    }
+
+    removeProposalDocument(attendanceId: number, documentId: number): Observable<void> {
+        return this.http.post<void>(`${environment.apiuUrl}/crm/customer-attendance/${attendanceId}/documents/${documentId}/remove`, null, { headers: this.headers() });
+    }
+
+    downloadSignedOrder(attendanceId: number, documentId: number): Observable<Blob> {
+        return this.http.get(`${environment.apiuUrl}/crm/customer-attendance/${attendanceId}/documents/${documentId}/order-signed`, { headers: this.headers(), responseType: 'blob' });
+    }
+
+    downloadSignedProposal(attendanceId: number, documentId: number): Observable<Blob> {
+        return this.http.get(`${environment.apiuUrl}/crm/customer-attendance/${attendanceId}/documents/${documentId}/signed`, { headers: this.headers(), responseType: 'blob' });
     }
 
     downloadDocument(attendanceId: number, documentId: number): Observable<Blob> {

@@ -1,4 +1,6 @@
-import { Component, OnInit, computed, signal } from '@angular/core';
+import { AttendanceLogsComponent } from '@/app/pages/crm/new.customer/attendance.logs/attendance.logs.component';
+import { attendanceDeliveryDeadline } from '@/app/models/crm/attendance.date';
+import { Component, OnInit, computed, signal, DestroyRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { FormControl, FormGroup, ReactiveFormsModule, FormsModule, Validators } from '@angular/forms';
@@ -24,12 +26,35 @@ import { AttendanceQueryMode } from '@/app/models/crm/customer.attendance';
 @Component({
     selector: 'p-customer-attendance',
     standalone: true,
-    imports: [CommonModule, RouterModule, ReactiveFormsModule, FormsModule, ButtonModule, TagModule, SelectModule, DialogModule, InputTextModule, TextareaModule, PaginatorModule, SkeletonModule, ToastModule, InputNumberModule],
+    imports: [
+        AttendanceLogsComponent,
+        CommonModule,
+        RouterModule,
+        ReactiveFormsModule,
+        FormsModule,
+        ButtonModule,
+        TagModule,
+        SelectModule,
+        DialogModule,
+        InputTextModule,
+        TextareaModule,
+        PaginatorModule,
+        SkeletonModule,
+        ToastModule,
+        InputNumberModule
+    ],
     templateUrl: './new.customer.component.html',
     styleUrl: './new.customer.component.scss',
     providers: [MessageService]
 })
 export default class NewCustomerComponent implements OnInit {
+    private readonly destroyRef = inject(DestroyRef);
+    readonly currentDate = signal(new Date());
+    deliveryDeadline(item: CustomerAttendance) {
+        if (item.status === AttendanceStatus.COMPLETED || item.status === AttendanceStatus.CANCELLED) return { severity: 'secondary' as const, label: item.status === AttendanceStatus.COMPLETED ? 'Concluído' : 'Cancelado' };
+        return attendanceDeliveryDeadline(item.expectedDeliveryDate, this.currentDate());
+    }
+
     readonly stages = ATTENDANCE_STAGES;
 
     readonly CANCELLED = AttendanceStatus.CANCELLED;
@@ -50,7 +75,7 @@ export default class NewCustomerComponent implements OnInit {
 
     readonly loadError = signal('');
 
-    readonly queryMode = signal<AttendanceQueryMode>('ACTIVE');
+    readonly queryMode = signal<AttendanceQueryMode | 'COMPLETED'>('ACTIVE');
 
     readonly queryError = signal('');
 
@@ -63,11 +88,7 @@ export default class NewCustomerComponent implements OnInit {
     });
 
     readonly queryStages = computed(() =>
-        this.stages.filter(
-            (stage) =>
-                (stage.value !== AttendanceStatus.PAYMENT_PENDING || this.items().some((item) => item.status === AttendanceStatus.PAYMENT_PENDING)) &&
-                (this.queryMode() === 'CANCELLED' ? stage.value === this.CANCELLED : stage.value !== this.CANCELLED)
-        )
+        this.stages.filter((stage) => (![AttendanceStatus.APPROVAL_PENDING, AttendanceStatus.DOCUMENTS_PENDING].includes(stage.value) || this.items().some((item) => item.status === stage.value)) && this.matchesQueryMode(stage.value))
     );
 
     readonly statusFilter = signal<AttendanceStatus | null>(null);
@@ -79,7 +100,7 @@ export default class NewCustomerComponent implements OnInit {
 
     readonly filteredItems = computed(() => {
         return this.items()
-            .filter((item) => (this.queryMode() === 'CANCELLED' ? item.status === this.CANCELLED : item.status !== this.CANCELLED) && (!this.statusFilter() || item.status === this.statusFilter()))
+            .filter((item) => this.matchesQueryMode(item.status) && (!this.statusFilter() || item.status === this.statusFilter()))
             .sort((a, b) => Number(b.visitId === this.highlightedVisitId) - Number(a.visitId === this.highlightedVisitId) || new Date(b.dateCreated).getTime() - new Date(a.dateCreated).getTime());
     });
 
@@ -109,7 +130,7 @@ export default class NewCustomerComponent implements OnInit {
         this.loading.set(true);
         this.loadError.set('');
         try {
-            const result = await lastValueFrom(hasFilters ? this.service.search(mode, filters) : this.service.list());
+            const result = await lastValueFrom(hasFilters ? this.service.search(mode === 'COMPLETED' ? 'ACTIVE' : mode, filters) : this.service.list());
             if (request === this.queryRequest) {
                 this.items.set(result);
                 this.first.set(0);
@@ -121,7 +142,13 @@ export default class NewCustomerComponent implements OnInit {
         }
     }
 
-    changeQueryMode(mode: AttendanceQueryMode): void {
+    private matchesQueryMode(status: AttendanceStatus): boolean {
+        if (this.queryMode() === 'CANCELLED') return status === AttendanceStatus.CANCELLED;
+        if (this.queryMode() === 'COMPLETED') return status === AttendanceStatus.COMPLETED;
+        return status !== AttendanceStatus.CANCELLED && status !== AttendanceStatus.COMPLETED;
+    }
+
+    changeQueryMode(mode: AttendanceQueryMode | 'COMPLETED'): void {
         if (this.saving() || mode === this.queryMode()) return;
         ++this.queryRequest;
         this.queryMode.set(mode);
@@ -132,7 +159,7 @@ export default class NewCustomerComponent implements OnInit {
         this.statusFilter.set(null);
         this.first.set(0);
         this.queryForm.reset({ id: null, clientName: '', salespersonName: '' });
-        if (mode === 'ACTIVE') void this.load();
+        if (mode !== 'CANCELLED') void this.load();
     }
 
     clearQuery(): void {
@@ -144,7 +171,7 @@ export default class NewCustomerComponent implements OnInit {
         this.statusFilter.set(null);
         this.first.set(0);
         this.queryForm.reset({ id: null, clientName: '', salespersonName: '' });
-        if (this.queryMode() === 'ACTIVE') void this.load();
+        if (this.queryMode() !== 'CANCELLED') void this.load();
     }
 
     changeStatus(value: AttendanceStatus | null): void {
@@ -154,6 +181,13 @@ export default class NewCustomerComponent implements OnInit {
 
     stageFor(status: AttendanceStatus) {
         return this.stages.find((stage) => stage.value === status) ?? this.stages[0];
+    }
+
+    getClientName(name: string): string {
+        if (name.length > 35) {
+            return name.substring(0, 35).toString();
+        }
+        return name;
     }
 
     openCancellation(item: CustomerAttendance): void {
@@ -203,6 +237,8 @@ export default class NewCustomerComponent implements OnInit {
         this.createdAttendanceId = Number(this.route.snapshot.queryParamMap.get('createdAttendanceId')) || 0;
     }
     ngOnInit(): void {
+        const refreshDate = setInterval(() => this.currentDate.set(new Date()), 60000);
+        this.destroyRef.onDestroy(() => clearInterval(refreshDate));
         void this.load();
     }
 }

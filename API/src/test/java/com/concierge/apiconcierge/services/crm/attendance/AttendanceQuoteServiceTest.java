@@ -44,7 +44,7 @@ class AttendanceQuoteServiceTest {
   when(quoteRepository.findByCompanyIdAndResaleIdAndAttendanceId(2, 3, 1)).thenReturn(Optional.empty());
   when(quoteRepository.saveAndFlush(any())).thenAnswer(call -> { AttendanceQuote q = call.getArgument(0); q.setId(5); q.setVersion(0L); return q; });
   var response = service.save(new QuoteSaveDto(1, 0L, null, " Nota ", List.of(item("2", "100", QuoteDiscountType.PERCENTAGE, "10"))), "user");
-  assertEquals(new BigDecimal("200.00"), response.quote().subtotal()); assertEquals(new BigDecimal("20.00"), response.quote().discountTotal()); assertEquals(new BigDecimal("180.00"), response.quote().total()); assertEquals(new BigDecimal("180.00"), response.attendance().quoteTotal()); assertEquals(AttendanceStatus.QUOTATION, response.attendance().status());
+  assertEquals(new BigDecimal("200.00"), response.quote().subtotal()); assertEquals(new BigDecimal("20.00"), response.quote().discountTotal()); assertEquals(new BigDecimal("180.00"), response.quote().total()); assertEquals(new BigDecimal("180.00"), response.attendance().quoteTotal()); assertEquals(AttendanceStatus.COMMERCIAL_PROPOSAL, response.attendance().status());
   verify(attendanceRepository).saveAndFlush(a);
  }
  @Test void editingAQuoteDoesNotRegressALaterAttendanceStage() {

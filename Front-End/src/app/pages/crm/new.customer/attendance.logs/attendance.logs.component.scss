@@ -1,0 +1,66 @@
+:host {
+    display: inline-block;
+}
+.log-list {
+    list-style: none;
+    padding: 0;
+    margin: 1.25rem 0;
+    display: grid;
+    gap: 1rem;
+}
+.log-list li {
+    display: flex;
+    gap: 1rem;
+    padding: 1rem;
+    border: 1px solid var(--p-content-border-color);
+    border-radius: 0.8rem;
+}
+.event-icon {
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 50%;
+    background: var(--p-content-hover-background);
+    color: var(--p-primary-color);
+}
+.removed {
+    color: var(--p-red-500);
+}
+.event-content {
+    flex: 1;
+    min-width: 0;
+}
+.event-heading {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+.event-heading time,
+small {
+    font-size: 0.75rem;
+    color: var(--p-text-muted-color);
+}
+.stage {
+    display: inline-block;
+    margin-top: 0.5rem;
+    font-size: 0.75rem;
+    color: var(--p-primary-color);
+}
+.filename {
+    margin: 0.5rem 0;
+    overflow-wrap: anywhere;
+    font-size: 0.9rem;
+}
+.log-list .empty {
+    display: grid;
+    justify-items: center;
+    text-align: center;
+    padding: 2rem;
+    color: var(--p-text-muted-color);
+}
+.empty > i {
+    font-size: 1.8rem;
+}

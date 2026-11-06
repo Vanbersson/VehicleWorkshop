@@ -28,20 +28,32 @@
         <fieldset class="client-type">
             <legend>Tipo de pessoa</legend>
             <div>
-                <p-radioButton inputId="filter-client-pj" value="j" formControlName="clientCompanyTipo" /><label for="filter-client-pj">Pessoa jurídica</label
-                ><p-radioButton inputId="filter-client-pf" value="f" formControlName="clientCompanyTipo" /><label for="filter-client-pf">Pessoa física</label>
+                <p-radioButton inputId="filter-client-pj" value="j" formControlName="clientCompanyTipo" />
+                <label for="filter-client-pj">Pessoa jurídica</label>
+                <p-radioButton inputId="filter-client-pf" value="f" formControlName="clientCompanyTipo" />
+                <label for="filter-client-pf">Pessoa física</label>
             </div>
         </fieldset>
         <div class="filter-grid">
-            <div class="filter-field"><label for="filter-client-id">Código</label><p-inputNumber inputId="filter-client-id" [useGrouping]="false" formControlName="clientCompanyId" placeholder="Código do cadastro" fluid /></div>
-            <div class="filter-field"><label for="filter-client-trade">Nome fantasia</label><input pInputText id="filter-client-trade" formControlName="clientCompanyFantasia" placeholder="Informe o nome fantasia" /></div>
-            <div class="filter-field"><label for="filter-client-name">Nome / Razão social</label><input pInputText id="filter-client-name" formControlName="clientCompanyName" placeholder="Informe o nome ou a razão social" /></div>
+            <div class="filter-field">
+                <label for="filter-client-id">Código</label>
+                <p-inputNumber inputId="filter-client-id" [useGrouping]="false" formControlName="clientCompanyId"  fluid /></div>
+            <div class="filter-field">
+                <label for="filter-client-trade">Nome fantasia</label>
+                <input pInputText id="filter-client-trade" formControlName="clientCompanyFantasia" /></div>
+            <div class="filter-field">
+                <label for="filter-client-name">Nome / Razão social</label>
+                <input pInputText id="filter-client-name" formControlName="clientCompanyName" /></div>
             @if (formClientCompanyFilter.controls.clientCompanyTipo.value === 'j') {
                 <div class="filter-field">
-                    <label for="filter-client-cnpj">CNPJ</label><p-inputMask inputId="filter-client-cnpj" mask="99.999.999/9999-99" [unmask]="true" formControlName="clientCompanyCnpj" placeholder="00.000.000/0000-00" fluid />
+                    <label for="filter-client-cnpj">CNPJ</label>
+                    <p-inputMask inputId="filter-client-cnpj" mask="99.999.999/9999-99" [unmask]="true" formControlName="clientCompanyCnpj" fluid />
                 </div>
             } @else {
-                <div class="filter-field"><label for="filter-client-cpf">CPF</label><p-inputMask inputId="filter-client-cpf" mask="999.999.999-99" [unmask]="true" formControlName="clientCompanyCpf" placeholder="000.000.000-00" fluid /></div>
+                <div class="filter-field">
+                    <label for="filter-client-cpf">CPF</label>
+                    <p-inputMask inputId="filter-client-cpf" mask="999.999.999-99" [unmask]="true" formControlName="clientCompanyCpf" fluid />
+                </div>
             }
         </div>
         <div class="filter-form-footer">

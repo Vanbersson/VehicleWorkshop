@@ -56,7 +56,9 @@ describe('Customer attendance cards', () => {
         expect(component.filteredItems()[0].visitId).toBe(42);
         component.changeStatus(AttendanceStatus.DOCUMENTS_PENDING);
         expect(component.filteredItems().map((item) => item.id)).toEqual([2]);
-        expect(component.counts().map((stage) => stage.count)).toEqual([1, 1, 0, 0, 0, 0]);
+        expect(component.counts().find((stage) => stage.value === AttendanceStatus.VISIT_COMPLETED)?.count).toBe(1);
+        expect(component.counts().find((stage) => stage.value === AttendanceStatus.DOCUMENTS_PENDING)?.count).toBe(1);
+        expect(component.counts().reduce((sum, stage) => sum + stage.count, 0)).toBe(2);
     });
 
     it('hides cancelled attendances in the active query', () => {
@@ -121,5 +123,25 @@ describe('Customer attendance cards', () => {
         expect(component.items()[0].status).toBe(AttendanceStatus.CANCELLED);
         expect(component.items()[0].quoteTotal).toBe(180);
         expect(component.cancellationVisible).toBeFalse();
+    });
+    it('separates ongoing, completed and cancelled attendances', async () => {
+        const completed = { ...first, id: 3, status: AttendanceStatus.COMPLETED };
+        const cancelled = { ...first, id: 4, status: AttendanceStatus.CANCELLED };
+        service.list.and.returnValue(of([first, completed, cancelled]));
+        await component.load();
+        expect(component.filteredItems().map((item) => item.id)).toEqual([first.id]);
+        expect(component.queryStages().some((stage) => stage.value === AttendanceStatus.COMPLETED)).toBeFalse();
+        component.changeQueryMode('COMPLETED');
+        await component.load();
+        expect(component.filteredItems().map((item) => item.id)).toEqual([3]);
+        expect(component.queryStages().map((stage) => stage.value)).toEqual([AttendanceStatus.COMPLETED]);
+        service.search.and.returnValue(of([first, completed]));
+        component.queryForm.controls.clientName.setValue('Cliente');
+        await component.load();
+        expect(service.search).toHaveBeenCalledWith('ACTIVE', jasmine.objectContaining({ clientName: 'Cliente' }));
+        expect(component.filteredItems().map((item) => item.id)).toEqual([3]);
+        component.changeQueryMode('CANCELLED');
+        component.items.set([first, completed, cancelled]);
+        expect(component.filteredItems().map((item) => item.id)).toEqual([4]);
     });
 });

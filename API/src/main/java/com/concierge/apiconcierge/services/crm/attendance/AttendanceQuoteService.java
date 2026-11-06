@@ -44,7 +44,7 @@ public class AttendanceQuoteService {
         quote.setNotes(data.notes() == null ? "" : data.notes().trim()); quote.setDateUpdated(new Date());
         quote.setSubtotal(subtotal.setScale(2)); quote.setDiscountTotal(discounts.setScale(2)); quote.setTotal(subtotal.subtract(discounts).setScale(2));
         AttendanceQuote saved = quoteRepository.saveAndFlush(quote);
-        if (a.getStatus() == AttendanceStatus.VISIT_COMPLETED) { a.setStatus(AttendanceStatus.QUOTATION); attendanceRepository.saveAndFlush(a); }
+        if (a.getStatus() == AttendanceStatus.VISIT_COMPLETED) { a.setStatus(AttendanceStatus.COMMERCIAL_PROPOSAL); attendanceRepository.saveAndFlush(a); }
         return QuoteResponseDto.from(a, saved);
     }
 

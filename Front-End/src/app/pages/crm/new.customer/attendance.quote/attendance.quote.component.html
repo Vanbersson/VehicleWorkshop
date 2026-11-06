@@ -16,7 +16,10 @@
         <span class="quote-label">ORÇAMENTO COMERCIAL</span>
     </div>
     @if (loading()) {
-        <div class="quote-loading" role="status"><p-progress-spinner ariaLabel="Carregando orçamento" [style]="{ width: '3rem', height: '3rem' }" /><span>Carregando orçamento…</span></div>
+        <div class="quote-loading" role="status">
+            <p-progress-spinner ariaLabel="Carregando orçamento" [style]="{ width: '3rem', height: '3rem' }" />
+            <span>Carregando orçamento…</span>
+        </div>
     } @else if (loadError()) {
         <p class="quote-error" role="alert">{{ loadError() }}</p>
         <p-button label="Tentar novamente" icon="pi pi-refresh" (onClick)="load()" />
@@ -63,7 +66,8 @@
                                     </div>
                                 </div>
                                 <div class="item-total">
-                                    <span class="text-muted-color">Total do item</span><strong>{{ amounts(index) ? (amounts(index)!.total | currency: 'BRL') : 'Revise os valores' }}</strong>
+                                    <span class="text-muted-color">Total do item</span>
+                                    <strong>{{ amounts(index) ? (amounts(index)!.total | currency: 'BRL') : 'Revise os valores' }}</strong>
                                 </div>
                             </div>
                             @if (itemError(index)) {
@@ -90,12 +94,12 @@
             <p class="quote-error" role="alert">{{ saveError() }}</p>
         }
     }
-    <ng-template #footer
-        ><p-button [label]="cancelled() ? 'Fechar' : 'Cancelar'" severity="secondary" [text]="true" (onClick)="close(false)" [disabled]="saving()" /><p-button
+    <ng-template #footer>
+        <p-button [label]="cancelled() ? 'Fechar' : 'Cancelar'" severity="secondary" [text]="true" (onClick)="close(false)" [disabled]="saving()" /><p-button
             label="Salvar orçamento"
             icon="pi pi-check"
             (onClick)="save()"
             [loading]="saving()"
-            [disabled]="loading() || !!loadError() || cancelled()"
-    /></ng-template>
+            [disabled]="loading() || !!loadError() || cancelled()"/>
+    </ng-template>
 </p-dialog>

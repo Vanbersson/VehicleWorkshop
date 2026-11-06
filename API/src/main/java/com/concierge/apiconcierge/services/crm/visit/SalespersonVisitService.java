@@ -88,8 +88,19 @@ public class SalespersonVisitService implements ISalespersonVisitService {
         v.setUserIdRegister(existing.getUserIdRegister());
         v.setUserNameRegister(existing.getUserNameRegister());
         SalespersonVisit saved = this.repository.save(v);
-        if (saved.getStatus() == StatusVisitEnum.concluído) attendanceService.createForVisit(saved);
         return saved;
+    }
+
+    @Override
+    @org.springframework.transaction.annotation.Transactional
+    public com.concierge.apiconcierge.dtos.crm.attendance.AttendanceResponseDto generateAttendance(Integer id, String emailUser) {
+        User user = userRepository.loginEmail(emailUser);
+        if (user == null || user.getStatus() == StatusEnableDisable.Desabilitado) throw new BusinessException("Usuario bloqueado.");
+        SalespersonVisit visit = repository.findForCompletion(user.getCompanyId(), user.getResaleId(), id);
+        if (visit == null) throw new ResourcesNotFoundException("Visita nao encontrada.");
+        authorizeAssignment(user, visit.getSalespersonId(), REGISTER_VISIT_ALL_SALESPERSON);
+        if (visit.getStatus() != StatusVisitEnum.concluído) throw new BusinessException("Conclua a visita antes de gerar o atendimento.");
+        return com.concierge.apiconcierge.dtos.crm.attendance.AttendanceResponseDto.from(attendanceService.createForVisit(visit));
     }
 
     @Override

@@ -59,6 +59,11 @@ public class SalespersonVisitController {
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
+    @PostMapping("/register/{id}/attendance")
+    public com.concierge.apiconcierge.dtos.crm.attendance.AttendanceResponseDto generateAttendance(@PathVariable Integer id, HttpServletRequest request) {
+        return service.generateAttendance(id, getEmail(request));
+    }
+
     @GetMapping("/id/{id}")
     public ResponseEntity<SalespersonVisit> filterVisit(@PathVariable(name = "id") Integer id, HttpServletRequest request) {
         String emailUser = this.getEmail(request);

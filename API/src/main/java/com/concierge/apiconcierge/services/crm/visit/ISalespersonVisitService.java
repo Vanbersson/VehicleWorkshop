@@ -18,6 +18,8 @@ public interface ISalespersonVisitService {
 
     SalespersonVisit registerUpdate(SalespersonVisit v, String emailUser);
 
+    com.concierge.apiconcierge.dtos.crm.attendance.AttendanceResponseDto generateAttendance(Integer id, String emailUser);
+
     SalespersonVisit filterVisit(Integer id, String emailUser);
 
     MessageResponse agendaNew(SalespersonVisitAgendaNewDto v, String emailUser);

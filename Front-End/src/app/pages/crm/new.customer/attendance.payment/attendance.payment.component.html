@@ -1,0 +1,170 @@
+<section aria-labelledby="paymentReceiptsTitle">
+    <div class="payment-header">
+        <div>
+            <div class="eyebrow"><i class="pi pi-wallet" aria-hidden="true"></i> Financeiro</div>
+            <h2 id="paymentReceiptsTitle" class="text-xl font-semibold m-0">Pagamento do atendimento</h2>
+            <p class="text-sm text-muted-color mt-2 mb-0">Adicione PDFs ou imagens e informe o valor de cada comprovante. Até 5 MB por arquivo.</p>
+        </div>
+        <div class="flex flex-wrap gap-2">
+            <p-button label="Atualizar" icon="pi pi-refresh" severity="secondary" [text]="true" (onClick)="load()" [disabled]="busy || pending().length > 0" />
+            @if (!readOnly) {
+                <input #fileInput type="file" multiple accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp" class="hidden" aria-label="Selecionar comprovantes em PDF ou imagem" (change)="selectFiles($event)" /><p-button
+                    label="Adicionar comprovantes"
+                    icon="pi pi-plus"
+                    (onClick)="fileInput.click()"
+                    [disabled]="busy"
+                />
+            }
+        </div>
+    </div>
+    <div class="summary" aria-label="Resumo do pagamento">
+        <div>
+            <span>Total do orçamento</span>
+            <strong>{{ attendance?.quoteTotal != null ? (attendance?.quoteTotal | currency: 'BRL') : '—' }}</strong>
+            @if (attendance?.quoteTotal == null) {
+                <small>Nenhum orçamento salvo</small>
+            }
+        </div>
+        <div>
+            <span><i class="pi pi-check-circle" aria-hidden="true"></i> Total dos comprovantes</span><strong>{{ total() | currency: 'BRL' }}</strong>
+            <small>{{ receipts().length }} arquivo(s) salvo(s)</small>
+        </div>
+        <div class="balance" [class.settled]="remainingAmount === 0">
+            <span><i class="pi pi-chart-pie" aria-hidden="true"></i> Falta pagar</span>
+            <strong>{{ remainingAmount != null ? (remainingAmount | currency: 'BRL') : '—' }}</strong>
+            @if (remainingAmount === 0) {
+                <small>Valor do orçamento atingido</small>
+            }
+        </div>
+    </div>
+    @if (readOnly) {
+        <p class="text-muted-color text-sm">Atendimento cancelado: comprovantes disponíveis apenas para consulta.</p>
+    }
+    @if (error()) {
+        <p class="feedback failure" role="alert">{{ error() }}</p>
+    }
+    @if (success()) {
+        <p class="feedback success" role="status">{{ success() }}</p>
+    }
+    @if (pending().length) {
+        <div class="pending-panel">
+            <h3 class="text-base font-semibold mt-0">
+                <i class="pi pi-cloud-upload" aria-hidden="true"></i> Novos comprovantes <span class="count">{{ pending().length }}</span>
+            </h3>
+            <p class="text-sm text-muted-color">Informe um valor maior que zero para cada arquivo e clique em Salvar comprovantes.</p>
+            @for (entry of pending(); track entry.id) {
+                <div class="receipt-row">
+                    <div class="file-description">
+                        <i class="pi" [ngClass]="entry.file.type === 'application/pdf' ? 'pi-file-pdf' : 'pi-image'" aria-hidden="true"></i>
+                        <div>
+                            <strong>{{ entry.file.name }}</strong
+                            ><small>{{ entry.file.size / 1024 | number: '1.0-1' }} KB</small>
+                        </div>
+                    </div>
+                    <div>
+                        <label [for]="'pendingReceipt' + entry.id">Valor do comprovante *</label
+                        ><p-inputnumber
+                            [inputId]="'pendingReceipt' + entry.id"
+                            [ngModel]="entry.amount"
+                            (ngModelChange)="setPendingAmount(entry.id, $event)"
+                            [ngModelOptions]="{ standalone: true }"
+                            mode="currency"
+                            currency="BRL"
+                            locale="pt-BR"
+                            [minFractionDigits]="2"
+                            [maxFractionDigits]="2"
+                            [min]="0.01"
+                            [max]="999999999999.99"
+                            [disabled]="busy"
+                            fluid
+                        />
+                    </div>
+                    <p-button label="Retirar da seleção" icon="pi pi-times" severity="secondary" [text]="true" (onClick)="removePending(entry.id)" [disabled]="busy" />
+                </div>
+            }
+            <div class="flex justify-end mt-4"><p-button label="Salvar comprovantes" icon="pi pi-upload" (onClick)="upload()" [loading]="uploading()" [disabled]="busy || invalidPending()" /></div>
+        </div>
+    }
+    <div class="list-heading">
+        <div>
+            <h3>
+                Comprovantes salvos <span class="count">{{ receipts().length }}</span>
+            </h3>
+            <p>Consulte os arquivos e gerencie os valores de cada pagamento.</p>
+        </div>
+    </div>
+    @if (loading()) {
+        <p class="text-muted-color" role="status"><i class="pi pi-spin pi-spinner" aria-hidden="true"></i> Carregando comprovantes...</p>
+    } @else {
+        <ul class="receipt-list">
+            @for (item of receipts(); track item.id) {
+                <li class="receipt-row">
+                    <div class="file-description">
+                        <i class="pi" [ngClass]="item.contentType === 'application/pdf' ? 'pi-file-pdf' : 'pi-image'" aria-hidden="true"></i>
+                        <div>
+                            <strong>{{ item.fileName }}</strong
+                            ><small>{{ item.size / 1024 | number: '1.0-1' }} KB &middot; {{ item.createdAt | date: 'dd/MM/yyyy HH:mm' }}</small
+                            ><small><i class="pi pi-user" aria-hidden="true"></i> Adicionado por {{ item.uploadedByUserName || 'Usuário não registrado' }}</small>
+                            @if (item.updatedByUserName) {
+                                <small
+                                    >Última atualização por {{ item.updatedByUserName }}
+                                    @if (item.updatedAt) {
+                                        &middot; {{ item.updatedAt | date: 'dd/MM/yyyy HH:mm' }}
+                                    }
+                                </small>
+                            }
+                        </div>
+                    </div>
+                    <div>
+                        @if (readOnly) {
+                            <span class="text-sm text-muted-color">Valor do comprovante</span><strong class="block">{{ item.receiptAmount | currency: 'BRL' }}</strong>
+                        } @else {
+                            <label [for]="'receiptAmount' + item.id">Valor do comprovante *</label
+                            ><p-inputnumber
+                                [inputId]="'receiptAmount' + item.id"
+                                [ngModel]="amounts()[item.id]"
+                                (ngModelChange)="setAmount(item.id, $event)"
+                                [ngModelOptions]="{ standalone: true }"
+                                mode="currency"
+                                currency="BRL"
+                                locale="pt-BR"
+                                [minFractionDigits]="2"
+                                [maxFractionDigits]="2"
+                                [min]="0.01"
+                                [max]="999999999999.99"
+                                [disabled]="busy"
+                                fluid
+                            />
+                            <p-button
+                                label="Salvar valor"
+                                icon="pi pi-check"
+                                size="small"
+                                [text]="true"
+                                (onClick)="saveAmount(item)"
+                                [loading]="savingId() === item.id"
+                                [disabled]="busy || !validAmount(amounts()[item.id]) || amounts()[item.id] === item.receiptAmount"
+                            />
+                        }
+                    </div>
+                    <div class="receipt-actions">
+                        <p-button
+                            label="Baixar"
+                            icon="pi pi-download"
+                            severity="secondary"
+                            [text]="true"
+                            (onClick)="download(item)"
+                            [loading]="downloadingId() === item.id"
+                            [disabled]="downloadingId() !== null"
+                            [ariaLabel]="'Baixar ' + item.fileName"
+                        />
+                        @if (!readOnly) {
+                            <p-button label="Remover" icon="pi pi-trash" severity="danger" [text]="true" (onClick)="remove(item)" [loading]="removingId() === item.id" [disabled]="busy" [ariaLabel]="'Remover ' + item.fileName" />
+                        }
+                    </div>
+                </li>
+            } @empty {
+                <li class="empty"><i class="pi pi-wallet" aria-hidden="true"></i><strong>Nenhum comprovante adicionado</strong><span>Os comprovantes e seus valores aparecerão aqui.</span></li>
+            }
+        </ul>
+    }
+</section>

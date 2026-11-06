@@ -21,7 +21,7 @@ describe('VisitMaintenanceComponent registration flow', () => {
 
     beforeEach(() => {
         state = {};
-        service = jasmine.createSpyObj<VisitService>('VisitService', ['registerNew', 'registerUpdate', 'registerSalespersons']);
+        service = jasmine.createSpyObj<VisitService>('VisitService', ['generateAttendance', 'registerNew', 'registerUpdate', 'registerSalespersons']);
         service.registerSalespersons.and.returnValue(of([salesperson]));
         service.registerNew.and.callFake((v) => of(new HttpResponse({ status: 201, body: Object.assign(new Visit(), v, { id: 42 }) })));
         service.registerUpdate.and.callFake((v) => of(new HttpResponse({ status: 200, body: v })));
@@ -56,9 +56,13 @@ describe('VisitMaintenanceComponent registration flow', () => {
         expect(TestBed.inject(Router).navigate).not.toHaveBeenCalled();
         expect(component.visibleDateVisit).toBeFalse();
         await component.onCompletionDialogHide();
+        expect(component.attendancePromptVisible).toBeTrue();
+        expect(TestBed.inject(Router).navigate).not.toHaveBeenCalled();
+        expect(service.generateAttendance).not.toHaveBeenCalled();
+        await component.finishWithoutAttendance();
+        expect(TestBed.inject(Router).navigate).not.toHaveBeenCalled();
+        await component.onAttendancePromptHide();
         expect(TestBed.inject(Router).navigate).toHaveBeenCalledWith(['/crm/visit']);
-        await component.onCompletionDialogHide();
-        expect(TestBed.inject(Router).navigate).toHaveBeenCalledTimes(1);
     });
 
     it('does not navigate when the completion dialog is cancelled', async () => {
@@ -144,5 +148,45 @@ describe('VisitMaintenanceComponent registration flow', () => {
         component.visibleDateVisit = false;
         component.openDateVisit();
         expect(component.formVisit.controls.dateVisit.value).toBe(selected);
+    });
+    it('creates attendance only after confirmation and returns to the visit list', async () => {
+        fillOtherSelections();
+        await component.goToStep(5);
+        component.openDateVisit();
+        await component.saveComplete();
+        await component.onCompletionDialogHide();
+        component.attendancePromptVisible = true;
+        service.generateAttendance.and.returnValue(of({ id: 16 } as import('@/app/models/crm/customer.attendance').CustomerAttendance));
+        await component.generateAttendance();
+        expect(service.generateAttendance).toHaveBeenCalledWith(42);
+        expect(TestBed.inject(Router).navigate).not.toHaveBeenCalled();
+        await component.onAttendancePromptHide();
+        expect(TestBed.inject(Router).navigate).toHaveBeenCalledWith(['/crm/visit']);
+        expect(component.attendancePromptVisible).toBeFalse();
+    });
+    it('keeps the completed visit and allows retrying when attendance generation fails', async () => {
+        fillOtherSelections();
+        await component.goToStep(5);
+        component.openDateVisit();
+        await component.saveComplete();
+        await component.onCompletionDialogHide();
+        component.attendancePromptVisible = true;
+        service.generateAttendance.and.returnValue(throwError(() => new Error('Offline')));
+        await component.generateAttendance();
+        expect(component.attendancePromptVisible).toBeTrue();
+        expect(component.attendanceError()).toBeTruthy();
+        expect(service.registerUpdate.calls.mostRecent().args[0].status).toBe(StatusVisitEnum.CLOSE);
+        expect(TestBed.inject(Router).navigate).not.toHaveBeenCalled();
+    });
+    it('navigates once only after the attendance prompt has fully closed', async () => {
+        await component.onAttendancePromptHide();
+        expect(TestBed.inject(Router).navigate).not.toHaveBeenCalled();
+        component.attendancePromptVisible = true;
+        await component.finishWithoutAttendance();
+        expect(component.attendancePromptVisible).toBeFalse();
+        expect(TestBed.inject(Router).navigate).not.toHaveBeenCalled();
+        await component.onAttendancePromptHide();
+        await component.onAttendancePromptHide();
+        expect(TestBed.inject(Router).navigate).toHaveBeenCalledOnceWith(['/crm/visit']);
     });
 });

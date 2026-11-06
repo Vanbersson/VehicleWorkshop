@@ -1,4 +1,4 @@
-import { Component, DoCheck, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { lastValueFrom } from 'rxjs';
@@ -22,51 +22,25 @@ import { PrimeNG } from 'primeng/config';
     styleUrl: './dashboard.component.scss',
     providers: []
 })
-export default class DashboardComponent implements OnInit, DoCheck {
-    //Vehicle
+export default class DashboardComponent implements OnInit {
     countVehicle = signal<Array<number>>([]);
-    //ClientCompany
     clientCompany!: ClientCompany;
     clientName!: string;
-    selectClientCompany = signal<ClientCompany>(new ClientCompany());
     clientData1: any;
     clientOptions1: any;
     clientData2: any;
     clientOptions2: any;
-
     yearNow = signal<number>(Number.parseInt(new Date().getFullYear().toString()));
     readonly loadingDashboard = signal(false);
     readonly loadError = signal('');
     isSearchClient: boolean = false;
 
-    annualTotal(data: { datasets?: { data?: unknown[] }[] } | undefined): number | null {
-        const values = data?.datasets?.[1]?.data;
-        if (!values?.length || values.some((value) => typeof value !== 'number' || !Number.isFinite(value))) return null;
-        return (values as number[]).reduce((total, value) => total + value, 0);
-    }
-
-    async refreshDashboard(): Promise<void> {
-        if (this.loadingDashboard()) return;
-        if (this.isSearchClient && this.clientCompany?.id) await this.searchClient(this.clientCompany.id);
-        else await this.init();
-    }
-
     constructor(
         private primeng: PrimeNG,
         private loadingService: LoadingService,
         private dashboardService: DashboardService
-    ) {}
-    ngDoCheck(): void {
-        //Client
-        if (!this.loadingDashboard() && this.selectClientCompany().id != null) {
-            this.clientCompany = this.selectClientCompany();
-            this.clientName = this.clientCompany.name;
-            //Search client
-            this.searchClient(this.clientCompany.id!);
-            this.selectClientCompany.set(new ClientCompany());
-        }
-    }
-
+    ) { }
+    
     async ngOnInit(): Promise<void> {
         this.primeng.setTranslation({
             startsWith: 'Inicia com',
@@ -207,6 +181,26 @@ export default class DashboardComponent implements OnInit, DoCheck {
         await this.init();
     }
 
+    annualTotal(data: { datasets?: { data?: unknown[] }[] } | undefined): number | null {
+        const values = data?.datasets?.[1]?.data;
+        if (!values?.length || values.some((value) => typeof value !== 'number' || !Number.isFinite(value))) return null;
+        return (values as number[]).reduce((total, value) => total + value, 0);
+    }
+
+    async refreshDashboard(): Promise<void> {
+        if (this.loadingDashboard()) return;
+        if (this.isSearchClient && this.clientCompany?.id) await this.searchClient(this.clientCompany.id);
+        else await this.init();
+    }
+
+    selectClientCompanyEvent(clientCompany: ClientCompany) {
+        if(!clientCompany) return;
+        this.clientCompany = clientCompany;
+        this.clientName = this.clientCompany.name;
+        //Search client
+        this.searchClient(this.clientCompany.id!);
+    }
+
     async init(): Promise<void> {
         if (this.loadingDashboard()) return;
         this.loadingDashboard.set(true);
@@ -314,6 +308,7 @@ export default class DashboardComponent implements OnInit, DoCheck {
             this.loadingDashboard.set(false);
         }
     }
+
     private async countVehiclePenAuth(): Promise<HttpResponse<any[]>> {
         try {
             return await lastValueFrom(this.dashboardService.countVehiclePenAuth());
@@ -321,6 +316,7 @@ export default class DashboardComponent implements OnInit, DoCheck {
             return error;
         }
     }
+
     private async countYesServiceFilterYear(year: number): Promise<HttpResponse<any[]>> {
         try {
             return await lastValueFrom(this.dashboardService.countYesServiceFilterYear(year));
@@ -328,13 +324,7 @@ export default class DashboardComponent implements OnInit, DoCheck {
             return error;
         }
     }
-    private async countNotServiceFilterYear(year: number): Promise<HttpResponse<any[]>> {
-        try {
-            return await lastValueFrom(this.dashboardService.countNotServiceFilterYear(year));
-        } catch (error: any) {
-            return error;
-        }
-    }
+   
     private async countYesServiceFilterYearClient(year: number, clientId: number): Promise<HttpResponse<any[]>> {
         try {
             return await lastValueFrom(this.dashboardService.countYesServiceFilterYearClient(year, clientId));
@@ -342,6 +332,7 @@ export default class DashboardComponent implements OnInit, DoCheck {
             return error;
         }
     }
+
     private async countVehicleFilterYear(year: number): Promise<HttpResponse<any[]>> {
         try {
             return await lastValueFrom(this.dashboardService.countVehicleFilterYear(year));
@@ -349,6 +340,7 @@ export default class DashboardComponent implements OnInit, DoCheck {
             return error;
         }
     }
+
     private async countVehicleFilterYearClient(year: number, clientId: number): Promise<HttpResponse<any[]>> {
         try {
             return await lastValueFrom(this.dashboardService.countVehicleFilterYearClient(year, clientId));

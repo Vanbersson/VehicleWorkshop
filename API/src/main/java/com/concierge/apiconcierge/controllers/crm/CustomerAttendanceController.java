@@ -1,5 +1,6 @@
 package com.concierge.apiconcierge.controllers.crm;
 
+import com.concierge.apiconcierge.dtos.crm.attendance.AttendanceCreateDto;
 import com.concierge.apiconcierge.dtos.crm.attendance.AttendanceResponseDto;
 import com.concierge.apiconcierge.dtos.crm.attendance.AttendanceUpdateDto;
 import com.concierge.apiconcierge.services.auth.TokenService;
@@ -7,22 +8,31 @@ import com.concierge.apiconcierge.services.crm.attendance.CustomerAttendanceServ
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
 
 @RestController
 @RequestMapping("crm/customer-attendance")
 public class CustomerAttendanceController {
-    @Autowired private TokenService tokenService;
-    @Autowired private CustomerAttendanceService service;
+    @Autowired
+    private TokenService tokenService;
+    @Autowired
+    private CustomerAttendanceService service;
 
     @PostMapping
-    public AttendanceResponseDto create(@Valid @RequestBody com.concierge.apiconcierge.dtos.crm.attendance.AttendanceCreateDto data, HttpServletRequest request) {
+    public AttendanceResponseDto create(@Valid @RequestBody AttendanceCreateDto data, HttpServletRequest request) {
         return service.create(data, email(request));
     }
 
     @GetMapping
-    public List<AttendanceResponseDto> list(HttpServletRequest request) { return service.list(email(request)); }
+    public ResponseEntity<List<AttendanceResponseDto>> list(HttpServletRequest request) {
+        String emailUser = this.email(request);
+        List<AttendanceResponseDto> response = service.list(emailUser);
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
 
     @GetMapping("/creation-salespersons")
     public List<com.concierge.apiconcierge.dtos.salesperson.ResponseSalespersonDto> creationSalespersons(HttpServletRequest request) {
@@ -32,6 +42,11 @@ public class CustomerAttendanceController {
     @GetMapping("/{id}")
     public com.concierge.apiconcierge.dtos.crm.attendance.AttendanceDetailDto detail(@PathVariable Integer id, HttpServletRequest request) {
         return service.detail(id, email(request));
+    }
+
+    @GetMapping("/{id}/logs")
+    public List<com.concierge.apiconcierge.dtos.crm.attendance.AttendanceLogDto> logs(@PathVariable Integer id, HttpServletRequest request) {
+        return service.logs(id, email(request));
     }
 
     @PostMapping("/active/search")
@@ -54,5 +69,7 @@ public class CustomerAttendanceController {
         return service.cancel(data, email(request));
     }
 
-    private String email(HttpServletRequest request) { return tokenService.validToken(request.getHeader("Authorization").replace("Bearer ", "")); }
+    private String email(HttpServletRequest request) {
+        return tokenService.validToken(request.getHeader("Authorization").replace("Bearer ", ""));
+    }
 }

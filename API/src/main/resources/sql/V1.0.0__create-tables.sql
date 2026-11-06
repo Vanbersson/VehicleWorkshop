@@ -631,6 +631,7 @@ salesperson_name VARCHAR(255) NOT NULL,
 date_created DATETIME(6) NOT NULL,
 date_visit DATETIME(6),
 status VARCHAR(32) NOT NULL,
+expected_delivery_date DATE NULL,
 notes VARCHAR(2000),
 cancellation_reason VARCHAR(2000),
 cancelled_at DATETIME(6),
@@ -672,14 +673,48 @@ CONSTRAINT fk_quote_attendance FOREIGN KEY (attendance_id) REFERENCES tb_crm_cus
 CREATE TABLE IF NOT EXISTS tb_crm_attendance_document (
 id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
 attendance_id INT NOT NULL,
+stage VARCHAR(30) NOT NULL DEFAULT 'DOCUMENTS',
+receipt_amount DECIMAL(19,2) NULL,
+uploaded_by_user_id INT NULL,
+uploaded_by_user_name VARCHAR(255) NULL,
+updated_by_user_id INT NULL,
+updated_by_user_name VARCHAR(255) NULL,
+updated_at DATETIME(6) NULL,
 file_name VARCHAR(255) NOT NULL,
 content_type VARCHAR(100) NOT NULL,
 file_size BIGINT NOT NULL,
 created_at DATETIME(6) NOT NULL,
 file_path VARCHAR(1024) NOT NULL,
+share_token_hash VARCHAR(64) NULL UNIQUE,
+share_expires_at DATETIME(6) NULL,
+proposal_approved_at DATETIME(6) NULL,
+order_approved_at DATETIME(6) NULL,
+signed_file_path VARCHAR(1024) NULL,
+signed_file_name VARCHAR(255) NULL,
+signed_uploaded_at DATETIME(6) NULL,
 INDEX idx_attendance_document (attendance_id, created_at),
 CONSTRAINT fk_attendance_document FOREIGN KEY (attendance_id) REFERENCES tb_crm_customer_attendance(id)
 );
+CREATE TABLE IF NOT EXISTS tb_crm_attendance_log (
+ id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+ company_id INT NOT NULL,
+ resale_id INT NOT NULL,
+ attendance_id INT NOT NULL,
+ stage VARCHAR(40) NOT NULL,
+ action VARCHAR(50) NOT NULL,
+ user_id INT NULL,
+ user_name VARCHAR(255) NULL,
+ client_id INT NULL,
+ client_name VARCHAR(255) NULL,
+ occurred_at DATETIME(6) NOT NULL,
+ document_id INT NULL,
+ file_name VARCHAR(255) NULL,
+ previous_amount DECIMAL(19,2) NULL,
+ new_amount DECIMAL(19,2) NULL,
+ INDEX idx_attendance_log (attendance_id, occurred_at, id),
+ CONSTRAINT fk_attendance_log FOREIGN KEY (attendance_id) REFERENCES tb_crm_customer_attendance(id)
+);
+
 -- FIM MENU CRM
 
 CREATE TABLE IF NOT EXISTS tb_vehicle_entry(

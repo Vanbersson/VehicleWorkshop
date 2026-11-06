@@ -3,6 +3,7 @@ package com.concierge.apiconcierge.models.crm.attendance;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+
 import java.util.Date;
 
 @Getter
@@ -10,7 +11,8 @@ import java.util.Date;
 @Entity
 @Table(name = "tb_crm_customer_attendance", uniqueConstraints = @UniqueConstraint(name = "uk_customer_attendance_visit", columnNames = "visit_id"))
 public class CustomerAttendance {
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
     @Column(name = "company_id", nullable = false)
     private Integer companyId;
@@ -51,6 +53,8 @@ public class CustomerAttendance {
     private Date approvalRequestedAt;
     @Column(name = "completed_at")
     private Date completedAt;
+    @Column(name = "expected_delivery_date")
+    private java.time.LocalDate expectedDeliveryDate;
     @Version
     private Long version;
 }

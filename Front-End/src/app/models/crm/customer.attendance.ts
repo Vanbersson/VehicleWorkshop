@@ -3,6 +3,8 @@ export enum AttendanceStatus {
     QUOTATION = 'QUOTATION',
     DOCUMENTS_PENDING = 'DOCUMENTS_PENDING',
     PAYMENT_PENDING = 'PAYMENT_PENDING',
+    INVOICING_PENDING = 'INVOICING_PENDING',
+    DELIVERY_PENDING = 'DELIVERY_PENDING',
     COMMERCIAL_PROPOSAL = 'COMMERCIAL_PROPOSAL',
     APPROVAL_PENDING = 'APPROVAL_PENDING',
     COMPLETED = 'COMPLETED',
@@ -22,6 +24,7 @@ export interface CustomerAttendance {
     notes: string | null;
     version: number;
     quoteTotal?: number | null;
+    paymentTotal?: number | null;
     cancellationReason?: string | null;
     cancelledAt?: string | null;
     cancelledByName?: string | null;
@@ -29,9 +32,12 @@ export interface CustomerAttendance {
     proposalNotes?: string | null;
     approvalRequestedAt?: string | null;
     completedAt?: string | null;
+    expectedDeliveryDate?: string | null;
 }
 
 export interface AttendanceUpdate {
+    expectedDeliveryDate?: string | null;
+    salespersonId?: number;
     clientId?: number;
     id: number;
     status: AttendanceStatus;
@@ -62,15 +68,17 @@ export interface AttendanceSearch {
 
 export const ATTENDANCE_WORKFLOW = [
     { value: AttendanceStatus.VISIT_COMPLETED, label: 'Visita', statusLabel: 'Visita feita', icon: 'pi pi-check-square', severity: 'secondary' as const },
-    { value: AttendanceStatus.DOCUMENTS_PENDING, label: 'Documentos', statusLabel: 'Documentos', icon: 'pi pi-id-card', severity: 'warn' as const },
-    { value: AttendanceStatus.COMMERCIAL_PROPOSAL, label: 'Proposta comercial', statusLabel: 'Proposta comercial', icon: 'pi pi-file', severity: 'info' as const },
-    { value: AttendanceStatus.QUOTATION, label: 'Orçamento', statusLabel: 'Orçamento', icon: 'pi pi-file-edit', severity: 'info' as const },
-    { value: AttendanceStatus.APPROVAL_PENDING, label: 'Enviar para aprovação', statusLabel: 'Aguardando aprovação', icon: 'pi pi-send', severity: 'warn' as const },
+    { value: AttendanceStatus.COMMERCIAL_PROPOSAL, label: 'Proposta', statusLabel: 'Proposta', icon: 'pi pi-file', severity: 'info' as const },
+    { value: AttendanceStatus.QUOTATION, label: 'Pedido', statusLabel: 'Pedido', icon: 'pi pi-shopping-cart', severity: 'info' as const },
+    { value: AttendanceStatus.PAYMENT_PENDING, label: 'Pagamento', statusLabel: 'Pagamento', icon: 'pi pi-wallet', severity: 'warn' as const },
+    { value: AttendanceStatus.INVOICING_PENDING, label: 'Faturamento', statusLabel: 'Faturamento', icon: 'pi pi-receipt', severity: 'warn' as const },
+    { value: AttendanceStatus.DELIVERY_PENDING, label: 'Entrega', statusLabel: 'Entrega', icon: 'pi pi-truck', severity: 'info' as const },
     { value: AttendanceStatus.COMPLETED, label: 'Concluído', statusLabel: 'Concluído', icon: 'pi pi-check-circle', severity: 'success' as const }
 ];
 
 export const ATTENDANCE_STAGES = [
     ...ATTENDANCE_WORKFLOW.map((stage) => ({ ...stage, label: stage.statusLabel })),
-    { value: AttendanceStatus.PAYMENT_PENDING, label: 'Pagamento pendente', icon: 'pi pi-wallet', severity: 'danger' as const },
+    { value: AttendanceStatus.APPROVAL_PENDING, label: 'Proposta (aprovação anterior)', icon: 'pi pi-file', severity: 'info' as const },
+    { value: AttendanceStatus.DOCUMENTS_PENDING, label: 'Pedido (documentos anteriores)', icon: 'pi pi-id-card', severity: 'info' as const },
     { value: AttendanceStatus.CANCELLED, label: 'Cancelado', icon: 'pi pi-ban', severity: 'danger' as const }
 ];

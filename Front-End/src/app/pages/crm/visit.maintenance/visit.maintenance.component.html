@@ -253,3 +253,15 @@
         <p-button label="Pronto" (onClick)="visibleSalesperson = false" />
     </ng-template>
 </p-dialog>
+
+<p-dialog header="Visita concluída" [modal]="true" [(visible)]="attendancePromptVisible" (onHide)="onAttendancePromptHide()" [closable]="false" [closeOnEscape]="false" [draggable]="false" [style]="{ width: '30rem', maxWidth: '95vw' }">
+    <p>Deseja gerar um atendimento para esta visita?</p>
+    <p class="text-muted-color text-sm">O atendimento será vinculado à visita concluída.</p>
+    @if (attendanceError()) {
+        <p class="text-red-600" role="alert">{{ attendanceError() }}</p>
+    }
+    <ng-template #footer>
+        <p-button label="Não, finalizar" severity="secondary" [outlined]="true" (onClick)="finishWithoutAttendance()" [disabled]="generatingAttendance()" />
+        <p-button label="Sim, gerar atendimento" icon="pi pi-plus" (onClick)="generateAttendance()" [loading]="generatingAttendance()" [disabled]="generatingAttendance()" />
+    </ng-template>
+</p-dialog>

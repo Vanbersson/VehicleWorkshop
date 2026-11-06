@@ -1,0 +1,211 @@
+:host {
+    display: block;
+}
+.payment-header {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1.25rem;
+    margin-bottom: 1.5rem;
+}
+.eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--p-primary-color);
+    margin-bottom: 0.5rem;
+}
+.summary {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+.summary > div {
+    padding: 1.25rem;
+    border: 1px solid var(--p-content-border-color);
+    border-radius: 1rem;
+    background: var(--p-content-background);
+    min-width: 0;
+}
+.summary span,
+.summary small {
+    color: var(--p-text-muted-color);
+    font-size: 0.8rem;
+}
+.summary span {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.summary strong {
+    display: block;
+    font-size: clamp(1.25rem, 2vw, 1.8rem);
+    margin: 0.7rem 0 0.35rem;
+    overflow-wrap: anywhere;
+}
+.summary .balance {
+    background: var(--p-primary-50);
+    border-color: var(--p-primary-200);
+}
+.balance strong {
+    color: var(--p-primary-700);
+}
+.summary .settled {
+    background: var(--p-green-50);
+    border-color: var(--p-green-200);
+}
+.settled strong {
+    color: var(--p-green-700);
+}
+.list-heading {
+    margin: 1.5rem 0 1rem;
+}
+h3 {
+    margin: 0;
+    font-size: 1rem;
+}
+.list-heading p {
+    margin: 0.45rem 0 0;
+    font-size: 0.85rem;
+    color: var(--p-text-muted-color);
+}
+.count {
+    display: inline-block;
+    padding: 0.15rem 0.5rem;
+    margin-left: 0.3rem;
+    border-radius: 2rem;
+    font-size: 0.75rem;
+    background: var(--p-content-hover-background);
+    color: var(--p-text-muted-color);
+}
+.receipt-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 0.85rem;
+}
+.receipt-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(11rem, 14rem) auto;
+    gap: 1.25rem;
+    align-items: center;
+    padding: 1.25rem;
+    border: 1px solid var(--p-content-border-color);
+    border-radius: 1rem;
+}
+.file-description {
+    display: flex;
+    gap: 0.85rem;
+    align-items: center;
+    min-width: 0;
+}
+.file-description > i {
+    display: grid;
+    place-items: center;
+    width: 2.75rem;
+    height: 3rem;
+    border-radius: 0.65rem;
+    background: var(--p-content-hover-background);
+    font-size: 1.4rem;
+    color: var(--p-primary-color);
+    flex-shrink: 0;
+}
+.file-description strong {
+    display: block;
+    overflow-wrap: anywhere;
+    font-size: 0.9rem;
+}
+.file-description small {
+    display: block;
+    color: var(--p-text-muted-color);
+    margin-top: 0.4rem;
+    font-size: 0.75rem;
+}
+.receipt-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+}
+label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+.pending-panel {
+    padding: 1.25rem;
+    border: 1px dashed var(--p-primary-color);
+    border-radius: 1rem;
+    margin-bottom: 1.5rem;
+}
+.pending-panel .receipt-row {
+    margin-top: 0.75rem;
+}
+.feedback {
+    padding: 0.85rem 1rem;
+    border-radius: 0.65rem;
+    font-size: 0.85rem;
+    white-space: pre-wrap;
+}
+.failure {
+    color: var(--p-red-700);
+    background: var(--p-red-50);
+}
+.success {
+    color: var(--p-green-700);
+    background: var(--p-green-50);
+}
+.empty {
+    display: grid;
+    justify-items: center;
+    gap: 0.65rem;
+    text-align: center;
+    padding: 2.5rem 1rem;
+    color: var(--p-text-muted-color);
+    border: 1px dashed var(--p-content-border-color);
+    border-radius: 1rem;
+}
+.empty > i {
+    font-size: 2rem;
+    color: var(--p-primary-color);
+}
+:host-context(.app-dark) {
+    .summary .balance,
+    .summary .settled,
+    .feedback {
+        background: var(--p-content-hover-background);
+    }
+}
+@media (max-width: 900px) {
+    .receipt-row {
+        grid-template-columns: minmax(0, 1fr) minmax(10rem, 13rem);
+    }
+    .receipt-actions {
+        grid-column: 1/-1;
+        flex-direction: row;
+        justify-content: flex-end;
+    }
+}
+@media (max-width: 600px) {
+    .summary,
+    .receipt-row {
+        grid-template-columns: 1fr;
+    }
+    .summary {
+        gap: 0.65rem;
+    }
+    .summary > div,
+    .receipt-row,
+    .pending-panel {
+        padding: 1rem;
+    }
+    .receipt-actions {
+        justify-content: flex-start;
+    }
+}

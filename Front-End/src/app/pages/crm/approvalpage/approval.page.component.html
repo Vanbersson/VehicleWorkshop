@@ -1,0 +1,140 @@
+<main class="approval-page">
+    <div class="topbar">
+        <span class="brand"><span class="brand-icon" aria-hidden="true">PDF</span>{{ title | uppercase }} COMERCIAL</span>
+        @if (page() && !page()!.accessRequired) {
+            <p-tag
+                [value]="page()!.approvedAt ? title + ' aprovad' + (kind() === 'orders' ? 'o' : 'a') : page()!.signedFileName ? 'Assinatura recebida' : 'Aguardando assinatura'"
+                [severity]="page()!.approvedAt ? 'success' : 'info'"
+                [rounded]="true"
+            />
+        }
+    </div>
+    @if (loading()) {
+        <section class="card state" role="status">
+            <i class="pi pi-spin pi-spinner" aria-hidden="true"></i>
+            <p>Carregando {{ relation }}...</p>
+        </section>
+    } @else if (!page()) {
+        <section class="card state">
+            <i class="pi pi-link" aria-hidden="true"></i>
+            <h1>Não foi possível abrir o link</h1>
+            <p role="alert">{{ error() }}</p>
+            <p-button label="Tentar novamente" icon="pi pi-refresh" (onClick)="load()" />
+        </section>
+    } @else if (page()!.accessRequired) {
+        <section class="card access-card" aria-labelledby="accessTitle">
+            <span class="eyebrow">ACESSO {{ relation | uppercase }}</span>
+            <h1 id="accessTitle">Confirme seus dados</h1>
+            <p>Informe o CNPJ ou CPF para acessar os documentos e a aprovação.</p>
+            <form [formGroup]="identity" (ngSubmit)="verify()">
+                <label for="taxId">CNPJ ou CPF</label>
+                <input pInputText inputId="taxId" id="taxId" formControlName="taxId" type="text" inputmode="numeric" autocomplete="off" maxlength="32" placeholder="Digite o CNPJ ou CPF" [readOnly]="busy()" class="w-full" />
+                <small>Use o documento cadastrado, com ou sem pontuação.</small>
+                @if (identity.controls.taxId.touched && identity.controls.taxId.invalid) {
+                    <p class="error" role="alert">Informe o CNPJ ou CPF.</p>
+                }
+                @if (error()) {
+                    <p class="error" role="alert">{{ error() }}</p>
+                }
+                <p-button type="submit" [label]="'Acessar ' + title.toLowerCase()" [loading]="busy()" styleClass="w-full" />
+            </form>
+            <p class="note">Se não conseguir acessar, entre em contato com o vendedor.</p>
+        </section>
+    } @else {
+        <header class="hero">
+            <h1>Aprovação {{ relation }}</h1>
+            <p>Confira o documento, envie a via assinada e confirme sua aprovação.</p>
+        </header>
+        <nav class="steps" aria-label="Etapas da aprovação">
+            <div><span>1</span>Baixar documento</div>
+            <div [class.active]="!page()!.signedFileName && !page()!.approvedAt"><span>2</span>Enviar documento assinado</div>
+            <div [class.active]="!!page()!.signedFileName || !!page()!.approvedAt"><span>3</span>Aprovar documento</div>
+        </nav>
+        @if (error()) {
+            <p class="error" role="alert">{{ error() }}</p>
+        }
+        <div class="approval-layout">
+            <div class="stack">
+                <section class="card" aria-labelledby="downloadTitle">
+                    <div class="card-heading">
+                        <span class="number">01</span>
+                        <div>
+                            <h2 id="downloadTitle">Confira o documento</h2>
+                            <p>Baixe o arquivo e revise todos os detalhes.</p>
+                        </div>
+                    </div>
+                    <div class="document-file">
+                        <span class="file-icon" aria-hidden="true">PDF</span>
+                        <div class="min-w-0">
+                            <strong class="filename">{{ page()!.fileName }}</strong
+                            ><small>Documento original {{ relation }}{{ page()!.size != null ? ' ? ' + (page()!.size! / 1024 | number: '1.0-1') + ' KB' : '' }}</small>
+                        </div>
+                    </div>
+                    <p-button label="Baixar documento" icon="pi pi-download" severity="secondary" [outlined]="true" (onClick)="download()" [disabled]="busy()" styleClass="w-full" />
+                </section>
+                <section class="card" aria-labelledby="signedTitle">
+                    <div class="card-heading">
+                        <span class="number">02</span>
+                        <div>
+                            <h2 id="signedTitle">Documento assinado</h2>
+                            <p>Assine o documento e envie a via em PDF.</p>
+                        </div>
+                    </div>
+                    @if (page()!.signedFileName) {
+                        <div class="signed-received">
+                            <i class="pi pi-check-circle" aria-hidden="true"></i>
+                            <div>
+                                <strong>Documento assinado recebido</strong>
+                                <p class="filename">{{ page()!.signedFileName }}</p>
+                                @if (page()!.signedUploadedAt) {
+                                    <small>{{ page()!.signedUploadedAt | date: 'dd/MM/yyyy HH:mm' }}</small>
+                                }
+                            </div>
+                        </div>
+                        <p-button label="Baixar documento assinado" icon="pi pi-download" severity="secondary" [text]="true" (onClick)="download(true)" [disabled]="busy()" />
+                    } @else if (page()!.approvedAt) {
+                        <p>A aprovação deste documento já foi registrada.</p>
+                    } @else {
+                        <label for="signedFile">Selecione o documento assinado</label>
+                        <div class="upload-area">
+                            <i class="pi pi-upload" aria-hidden="true"></i><strong>Envie o documento em PDF</strong><small>Um arquivo de até 5 MB.</small>
+                            <input #signedFileInput id="signedFile" type="file" accept=".pdf,application/pdf" (change)="selectFile($event)" [disabled]="busy()" hidden />
+                            <p-button label="Selecionar PDF assinado" icon="pi pi-plus" severity="secondary" [outlined]="true" (onClick)="signedFileInput.click()" [disabled]="busy()" />
+                            @if (file()) {
+                                <span class="filename" role="status">{{ file()!.name }}</span>
+                            }
+                        </div>
+                        <p-button label="Enviar PDF assinado" icon="pi pi-upload" (onClick)="upload()" [disabled]="!file() || busy()" [loading]="busy() && !!file()" styleClass="w-full" />
+                    }
+                </section>
+            </div>
+            <section class="card approval-card" aria-labelledby="approveTitle">
+                <div class="card-heading">
+                    <span class="number">03</span>
+                    <div>
+                        <h2 id="approveTitle">Aprovar {{ title.toLowerCase() }}</h2>
+                        <p>Confirme para finalizar esta etapa.</p>
+                    </div>
+                </div>
+                @if (page()!.approvedAt) {
+                    <div class="approved" role="status">
+                        <i class="pi pi-check" aria-hidden="true"></i><strong>{{ title }} aprovad{{ kind() === 'orders' ? 'o' : 'a' }}</strong>
+                        <p>Aprovação registrada em {{ page()!.approvedAt | date: 'dd/MM/yyyy HH:mm' }}.</p>
+                    </div>
+                } @else if (page()!.signedFileName) {
+                    <form (submit)="$event.preventDefault(); approve()">
+                        <div class="consent">
+                            <p-checkbox inputId="confirmed" [formControl]="confirmation" [binary]="true" [readonly]="busy()" /><label for="confirmed">Li o documento e confirmo a aprovação {{ relation }}.</label>
+                        </div>
+                        <p-button type="submit" [label]="'Aprovar ' + title.toLowerCase()" [loading]="busy()" [disabled]="confirmation.invalid || busy()" styleClass="w-full" />
+                    </form>
+                } @else {
+                    <p class="pending"><i class="pi pi-clock" aria-hidden="true"></i> Envie o PDF assinado para liberar esta etapa.</p>
+                    <p-button [label]="'Aprovar ' + title.toLowerCase()" [disabled]="true" styleClass="w-full" />
+                }
+                <p class="note">A aprovação será registrada com data e hora após o envio do documento assinado.</p>
+            </section>
+        </div>
+    }
+    <footer>Este link é exclusivo para o documento compartilhado.</footer>
+</main>

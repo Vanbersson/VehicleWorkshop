@@ -1,3 +1,4 @@
+import { CustomerAttendance } from '@/app/models/crm/customer.attendance';
 import { HttpClient, HttpHeaders, HttpResponse } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { StorageService } from '../../storage/storage.service';
@@ -28,6 +29,10 @@ export class VisitService {
     }
     registerUpdate(p: Visit): Observable<HttpResponse<Visit>> {
         return this.http.post<Visit>(`${environment.apiuUrl}/salesperson/visit/register/update`, p, { headers: this.myHeaders(), observe: 'response' });
+    }
+
+    generateAttendance(id: number): Observable<CustomerAttendance> {
+        return this.http.post<CustomerAttendance>(`${environment.apiuUrl}/salesperson/visit/register/${id}/attendance`, {}, { headers: this.myHeaders() });
     }
 
     visitFilterId(id: number): Observable<HttpResponse<Visit>> {

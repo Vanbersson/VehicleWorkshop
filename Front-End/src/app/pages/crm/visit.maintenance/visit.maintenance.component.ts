@@ -71,6 +71,10 @@ interface IProductsInterest {
 export default class VisitMaintenanceComponent implements OnInit {
     private visit: Visit | null = null;
     private navigateAfterCompletion = false;
+    private returnToVisitsAfterPrompt = false;
+    attendancePromptVisible = false;
+    readonly generatingAttendance = signal(false);
+    readonly attendanceError = signal('');
     private previousContactType = ContactTypeEnum.IN_PERSON;
     saving = signal(false);
     initializing = signal(true);
@@ -114,7 +118,6 @@ export default class VisitMaintenanceComponent implements OnInit {
     constructor(
         private router: Router,
         private visitService: VisitService,
-        private loadingService: LoadingService,
         private userService: UserService,
         private messageService: MessageService,
         private location: Location
@@ -130,7 +133,7 @@ export default class VisitMaintenanceComponent implements OnInit {
     }
 
     private async init(): Promise<void> {
-        this.loadingService.show();
+        //  this.loadingService.show();
         try {
             this.salespersons.set(await this.loadAuthorizedSalespersons());
             if (this.visit) {
@@ -169,7 +172,7 @@ export default class VisitMaintenanceComponent implements OnInit {
             }
         } finally {
             this.initializing.set(false);
-            this.loadingService.hide();
+            // this.loadingService.hide();
         }
     }
 
@@ -297,7 +300,6 @@ export default class VisitMaintenanceComponent implements OnInit {
             payload.dateVisit = this.formatDateTime(new Date(date.getFullYear(), date.getMonth(), date.getDate(), time.getHours(), time.getMinutes()));
         }
         try {
-            this.loadingService.show();
             const result = await lastValueFrom(this.visit?.id ? this.visitService.registerUpdate(payload) : this.visitService.registerNew(payload));
             if (!result.body?.id) throw new Error('O servidor não retornou o registro salvo.');
             this.visit = result.body;
@@ -310,7 +312,6 @@ export default class VisitMaintenanceComponent implements OnInit {
             this.messageService.add({ severity: 'error', summary: 'Erro ao salvar visita', detail });
             return false;
         } finally {
-            this.loadingService.hide();
             this.saving.set(false);
         }
     }
@@ -329,7 +330,35 @@ export default class VisitMaintenanceComponent implements OnInit {
     async onCompletionDialogHide(): Promise<void> {
         if (!this.navigateAfterCompletion) return;
         this.navigateAfterCompletion = false;
+        this.attendancePromptVisible = true;
+    }
+
+    async finishWithoutAttendance(): Promise<void> {
+        if (this.generatingAttendance()) return;
+        this.returnToVisitsAfterPrompt = true;
+        this.attendancePromptVisible = false;
+    }
+
+    async onAttendancePromptHide(): Promise<void> {
+        if (!this.returnToVisitsAfterPrompt) return;
+        this.returnToVisitsAfterPrompt = false;
         await this.router.navigate(['/crm/visit']);
+    }
+
+    async generateAttendance(): Promise<void> {
+        if (!this.visit?.id || this.generatingAttendance()) return;
+        this.generatingAttendance.set(true);
+        this.attendanceError.set('');
+        try {
+            const attendance = await lastValueFrom(this.visitService.generateAttendance(this.visit.id));
+            if (!attendance?.id) throw new Error('O servidor não confirmou a criação do atendimento.');
+            this.returnToVisitsAfterPrompt = true;
+            this.attendancePromptVisible = false;
+        } catch {
+            this.attendanceError.set('A visita foi concluída, mas não foi possível gerar o atendimento. Tente novamente.');
+        } finally {
+            this.generatingAttendance.set(false);
+        }
     }
 
     formatDateTime(date: Date): string {
