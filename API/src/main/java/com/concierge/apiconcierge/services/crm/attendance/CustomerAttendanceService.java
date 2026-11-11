@@ -56,6 +56,7 @@ public class CustomerAttendanceService {
 
     @Transactional
     public AttendanceResponseDto create(AttendanceCreateDto data, String email) {
+        if (data.clientId() == null || data.clientId() <= 0) throw new BusinessException("Selecione um cliente cadastrado para criar o atendimento. Somente visitas podem gerar atendimento sem cliente cadastrado.");
         User user = currentUser(email);
         Integer ownSalesperson = permittedCreationSalesperson(user);
         if (ownSalesperson != null && !Objects.equals(ownSalesperson, data.salespersonId()))
@@ -134,10 +135,16 @@ public class CustomerAttendanceService {
         if (!Objects.equals(attendance.getVersion(), data.version())) {
             throw new BusinessException("Este atendimento foi alterado. Atualize a lista antes de tentar novamente.");
         }
+        attendance = repository.findForQuote(user.getCompanyId(), user.getResaleId(), data.id());
+        if (attendance == null) throw new ResourcesNotFoundException("Atendimento não encontrado.");
+        if (!Objects.equals(attendance.getVersion(), data.version())) throw new BusinessException("Este atendimento foi alterado. Atualize a lista antes de tentar novamente.");
+        if (attendance.getStatus() == AttendanceStatus.COMPLETED) throw new BusinessException("O atendimento concluído está disponível apenas para consulta.");
         if (attendance.getStatus() == com.concierge.apiconcierge.models.crm.attendance.AttendanceStatus.CANCELLED)
             throw new BusinessException("O atendimento está cancelado e não pode ser alterado.");
         if (data.status() == com.concierge.apiconcierge.models.crm.attendance.AttendanceStatus.CANCELLED)
             throw new BusinessException("Use a ação de cancelamento e informe o motivo.");
+        Integer effectiveClientId = data.clientId() != null ? data.clientId() : attendance.getClientId();
+        if (effectiveClientId == null || effectiveClientId <= 0) throw new BusinessException("Selecione um cliente cadastrado antes de salvar a etapa do atendimento.");
         if (data.salespersonId() != null && !Objects.equals(data.salespersonId(), attendance.getSalespersonId())) {
             Integer allowedSalesperson = permittedCreationSalesperson(user);
             if (allowedSalesperson != null && !Objects.equals(allowedSalesperson, data.salespersonId()))
@@ -165,6 +172,8 @@ public class CustomerAttendanceService {
         if (data.documentsNotes() != null) attendance.setDocumentsNotes(data.documentsNotes().trim());
         if (data.proposalNotes() != null) attendance.setProposalNotes(data.proposalNotes().trim());
         attendance.setExpectedDeliveryDate(data.expectedDeliveryDate());
+        attendance.setScheduledDeliveryDate(data.scheduledDeliveryDate());
+        attendance.setPickupDate(data.pickupDate());
         attendance.setStatus(data.status());
         attendance.setNotes(data.notes() == null ? "" : data.notes().trim());
         CustomerAttendance saved = repository.saveAndFlush(attendance);
@@ -179,6 +188,7 @@ public class CustomerAttendanceService {
         CustomerAttendance scope = authorizedAttendance(data.id(), email);
         CustomerAttendance attendance = repository.findForQuote(scope.getCompanyId(), scope.getResaleId(), scope.getId());
         if (attendance == null) throw new ResourcesNotFoundException("Atendimento não encontrado.");
+        if (attendance.getStatus() == AttendanceStatus.COMPLETED) throw new BusinessException("O atendimento concluído não pode ser cancelado.");
         if (attendance.getStatus() == AttendanceStatus.CANCELLED)
             throw new BusinessException("Este atendimento já está cancelado.");
         if (!Objects.equals(attendance.getVersion(), data.version()))

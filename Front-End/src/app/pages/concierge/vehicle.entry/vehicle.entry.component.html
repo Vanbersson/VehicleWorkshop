@@ -507,7 +507,7 @@
                 </td>
                 <td>{{ vehicle.vehicleFleet || '—' }}</td>
                 <td>{{ vehicle.modelDescription | uppercase }}</td>
-                <td>{{ vehicle.attendantUserName || 'Não informado' }}</td>
+                <td>{{ vehicle.salespersonName || 'Não informado' }}</td>
                 <td>{{ vehicle.clientCompanyName || 'Sem cadastro' }}</td>
                 <td><p-tag [value]="vehicle.id ? 'Fotos pendentes' : 'A registrar'" [severity]="vehicle.id ? 'warn' : 'secondary'" [rounded]="true" /></td>
                 <td><p-button type="button" icon="pi pi-trash" label="Remover" severity="danger" [text]="true" size="small" [disabled]="saving() || vehicle.id != null" (onClick)="deleteVehicleEntry(index)" /></td></tr></ng-template

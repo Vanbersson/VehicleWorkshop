@@ -30,6 +30,19 @@ describe('Attendance quote dialog', () => {
         component.visible = true;
     });
 
+    it('opens a completed quote in consultation mode and rejects changes', async () => {
+        const completed = { ...attendance, status: AttendanceStatus.COMPLETED };
+        component.attendance = completed;
+        service.getQuote.and.returnValue(of({ attendance: completed, quote }));
+        await component.load();
+        expect(component.form.disabled).toBeTrue();
+        expect(component.items.getRawValue()).toEqual(quote.items);
+        component.addItem();
+        component.removeItem(0);
+        expect(component.items.length).toBe(1);
+        await component.save();
+        expect(service.saveQuote).not.toHaveBeenCalled();
+    });
     it('reopens saved items with the quotation version', async () => {
         service.getQuote.and.returnValue(of({ attendance, quote }));
         await component.load();

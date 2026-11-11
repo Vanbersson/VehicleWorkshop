@@ -11,16 +11,9 @@ import java.util.Date;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(of = "id")
-@SecondaryTable(name = "tb_company", pkJoinColumns = @PrimaryKeyJoinColumn(name = "id"))
-@SecondaryTable(name = "tb_resale", pkJoinColumns = @PrimaryKeyJoinColumn(name = "id"))
-@SecondaryTable(name = "tb_vehicle_entry", pkJoinColumns = @PrimaryKeyJoinColumn(name = "id"))
-@SecondaryTable(name = "tb_user", pkJoinColumns = @PrimaryKeyJoinColumn(name = "id"))
-@SecondaryTable(name = "tb_client_company", pkJoinColumns = @PrimaryKeyJoinColumn(name = "id"))
 @Entity
-@Table(name = "tb_budget")
 public class Budget {
 
-    @JoinColumn(table = "tb_company", referencedColumnName = "id")
     @Column(name = "company_id")
     private Integer companyId;
 

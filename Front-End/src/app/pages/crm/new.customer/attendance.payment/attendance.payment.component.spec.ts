@@ -25,11 +25,59 @@ describe('AttendancePaymentComponent', () => {
         component.selectFiles({ target: { files: [new File(['pdf'], 'recibo.pdf', { type: 'application/pdf' }), new File(['png'], 'foto.png', { type: 'image/png' })], value: '' } } as unknown as Event);
     }
     beforeEach(() => {
-        service = jasmine.createSpyObj('CustomerAttendanceService', ['removePaymentReceipt', 'documents', 'uploadPaymentReceipt', 'updatePaymentReceiptValue', 'downloadDocument']);
+        service = jasmine.createSpyObj('CustomerAttendanceService', [
+            'removePaymentReceipt',
+            'documents',
+            'uploadPaymentReceipt',
+            'updatePaymentReceiptValue',
+            'downloadDocument',
+            'uploadInvoicingDocument',
+            'updateInvoicingDocumentValue',
+            'removeInvoicingDocument'
+        ]);
         service.documents.and.returnValue(of([receipt]));
         TestBed.configureTestingModule({ providers: [AttendancePaymentComponent, { provide: CustomerAttendanceService, useValue: service }] });
         component = TestBed.inject(AttendancePaymentComponent);
         component.attendance = { ...attendance };
+    });
+    it('blocks payment and invoicing mutations after completion', async () => {
+        component.attendance = { ...attendance, status: AttendanceStatus.COMPLETED };
+        for (const stage of ['PAYMENT', 'INVOICING'] as const) {
+            component.stage = stage;
+            expect(component.readOnly).toBeTrue();
+            await component.saveAmount({ ...receipt, stage });
+            await component.remove({ ...receipt, stage });
+            await component.upload();
+        }
+        expect(service.updatePaymentReceiptValue).not.toHaveBeenCalled();
+        expect(service.updateInvoicingDocumentValue).not.toHaveBeenCalled();
+        expect(service.removePaymentReceipt).not.toHaveBeenCalled();
+        expect(service.removeInvoicingDocument).not.toHaveBeenCalled();
+        expect(service.uploadPaymentReceipt).not.toHaveBeenCalled();
+        expect(service.uploadInvoicingDocument).not.toHaveBeenCalled();
+    });
+    it('uses fiscal documents and uploads each PDF with its note value in invoicing mode', async () => {
+        component.stage = 'INVOICING';
+        const fiscal: AttendanceDocument = { ...receipt, stage: 'INVOICING', receiptAmount: 150 };
+        service.documents.and.returnValue(of([receipt, fiscal]));
+        await component.load();
+        expect(service.documents).toHaveBeenCalledWith(42, 'INVOICING');
+        expect(component.total()).toBe(150);
+        const file = new File(['%PDF-test'], 'nota.pdf', { type: 'application/pdf' });
+        component.selectFiles({ target: { files: [file], value: '' } } as unknown as Event);
+        component.setPendingAmount(component.pending()[0].id, 75.5);
+        service.uploadInvoicingDocument.and.returnValue(of({ ...fiscal, id: 2, receiptAmount: 75.5 }));
+        await component.upload();
+        expect(service.uploadInvoicingDocument).toHaveBeenCalledWith(42, file, 75.5);
+        expect(service.uploadPaymentReceipt).not.toHaveBeenCalled();
+        expect(component.total()).toBe(225.5);
+        expect(component.pending()).toEqual([]);
+    });
+    it('rejects image selection in invoicing mode', () => {
+        component.stage = 'INVOICING';
+        select();
+        expect(component.pending()).toEqual([]);
+        expect(component.error()).toContain('PDF');
     });
     it('loads only payment receipts and their total', async () => {
         await component.load();

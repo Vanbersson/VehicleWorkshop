@@ -30,7 +30,7 @@ public class BudgetController {
     public ResponseEntity<Object> save(@RequestBody BudgetNewDto data, HttpServletRequest request) {
         try {
             String userLoginEmail = this.getEmail(request);
-            System.out.println(userLoginEmail);
+
             Integer id = this.service.save(data, userLoginEmail);
             Map<String, Object> map = new HashMap<>();
             map.put("id", id);

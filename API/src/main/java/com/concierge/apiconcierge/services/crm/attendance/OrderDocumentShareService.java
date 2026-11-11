@@ -34,7 +34,7 @@ public class OrderDocumentShareService {
  public Share create(Integer attendanceId, Integer documentId, String email) {
   var scope=attendances.authorizedAttendance(attendanceId,email);
   var attendance=attendanceRepository.findForQuote(scope.getCompanyId(),scope.getResaleId(),attendanceId);
-  if(attendance==null || attendance.getStatus()==AttendanceStatus.CANCELLED) throw unavailable();
+  if(attendance==null || attendance.getStatus()==AttendanceStatus.COMPLETED || attendance.getStatus()==AttendanceStatus.CANCELLED) throw unavailable();
   var document=documents.findByAttendanceIdAndId(attendanceId,documentId).orElseThrow(this::unavailable);
   if(document.getStage()!=AttendanceDocumentStage.DOCUMENTS) throw unavailable();
   byte[] bytes=new byte[32];random.nextBytes(bytes);
@@ -42,6 +42,11 @@ public class OrderDocumentShareService {
   Instant expires=Instant.now().plus(7,ChronoUnit.DAYS);
   document.setShareTokenHash(hash(token));document.setShareExpiresAt(expires);documents.saveAndFlush(document);
   return new Share("/public/orders/"+token,expires);
+ }
+ private void requireMutable(AttendanceDocument document) {
+  var scope=attendanceRepository.findById(document.getAttendanceId()).orElseThrow(this::unavailable);
+  var attendance=attendanceRepository.findForQuote(scope.getCompanyId(),scope.getResaleId(),scope.getId());
+  if(attendance==null || attendance.getStatus()==AttendanceStatus.COMPLETED || attendance.getStatus()==AttendanceStatus.CANCELLED) throw unavailable();
  }
  private void validateToken(String token) {
   if(token==null || !token.matches("[A-Za-z0-9_-]{43}")) throw unavailable();
@@ -62,6 +67,7 @@ public class OrderDocumentShareService {
   if(!confirmed) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Confirme a aprovacao do pedido.");
   validateToken(token);
   var document=validate(documents.findForShareApproval(hash(token)).orElseThrow(this::unavailable));
+  requireMutable(document);
   if(document.getOrderApprovedAt()==null) {
    if(document.getSignedFilePath()==null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Envie o pedido assinado em PDF antes de aprovar.");
    document.setOrderApprovedAt(Instant.now());
@@ -79,6 +85,7 @@ public class OrderDocumentShareService {
  public void uploadSigned(String token, org.springframework.web.multipart.MultipartFile file) throws IOException {
   validateToken(token);
   var document=validate(documents.findForShareApproval(hash(token)).orElseThrow(this::unavailable));
+  requireMutable(document);
   if(document.getOrderApprovedAt()!=null || document.getSignedFilePath()!=null) throw new ResponseStatusException(HttpStatus.CONFLICT,"O pedido assinado ja foi enviado.");
   String name=Optional.ofNullable(file.getOriginalFilename()).orElse("").replace('\\','/');
   name=name.substring(name.lastIndexOf('/')+1).replaceAll("[\\p{Cntrl}]","").trim();

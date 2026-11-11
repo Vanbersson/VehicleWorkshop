@@ -40,7 +40,7 @@ describe('Vehicle print report', () => {
                 modelDescription: 'Truck',
                 vehicleColor: 'Blue',
                 vehicleFleet: 'Fleet1',
-                attendantUserName: 'Consultant',
+                salespersonName: 'Consultant',
                 entryDate: '2024-01-01T10:00:00Z',
                 vehicleKmEntry: 'omit-km',
                 numServiceOrder: 'OS42',

@@ -12,14 +12,13 @@ public class ConstantsPermission {
     public static final Integer AUTH_ENTRY_VEHICLE = 108;
 
 
-
     public static final Integer CONCIERGE_VEHICLE_ENTRY_NOTIFICATIONS = 153;
     public static final Integer CONCIERGE_VEHICLE_EXIT_NOTIFICATIONS = 154;
 
     //BUDGET
-    public static final Integer BUDGET_NEW = 150;
-    public static final Integer BUDGET_UPDATE = 151;
-    public static final Integer BUDGET_SHOW = 152;
+    public static final Integer CREATE_BUDGET_ALL_SALESPERSON = 150;
+    public static final Integer UPDATE_BUDGET_ALL_SALESPERSON = 151;
+    public static final Integer LIST_BUDGET_ALL_SALESPERSON = 152;
 
     //WORKSHOP
     public static final Integer EDIT_QTD_MATERIAL = 300;

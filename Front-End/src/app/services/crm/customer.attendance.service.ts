@@ -71,6 +71,14 @@ export class CustomerAttendanceService {
         return this.http.post<AttendanceDocument>(`${environment.apiuUrl}/crm/customer-attendance/${attendanceId}/documents`, data, { headers: this.headers() });
     }
 
+    uploadInvoicingDocument(attendanceId: number, file: File, receiptAmount: number): Observable<AttendanceDocument> {
+        const data = new FormData();
+        data.append('file', file);
+        data.append('stage', 'INVOICING');
+        data.append('receiptAmount', receiptAmount.toFixed(2));
+        return this.http.post<AttendanceDocument>(`${environment.apiuUrl}/crm/customer-attendance/${attendanceId}/documents`, data, { headers: this.headers() });
+    }
+
     uploadPaymentReceipt(attendanceId: number, file: File, receiptAmount: number): Observable<AttendanceDocument> {
         const data = new FormData();
         data.append('file', file);
@@ -78,7 +86,7 @@ export class CustomerAttendanceService {
         data.append('receiptAmount', receiptAmount.toFixed(2));
         return this.http.post<AttendanceDocument>(`${environment.apiuUrl}/crm/customer-attendance/${attendanceId}/documents`, data, { headers: this.headers() });
     }
-    
+
     updatePaymentReceiptValue(attendanceId: number, documentId: number, receiptAmount: number): Observable<AttendanceDocument> {
         return this.http.post<AttendanceDocument>(`${environment.apiuUrl}/crm/customer-attendance/${attendanceId}/documents/${documentId}/payment-value`, { receiptAmount }, { headers: this.headers() });
     }
@@ -94,6 +102,18 @@ export class CustomerAttendanceService {
     removePaymentReceipt(attendanceId: number, documentId: number): Observable<void> {
         return this.http.post<void>(`${environment.apiuUrl}/crm/customer-attendance/${attendanceId}/documents/${documentId}/payment-remove`, {}, { headers: this.headers() });
     }
+    updateInvoicingDocumentValue(attendanceId: number, documentId: number, receiptAmount: number): Observable<AttendanceDocument> {
+        return this.http.post<AttendanceDocument>(`${environment.apiuUrl}/crm/customer-attendance/${attendanceId}/documents/${documentId}/invoicing-value`, { receiptAmount }, { headers: this.headers() });
+    }
+
+    removeDeliveryDocument(attendanceId: number, documentId: number): Observable<void> {
+        return this.http.post<void>(`${environment.apiuUrl}/crm/customer-attendance/${attendanceId}/documents/${documentId}/delivery-remove`, null, { headers: this.headers() });
+    }
+
+    removeInvoicingDocument(attendanceId: number, documentId: number): Observable<void> {
+        return this.http.post<void>(`${environment.apiuUrl}/crm/customer-attendance/${attendanceId}/documents/${documentId}/invoicing-remove`, null, { headers: this.headers() });
+    }
+
     removeOrderDocument(attendanceId: number, documentId: number): Observable<void> {
         return this.http.post<void>(`${environment.apiuUrl}/crm/customer-attendance/${attendanceId}/documents/${documentId}/order-remove`, null, { headers: this.headers() });
     }

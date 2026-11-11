@@ -68,7 +68,7 @@ public class VehicleReportRepository {
             }
         }
         if (vehicleFilters.userAttendantId() != null && vehicleFilters.userAttendantId() != 0)
-            predicates.add(cb.equal(vehicle.get("attendantUserId"), vehicleFilters.userAttendantId()));
+            predicates.add(cb.equal(vehicle.get("salespersonId"), vehicleFilters.userAttendantId()));
         if (vehicleFilters.clientId() != null && vehicleFilters.clientId() != 0)
             predicates.add(cb.equal(vehicle.get("clientCompanyId"), vehicleFilters.clientId()));
         if (vehicleFilters.modelId() != null && vehicleFilters.modelId() != 0)

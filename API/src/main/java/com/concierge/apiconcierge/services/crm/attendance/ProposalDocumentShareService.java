@@ -34,7 +34,7 @@ public class ProposalDocumentShareService {
  public Share create(Integer attendanceId, Integer documentId, String email) {
   var scope=attendances.authorizedAttendance(attendanceId,email);
   var attendance=attendanceRepository.findForQuote(scope.getCompanyId(),scope.getResaleId(),attendanceId);
-  if(attendance==null || attendance.getStatus()==AttendanceStatus.CANCELLED) throw unavailable();
+  if(attendance==null || attendance.getStatus()==AttendanceStatus.COMPLETED || attendance.getStatus()==AttendanceStatus.CANCELLED) throw unavailable();
   var document=documents.findByAttendanceIdAndId(attendanceId,documentId).orElseThrow(this::unavailable);
   if(document.getStage()!=AttendanceDocumentStage.PROPOSAL) throw unavailable();
   byte[] bytes=new byte[32];random.nextBytes(bytes);
@@ -42,6 +42,11 @@ public class ProposalDocumentShareService {
   Instant expires=Instant.now().plus(7,ChronoUnit.DAYS);
   document.setShareTokenHash(hash(token));document.setShareExpiresAt(expires);documents.saveAndFlush(document);
   return new Share("/public/proposals/"+token,expires);
+ }
+ private void requireMutable(AttendanceDocument document) {
+  var scope=attendanceRepository.findById(document.getAttendanceId()).orElseThrow(this::unavailable);
+  var attendance=attendanceRepository.findForQuote(scope.getCompanyId(),scope.getResaleId(),scope.getId());
+  if(attendance==null || attendance.getStatus()==AttendanceStatus.COMPLETED || attendance.getStatus()==AttendanceStatus.CANCELLED) throw unavailable();
  }
  private void validateToken(String token) {
   if(token==null || !token.matches("[A-Za-z0-9_-]{43}")) throw unavailable();
@@ -62,6 +67,7 @@ public class ProposalDocumentShareService {
   if(!confirmed) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Confirme a aprovacao da proposta.");
   validateToken(token);
   var document=validate(documents.findForShareApproval(hash(token)).orElseThrow(this::unavailable));
+  requireMutable(document);
   if(document.getProposalApprovedAt()==null) {
    if(document.getSignedFilePath()==null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Envie a proposta assinada em PDF antes de aprovar.");
    document.setProposalApprovedAt(Instant.now());
@@ -79,6 +85,7 @@ public class ProposalDocumentShareService {
  public void uploadSigned(String token, org.springframework.web.multipart.MultipartFile file) throws IOException {
   validateToken(token);
   var document=validate(documents.findForShareApproval(hash(token)).orElseThrow(this::unavailable));
+  requireMutable(document);
   if(document.getProposalApprovedAt()!=null || document.getSignedFilePath()!=null) throw new ResponseStatusException(HttpStatus.CONFLICT,"A proposta assinada ja foi enviada.");
   String name=Optional.ofNullable(file.getOriginalFilename()).orElse("").replace('\\','/');
   name=name.substring(name.lastIndexOf('/')+1).replaceAll("[\\p{Cntrl}]","").trim();

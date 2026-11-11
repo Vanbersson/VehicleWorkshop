@@ -23,6 +23,22 @@ class AttendanceDocumentServiceTest {
  @InjectMocks AttendanceDocumentService service;
  CustomerAttendance attendance;
  @BeforeEach void setup(){var uploader=new com.concierge.apiconcierge.models.user.User();uploader.setId(9);uploader.setName("Operador");lenient().when(users.filterEmail(1,2,"user")).thenReturn(uploader);attendance=new CustomerAttendance();attendance.setId(42);attendance.setCompanyId(1);attendance.setResaleId(2);when(attendances.authorizedAttendance(42,"user")).thenReturn(attendance);lenient().when(attendanceRepository.findForQuote(1,2,42)).thenReturn(attendance);}
+ @Test void acceptsDriverImagesAndLogsDeliveryStage() throws Exception {
+  byte[] png=new byte[]{(byte)137,80,78,71,13,10,26,10};
+  when(documents.saveAndFlush(any())).thenAnswer(call->call.getArgument(0));
+  var saved=service.upload(42,new MockMultipartFile("file","driver.png","image/png",png),AttendanceDocumentStage.DELIVERY,"user");
+  assertEquals(AttendanceDocumentStage.DELIVERY,saved.stage());
+  assertEquals("image/png",saved.contentType());
+  ArgumentCaptor<AttendanceLog> log=ArgumentCaptor.forClass(AttendanceLog.class);
+  verify(logs).saveAndFlush(log.capture());
+  assertEquals(AttendanceStatus.DELIVERY_PENDING,log.getValue().getStage());
+ }
+ @Test void rejectsDisguisedDriverFilesAndDuplicateDocuments() {
+  assertThrows(BusinessException.class,()->service.upload(42,new MockMultipartFile("file","driver.png","image/png","%PDF-test".getBytes()),AttendanceDocumentStage.DELIVERY,"user"));
+  when(documents.findFirstByAttendanceIdAndStage(42,AttendanceDocumentStage.DELIVERY)).thenReturn(Optional.of(new AttendanceDocument()));
+  assertThrows(BusinessException.class,()->service.upload(42,new MockMultipartFile("file","driver.pdf","application/pdf","%PDF-test".getBytes()),AttendanceDocumentStage.DELIVERY,"user"));
+  verify(documents,never()).saveAndFlush(any());verifyNoInteractions(storage);
+ }
  @Test void storesPdfBytesInTheFolderAndOnlyThePathInTheDatabase() throws Exception {
   when(storage.save(eq(1),eq(2),eq(42),eq("pdf"),any())).thenReturn("1/2/attendance/42/documents/file.pdf");
   byte[] bytes="%PDF-1.7 test".getBytes(StandardCharsets.US_ASCII);
@@ -266,6 +282,21 @@ class AttendanceDocumentServiceTest {
   assertEquals(AttendanceLogAction.DOCUMENT_REMOVED,removed.getAction());assertEquals(new java.math.BigDecimal("35.75"),removed.getPreviousAmount());
   for(var log:entries.getAllValues()){assertEquals(AttendanceStatus.PAYMENT_PENDING,log.getStage());assertEquals(9,log.getUserId());assertEquals("Operador",log.getUserName());assertEquals("recibo.pdf",log.getFileName());assertEquals(8,log.getDocumentId());assertNotNull(log.getOccurredAt());}
  }
+ @Test void recordsInvoicingAdditionValueChangeAndRemovalWithAmountsAndActor() throws Exception {
+  when(documents.saveAndFlush(any())).thenAnswer(call->{AttendanceDocument doc=call.getArgument(0);doc.setId(8);return doc;});
+  service.upload(42,new MockMultipartFile("file","nota.pdf","application/pdf","%PDF-test".getBytes()),AttendanceDocumentStage.INVOICING,new java.math.BigDecimal("20.50"),"user");
+  AttendanceDocument doc=new AttendanceDocument();doc.setId(8);doc.setStage(AttendanceDocumentStage.INVOICING);doc.setFileName("nota.pdf");doc.setReceiptAmount(new java.math.BigDecimal("20.50"));
+  when(documents.findByAttendanceIdAndId(42,8)).thenReturn(Optional.of(doc));
+  service.updateInvoiceAmount(42,8,new java.math.BigDecimal("35.75"),"user");
+  org.springframework.transaction.support.TransactionSynchronizationManager.initSynchronization();
+  try{service.removeInvoicingDocument(42,8,"user");}finally{org.springframework.transaction.support.TransactionSynchronizationManager.clearSynchronization();}
+  ArgumentCaptor<AttendanceLog> entries=ArgumentCaptor.forClass(AttendanceLog.class);verify(logs,times(3)).saveAndFlush(entries.capture());
+  var added=entries.getAllValues().get(0);var changed=entries.getAllValues().get(1);var removed=entries.getAllValues().get(2);
+  assertEquals(AttendanceLogAction.DOCUMENT_ADDED,added.getAction());assertEquals(new java.math.BigDecimal("20.50"),added.getNewAmount());
+  assertEquals(AttendanceLogAction.INVOICE_AMOUNT_CHANGED,changed.getAction());assertEquals(new java.math.BigDecimal("20.50"),changed.getPreviousAmount());assertEquals(new java.math.BigDecimal("35.75"),changed.getNewAmount());
+  assertEquals(AttendanceLogAction.DOCUMENT_REMOVED,removed.getAction());assertEquals(new java.math.BigDecimal("35.75"),removed.getPreviousAmount());
+  for(var log:entries.getAllValues()){assertEquals(AttendanceStatus.INVOICING_PENDING,log.getStage());assertEquals(9,log.getUserId());assertEquals("Operador",log.getUserName());assertEquals("nota.pdf",log.getFileName());assertEquals(8,log.getDocumentId());assertNotNull(log.getOccurredAt());}
+ }
  @Test void unchangedPaymentValueDoesNotCreateAuditOrUpdateTimestamp() {
   AttendanceDocument doc=new AttendanceDocument();doc.setStage(AttendanceDocumentStage.PAYMENT);doc.setReceiptAmount(new java.math.BigDecimal("20.00"));
   when(documents.findByAttendanceIdAndId(42,8)).thenReturn(Optional.of(doc));
@@ -276,4 +307,20 @@ class AttendanceDocumentServiceTest {
   AttendanceDocument doc=new AttendanceDocument();doc.setStage(AttendanceDocumentStage.PAYMENT);when(documents.findByAttendanceIdAndId(42,8)).thenReturn(Optional.of(doc));when(logs.saveAndFlush(any())).thenThrow(new IllegalStateException("Audit unavailable"));
   assertThrows(IllegalStateException.class,()->service.removePaymentReceipt(42,8,"user"));verify(documents,never()).delete(any());verifyNoInteractions(storage);
  }
+
+ @Test void completedAttendanceRejectsEveryDocumentMutationButAllowsListing() throws Exception {
+  attendance.setStatus(AttendanceStatus.COMPLETED);
+  for(var stage:AttendanceDocumentStage.values()) assertThrows(BusinessException.class,()->service.upload(42,new MockMultipartFile("file","doc.pdf","application/pdf","%PDF-test".getBytes()),stage,"user"));
+  assertThrows(BusinessException.class,()->service.updateReceiptAmount(42,7,new java.math.BigDecimal("1.00"),"user"));
+  assertThrows(BusinessException.class,()->service.updateInvoiceAmount(42,7,new java.math.BigDecimal("1.00"),"user"));
+  assertThrows(BusinessException.class,()->service.removeOrderDocument(42,7,"user"));
+  assertThrows(BusinessException.class,()->service.removeProposalDocument(42,7,"user"));
+  assertThrows(BusinessException.class,()->service.removePaymentReceipt(42,7,"user"));
+  assertThrows(BusinessException.class,()->service.removeInvoicingDocument(42,7,"user"));
+  assertThrows(BusinessException.class,()->service.removeDeliveryDocument(42,7,"user"));
+  when(documents.listMetadata(42,AttendanceDocumentStage.DOCUMENTS)).thenReturn(List.of());
+  assertTrue(service.list(42,"user").isEmpty());
+  verify(documents,never()).saveAndFlush(any()); verify(documents,never()).delete(any()); verifyNoInteractions(storage);
+ }
+
 }

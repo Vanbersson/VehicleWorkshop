@@ -35,7 +35,7 @@
             [rowsPerPageOptions]="[10, 25, 50]"
             [showCurrentPageReport]="true"
             currentPageReportTemplate="{first}–{last} de {totalRecords} entradas"
-            [globalFilterFields]="['id', 'vehiclePlate', 'modelDescription', 'vehicleFleet', 'numServiceOrder', 'clientCompanyName', 'attendantUserName', 'entryUserName', 'exitUserName']"
+            [globalFilterFields]="['id', 'vehiclePlate', 'modelDescription', 'vehicleFleet', 'numServiceOrder', 'clientCompanyName', 'salespersonName', 'entryUserName', 'exitUserName']"
             [tableStyle]="{ 'min-width': '78rem' }"
             sortField="id"
             [sortOrder]="-1"
@@ -62,7 +62,7 @@
                     <th pSortableColumn="entryDate">Entrada <p-sortIcon field="entryDate" /></th>
                     <th pSortableColumn="exitDate">Saída <p-sortIcon field="exitDate" /></th>
                     <th pSortableColumn="numServiceOrder">O.S. / Frota <p-sortIcon field="numServiceOrder" /></th>
-                    <th pSortableColumn="attendantUserName">Consultor <p-sortIcon field="attendantUserName" /></th>
+                    <th pSortableColumn="salespersonName">Consultor <p-sortIcon field="salespersonName" /></th>
                     <th>Portaria</th>
                     <th><span class="sr-only">Detalhes</span></th>
                 </tr></ng-template
@@ -89,7 +89,7 @@
                         <strong>{{ vehicle.numServiceOrder || '—' }}</strong
                         ><small class="block text-muted-color mt-2">Frota: {{ vehicle.vehicleFleet || '—' }}</small>
                     </td>
-                    <td>{{ vehicle.attendantUserName || 'Não informado' }}</td>
+                    <td>{{ vehicle.salespersonName || 'Não informado' }}</td>
                     <td>
                         <span class="block text-sm">Entrada: {{ vehicle.entryUserName || '—' }}</span
                         ><span class="block text-sm text-muted-color mt-2">Saída: {{ vehicle.exitUserName || '—' }}</span>

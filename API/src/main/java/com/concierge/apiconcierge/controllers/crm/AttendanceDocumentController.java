@@ -63,12 +63,29 @@ public class AttendanceDocumentController {
         service.removePaymentReceipt(attendanceId, documentId, email(request));
     }
 
+    @PostMapping("/{documentId}/invoicing-remove")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void removeInvoicingDocument(@PathVariable Integer attendanceId, @PathVariable Integer documentId, HttpServletRequest request) {
+        service.removeInvoicingDocument(attendanceId, documentId, email(request));
+    }
+
+    @PostMapping("/{documentId}/delivery-remove")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void removeDeliveryDocument(@PathVariable Integer attendanceId, @PathVariable Integer documentId, HttpServletRequest request) {
+        service.removeDeliveryDocument(attendanceId, documentId, email(request));
+    }
+
     public record ReceiptValue(java.math.BigDecimal receiptAmount) {
     }
 
     @PostMapping("/{documentId}/payment-value")
     public AttendanceDocumentDto updateReceiptAmount(@PathVariable Integer attendanceId, @PathVariable Integer documentId, @RequestBody ReceiptValue data, HttpServletRequest request) {
         return service.updateReceiptAmount(attendanceId, documentId, data.receiptAmount(), email(request));
+    }
+
+    @PostMapping("/{documentId}/invoicing-value")
+    public AttendanceDocumentDto updateInvoiceAmount(@PathVariable Integer attendanceId, @PathVariable Integer documentId, @RequestBody ReceiptValue data, HttpServletRequest request) {
+        return service.updateInvoiceAmount(attendanceId, documentId, data.receiptAmount(), email(request));
     }
 
     private String email(HttpServletRequest request) {

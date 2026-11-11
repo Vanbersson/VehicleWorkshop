@@ -5,6 +5,7 @@ import { Notfound } from './app/pages/notfound/notfound';
 import { authGuard } from './app/guards/auth/auth-guard';
 
 export const appRoutes: Routes = [
+    { path: 'public/concierge-budgets/:token', title: 'Aprovação do orçamento', loadComponent: () => import('@/app/pages/concierge/concierge.budget.approval/concierge.budget.approval.component').then((m) => m.ConciergeBudgetApprovalComponent) },
     { path: 'public/proposals/:token', title: 'Aprovação da proposta', data: { kind: 'proposals' }, loadComponent: () => import('@/app/pages/crm/approvalpage/approval.page.component') },
     { path: 'public/orders/:token', title: 'Aprovação do pedido', data: { kind: 'orders' }, loadComponent: () => import('@/app/pages/crm/approvalpage/approval.page.component') },
     {
@@ -21,6 +22,8 @@ export const appRoutes: Routes = [
                     { path: 'vehicle/maintenance/:id', title: 'Manuteção veículo', loadComponent: () => import('./app/pages/concierge/vehicle.maintenance/vehicle.maintenance.component') },
                     { path: 'vehicle/exit', title: 'Saída de veículos', loadComponent: () => import('./app/pages/concierge/vehicle.exit/vehicle.exit.component') },
                     { path: 'driver', title: 'Cadastro de Motorista', loadComponent: () => import('./app/pages/concierge/driver/driver.component') },
+                    { path: 'budget/list', title: 'Orçamentos', loadComponent: () => import('./app/pages/concierge/concierge.budget/concierge.budget.component') },
+                    { path: 'budget/maintenance', title: 'Manutenção Orçamento', loadComponent: () => import('./app/pages/concierge/concierge.budget.maintenance/concierge.budget.maintenance.component') },
                     {
                         path: 'register',
                         children: [
@@ -49,7 +52,6 @@ export const appRoutes: Routes = [
             {
                 path: 'workshop',
                 children: [
-                    { path: 'budget/list', title: 'Orçamento', loadComponent: () => import('./app/pages/workshop/budget/budget.component') },
                     {
                         path: 'equipment',
                         children: [
@@ -63,6 +65,7 @@ export const appRoutes: Routes = [
                             }
                         ]
                     },
+                    { path: 'budget/list', title: 'Orçamento', loadComponent: () => import('./app/pages/workshop/budget/budget.component') },
                     {
                         path: 'register',
                         children: [
@@ -137,7 +140,6 @@ export const appRoutes: Routes = [
             }
         ]
     },
-    { path: 'landing', title: 'Nativa | Máquinas, Implementos e Libreparts', loadComponent: () => import('@/app/pages/landingpage/landing.page.component').then((m) => m.LandingPageComponent) },
     { path: 'notfound', component: Notfound },
     { path: 'auth', loadComponent: () => import('./app/pages/login/login') },
     { path: '**', redirectTo: '/notfound' }

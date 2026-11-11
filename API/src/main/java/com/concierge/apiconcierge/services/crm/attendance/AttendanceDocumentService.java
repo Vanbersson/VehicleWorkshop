@@ -57,11 +57,12 @@ public class AttendanceDocumentService {
         CustomerAttendance scope = attendances.authorizedAttendance(attendanceId, email);
         CustomerAttendance attendance = attendanceRepository.findForQuote(scope.getCompanyId(), scope.getResaleId(), attendanceId);
         if (attendance == null) throw new ResourcesNotFoundException("Atendimento não encontrado.");
+        if (attendance.getStatus() == AttendanceStatus.COMPLETED) throw new BusinessException("O atendimento concluído está disponível apenas para consulta.");
         if (attendance.getStatus() == AttendanceStatus.CANCELLED)
             throw new BusinessException("O atendimento cancelado permite apenas consultar documentos.");
-        if (stage != AttendanceDocumentStage.PAYMENT && documents.findFirstByAttendanceIdAndStage(attendanceId, stage).isPresent())
+        if (stage != AttendanceDocumentStage.PAYMENT && stage != AttendanceDocumentStage.INVOICING && documents.findFirstByAttendanceIdAndStage(attendanceId, stage).isPresent())
             throw new BusinessException("Esta etapa permite apenas um documento. Remova o arquivo atual antes de adicionar outro.");
-        if (stage == AttendanceDocumentStage.PAYMENT) validateReceiptAmount(receiptAmount);
+        if (stage == AttendanceDocumentStage.PAYMENT || stage == AttendanceDocumentStage.INVOICING) validateReceiptAmount(receiptAmount);
         if (file.isEmpty() || file.getSize() > 5L * 1024 * 1024)
             throw new BusinessException("Selecione um arquivo de até 5 MB.");
         byte[] content = file.getBytes();
@@ -70,12 +71,12 @@ public class AttendanceDocumentService {
         String name = raw.substring(raw.lastIndexOf('/') + 1).replaceAll("[\\p{Cntrl}]", "").trim();
         if (name.isEmpty() || name.length() > 255) throw new BusinessException("Nome de arquivo inválido.");
         String extension = name.contains(".") ? name.substring(name.lastIndexOf('.') + 1).toLowerCase(Locale.ROOT) : "";
-        if(stage != AttendanceDocumentStage.PAYMENT && (!mime.equals("application/pdf") || !extension.equals("pdf")))
+        if(stage != AttendanceDocumentStage.PAYMENT && stage != AttendanceDocumentStage.DELIVERY && (!mime.equals("application/pdf") || !extension.equals("pdf")))
             throw new BusinessException("Esta etapa aceita apenas arquivos PDF.");
         boolean valid = (mime.equals("application/pdf") && extension.equals("pdf")) || (mime.equals("image/png") && extension.equals("png")) || (mime.equals("image/jpeg") && (extension.equals("jpg") || extension.equals("jpeg"))) || (mime.equals("image/webp") && extension.equals("webp"));
         if (!valid) throw new BusinessException("Envie um PDF ou uma imagem JPG, PNG ou WebP válida.");
         AttendanceDocument document = new AttendanceDocument();
-        if (stage == AttendanceDocumentStage.PAYMENT) {
+        if (stage == AttendanceDocumentStage.PAYMENT || stage == AttendanceDocumentStage.INVOICING) {
             var uploader = users.filterEmail(scope.getCompanyId(), scope.getResaleId(), email);
             if (uploader == null || uploader.getId() == null) throw new BusinessException("Usuario autenticado nao encontrado.");
             document.setUploadedByUserId(uploader.getId());
@@ -86,7 +87,7 @@ public class AttendanceDocumentService {
         }
         document.setAttendanceId(attendanceId);
         document.setStage(stage);
-        if(stage == AttendanceDocumentStage.PAYMENT) document.setReceiptAmount(receiptAmount.setScale(2));
+        if(stage == AttendanceDocumentStage.PAYMENT || stage == AttendanceDocumentStage.INVOICING) document.setReceiptAmount(receiptAmount.setScale(2));
         document.setFileName(name);
         document.setContentType(mime);
         document.setSize((long) content.length);
@@ -122,20 +123,28 @@ public class AttendanceDocumentService {
 
     private void validateReceiptAmount(java.math.BigDecimal amount) {
         if(amount == null || amount.signum() <= 0 || amount.stripTrailingZeros().scale() > 2 || amount.compareTo(new java.math.BigDecimal("999999999999.99")) > 0)
-            throw new BusinessException("Informe um valor positivo para cada comprovante, com ate duas casas decimais.");
+            throw new BusinessException("Informe um valor positivo para o documento, com ate duas casas decimais.");
     }
     private AttendanceDocumentDto metadata(AttendanceDocument document) {
         return new AttendanceDocumentDto(document.getId(),document.getFileName(),document.getContentType(),document.getSize(),document.getCreatedAt(),document.getStage(),document.getProposalApprovedAt(),document.getSignedFileName(),document.getSignedUploadedAt(),document.getOrderApprovedAt(),document.getReceiptAmount(),document.getUploadedByUserId(),document.getUploadedByUserName(),document.getUpdatedByUserId(),document.getUpdatedByUserName(),document.getUpdatedAt());
     }
     @Transactional
     public AttendanceDocumentDto updateReceiptAmount(Integer attendanceId,Integer documentId,java.math.BigDecimal amount,String email) {
+        return updateDocumentAmount(attendanceId, documentId, amount, AttendanceDocumentStage.PAYMENT, email);
+    }
+    @Transactional
+    public AttendanceDocumentDto updateInvoiceAmount(Integer attendanceId,Integer documentId,java.math.BigDecimal amount,String email) {
+        return updateDocumentAmount(attendanceId, documentId, amount, AttendanceDocumentStage.INVOICING, email);
+    }
+    private AttendanceDocumentDto updateDocumentAmount(Integer attendanceId,Integer documentId,java.math.BigDecimal amount,AttendanceDocumentStage stage,String email) {
         CustomerAttendance scope=attendances.authorizedAttendance(attendanceId,email);
         CustomerAttendance attendance=attendanceRepository.findForQuote(scope.getCompanyId(),scope.getResaleId(),attendanceId);
         if(attendance==null) throw new ResourcesNotFoundException("Atendimento nao encontrado.");
+        if(attendance.getStatus()==AttendanceStatus.COMPLETED) throw new BusinessException("O atendimento concluído está disponível apenas para consulta.");
         if(attendance.getStatus()==AttendanceStatus.CANCELLED) throw new BusinessException("O atendimento cancelado permite apenas consultar documentos.");
         validateReceiptAmount(amount);
         AttendanceDocument document=documents.findByAttendanceIdAndId(attendanceId,documentId).orElseThrow(()->new ResourcesNotFoundException("Comprovante nao encontrado neste atendimento."));
-        if(document.getStage()!=AttendanceDocumentStage.PAYMENT) throw new BusinessException("Este documento nao e um comprovante de pagamento.");
+        if(document.getStage()!=stage) throw new BusinessException("O documento nao pertence a esta etapa do atendimento.");
         var editor = users.filterEmail(scope.getCompanyId(), scope.getResaleId(), email);
         if (editor == null || editor.getId() == null) throw new BusinessException("Usuario autenticado nao encontrado.");
         java.math.BigDecimal previousAmount = document.getReceiptAmount();
@@ -145,7 +154,7 @@ public class AttendanceDocumentService {
         document.setUpdatedByUserName(editor.getName());
         document.setUpdatedAt(java.time.Instant.now());
         document = documents.saveAndFlush(document);
-        logDocumentAction(scope, document, AttendanceLogAction.RECEIPT_AMOUNT_CHANGED, email, previousAmount, document.getReceiptAmount());
+        logDocumentAction(scope, document, stage == AttendanceDocumentStage.INVOICING ? AttendanceLogAction.INVOICE_AMOUNT_CHANGED : AttendanceLogAction.RECEIPT_AMOUNT_CHANGED, email, previousAmount, document.getReceiptAmount());
         return metadata(document);
     }
 
@@ -174,10 +183,21 @@ public class AttendanceDocumentService {
         removeDocument(attendanceId, documentId, AttendanceDocumentStage.PAYMENT, email);
     }
 
+    @Transactional
+    public void removeInvoicingDocument(Integer attendanceId, Integer documentId, String email) {
+        removeDocument(attendanceId, documentId, AttendanceDocumentStage.INVOICING, email);
+    }
+
+    @Transactional
+    public void removeDeliveryDocument(Integer attendanceId, Integer documentId, String email) {
+        removeDocument(attendanceId, documentId, AttendanceDocumentStage.DELIVERY, email);
+    }
+
     private void removeDocument(Integer attendanceId, Integer documentId, AttendanceDocumentStage stage, String email) {
         CustomerAttendance scope = attendances.authorizedAttendance(attendanceId, email);
         CustomerAttendance attendance = attendanceRepository.findForQuote(scope.getCompanyId(), scope.getResaleId(), attendanceId);
         if (attendance == null) throw new ResourcesNotFoundException("Atendimento nao encontrado.");
+        if (attendance.getStatus() == AttendanceStatus.COMPLETED) throw new BusinessException("O atendimento concluído está disponível apenas para consulta.");
         if (attendance.getStatus() == AttendanceStatus.CANCELLED) throw new BusinessException("O atendimento cancelado permite apenas consultar documentos.");
         AttendanceDocument document = documents.findByAttendanceIdAndId(attendanceId, documentId).orElseThrow(() -> new ResourcesNotFoundException("Documento nao encontrado neste atendimento."));
         if (document.getStage() != stage) throw new BusinessException("O documento nao pertence a esta etapa do atendimento.");
@@ -212,6 +232,8 @@ public class AttendanceDocumentService {
             case PROPOSAL -> AttendanceStatus.COMMERCIAL_PROPOSAL;
             case DOCUMENTS -> AttendanceStatus.QUOTATION;
             case PAYMENT -> AttendanceStatus.PAYMENT_PENDING;
+            case INVOICING -> AttendanceStatus.INVOICING_PENDING;
+            case DELIVERY -> AttendanceStatus.DELIVERY_PENDING;
         });
         log.setAction(action);
         log.setUserId(user.getId());

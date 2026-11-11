@@ -9,7 +9,7 @@
             </div>
         </div>
         <div class="header-actions">
-            <span class="period-label"><i class="pi pi-calendar" aria-hidden="true"></i>{{ yearNow() - 1 }} – {{ yearNow() }}</span            >
+            <span class="period-label"><i class="pi pi-calendar" aria-hidden="true"></i>{{ yearNow() - 1 }} – {{ yearNow() }}</span>
             <p-button label="Atualizar" icon="pi pi-refresh" severity="secondary" [outlined]="true" (onClick)="refreshDashboard()" [loading]="loadingDashboard()" />
         </div>
     </header>

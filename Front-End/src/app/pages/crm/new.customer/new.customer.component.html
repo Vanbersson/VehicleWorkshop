@@ -168,19 +168,11 @@
                         <div class="card-footer">
                             <p-attendance-logs [attendanceId]="item.id" />
                             <small class="text-muted-color">Criado em {{ item.dateCreated | date: 'dd/MM/yyyy' }}</small>
-                            @if (item.status !== CANCELLED) {
+                            @if (!isAttendanceReadOnly(item.status)) {
                                 <p-button label="Editar" icon="pi pi-pencil" [text]="true" size="small" [routerLink]="['/crm/new/customer/maintenance', item.id]" [disabled]="saving()" [ariaLabel]="'Editar atendimento de ' + item.clientName" />
                                 <p-button label="Cancelar" icon="pi pi-ban" severity="danger" [text]="true" size="small" (onClick)="openCancellation(item)" [disabled]="saving()" [ariaLabel]="'Cancelar atendimento de ' + item.clientName" />
                             } @else {
-                                <p-button
-                                    label="Consultar"
-                                    icon="pi pi-eye"
-                                    [text]="true"
-                                    size="small"
-                                    [routerLink]="['/crm/new/customer/maintenance', item.id]"
-                                    [disabled]="saving()"
-                                    [ariaLabel]="'Consultar atendimento cancelado de ' + item.clientName"
-                                />
+                                <p-button label="Consultar" icon="pi pi-eye" [text]="true" size="small" [routerLink]="['/crm/new/customer/maintenance', item.id]" [disabled]="saving()" [ariaLabel]="'Consultar atendimento de ' + item.clientName" />
                             }
                         </div>
                     </article>

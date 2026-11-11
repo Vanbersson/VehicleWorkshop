@@ -3,8 +3,10 @@ package com.concierge.apiconcierge.services.vehicle.entry;
 import com.concierge.apiconcierge.dtos.vehicleEntry.AuthExitDto;
 import com.concierge.apiconcierge.dtos.vehicle.entry.VehicleExitDto;
 import com.concierge.apiconcierge.dtos.vehicleEntry.ImageUpdateDto;
+import com.concierge.apiconcierge.dtos.vehicleEntry.VehicleEntryResponsePlatesDto;
 import com.concierge.apiconcierge.exceptions.BusinessException;
 import com.concierge.apiconcierge.exceptions.vehicle.VehicleEntryException;
+import com.concierge.apiconcierge.models.enums.StatusEnableDisable;
 import com.concierge.apiconcierge.models.enums.YesNot;
 import com.concierge.apiconcierge.models.message.MessageResponse;
 import com.concierge.apiconcierge.models.notification.Notification;
@@ -57,18 +59,39 @@ public class VehicleEntryService implements IVehicleEntryService {
             throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.FORBIDDEN, "Sem permissao para consultar o historico do veiculo.");
         }
         VehicleEntry current = repository.filterId(companyId, resaleId, id);
-        if (current == null) throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.NOT_FOUND, "Veiculo nao encontrado.");
+        if (current == null)
+            throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.NOT_FOUND, "Veiculo nao encontrado.");
         String plate = current.getVehiclePlate() == null ? "" : current.getVehiclePlate().replaceAll("[^a-zA-Z0-9]", "").toUpperCase(Locale.ROOT);
-        if (current.getVehicleNew() == YesNot.yes || !plate.matches("[A-Z]{3}[0-9][A-Z0-9][0-9]{2}")) return List.of(current);
+        if (current.getVehicleNew() == YesNot.yes || !plate.matches("[A-Z]{3}[0-9][A-Z0-9][0-9]{2}"))
+            return List.of(current);
         return repository.historyByPlate(companyId, resaleId, plate);
     }
 
 
+    private Integer salespersonUserId(VehicleEntry vehicle) {
+        if (vehicle.getSalespersonId() == null) return null;
+        var salesperson = salespeople.findByCompanyIdAndResaleIdAndId(vehicle.getCompanyId(), vehicle.getResaleId(), vehicle.getSalespersonId());
+        return salesperson == null ? null : salesperson.getUserId();
+    }
+
+    private void normalizeSalesperson(VehicleEntry vehicle) {
+        if (vehicle.getSalespersonId() == null) {
+            vehicle.setSalespersonName(null);
+            return;
+        }
+        var salesperson = salespeople.findByCompanyIdAndResaleIdAndId(vehicle.getCompanyId(), vehicle.getResaleId(), vehicle.getSalespersonId());
+        if (salesperson == null || salesperson.getStatus() != StatusEnableDisable.Habilitado)
+            throw new BusinessException("Vendedor indisponivel nesta empresa/revenda.");
+        vehicle.setSalespersonName(salesperson.getName());
+    }
     @Value("${local.image.upload}")
     private String UPLOAD_DIR;
 
     @Autowired
     private IVehicleEntryRepository repository;
+
+    @Autowired
+    private com.concierge.apiconcierge.repositories.salesperson.ISalespersonRepository salespeople;
 
     @Autowired
     private IVehicleEntryValidation validation;
@@ -95,12 +118,12 @@ public class VehicleEntryService implements IVehicleEntryService {
     @Override
     public MessageResponse save(VehicleEntry vehicle, String userEmail) {
         try {
+            normalizeSalesperson(vehicle);
             MessageResponse response = this.validation.save(vehicle, userEmail);
             if (ConstantsMessage.SUCCESS.equals(response.getStatus())) {
                 vehicle.setId(null);
                 vehicle.setStatus(StatusVehicleEnum.Entered);
                 vehicle.setStepEntry(StepVehicleEnum.Attendant);
-                vehicle.setBudgetId(null);
                 vehicle.setExitUserId(null);
                 vehicle.setDriverExitId(null);
                 vehicle.setAuth1ExitUserId(null);
@@ -125,6 +148,7 @@ public class VehicleEntryService implements IVehicleEntryService {
     @Override
     public MessageResponse update(VehicleEntry vehicle, String userEmail) {
         try {
+            normalizeSalesperson(vehicle);
             MessageResponse response = this.validation.update(vehicle, userEmail);
             if (ConstantsMessage.SUCCESS.equals(response.getStatus())) {
                 VehicleEntry result = this.repository.save(vehicle);
@@ -189,7 +213,7 @@ public class VehicleEntryService implements IVehicleEntryService {
                     map.put("vehicleNew", item.getVehicleNew());
                     map.put("modelDescription", item.getModelDescription());
                     map.put("entryDate", item.getEntryDate());
-                    map.put("attendantUserName", item.getAttendantUserName());
+                    map.put("salespersonName", item.getSalespersonName());
                     map.put("clientCompanyName", item.getClientCompanyName());
                     map.put("authExitStatus", item.getAuthExitStatus());
                     map.put("numServiceOrder", item.getNumServiceOrder());
@@ -225,7 +249,7 @@ public class VehicleEntryService implements IVehicleEntryService {
                     map.put("vehicleNew", item.getVehicleNew());
                     map.put("modelDescription", item.getModelDescription());
                     map.put("entryDate", item.getEntryDate());
-                    map.put("attendantUserName", item.getAttendantUserName());
+                    map.put("salespersonName", item.getSalespersonName());
                     map.put("clientCompanyName", item.getClientCompanyName());
                     map.put("authExitStatus", item.getAuthExitStatus());
                     map.put("numServiceOrder", item.getNumServiceOrder());
@@ -238,6 +262,27 @@ public class VehicleEntryService implements IVehicleEntryService {
         } catch (Exception ex) {
             throw new VehicleEntryException(ex.getMessage());
         }
+    }
+
+    @Override
+    public List<VehicleEntryResponsePlatesDto> listAllPlates(String userEmail) {
+        User userResult = this.userRepository.loginEmail(userEmail);
+        if (userResult.getStatus() == StatusEnableDisable.Desabilitado) {
+            throw new BusinessException("Usuário Bloqueado.");
+        }
+        return this.repository.all(userResult.getCompanyId(), userResult.getResaleId(), StatusVehicleEnum.Entered)
+                .stream()
+                .map(v -> new VehicleEntryResponsePlatesDto(
+                        v.getId(),
+                        v.getVehiclePlate(),
+                        v.getModelDescription(),
+                        v.getClientCompanyId(),
+                        v.getClientCompanyName(),
+                        v.getSalespersonId(),
+                        v.getSalespersonName(),
+                        salespersonUserId(v)
+                ))
+                .toList();
     }
 
     @SneakyThrows
@@ -383,7 +428,7 @@ public class VehicleEntryService implements IVehicleEntryService {
                     map.put("modelDescription", item.getModelDescription());
                     map.put("entryDate", item.getEntryDate());
                     map.put("exitDate", item.getExitDate());
-                    map.put("attendantUserName", item.getAttendantUserName());
+                    map.put("salespersonName", item.getSalespersonName());
                     map.put("clientCompanyName", item.getClientCompanyName());
                     map.put("numServiceOrder", item.getNumServiceOrder());
                     list.add(map);
@@ -553,7 +598,7 @@ public class VehicleEntryService implements IVehicleEntryService {
     }
 
     @Override
-    public void updateImage(ImageUpdateDto data,String userEmail) {
+    public void updateImage(ImageUpdateDto data, String userEmail) {
         User resultUser = this.userRepository.loginEmail(userEmail);
         VehicleEntry resultVehicle = this.repository.filterId(resultUser.getCompanyId(), resultUser.getResaleId(), data.vehicleId());
         resultVehicle.setEntryPhoto1Url(data.image1());

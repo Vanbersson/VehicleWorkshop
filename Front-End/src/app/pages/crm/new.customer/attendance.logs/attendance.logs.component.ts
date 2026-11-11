@@ -56,6 +56,7 @@ export class AttendanceLogsComponent implements OnDestroy {
                     PROPOSAL_APPROVED: 'Cliente aprovou a proposta assinada',
                     SIGNED_ORDER_UPLOADED: 'Cliente enviou o pedido assinado',
                     ORDER_APPROVED: 'Cliente aprovou o pedido assinado',
+                    INVOICE_AMOUNT_CHANGED: 'Valor da nota alterado',
                     RECEIPT_AMOUNT_CHANGED: 'Valor do comprovante alterado'
                 } as Record<string, string>
             )[action] ?? action

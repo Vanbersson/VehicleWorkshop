@@ -2,22 +2,27 @@
     <div class="payment-header">
         <div>
             <div class="eyebrow"><i class="pi pi-wallet" aria-hidden="true"></i> Financeiro</div>
-            <h2 id="paymentReceiptsTitle" class="text-xl font-semibold m-0">Pagamento do atendimento</h2>
-            <p class="text-sm text-muted-color mt-2 mb-0">Adicione PDFs ou imagens e informe o valor de cada comprovante. Até 5 MB por arquivo.</p>
+            <h2 id="paymentReceiptsTitle" class="text-xl font-semibold m-0">{{ invoicing ? 'Faturamento do atendimento' : 'Pagamento do atendimento' }}</h2>
+            <p class="text-sm text-muted-color mt-2 mb-0">
+                {{ invoicing ? 'Adicione documentos fiscais em PDF' : 'Adicione PDFs ou imagens' }} e informe {{ invoicing ? 'o valor de cada nota' : 'o valor de cada comprovante' }}. Até 5 MB por arquivo.
+            </p>
         </div>
         <div class="flex flex-wrap gap-2">
             <p-button label="Atualizar" icon="pi pi-refresh" severity="secondary" [text]="true" (onClick)="load()" [disabled]="busy || pending().length > 0" />
             @if (!readOnly) {
-                <input #fileInput type="file" multiple accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp" class="hidden" aria-label="Selecionar comprovantes em PDF ou imagem" (change)="selectFiles($event)" /><p-button
-                    label="Adicionar comprovantes"
-                    icon="pi pi-plus"
-                    (onClick)="fileInput.click()"
-                    [disabled]="busy"
-                />
+                <input
+                    #fileInput
+                    type="file"
+                    multiple
+                    [accept]="invoicing ? '.pdf,application/pdf' : '.pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp'"
+                    class="hidden"
+                    [attr.aria-label]="invoicing ? 'Selecionar documentos fiscais em PDF' : 'Selecionar comprovantes em PDF ou imagem'"
+                    (change)="selectFiles($event)"
+                /><p-button [label]="invoicing ? 'Adicionar documentos fiscais' : 'Adicionar comprovantes'" icon="pi pi-plus" (onClick)="fileInput.click()" [disabled]="busy" />
             }
         </div>
     </div>
-    <div class="summary" aria-label="Resumo do pagamento">
+    <div class="summary" [attr.aria-label]="invoicing ? 'Resumo do faturamento' : 'Resumo do pagamento'">
         <div>
             <span>Total do orçamento</span>
             <strong>{{ attendance?.quoteTotal != null ? (attendance?.quoteTotal | currency: 'BRL') : '—' }}</strong>
@@ -26,11 +31,12 @@
             }
         </div>
         <div>
-            <span><i class="pi pi-check-circle" aria-hidden="true"></i> Total dos comprovantes</span><strong>{{ total() | currency: 'BRL' }}</strong>
+            <span><i class="pi pi-check-circle" aria-hidden="true"></i> {{ invoicing ? 'Total das notas' : 'Total dos comprovantes' }}</span
+            ><strong>{{ total() | currency: 'BRL' }}</strong>
             <small>{{ receipts().length }} arquivo(s) salvo(s)</small>
         </div>
         <div class="balance" [class.settled]="remainingAmount === 0">
-            <span><i class="pi pi-chart-pie" aria-hidden="true"></i> Falta pagar</span>
+            <span><i class="pi pi-chart-pie" aria-hidden="true"></i> {{ invoicing ? 'Falta faturar' : 'Falta pagar' }}</span>
             <strong>{{ remainingAmount != null ? (remainingAmount | currency: 'BRL') : '—' }}</strong>
             @if (remainingAmount === 0) {
                 <small>Valor do orçamento atingido</small>
@@ -38,7 +44,7 @@
         </div>
     </div>
     @if (readOnly) {
-        <p class="text-muted-color text-sm">Atendimento cancelado: comprovantes disponíveis apenas para consulta.</p>
+        <p class="text-muted-color text-sm">Atendimento em modo de consulta: {{ invoicing ? 'documentos fiscais' : 'comprovantes' }} disponíveis apenas para consulta.</p>
     }
     @if (error()) {
         <p class="feedback failure" role="alert">{{ error() }}</p>
@@ -49,9 +55,9 @@
     @if (pending().length) {
         <div class="pending-panel">
             <h3 class="text-base font-semibold mt-0">
-                <i class="pi pi-cloud-upload" aria-hidden="true"></i> Novos comprovantes <span class="count">{{ pending().length }}</span>
+                <i class="pi pi-cloud-upload" aria-hidden="true"></i> {{ invoicing ? 'Novos documentos fiscais' : 'Novos comprovantes' }} <span class="count">{{ pending().length }}</span>
             </h3>
-            <p class="text-sm text-muted-color">Informe um valor maior que zero para cada arquivo e clique em Salvar comprovantes.</p>
+            <p class="text-sm text-muted-color">Informe um valor maior que zero para cada arquivo e clique em {{ invoicing ? 'Salvar documentos fiscais' : 'Salvar comprovantes' }}.</p>
             @for (entry of pending(); track entry.id) {
                 <div class="receipt-row">
                     <div class="file-description">
@@ -62,7 +68,7 @@
                         </div>
                     </div>
                     <div>
-                        <label [for]="'pendingReceipt' + entry.id">Valor do comprovante *</label
+                        <label [for]="'pendingReceipt' + entry.id">{{ invoicing ? 'Valor da nota' : 'Valor do comprovante' }} *</label
                         ><p-inputnumber
                             [inputId]="'pendingReceipt' + entry.id"
                             [ngModel]="entry.amount"
@@ -82,15 +88,15 @@
                     <p-button label="Retirar da seleção" icon="pi pi-times" severity="secondary" [text]="true" (onClick)="removePending(entry.id)" [disabled]="busy" />
                 </div>
             }
-            <div class="flex justify-end mt-4"><p-button label="Salvar comprovantes" icon="pi pi-upload" (onClick)="upload()" [loading]="uploading()" [disabled]="busy || invalidPending()" /></div>
+            <div class="flex justify-end mt-4"><p-button [label]="invoicing ? 'Salvar documentos fiscais' : 'Salvar comprovantes'" icon="pi pi-upload" (onClick)="upload()" [loading]="uploading()" [disabled]="busy || invalidPending()" /></div>
         </div>
     }
     <div class="list-heading">
         <div>
             <h3>
-                Comprovantes salvos <span class="count">{{ receipts().length }}</span>
+                {{ invoicing ? 'Documentos fiscais salvos' : 'Comprovantes salvos' }} <span class="count">{{ receipts().length }}</span>
             </h3>
-            <p>Consulte os arquivos e gerencie os valores de cada pagamento.</p>
+            <p>Consulte os arquivos e gerencie os valores de cada {{ invoicing ? 'nota fiscal' : 'pagamento' }}.</p>
         </div>
     </div>
     @if (loading()) {
@@ -117,9 +123,10 @@
                     </div>
                     <div>
                         @if (readOnly) {
-                            <span class="text-sm text-muted-color">Valor do comprovante</span><strong class="block">{{ item.receiptAmount | currency: 'BRL' }}</strong>
+                            <span class="text-sm text-muted-color">{{ invoicing ? 'Valor da nota' : 'Valor do comprovante' }}</span
+                            ><strong class="block">{{ item.receiptAmount | currency: 'BRL' }}</strong>
                         } @else {
-                            <label [for]="'receiptAmount' + item.id">Valor do comprovante *</label
+                            <label [for]="'receiptAmount' + item.id">{{ invoicing ? 'Valor da nota' : 'Valor do comprovante' }} *</label
                             ><p-inputnumber
                                 [inputId]="'receiptAmount' + item.id"
                                 [ngModel]="amounts()[item.id]"
@@ -163,7 +170,10 @@
                     </div>
                 </li>
             } @empty {
-                <li class="empty"><i class="pi pi-wallet" aria-hidden="true"></i><strong>Nenhum comprovante adicionado</strong><span>Os comprovantes e seus valores aparecerão aqui.</span></li>
+                <li class="empty">
+                    <i class="pi pi-wallet" aria-hidden="true"></i><strong>{{ invoicing ? 'Nenhum documento fiscal adicionado' : 'Nenhum comprovante adicionado' }}</strong
+                    ><span>{{ invoicing ? 'Os documentos fiscais e seus valores' : 'Os comprovantes e seus valores' }} aparecerão aqui.</span>
+                </li>
             }
         </ul>
     }

@@ -6,7 +6,7 @@ import { VehicleEntry } from '@/app/models/vehicle.entry';
     providedIn: 'root'
 })
 export class ShareWhatsappService {
-    constructor() { }
+    constructor() {}
 
     /* Share vehicle data via WhatsApp */
     shareVehicle(vehicle: VehicleEntry) {
@@ -14,12 +14,9 @@ export class ShareWhatsappService {
         const datePipe = new DatePipe('pt-BR');
         //Alterar o fuso horário para o horário local
         vehicle.entryDate = this.formatDateTime(new Date(vehicle.entryDate));
-        if (vehicle.exitDate)
-            vehicle.exitDate = this.formatDateTime(new Date(vehicle.exitDate));
-        if (vehicle.auth1ExitDate)
-            vehicle.auth1ExitDate = this.formatDateTime(new Date(vehicle.auth1ExitDate));
-        if (vehicle.auth2ExitDate)
-            vehicle.auth2ExitDate = this.formatDateTime(new Date(vehicle.auth2ExitDate));
+        if (vehicle.exitDate) vehicle.exitDate = this.formatDateTime(new Date(vehicle.exitDate));
+        if (vehicle.auth1ExitDate) vehicle.auth1ExitDate = this.formatDateTime(new Date(vehicle.auth1ExitDate));
+        if (vehicle.auth2ExitDate) vehicle.auth2ExitDate = this.formatDateTime(new Date(vehicle.auth2ExitDate));
 
         const message = encodeURIComponent(`*Dados do Veículo*\n
           Código: ${vehicle.id}
@@ -30,10 +27,10 @@ export class ShareWhatsappService {
           KM Saída: ${vehicle.vehicleKmExit}
           Empresa Código: ${vehicle.clientCompanyId == null ? '' : vehicle.clientCompanyId}
           Empresa Nome: ${vehicle.clientCompanyName == '' ? '' : uppercase.transform(vehicle.clientCompanyName)}
-          Consultor: ${vehicle.attendantUserName == '' ? '' : uppercase.transform(vehicle.attendantUserName)}
+          Consultor: ${vehicle.salespersonName == '' ? '' : uppercase.transform(vehicle.salespersonName)}
           Consultor Obs.: ${vehicle.attendantInformation == '' ? '' : uppercase.transform(vehicle.attendantInformation)}
           
-          Data Entrada: ${datePipe.transform(vehicle.entryDate, "dd/MM/yyyy HH:mm")}
+          Data Entrada: ${datePipe.transform(vehicle.entryDate, 'dd/MM/yyyy HH:mm')}
           Porteiro Entrada: ${uppercase.transform(vehicle.entryUserName)}
           Porteiro Entrada Obs.: ${vehicle.entryInformation == '' ? '' : uppercase.transform(vehicle.entryInformation)}
           Entrada Foto1: ${vehicle.entryPhoto1Url}
@@ -41,7 +38,7 @@ export class ShareWhatsappService {
           Entrada Foto3: ${vehicle.entryPhoto3Url}
           Entrada Foto4: ${vehicle.entryPhoto4Url}
 
-          Data Saída: ${vehicle.exitDate == null ? '' : datePipe.transform(vehicle.exitDate, "dd/MM/yyyy HH:mm")}
+          Data Saída: ${vehicle.exitDate == null ? '' : datePipe.transform(vehicle.exitDate, 'dd/MM/yyyy HH:mm')}
           Porteiro Saída: ${vehicle.exitUserName == '' ? '' : uppercase.transform(vehicle.exitUserName)}
           Porteiro Saída Obs.: ${vehicle.exitInformation == '' ? '' : uppercase.transform(vehicle.exitInformation)}
           Saída Foto1: ${vehicle.exitPhoto1Url}
@@ -56,8 +53,8 @@ export class ShareWhatsappService {
           O.S.: ${vehicle.numServiceOrder}
           NFe: ${vehicle.numNfe}
           NFS-e: ${vehicle.numNfse}
-          Auto 1ª: ${vehicle.auth1ExitUserName} ${vehicle.auth1ExitDate == null ? '' : datePipe.transform(vehicle.auth1ExitDate, "dd/MM/yyyy HH:mm")}
-          Auto 2ª: ${vehicle.auth2ExitUserName} ${vehicle.auth2ExitDate == null ? '' : datePipe.transform(vehicle.auth2ExitDate, "dd/MM/yyyy HH:mm")}
+          Auto 1ª: ${vehicle.auth1ExitUserName} ${vehicle.auth1ExitDate == null ? '' : datePipe.transform(vehicle.auth1ExitDate, 'dd/MM/yyyy HH:mm')}
+          Auto 2ª: ${vehicle.auth2ExitUserName} ${vehicle.auth2ExitDate == null ? '' : datePipe.transform(vehicle.auth2ExitDate, 'dd/MM/yyyy HH:mm')}
           `);
         window.open(`https://wa.me/?text=${message}`, '_blank');
     }
@@ -67,11 +64,12 @@ export class ShareWhatsappService {
         // Obtém o fuso horário local no formato ±hh:mm
         const tzOffset = -date.getTimezoneOffset();
         const sign = tzOffset >= 0 ? '+' : '-';
-        const hours = Math.floor(Math.abs(tzOffset) / 60).toString().padStart(2, '0');
+        const hours = Math.floor(Math.abs(tzOffset) / 60)
+            .toString()
+            .padStart(2, '0');
         const minutes = (Math.abs(tzOffset) % 60).toString().padStart(2, '0');
         const timezone = `${sign}${hours}:${minutes}`;
         // Formata a data e adiciona o fuso horário
         return datePipe.transform(date, "yyyy-MM-dd'T'HH:mm:ss.SSS") + timezone;
     }
-
 }

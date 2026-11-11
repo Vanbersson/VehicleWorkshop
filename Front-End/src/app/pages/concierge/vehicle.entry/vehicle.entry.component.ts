@@ -31,7 +31,7 @@ import { SelectModule } from 'primeng/select';
 
 import { ClientCompany } from '@/app/models/client.company';
 import { Driver } from '@/app/models/driver';
-import { User } from '@/app/models/user';
+import { Salesperson } from '@/app/models/crm/salesperson';
 import { VehicleEntry } from '@/app/models/vehicle.entry';
 import { YesNotEnum } from '@/app/models/yes.not.enum';
 import { VehicleEntryService } from '@/app/services/vehicle/vehicle.entry.service';
@@ -39,7 +39,7 @@ import { VehicleEntryChecklist } from '@/app/models/vehicle.entry.checklist';
 import { VehicleModel } from '@/app/models/vehicle.model';
 import { IColor } from '@/app/interfaces/i.color';
 import { StorageService } from '@/app/services/storage/storage.service';
-import { UserService } from '@/app/services/user/user.service';
+import { SalespersonService } from '@/app/services/salesperson/salesperson.service';
 import { PhotoService } from '@/app/services/photo/photo.service';
 import { VehicleModelService } from '@/app/services/vehicle/vehicle.model.service';
 import { IPhotoResult } from '@/app/interfaces/i.photo-result';
@@ -148,7 +148,7 @@ export default class VehicleEntryComponent implements OnInit, DoCheck {
         entryDate: new FormControl<Date | null>(new Date(), Validators.required),
         exitDatePrevision: new FormControl<Date | null>(null),
         vehicleColor: new FormControl<IColor | null>(null),
-        attendant: new FormControl<User | null>(null),
+        attendant: new FormControl<Salesperson | null>(null),
         vehicleNew: new FormControl<YesNotEnum>(YesNotEnum.NOT),
         vehicleServiceOrder: new FormControl<YesNotEnum>(YesNotEnum.YES),
         entryInformation: new FormControl<string>(''),
@@ -173,7 +173,7 @@ export default class VehicleEntryComponent implements OnInit, DoCheck {
         checklist19Desc: new FormControl<string>(''),
         checklist20Desc: new FormControl<string>('')
     });
-    attendants = signal<User[]>([]);
+    attendants = signal<Salesperson[]>([]);
     formCompanyIsEditable = false;
 
     modChecklist: ModuleConciergeVehicleChecklist = new ModuleConciergeVehicleChecklist();
@@ -189,7 +189,7 @@ export default class VehicleEntryComponent implements OnInit, DoCheck {
         private storageService: StorageService,
         private vehicleModelService: VehicleModelService,
         private vehicleService: VehicleEntryService,
-        private userService: UserService,
+        private salespersonService: SalespersonService,
         private messageService: MessageService,
         private photoService: PhotoService,
         private modService: ModuleConciergeService
@@ -321,11 +321,8 @@ export default class VehicleEntryComponent implements OnInit, DoCheck {
         }
     }
     private async getAttendants() {
-        const result = await this.filterUserRoleId();
-        if (result.status !== 200 || result.body?.status !== StatusSuccessError.succes) throw new Error('getAttendants');
-        if (result.status == 200 && result.body?.status == StatusSuccessError.succes) {
-            this.attendants.set(result.body.data);
-        }
+        const salespeople = await lastValueFrom(this.salespersonService.listAll());
+        this.attendants.set(salespeople.filter((person) => person.status === 'Habilitado'));
     }
     private async getChecklist() {
         const result = await this.filterModeluChecklist();
@@ -593,8 +590,8 @@ export default class VehicleEntryComponent implements OnInit, DoCheck {
         }
         this.vehicleEntry.driverEntryId = this.driver.id;
         this.vehicleEntry.driverEntryName = this.driver.name;
-        this.vehicleEntry.attendantUserId = vehicleValue.attendant?.id ?? null;
-        this.vehicleEntry.attendantUserName = vehicleValue.attendant?.name ?? '';
+        this.vehicleEntry.salespersonId = vehicleValue.attendant?.id ?? null;
+        this.vehicleEntry.salespersonName = vehicleValue.attendant?.name ?? '';
         this.vehicleEntry.modelId = vehicleValue.modelVehicle!.id;
         this.vehicleEntry.modelDescription = vehicleValue.modelVehicle!.description;
         this.vehicleEntry.vehiclePlate = vehicleValue?.vehiclePlate ?? '';
@@ -878,14 +875,6 @@ export default class VehicleEntryComponent implements OnInit, DoCheck {
     private async filterFreeAdmission(plate: string): Promise<HttpResponse<MessageResponse>> {
         try {
             return await lastValueFrom(this.vehicleService.filterFreeAdmission(plate));
-        } catch (error: any) {
-            this.messageService.add({ severity: 'error', summary: 'Erro', detail: error?.error?.message ?? 'Não foi possível concluir a operação.', icon: 'pi pi-times' });
-            return error;
-        }
-    }
-    private async filterUserRoleId(): Promise<HttpResponse<MessageResponse>> {
-        try {
-            return await lastValueFrom(this.userService.filterRoleId(2));
         } catch (error: any) {
             this.messageService.add({ severity: 'error', summary: 'Erro', detail: error?.error?.message ?? 'Não foi possível concluir a operação.', icon: 'pi pi-times' });
             return error;

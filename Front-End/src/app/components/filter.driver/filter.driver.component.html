@@ -10,41 +10,48 @@
     [disabled]="isDisabled"
 />
 <p-dialog [(visible)]="dialogVisibleDriver" [modal]="true" [maximizable]="true" [style]="{ width: '70rem', maxWidth: '96vw' }" [draggable]="false" [resizable]="false" (onHide)="hideDialog()">
-    <ng-template #header
-        ><div class="filter-heading">
+    <ng-template #header>
+        <div class="filter-heading">
             <span class="filter-symbol"><i class="pi pi-id-card" aria-hidden="true"></i></span>
             <div>
                 <span class="filter-eyebrow">CONSULTA DE CADASTROS</span>
                 <h2>Selecionar motorista</h2>
                 <p>Pesquise o motorista para vincular ao atendimento.</p>
             </div>
-        </div></ng-template
-    >
+        </div>
+    </ng-template>
     <form [formGroup]="formDriver" (ngSubmit)="tableFilter.clear(); filterDriver()" class="filter-panel">
         <div class="filter-section-heading">
             <i class="pi pi-filter" aria-hidden="true"></i>
             <h3>Critérios de pesquisa</h3>
         </div>
         <div class="filter-grid">
-            <div class="filter-field"><label for="filter-driver-id">Código</label><p-inputNumber inputId="filter-driver-id" [useGrouping]="false" formControlName="id" placeholder="Código do motorista" fluid /></div>
-            <div class="filter-field"><label for="filter-driver-name">Nome completo</label><input pInputText id="filter-driver-name" formControlName="name" placeholder="Informe o nome do motorista" /></div>
-            <div class="filter-field"><label for="filter-driver-cpf">CPF</label><p-inputMask inputId="filter-driver-cpf" mask="999.999.999-99" [unmask]="true" formControlName="cpf" placeholder="000.000.000-00" fluid /></div>
-            <div class="filter-field"><label for="filter-driver-rg">RG</label><input pInputText id="filter-driver-rg" formControlName="rg" placeholder="Informe o RG" /></div>
             <div class="filter-field">
-                <label for="filter-driver-cnh">Número de registro da CNH</label><input pInputText id="filter-driver-cnh" formControlName="cnhRegister" placeholder="Informe o registro da CNH" maxlength="11" inputmode="numeric" />
+                <label for="filter-driver-id">Código</label>
+                <p-inputNumber inputId="filter-driver-id" [useGrouping]="false" formControlName="id" fluid />
+            </div>
+            <div class="filter-field">
+                <label for="filter-driver-name">Nome completo</label>
+                <input pInputText id="filter-driver-name" formControlName="name" />
+            </div>
+            <div class="filter-field">
+                <label for="filter-driver-cpf">CPF</label>
+                <p-inputMask inputId="filter-driver-cpf" mask="999.999.999-99" [unmask]="true" formControlName="cpf" fluid />
+            </div>
+            <div class="filter-field">
+                <label for="filter-driver-rg">RG</label>
+                <input pInputText id="filter-driver-rg" formControlName="rg" />
+            </div>
+            <div class="filter-field">
+                <label for="filter-driver-cnh">Número de registro da CNH</label>
+                <input pInputText id="filter-driver-cnh" formControlName="cnhRegister" maxlength="11" inputmode="numeric" />
             </div>
         </div>
         <div class="filter-form-footer">
             <p>Preencha um critério. Prioridade: código, nome, CPF, RG e CNH.</p>
             <div>
-                <p-button type="button" label="Limpar filtros" icon="pi pi-filter-slash" [text]="true" severity="secondary" (onClick)="cleanForm(); tableFilter.clear()" /><button
-                    pButton
-                    type="submit"
-                    label="Pesquisar"
-                    icon="pi pi-search"
-                    [loading]="loading()"
-                    [disabled]="isDisabled"
-                ></button>
+                <p-button type="button" label="Limpar filtros" icon="pi pi-filter-slash" [text]="true" severity="secondary" (onClick)="cleanForm(); tableFilter.clear()" />
+                <button pButton type="submit" label="Pesquisar" icon="pi pi-search" [loading]="loading()" [disabled]="isDisabled"></button>
             </div>
         </div>
     </form>
@@ -77,10 +84,12 @@
             [tableStyle]="{ 'min-width': '52rem' }"
             size="small"
         >
-            <ng-template #caption
-                ><p-iconfield iconPosition="left" class="result-search"
-                    ><p-inputicon><i class="pi pi-search" aria-hidden="true"></i></p-inputicon
-                    ><input
+            <ng-template #caption>
+                <p-iconfield iconPosition="left" class="result-search">
+                    <p-inputicon>
+                        <i class="pi pi-search" aria-hidden="true"></i>
+                    </p-inputicon>
+                    <input
                         #resultSearch
                         [(ngModel)]="resultQuery"
                         pInputText
@@ -88,20 +97,23 @@
                         class="w-full"
                         (input)="tableFilter.filterGlobal(resultSearch.value, 'contains')"
                         placeholder="Filtrar resultados encontrados"
-                        aria-label="Filtrar motoristas encontrados" /></p-iconfield
-            ></ng-template>
-            <ng-template #header
-                ><tr>
+                        aria-label="Filtrar motoristas encontrados"
+                    />
+                </p-iconfield>
+            </ng-template>
+            <ng-template #header>
+                <tr>
                     <th aria-label="Seleção"></th>
                     <th pSortableColumn="id">Código <p-sortIcon field="id" /></th>
                     <th pSortableColumn="name">Motorista <p-sortIcon field="name" /></th>
                     <th>CPF</th>
                     <th>RG</th>
                     <th>CNH</th>
-                    <th pSortableColumn="status">Status <p-sortIcon field="status" /></th></tr
-            ></ng-template>
-            <ng-template #body let-client
-                ><tr [pSelectableRow]="client" [pSelectableRowDisabled]="client.status !== enabled">
+                    <th pSortableColumn="status">Status <p-sortIcon field="status" /></th>
+                </tr>
+            </ng-template>
+            <ng-template #body let-client>
+                <tr [pSelectableRow]="client" [pSelectableRowDisabled]="client.status !== enabled">
                     <td><p-tableRadioButton [value]="client" [disabled]="client.status !== enabled || loading() || isDisabled" /></td>
                     <td class="text-muted-color">#{{ client.id }}</td>
                     <td>
@@ -110,10 +122,13 @@
                     <td>{{ client.cpf ? maskCPF(client.cpf) : '—' }}</td>
                     <td>{{ client.rg || '—' }}</td>
                     <td>{{ client.cnhRegister || '—' }}</td>
-                    <td><p-tag [value]="client.status" [severity]="client.status === enabled ? 'success' : 'secondary'" [rounded]="true" /></td></tr
-            ></ng-template>
-            <ng-template #emptymessage
-                ><tr>
+                    <td>
+                        <p-tag [value]="client.status" [severity]="client.status === enabled ? 'success' : 'secondary'" [rounded]="true" />
+                    </td>
+                </tr>
+            </ng-template>
+            <ng-template #emptymessage>
+                <tr>
                     <td colspan="7">
                         <div class="filter-empty">
                             <span class="filter-symbol"><i class="pi" [ngClass]="searched() ? 'pi-search' : 'pi-id-card'" aria-hidden="true"></i></span>
@@ -121,21 +136,17 @@
                             <p>{{ searched() ? 'Revise os critérios de pesquisa e tente novamente.' : 'Informe um critério acima e clique em Pesquisar para consultar os cadastros.' }}</p>
                         </div>
                     </td>
-                </tr></ng-template
-            >
+                </tr>
+            </ng-template>
         </p-table>
     </section>
-    <ng-template #footer
-        ><div class="filter-dialog-footer">
+    <ng-template #footer>
+        <div class="filter-dialog-footer">
             <span>{{ dialogSelectDriver ? dialogSelectDriver.name : 'Nenhum motorista selecionado' }}</span>
             <div>
-                <p-button type="button" label="Fechar" severity="secondary" [text]="true" (onClick)="hideDialog()" /><p-button
-                    type="button"
-                    label="Selecionar motorista"
-                    icon="pi pi-check"
-                    [disabled]="isDisabled || loading() || !dialogSelectDriver || dialogSelectDriver.status !== enabled"
-                    (onClick)="selectDriver()"
-                />
-            </div></div
-    ></ng-template>
+                <p-button type="button" label="Fechar" severity="secondary" [text]="true" (onClick)="hideDialog()" />
+                <p-button type="button" label="Selecionar motorista" icon="pi pi-check" [disabled]="isDisabled || loading() || !dialogSelectDriver || dialogSelectDriver.status !== enabled" (onClick)="selectDriver()" />
+            </div>
+        </div>
+    </ng-template>
 </p-dialog>

@@ -20,6 +20,7 @@ class ProposalDocumentShareServiceTest {
  @InjectMocks ProposalDocumentShareService service;
  CustomerAttendance attendance; AttendanceDocument document;
  @BeforeEach void setup() {
+  lenient().when(attendanceRepository.findForQuote(1,2,42)).thenAnswer(call -> attendance);
   attendance=new CustomerAttendance();attendance.setId(42);attendance.setCompanyId(1);attendance.setResaleId(2);attendance.setClientId(88);attendance.setClientName("Cliente");
   document=new AttendanceDocument();document.setId(7);document.setAttendanceId(42);document.setStage(AttendanceDocumentStage.PROPOSAL);document.setFilePath("file.pdf");document.setShareExpiresAt(Instant.now().plusSeconds(60));
  }
@@ -103,4 +104,16 @@ class ProposalDocumentShareServiceTest {
   assertThrows(ResponseStatusException.class,()->service.approve("a".repeat(43),true));
   assertThrows(ResponseStatusException.class,()->service.uploadSigned("a".repeat(43),new org.springframework.mock.web.MockMultipartFile("file","bad.pdf","application/pdf","bad".getBytes())));verifyNoInteractions(logs);
  }
+
+ @Test void completedAttendanceRejectsNewLinksApprovalsAndSignatures() {
+  attendance.setStatus(AttendanceStatus.COMPLETED);
+  when(attendances.authorizedAttendance(42,"user")).thenReturn(attendance);
+  assertThrows(ResponseStatusException.class,()->service.create(42,7,"user"));
+  when(documents.findForShareApproval(any())).thenReturn(Optional.of(document));
+  when(attendanceRepository.findById(42)).thenReturn(Optional.of(attendance));
+  assertThrows(ResponseStatusException.class,()->service.approve("a".repeat(43),true));
+  assertThrows(ResponseStatusException.class,()->service.uploadSigned("a".repeat(43),new org.springframework.mock.web.MockMultipartFile("file","doc.pdf","application/pdf","%PDF-test".getBytes())));
+  verify(documents,never()).saveAndFlush(any()); verifyNoInteractions(storage);
+ }
+
 }

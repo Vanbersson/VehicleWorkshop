@@ -20,12 +20,11 @@ import { StatusRoleFuncEnum } from '@/app/models/status-role-func-enum';
                 <li class="menu-separator"></li>
             }
         }
-    </ul>     
-    `,
+    </ul> `
 })
 export class AppMenu {
     model: MenuItem[] = [];
-    constructor(private storageService: StorageService) { }
+    constructor(private storageService: StorageService) {}
 
     ngOnInit() {
         this.model = [
@@ -44,6 +43,7 @@ export class AppMenu {
                     { key: '1_2', visible: false, label: 'Lista de Veículos', icon: 'pi pi-fw pi-car', routerLink: ['/concierge/vehicle/list'] },
                     { key: '1_5', visible: false, label: 'Saída de Veículos', icon: 'pi pi-fw pi-sign-out', class: 'rotated-icon', routerLink: ['/concierge/vehicle/exit'] },
                     { key: '1_3', visible: false, label: 'Cadastro de Motoristas', icon: 'pi pi-fw pi-id-card', routerLink: ['concierge/driver'] },
+                    { key: '1_4', visible: false, label: 'Orçamentos', icon: 'pi pi-clipboard', routerLink: ['concierge/budget/list'] },
                     {
                         key: '1_99',
                         visible: false,
@@ -53,8 +53,7 @@ export class AppMenu {
                             { key: '1_99_0', visible: false, label: 'Cadastro de Modelos', routerLink: ['concierge/register/vehicle/model'] },
                             { key: '1_100', visible: false, label: 'Módulo', routerLink: ['concierge/register/module'] }
                         ]
-                    },
-
+                    }
                 ]
             },
             {
@@ -66,16 +65,18 @@ export class AppMenu {
                 items: [
                     { key: '2_1', visible: false, label: 'Atendimento' },
                     {
-                        key: '2_2', visible: false, label: 'Consultas', path: '/consutas',
-                        items: [
-                            { key: '2_2_0', visible: false, label: 'Orçamentos' }
-                        ]
+                        key: '2_2',
+                        visible: false,
+                        label: 'Consultas',
+                        path: '/consutas',
+                        items: [{ key: '2_2_0', visible: false, label: 'Orçamentos' }]
                     },
                     {
-                        key: '2_3', visible: false, label: 'Compras', path: '/purchase',
-                        items: [
-                            { key: '2_3_0', visible: false, label: 'Pedidos de compra', routerLink: ['part/purchase/order'] },
-                        ]
+                        key: '2_3',
+                        visible: false,
+                        label: 'Compras',
+                        path: '/purchase',
+                        items: [{ key: '2_3_0', visible: false, label: 'Pedidos de compra', routerLink: ['part/purchase/order'] }]
                     },
                     {
                         key: '2_99',
@@ -90,7 +91,6 @@ export class AppMenu {
                         ]
                     },
                     { key: '2_100', visible: false, label: 'Módulo' }
-
                 ]
             },
             {
@@ -99,13 +99,19 @@ export class AppMenu {
                 label: 'Oficina',
                 path: '/workshop',
                 items: [
-                    { key: '3_1', visible: false, label: 'Orçamentos' },
+                    { key: '3_1', visible: false, label: 'Atendimento Oficina' },
                     {
-                        key: '3_2', visible: false, label: 'Controle de equipamentos', path: '/control',
+                        key: '3_2',
+                        visible: false,
+                        label: 'Controle de equipamentos',
+                        path: '/control',
                         items: [
                             { key: '3_2_0', visible: false, label: 'Requisições', routerLink: ['workshop/equipment/request/material'] },
                             {
-                                key: '3_2_1', visible: false, label: 'Cadastro', path: '/retister',
+                                key: '3_2_1',
+                                visible: false,
+                                label: 'Cadastro',
+                                path: '/retister',
                                 items: [
                                     { key: '3_2_1_0', visible: false, label: 'Categoria', routerLink: ['workshop/equipment/register/category/material'] },
                                     { key: '3_2_1_1', visible: false, label: 'Material', routerLink: ['workshop/equipment/register/material'] }
@@ -113,8 +119,12 @@ export class AppMenu {
                             }
                         ]
                     },
+                    { key: '3_3', visible: false, label: 'Orçamentos', routerLink: ['workshop/budget/list'] },
                     {
-                        key: '3_99', visible: false, label: 'Cadastro', path: '/register',
+                        key: '3_99',
+                        visible: false,
+                        label: 'Cadastro',
+                        path: '/register',
                         items: [
                             { key: '3_99_0', visible: false, label: 'Mecânico', routerLink: ['workshop/register/mechanic'] },
                             { key: '3_99_1', visible: false, label: 'Departamentos', routerLink: ['workshop/register/mechanic/department'] }
@@ -130,14 +140,16 @@ export class AppMenu {
                 items: [
                     { key: '4_1', visible: false, label: 'Manutenção Clientes', routerLink: ['invoicing/client'] },
                     {
-                        key: '4_99', visible: false, label: 'Cadastros', path: '/register',
+                        key: '4_99',
+                        visible: false,
+                        label: 'Cadastros',
+                        path: '/register',
                         items: [
                             { key: '4_99_0', visible: false, label: 'Categoria de Clientes', routerLink: ['invoicing/register/category'] },
                             { key: '4_99_1', visible: false, label: 'Condição de pagamento', routerLink: ['invoicing/register/payment'] },
                             { key: '4_99_2', visible: false, label: 'Região', routerLink: ['invoicing/register/region'] }
                         ]
                     }
-
                 ]
             },
             {
@@ -152,11 +164,11 @@ export class AppMenu {
                     { key: '5_3', visible: false, label: 'Atendimento', icon: 'pi pi-th-large', routerLink: ['crm/new/customer'] },
                     { key: '5_4', visible: false, label: 'Relatório', icon: 'pi pi-clipboard', routerLink: ['crm/report'] },
                     {
-                        key: '5_99', visible: false, label: 'Cadastros', path: '/register',
-                        items: [
-                            { key: '5_99_0', visible: false, label: 'Tipo Atendimento', routerLink: ['crm/register/type/customer'] },
-
-                        ]
+                        key: '5_99',
+                        visible: false,
+                        label: 'Cadastros',
+                        path: '/register',
+                        items: [{ key: '5_99_0', visible: false, label: 'Tipo Atendimento', routerLink: ['crm/register/type/customer'] }]
                     }
                 ]
             },
@@ -167,26 +179,34 @@ export class AppMenu {
                 path: '/report',
                 items: [
                     {
-                        key: '100_1', visible: false, label: 'Portaria', path: '/concierge', items: [
-                            { key: '100_1_0', visible: false, label: 'Entrada de Veículo', routerLink: ['report/concierge/vehicle/entry'] },
-                        ]
+                        key: '100_1',
+                        visible: false,
+                        label: 'Portaria',
+                        path: '/concierge',
+                        items: [{ key: '100_1_0', visible: false, label: 'Entrada de Veículo', routerLink: ['report/concierge/vehicle/entry'] }]
                     },
                     {
-                        key: '100_2', visible: false, label: 'Peças', path: '/part', items: [
-                            { key: '100_2_0', visible: false, label: 'Pedidos de compra', routerLink: ['report/part/purchase/order'] },
-                        ]
+                        key: '100_2',
+                        visible: false,
+                        label: 'Peças',
+                        path: '/part',
+                        items: [{ key: '100_2_0', visible: false, label: 'Pedidos de compra', routerLink: ['report/part/purchase/order'] }]
                     },
                     {
-                        key: '100_3', visible: false, label: 'Oficina', path: '/workshop', items: [
+                        key: '100_3',
+                        visible: false,
+                        label: 'Oficina',
+                        path: '/workshop',
+                        items: [
                             {
-                                key: '100_3_0', visible: false, label: 'Controle de equipamentos', path: '/control', items: [
-                                    { key: '100_3_1', visible: false, label: 'Requisições', routerLink: ['report/workshop/equipment/request/material'] },
-                                ]
-                            },
+                                key: '100_3_0',
+                                visible: false,
+                                label: 'Controle de equipamentos',
+                                path: '/control',
+                                items: [{ key: '100_3_1', visible: false, label: 'Requisições', routerLink: ['report/workshop/equipment/request/material'] }]
+                            }
                         ]
                     }
-
-
                 ]
             },
             {
@@ -196,13 +216,16 @@ export class AppMenu {
                 path: '/config',
                 items: [
                     {
-                        key: '999_2', visible: false, label: 'Cadastros', path: '/register',
+                        key: '999_2',
+                        visible: false,
+                        label: 'Cadastros',
+                        path: '/register',
                         items: [
                             { key: '999_2_0', visible: false, label: 'Empresa', routerLink: '/config/register/company' },
                             { key: '999_2_1', visible: false, label: 'Usuários', routerLink: '/config/register/user' },
                             { key: '999_2_2', visible: false, label: 'Marcas', routerLink: '/config/register/brand' },
                             { key: '999_2_3', visible: false, label: 'Vendedores', routerLink: '/config/register/salesperson' },
-                            { key: '999_2_4', visible: false, label: 'Grupo Vendedores', routerLink: '/config/register/salesperson/group' },
+                            { key: '999_2_4', visible: false, label: 'Grupo Vendedores', routerLink: '/config/register/salesperson/group' }
                         ]
                     }
                 ]
@@ -211,7 +234,7 @@ export class AppMenu {
 
         // Converte a string em um array de keys
         const keysToShow = this.storageService.menus.split(',');
-        this.model = this.model.map(item => this.updateVisibility(item, keysToShow));
+        this.model = this.model.map((item) => this.updateVisibility(item, keysToShow));
     }
 
     updateVisibility(item: MenuItem, keys: string[]): MenuItem {
@@ -222,7 +245,7 @@ export class AppMenu {
             item.visible = true;
         }
         if (item.items) {
-            item.items = item.items.map(subItem => this.updateVisibility(subItem, keys));
+            item.items = item.items.map((subItem) => this.updateVisibility(subItem, keys));
         }
         return item;
     }

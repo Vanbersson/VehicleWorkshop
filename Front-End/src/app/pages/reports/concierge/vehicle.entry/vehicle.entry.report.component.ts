@@ -29,6 +29,8 @@ import { VehicleDetailsComponent } from '@/app/components/vehicle.details/vehicl
 
 import { ClientCompany } from '@/app/models/client.company';
 import { VehicleEntry } from '@/app/models/vehicle.entry';
+import { Salesperson } from '@/app/models/crm/salesperson';
+import { SalespersonService } from '@/app/services/salesperson/salesperson.service';
 import { User } from '@/app/models/user';
 import { VehicleModel } from '@/app/models/vehicle.model';
 import { UserService } from '@/app/services/user/user.service';
@@ -138,7 +140,7 @@ export default class VehicleEntryReportComponent implements OnInit {
     selectClientCompany = signal<ClientCompany>(new ClientCompany());
 
     vehicleModels = signal<VehicleModel[]>([]);
-    attendantsUser = signal<User[]>([]);
+    attendantsUser = signal<Salesperson[]>([]);
     conciergeUser = signal<User[]>([]);
 
     formFilter = new FormGroup({
@@ -149,7 +151,7 @@ export default class VehicleEntryReportComponent implements OnInit {
         clientCompanyId: new FormControl<number | null>(null),
         clientCompanyName: new FormControl<string>(''),
         modelVehicle: new FormControl<VehicleModel | null>(null),
-        userAttendant: new FormControl<User | null>(null),
+        userAttendant: new FormControl<Salesperson | null>(null),
         userConcierge: new FormControl<User | null>(null),
         vehicleId: new FormControl<number | null>(null),
         vehiclePlate: new FormControl<string>(''),
@@ -165,6 +167,7 @@ export default class VehicleEntryReportComponent implements OnInit {
         private primeng: PrimeNG,
         private clientService: ClientCompanyService,
         private userService: UserService,
+        private salespersonService: SalespersonService,
         private vehicleService: VehicleEntryService,
         private vehicleEntryReportService: VehicleEntryReportService,
         private vehicleModelService: VehicleModelService,
@@ -209,7 +212,7 @@ export default class VehicleEntryReportComponent implements OnInit {
     private async init() {
         this.loadingService.show();
         //Attendant
-        this.attendantsUser.set(await this.getUsers(2));
+        this.attendantsUser.set((await lastValueFrom(this.salespersonService.listAll())).filter((person) => person.status === 'Habilitado'));
         //Concierge
         this.conciergeUser.set(await this.getUsers(10));
         //Vehicle Models

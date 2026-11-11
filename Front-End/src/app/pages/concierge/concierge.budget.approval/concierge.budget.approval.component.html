@@ -1,0 +1,133 @@
+<main class="approval-page">
+    <div class="topbar">
+        <span class="brand"><span class="brand-icon" aria-hidden="true">PDF</span> ORÇAMENTO DE VEÍCULO</span>
+        @if (page() && !page()!.accessRequired) {
+            <p-tag [value]="page()!.approvedAt ? 'Orçamento aprovado' : 'Aguardando aprovação'" [severity]="page()!.approvedAt ? 'success' : 'info'" [rounded]="true" />
+        }
+    </div>
+    @if (loading()) {
+        <section class="card state" role="status">
+            <i class="pi pi-spin pi-spinner" aria-hidden="true"></i>
+            <p>Carregando orçamento...</p>
+        </section>
+    } @else if (!page()) {
+        <section class="card state">
+            <i class="pi pi-link" aria-hidden="true"></i>
+            <h1>Não foi possível abrir o link</h1>
+            <p role="alert">{{ error() }}</p>
+            <p-button label="Tentar novamente" icon="pi pi-refresh" (onClick)="load()" />
+        </section>
+    } @else if (page()!.accessRequired) {
+        <section class="card access-card" aria-labelledby="accessTitle">
+            <span class="eyebrow">ACESSO AO ORÇAMENTO</span>
+            <h1 id="accessTitle">Confirme seus dados</h1>
+            <p>Informe o CNPJ ou CPF do cliente para consultar e aprovar o orçamento do veículo.</p>
+            <form [formGroup]="identity" (ngSubmit)="verify()">
+                <label for="budgetTaxId">CNPJ ou CPF</label
+                ><input pInputText id="budgetTaxId" formControlName="taxId" type="text" inputmode="numeric" autocomplete="off" maxlength="32" placeholder="Digite o CNPJ ou CPF" [readOnly]="busy()" class="w-full" /><small
+                    >Use o documento cadastrado, com ou sem pontuação.</small
+                >
+                @if (identity.controls.taxId.touched && identity.invalid) {
+                    <p class="error" role="alert">Informe o CNPJ ou CPF.</p>
+                }
+                @if (error()) {
+                    <p class="error" role="alert">{{ error() }}</p>
+                }
+                <p-button type="submit" label="Acessar orçamento" [loading]="busy()" styleClass="w-full" />
+            </form>
+            <p class="note">Se não conseguir acessar, entre em contato com o atendente.</p>
+        </section>
+    } @else {
+        <header class="hero">
+            <h1>Aprovação do orçamento #{{ page()!.budgetId }}</h1>
+            <p>Revise os itens, os serviços e o documento antes de confirmar.</p>
+        </header>
+        <nav class="steps" aria-label="Etapas da aprovação">
+            <div><span>1</span>Confirmar acesso</div>
+            <div [class.active]="!page()!.approvedAt"><span>2</span>Conferir orçamento</div>
+            <div [class.active]="!!page()!.approvedAt"><span>3</span>Aprovar orçamento</div>
+        </nav>
+        @if (error()) {
+            <p class="error" role="alert">{{ error() }}</p>
+        }
+        <div class="approval-layout">
+            <div class="stack">
+                <section class="card" aria-labelledby="budgetReviewTitle">
+                    <div class="card-heading">
+                        <span class="number">01</span>
+                        <div>
+                            <h2 id="budgetReviewTitle">Confira o orçamento</h2>
+                            <p>{{ page()!.clientName }} · {{ page()!.vehiclePlate || 'Veículo sem placa' }}</p>
+                        </div>
+                    </div>
+                    @if (page()!.dateValidation) {
+                        <p class="note">Validade: {{ page()!.dateValidation | date: 'dd/MM/yyyy' }}</p>
+                    }
+                    <ul class="list-none p-0 m-0">
+                        @for (item of page()!.items; track $index) {
+                            <li class="py-3 border-b border-surface-200">
+                                <strong class="block break-words">{{ item.description }}</strong>
+                                <div class="flex flex-wrap justify-between gap-2 mt-2">
+                                    <small
+                                        >{{ item.type === 1 ? 'Serviço · ' + item.hourService + ' hora(s)' : 'Item · ' + item.quantity + ' unidade(s)' }} × {{ item.price | currency: 'BRL' : 'symbol' : '1.2-3' }} · Desconto:
+                                        {{ item.discount | currency: 'BRL' : 'symbol' : '1.2-3' }}</small
+                                    ><strong>{{ item.total | currency: 'BRL' : 'symbol' : '1.2-3' }}</strong>
+                                </div>
+                            </li>
+                        } @empty {
+                            <li class="note">Nenhum item ou serviço informado.</li>
+                        }
+                    </ul>
+                    <p class="flex justify-between gap-3 text-lg font-semibold mt-5 mb-0">
+                        <span>Total do orçamento</span><span>{{ page()!.total | currency: 'BRL' : 'symbol' : '1.2-3' }}</span>
+                    </p>
+                </section>
+                <section class="card">
+                    <div class="card-heading">
+                        <span class="number">02</span>
+                        <div>
+                            <h2>Documento em PDF</h2>
+                            <p>Baixe o arquivo e confira os detalhes.</p>
+                        </div>
+                    </div>
+                    <div class="document-file">
+                        <span class="file-icon" aria-hidden="true">PDF</span>
+                        <div>
+                            <strong class="break-all">{{ page()!.fileName }}</strong
+                            ><small>{{ (page()!.size ?? 0) / 1024 | number: '1.0-1' }} KB</small>
+                        </div>
+                    </div>
+                    <p-button label="Baixar orçamento em PDF" icon="pi pi-download" severity="secondary" [outlined]="true" (onClick)="download()" [disabled]="busy()" styleClass="w-full" />
+                </section>
+            </div>
+            <section class="card approval-card" aria-labelledby="budgetApproveTitle">
+                <div class="card-heading">
+                    <span class="number">03</span>
+                    <div>
+                        <h2 id="budgetApproveTitle">Aprovar orçamento</h2>
+                        <p>Confirme após revisar os valores.</p>
+                    </div>
+                </div>
+                @if (page()!.approvedAt) {
+                    <div class="approved">
+                        <i class="pi pi-check-circle" aria-hidden="true"></i>
+                        <h3>Orçamento aprovado</h3>
+                        <p>Aprovação registrada em {{ page()!.approvedAt | date: 'dd/MM/yyyy HH:mm' }}.</p>
+                    </div>
+                } @else {
+                    <form (submit)="$event.preventDefault(); approve()">
+                        <div class="consent">
+                            <p-checkbox inputId="budgetConfirmed" [formControl]="confirmation" [binary]="true" [readonly]="busy()" /><label for="budgetConfirmed">Li o orçamento e concordo com os itens, serviços e valores apresentados.</label>
+                        </div>
+                        @if (confirmation.touched && confirmation.invalid) {
+                            <p class="error" role="alert">Confirme a leitura antes de aprovar.</p>
+                        }
+                        <p-button type="submit" label="Aprovar orçamento" icon="pi pi-check" [loading]="busy()" [disabled]="busy() || confirmation.invalid" styleClass="w-full" />
+                    </form>
+                }
+                <p class="note">A aprovação será registrada com data e hora.</p>
+            </section>
+        </div>
+    }
+    <footer>Este link é exclusivo para o orçamento compartilhado.</footer>
+</main>

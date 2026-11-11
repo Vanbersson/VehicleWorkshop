@@ -32,7 +32,7 @@
             [(selection)]="selectedItems"
             [rowHover]="true"
             [scrollable]="true"
-            [globalFilterFields]="['id', 'vehiclePlate', 'modelDescription', 'vehicleFleet', 'entryDate', 'clientCompanyName', 'attendantUserName', 'numServiceOrder']"
+            [globalFilterFields]="['id', 'vehiclePlate', 'modelDescription', 'vehicleFleet', 'entryDate', 'clientCompanyName', 'salespersonName', 'numServiceOrder']"
             size="small"
             [loading]="loadingVehicles()"
             currentPageReportTemplate="{first}–{last} de {totalRecords} veículos"
@@ -40,14 +40,15 @@
             [rows]="10"
             [rowsPerPageOptions]="[10, 25, 50]"
             [showCurrentPageReport]="true"
-            [tableStyle]="{ 'min-width': '90rem' }">
+            [tableStyle]="{ 'min-width': '90rem' }"
+        >
             <ng-template #caption>
                 <div class="list-toolbar">
                     <p-iconfield iconPosition="left" class="vehicle-search">
                         <p-inputicon>
                             <i class="pi pi-search" aria-hidden="true"></i>
                         </p-inputicon>
-                        <input #searchInput pInputText type="search" class="w-full" placeholder="Buscar placa, modelo, frota ou empresa" aria-label="Pesquisar entradas de veículos" (input)="tableFilter1.filterGlobal(searchInput.value, 'contains')"/>
+                        <input #searchInput pInputText type="search" class="w-full" placeholder="Buscar placa, modelo, frota ou empresa" aria-label="Pesquisar entradas de veículos" (input)="tableFilter1.filterGlobal(searchInput.value, 'contains')" />
                     </p-iconfield>
                     <div class="list-filters">
                         <p-select
@@ -122,10 +123,11 @@
                     <th style="min-width: 10rem">
                         <div class="flex items-center justify-between">
                             Consultor
-                            <p-columnFilter type="text" field="attendantUserName" display="menu"></p-columnFilter>
+                            <p-columnFilter type="text" field="salespersonName" display="menu"></p-columnFilter>
                         </div>
                     </th>
-                    <th style="min-width: 5rem">Liberação
+                    <th style="min-width: 5rem">
+                        Liberação
                         <!-- <div class="flex items-center justify-between">
                             Liberação
                             <p-columnFilter field="authExitStatus" matchMode="equals" display="menu">
@@ -189,10 +191,10 @@
                         }
                     </td>
                     <td>
-                        @if (vehicle.attendantUserName == 'FALTA') {
+                        @if (vehicle.salespersonName == 'FALTA') {
                             <p-tag value="FALTA" severity="danger"></p-tag>
                         } @else {
-                            <span class="text-500">{{ vehicle.attendantUserName | uppercase }}</span>
+                            <span class="text-500">{{ vehicle.salespersonName | uppercase }}</span>
                         }
                     </td>
                     <td>

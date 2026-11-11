@@ -37,13 +37,16 @@
         <div class="filter-grid">
             <div class="filter-field">
                 <label for="filter-client-id">Código</label>
-                <p-inputNumber inputId="filter-client-id" [useGrouping]="false" formControlName="clientCompanyId"  fluid /></div>
+                <p-inputNumber inputId="filter-client-id" [useGrouping]="false" formControlName="clientCompanyId" fluid />
+            </div>
             <div class="filter-field">
                 <label for="filter-client-trade">Nome fantasia</label>
-                <input pInputText id="filter-client-trade" formControlName="clientCompanyFantasia" /></div>
+                <input pInputText id="filter-client-trade" formControlName="clientCompanyFantasia" />
+            </div>
             <div class="filter-field">
                 <label for="filter-client-name">Nome / Razão social</label>
-                <input pInputText id="filter-client-name" formControlName="clientCompanyName" /></div>
+                <input pInputText id="filter-client-name" formControlName="clientCompanyName" />
+            </div>
             @if (formClientCompanyFilter.controls.clientCompanyTipo.value === 'j') {
                 <div class="filter-field">
                     <label for="filter-client-cnpj">CNPJ</label>

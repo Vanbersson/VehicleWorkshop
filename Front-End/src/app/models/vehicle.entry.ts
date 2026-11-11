@@ -1,7 +1,6 @@
-import { StatusVehicleAuthEnum } from "./status.vehicle.auth.enum";
-import { StatusVehicleEnum } from "./status.vehicle.enum";
-import { StatusVehicleStepEnum } from "./status.vehicle.step.enum";
-
+import { StatusVehicleAuthEnum } from './status.vehicle.auth.enum';
+import { StatusVehicleEnum } from './status.vehicle.enum';
+import { StatusVehicleStepEnum } from './status.vehicle.step.enum';
 
 export class VehicleEntry {
     companyId: number | null = null;
@@ -32,8 +31,9 @@ export class VehicleEntry {
     exitPhoto4Url: string = '';
     exitInformation: string = '';
 
-    attendantUserId: number | null = null;
-    attendantUserName: string = '';
+    salespersonUserId?: number | null;
+    salespersonId: number | null = null;
+    salespersonName: string = '';
     attendantPhoto1Url: string = '';
     attendantPhoto2Url: string = '';
     attendantPhoto3Url: string = '';

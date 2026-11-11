@@ -885,7 +885,7 @@
                             </section>
                         </form>
                     </p-tabpanel>
-                    </p-tabpanels>
+                </p-tabpanels>
             </p-tabs>
         </section>
         <footer class="maintenance-actions">
@@ -909,9 +909,7 @@
 </div>
 <p-confirmDialog [style]="{ width: '28rem', maxWidth: '95vw' }" />
 
-<p-dialog [(visible)]="visibleVehiclePlateTogether" [modal]="true" 
-    [draggable]="false" [style]="{ width: '80rem', maxWidth: '96vw' }" 
-    [breakpoints]="{ '640px': '96vw' }">
+<p-dialog [(visible)]="visibleVehiclePlateTogether" [modal]="true" [draggable]="false" [style]="{ width: '80rem', maxWidth: '96vw' }" [breakpoints]="{ '640px': '96vw' }">
     <ng-template #header>
         <div class="flex items-center gap-3">
             <span class="maintenance-icon"><i class="pi pi-link" aria-hidden="true"></i></span>
@@ -942,13 +940,14 @@
             [rowsPerPageOptions]="[5, 10, 25]"
             [showCurrentPageReport]="true"
             currentPageReportTemplate="{first}–{last} de {totalRecords} veículos"
-            [globalFilterFields]="['id', 'vehiclePlate', 'modelDescription', 'vehicleFleet', 'numServiceOrder', 'clientCompanyName', 'attendantUserName', 'entryDate', 'exitDate']">
+            [globalFilterFields]="['id', 'vehiclePlate', 'modelDescription', 'vehicleFleet', 'numServiceOrder', 'clientCompanyName', 'salespersonName', 'entryDate', 'exitDate']"
+        >
             <ng-template #caption>
                 <div class="flex items-center justify-between flex-wrap gap-3">
                     <p-iconfield iconPosition="left" class="w-full sm:max-w-md">
                         <p-inputicon>
                             <i class="pi pi-search" aria-hidden="true"></i>
-                            </p-inputicon>
+                        </p-inputicon>
                         <input
                             #togetherSearch
                             pInputText
@@ -956,11 +955,12 @@
                             class="w-full"
                             placeholder="Buscar placa, modelo, frota ou empresa"
                             aria-label="Pesquisar veículos da mesma entrada"
-                            (input)="togetherTable.filterGlobal(togetherSearch.value, 'contains')" />
+                            (input)="togetherTable.filterGlobal(togetherSearch.value, 'contains')"
+                        />
                     </p-iconfield>
                     <p-button type="button" icon="pi pi-filter-slash" label="Limpar filtros" [text]="true" severity="secondary" (onClick)="togetherTable.clear(); togetherSearch.value = ''" />
                 </div>
-                </ng-template>
+            </ng-template>
             <ng-template #header>
                 <tr>
                     <th pSortableColumn="id" class="whitespace-nowrap">Código <p-sortIcon field="id" /></th>
@@ -971,7 +971,7 @@
                     <th pSortableColumn="entryDate" class="whitespace-nowrap">Entrada <p-sortIcon field="entryDate" /></th>
                     <th pSortableColumn="exitDate" class="whitespace-nowrap">Saída <p-sortIcon field="exitDate" /></th>
                     <th pSortableColumn="clientCompanyName" class="whitespace-nowrap">Empresa <p-sortIcon field="clientCompanyName" /></th>
-                    <th pSortableColumn="attendantUserName" class="whitespace-nowrap">Consultor <p-sortIcon field="attendantUserName" /></th>
+                    <th pSortableColumn="salespersonName" class="whitespace-nowrap">Consultor <p-sortIcon field="salespersonName" /></th>
                     <th>Ação</th>
                 </tr>
             </ng-template>
@@ -1003,10 +1003,10 @@
                         }
                     </td>
                     <td>
-                        @if (vehicle.attendantUserName === 'FALTA') {
+                        @if (vehicle.salespersonName === 'FALTA') {
                             <p-tag value="Não informado" severity="warn" [rounded]="true" />
                         } @else {
-                            {{ vehicle.attendantUserName | uppercase }}
+                            {{ vehicle.salespersonName | uppercase }}
                         }
                     </td>
                     <td>
@@ -1090,7 +1090,7 @@
                         </div>
                         <div>
                             <dt class="text-muted-color">Consultor</dt>
-                            <dd class="m-0 font-medium">{{ passage.attendantUserName || 'Não informado' }}</dd>
+                            <dd class="m-0 font-medium">{{ passage.salespersonName || 'Não informado' }}</dd>
                         </div>
                         <div>
                             <dt class="text-muted-color">Motorista de entrada</dt>

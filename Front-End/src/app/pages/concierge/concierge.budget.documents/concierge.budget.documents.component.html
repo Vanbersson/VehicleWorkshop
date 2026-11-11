@@ -1,0 +1,66 @@
+<section aria-labelledby="budgetDocumentTitle">
+    <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
+        <div>
+            <h2 id="budgetDocumentTitle" class="text-lg font-semibold m-0"><i class="pi pi-file-pdf text-primary mr-2" aria-hidden="true"></i>Documento do orçamento</h2>
+            <p class="text-sm text-muted-color mb-0 mt-2">Um arquivo PDF de até 5 MB.</p>
+        </div>
+        @if (budgetId) {
+            <div class="flex gap-2">
+                <p-button type="button" label="Atualizar" icon="pi pi-refresh" severity="secondary" [text]="true" (onClick)="load()" [disabled]="busy" />
+                @if (!readOnly && documents().length) {
+                    <p-button type="button" label="Gerar link de aprovação" icon="pi pi-link" [outlined]="true" (onClick)="share()" [loading]="sharing()" [disabled]="busy" />
+                }
+                @if (!readOnly && !documents().length) {
+                    <input #pdfInput type="file" accept=".pdf,application/pdf" class="hidden" aria-label="Selecionar PDF do orçamento" (change)="selectFile($event)" /><p-button
+                        type="button"
+                        label="Anexar PDF"
+                        icon="pi pi-upload"
+                        [outlined]="true"
+                        (onClick)="pdfInput.click()"
+                        [loading]="uploading()"
+                        [disabled]="busy"
+                    />
+                }
+            </div>
+        }
+    </div>
+    @if (!budgetId) {
+        <p class="text-muted-color text-sm">Salve o orçamento e abra a edição para anexar o documento.</p>
+    }
+    @if (error()) {
+        <p class="text-red-600 text-sm" role="alert">{{ error() }}</p>
+    }
+    @if (success()) {
+        <p class="text-green-600 text-sm" role="status">{{ success() }}</p>
+    }
+    @if (loading()) {
+        <p role="status" class="text-muted-color text-sm">Carregando documento...</p>
+    } @else {
+        @for (item of documents(); track item.id) {
+            <div class="flex flex-wrap items-center justify-between gap-3 border border-surface rounded-xl p-4 mt-4">
+                <div class="min-w-0">
+                    <strong class="block break-all">{{ item.fileName }}</strong
+                    ><small class="text-muted-color">{{ item.size / 1024 | number: '1.0-1' }} KB · {{ item.createdAt | date: 'dd/MM/yyyy HH:mm' }}</small>
+                </div>
+                <div class="flex gap-2">
+                    <p-button type="button" label="Baixar" icon="pi pi-download" severity="secondary" [text]="true" (onClick)="download(item)" [loading]="downloading()" [disabled]="downloading()" />
+                    @if (!readOnly) {
+                        <p-button type="button" label="Remover" icon="pi pi-trash" severity="danger" [text]="true" (onClick)="remove(item)" [disabled]="busy || downloading()" [loading]="removing()" />
+                    }
+                </div>
+            </div>
+        } @empty {
+            @if (budgetId && !error()) {
+                <p class="text-muted-color text-sm">Nenhum documento anexado.</p>
+            }
+        }
+    }
+    @if (shareUrl()) {
+        <div class="border border-surface rounded-xl p-4 mt-4" aria-live="polite">
+            <strong>Link de aprovação do orçamento</strong>
+            <p class="text-sm text-muted-color">Válido até {{ shareExpiresAt() | date: 'dd/MM/yyyy HH:mm' }}. O cliente precisa confirmar CPF ou CNPJ para consultar e aprovar. Gerar outro link ou alterar o orçamento invalida o link anterior.</p>
+            <a [href]="shareUrl()" target="_blank" rel="noopener noreferrer" class="block break-all mb-3">{{ shareUrl() }}</a
+            ><p-button type="button" label="Copiar link" icon="pi pi-copy" [text]="true" (onClick)="copyLink()" />
+        </div>
+    }
+</section>

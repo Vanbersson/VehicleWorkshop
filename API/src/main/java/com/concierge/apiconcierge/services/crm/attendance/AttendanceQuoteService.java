@@ -26,6 +26,7 @@ public class AttendanceQuoteService {
         CustomerAttendance scope = attendanceService.authorizedAttendance(data.attendanceId(), email);
         CustomerAttendance a = attendanceRepository.findForQuote(scope.getCompanyId(), scope.getResaleId(), scope.getId());
         if (a == null || !Objects.equals(a.getVersion(), data.attendanceVersion())) throw new BusinessException("O atendimento foi alterado. Feche e abra o orçamento novamente.");
+        if (a.getStatus() == AttendanceStatus.COMPLETED) throw new BusinessException("O atendimento concluído está disponível apenas para consulta.");
         if (a.getStatus() == AttendanceStatus.CANCELLED) throw new BusinessException("O atendimento está cancelado. O orçamento está disponível apenas para consulta.");
         AttendanceQuote quote = quoteRepository.findByCompanyIdAndResaleIdAndAttendanceId(a.getCompanyId(), a.getResaleId(), a.getId()).orElse(null);
         if (quote != null && !Objects.equals(quote.getVersion(), data.version()) || quote == null && data.version() != null) throw new BusinessException("O orçamento foi alterado. Feche e abra o diálogo novamente.");

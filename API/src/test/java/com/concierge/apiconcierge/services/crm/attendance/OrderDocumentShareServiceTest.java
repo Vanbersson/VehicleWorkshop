@@ -19,7 +19,8 @@ class OrderDocumentShareServiceTest {
  @Mock IAttendanceLogRepository logs;
  @InjectMocks OrderDocumentShareService service;
  CustomerAttendance attendance;AttendanceDocument document;
- @BeforeEach void setup(){ attendance=new CustomerAttendance();attendance.setId(42);attendance.setCompanyId(1);attendance.setResaleId(2);attendance.setClientId(88);attendance.setClientName("Cliente");document=new AttendanceDocument();document.setId(7);document.setAttendanceId(42);document.setStage(AttendanceDocumentStage.DOCUMENTS);document.setShareExpiresAt(Instant.now().plusSeconds(60)); }
+ @BeforeEach void setup(){
+  lenient().when(attendanceRepository.findForQuote(1,2,42)).thenAnswer(call -> attendance); attendance=new CustomerAttendance();attendance.setId(42);attendance.setCompanyId(1);attendance.setResaleId(2);attendance.setClientId(88);attendance.setClientName("Cliente");document=new AttendanceDocument();document.setId(7);document.setAttendanceId(42);document.setStage(AttendanceDocumentStage.DOCUMENTS);document.setShareExpiresAt(Instant.now().plusSeconds(60)); }
  @Test void createsAnOrderLinkAndDoesNotApproveIt(){
   when(attendances.authorizedAttendance(42,"user")).thenReturn(attendance);when(attendanceRepository.findForQuote(1,2,42)).thenReturn(attendance);when(documents.findByAttendanceIdAndId(42,7)).thenReturn(Optional.of(document));
   var result=service.create(42,7,"user");assertTrue(result.path().matches("/public/orders/[A-Za-z0-9_-]{43}"));assertNull(document.getOrderApprovedAt());assertNull(document.getProposalApprovedAt());
@@ -64,4 +65,16 @@ class OrderDocumentShareServiceTest {
   when(documents.findForShareApproval(any())).thenReturn(Optional.of(document));when(attendanceRepository.findById(42)).thenReturn(Optional.of(attendance));when(storage.save(any(),any(),any(),any(),any())).thenReturn("signed.pdf");when(logs.saveAndFlush(any())).thenThrow(new IllegalStateException("Audit unavailable"));
   assertThrows(IllegalStateException.class,()->service.uploadSigned("a".repeat(43),new org.springframework.mock.web.MockMultipartFile("file","pedido.pdf","application/pdf","%PDF-test".getBytes())));verify(storage).delete("signed.pdf");
  }
+
+ @Test void completedAttendanceRejectsNewLinksApprovalsAndSignatures() {
+  attendance.setStatus(AttendanceStatus.COMPLETED);
+  when(attendances.authorizedAttendance(42,"user")).thenReturn(attendance);
+  assertThrows(ResponseStatusException.class,()->service.create(42,7,"user"));
+  when(documents.findForShareApproval(any())).thenReturn(Optional.of(document));
+  when(attendanceRepository.findById(42)).thenReturn(Optional.of(attendance));
+  assertThrows(ResponseStatusException.class,()->service.approve("a".repeat(43),true));
+  assertThrows(ResponseStatusException.class,()->service.uploadSigned("a".repeat(43),new org.springframework.mock.web.MockMultipartFile("file","doc.pdf","application/pdf","%PDF-test".getBytes())));
+  verify(documents,never()).saveAndFlush(any()); verifyNoInteractions(storage);
+ }
+
 }

@@ -31,9 +31,6 @@ public class VehicleEntry {
     @Column(name = "step_entry")
     private StepVehicleEnum stepEntry;
 
-    @Column(name = "budget_id")
-    private Integer budgetId;
-
     @Column(name = "entry_user_id")
     private Integer entryUserId;
     @Column(name = "entry_user_name")
@@ -71,10 +68,10 @@ public class VehicleEntry {
     @Column(name = "exit_information")
     private String exitInformation;
 
-    @Column(name = "attendant_user_id")
-    private Integer attendantUserId;
-    @Column(name = "attendant_user_name")
-    private String attendantUserName;
+    @Column(name = "salesperson_id")
+    private Integer salespersonId;
+    @Column(name = "salesperson_name")
+    private String salespersonName;
     @Column(name = "attendant_photo1_url")
     private String attendantPhoto1Url;
     @Column(name = "attendant_photo2_url")

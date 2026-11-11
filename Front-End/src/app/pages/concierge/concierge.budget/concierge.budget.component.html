@@ -1,0 +1,155 @@
+<section class="budget-list-page">
+    <header class="page-heading">
+        <div class="budget-title">
+            <span class="budget-icon">
+                <i class="pi pi-clipboard" aria-hidden="true"></i>
+            </span>
+            <div>
+                <span class="budget-eyebrow"> PORTARIA / ORÇAMENTOS</span>
+                <h1>Orçamentos de veículos</h1>
+                <p class="text-muted-color">Acompanhe os orçamentos, as aprovações e as condições de cada atendimento.</p>
+            </div>
+        </div>
+        <div class="heading-actions">
+            <p-button label="Atualizar" icon="pi pi-refresh" severity="secondary" [outlined]="true" (onClick)="load()" [loading]="loading()" [disabled]="loading()" /><p-button
+                label="Novo orçamento"
+                icon="pi pi-plus"
+                routerLink="/concierge/budget/maintenance"
+            />
+        </div>
+    </header>
+    <div class="overview" aria-label="Resumo dos orçamentos">
+        <div>
+            <span class="overview-icon"><i class="pi pi-folder" aria-hidden="true"></i></span>
+            <div>
+                <span>Orçamentos nesta consulta</span><strong>{{ summary().total }}</strong>
+            </div>
+        </div>
+        <div>
+            <span class="overview-icon"><i class="pi pi-clock" aria-hidden="true"></i></span>
+            <div>
+                <span>Em aberto</span><strong>{{ summary().open }}</strong>
+            </div>
+        </div>
+        <div>
+            <span class="overview-icon approved"><i class="pi pi-check-circle" aria-hidden="true"></i></span>
+            <div>
+                <span>Aprovados</span><strong>{{ summary().approved }}</strong>
+            </div>
+        </div>
+        <div>
+            <span class="overview-icon"><i class="pi pi-inbox" aria-hidden="true"></i></span>
+            <div>
+                <span>Concluídos ou cancelados</span><strong>{{ summary().closed }}</strong>
+            </div>
+        </div>
+    </div>
+    @if (error()) {
+        <p class="feedback failure" role="alert"><i class="pi pi-exclamation-circle" aria-hidden="true"></i> {{ error() }}</p>
+    }
+
+    <section class="table-panel" aria-label="Lista de orçamentos">
+        <p-table
+            #table
+            [value]="filteredBudgets()"
+            [loading]="loading()"
+            [paginator]="true"
+            [rows]="10"
+            [rowsPerPageOptions]="[10, 25, 50]"
+            paginatorDropdownAppendTo="body"
+            [globalFilterFields]="['id', 'vehicleId', 'vehiclePlate', 'clientCompanyName', 'salespersonUserName', 'generationUserName', 'information']"
+            [tableStyle]="{ 'min-width': '68rem' }"
+            [showCurrentPageReport]="true"
+            currentPageReportTemplate="{first} a {last} de {totalRecords} orçamentos"
+            dataKey="id"
+        >
+            <ng-template #caption>
+                <div class="table-toolbar">
+                    <div>
+                        <h2>Orçamentos</h2>
+                        <p>Consulte os detalhes e gerencie cada registro.</p>
+                    </div>
+                    <div class="search-field">
+                        <i class="pi pi-search" aria-hidden="true"></i>
+                        <label for="budgetSearch" class="sr-only">Pesquisar orçamentos</label>
+                        <input pInputText id="budgetSearch" placeholder="Número, placa, cliente ou responsável" (input)="table.filterGlobal($any($event.target).value, 'contains')" />
+                    </div>
+                </div>
+                <div class="status-filters" aria-label="Filtrar por status">
+                    @for (filter of filters; track filter.value) {
+                        <button type="button" [class.selected]="statusFilter() === filter.value" [attr.aria-pressed]="statusFilter() === filter.value" [disabled]="loading()" (click)="selectStatus(filter.value); table.first = 0">
+                            {{ filter.label }}
+                        </button>
+                    }
+                </div>
+            </ng-template>
+            <ng-template #header>
+                <tr>
+                    <th pSortableColumn="id" style="width: 9rem">Orçamento <p-sortIcon field="id" /></th>
+                    <th>Cliente e atendente</th>
+                    <th>Status</th>
+                    <th>Aprovação do cliente</th>
+                    <th>Pagamento e validade</th>
+                    <th pSortableColumn="generationDate">Geração <p-sortIcon field="generationDate" /></th>
+                    <th class="actions-column">Ação</th>
+                </tr>
+            </ng-template>
+            <ng-template #body let-item>
+                <tr>
+                    <td>
+                        <a class="budget-number" routerLink="/concierge/budget/maintenance" [queryParams]="{ id: item.id }">#{{ item.id }} {{ (item.vehiclePlate | uppercase) || 'Sem placa informada' }}</a>
+                        <small class="cell-detail"> <i class="pi pi-car" aria-hidden="true"></i> Entrada #{{ item.vehicleId }} </small>
+                    </td>
+                    <td>
+                        <strong class="client-name">{{ item.clientCompanyName }}</strong
+                        ><small class="cell-detail"><i class="pi pi-user" aria-hidden="true"></i> {{ item.salespersonUserName || 'Sem atendente informado' }}</small>
+                    </td>
+                    <td>
+                        <p-tag [value]="statuses[item.status] || item.status" [severity]="severity(item.status)" [rounded]="true" />
+                        @if (item.cancellationReason) {
+                            <small class="cell-note" [attr.title]="item.cancellationReason">Motivo: {{ item.cancellationReason }}</small>
+                        }
+                    </td>
+                    <td>
+                        <p-tag [value]="hasApproval(item) ? 'Aprovado' : 'Não aprovado'" [severity]="hasApproval(item) ? 'success' : 'warn'" [icon]="hasApproval(item) ? 'pi pi-check-circle' : 'pi pi-clock'" />
+                        @if (item.dateAuthorization) {
+                            <small class="cell-detail">{{ item.dateAuthorization | date: 'dd/MM/yyyy HH:mm' }}</small>
+                        }
+                    </td>
+                    <td>
+                        <span>{{ item.paymentTypeDesc || 'Pagamento não informado' }}</span
+                        ><small class="cell-detail"><i class="pi pi-calendar" aria-hidden="true"></i> {{ item.dateValidation ? 'Até ' + (item.dateValidation | date: 'dd/MM/yyyy') : 'Sem validade informada' }}</small>
+                    </td>
+                    <td>
+                        <span>{{ item.generationUserName }}</span
+                        ><small class="cell-detail">{{ item.generationDate | date: 'dd/MM/yyyy HH:mm' }}</small>
+                    </td>
+                    <td>
+                        <div class="row-actions">
+                            <p-button
+                                [label]="item.canEdit !== false && ['OpenBudget', 'Approved'].includes(item.status) ? 'Editar' : 'Consultar'"
+                                [icon]="item.canEdit !== false && ['OpenBudget', 'Approved'].includes(item.status) ? 'pi pi-pencil' : 'pi pi-eye'"
+                                severity="secondary"
+                                [text]="true"
+                                size="small"
+                                routerLink="/concierge/budget/maintenance"
+                                [queryParams]="{ id: item.id }"
+                            />
+                        </div>
+                    </td>
+                </tr>
+            </ng-template>
+            <ng-template #emptymessage>
+                <tr>
+                    <td colspan="7">
+                        <div class="empty-state">
+                            <i class="pi pi-inbox" aria-hidden="true"></i>
+                            <strong>{{ error() ? 'Lista indisponível' : 'Nenhum orçamento encontrado' }}</strong>
+                            <span>{{ error() ? 'Tente atualizar a lista novamente.' : 'Revise a busca e o filtro ou cadastre um novo orçamento.' }}</span>
+                        </div>
+                    </td>
+                </tr>
+            </ng-template>
+        </p-table>
+    </section>
+</section>

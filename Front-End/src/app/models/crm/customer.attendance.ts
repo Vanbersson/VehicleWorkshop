@@ -11,6 +11,10 @@ export enum AttendanceStatus {
     CANCELLED = 'CANCELLED'
 }
 
+export function isAttendanceReadOnly(status: AttendanceStatus | null | undefined): boolean {
+    return status === AttendanceStatus.CANCELLED || status === AttendanceStatus.COMPLETED;
+}
+
 export interface CustomerAttendance {
     id: number;
     visitId: number | null;
@@ -33,10 +37,14 @@ export interface CustomerAttendance {
     approvalRequestedAt?: string | null;
     completedAt?: string | null;
     expectedDeliveryDate?: string | null;
+    scheduledDeliveryDate?: string | null;
+    pickupDate?: string | null;
 }
 
 export interface AttendanceUpdate {
     expectedDeliveryDate?: string | null;
+    scheduledDeliveryDate?: string | null;
+    pickupDate?: string | null;
     salespersonId?: number;
     clientId?: number;
     id: number;
@@ -73,7 +81,7 @@ export const ATTENDANCE_WORKFLOW = [
     { value: AttendanceStatus.PAYMENT_PENDING, label: 'Pagamento', statusLabel: 'Pagamento', icon: 'pi pi-wallet', severity: 'warn' as const },
     { value: AttendanceStatus.INVOICING_PENDING, label: 'Faturamento', statusLabel: 'Faturamento', icon: 'pi pi-receipt', severity: 'warn' as const },
     { value: AttendanceStatus.DELIVERY_PENDING, label: 'Entrega', statusLabel: 'Entrega', icon: 'pi pi-truck', severity: 'info' as const },
-    { value: AttendanceStatus.COMPLETED, label: 'Concluído', statusLabel: 'Concluído', icon: 'pi pi-check-circle', severity: 'success' as const }
+    { value: AttendanceStatus.COMPLETED, label: 'Concluir', statusLabel: 'Concluído', icon: 'pi pi-check-circle', severity: 'success' as const }
 ];
 
 export const ATTENDANCE_STAGES = [

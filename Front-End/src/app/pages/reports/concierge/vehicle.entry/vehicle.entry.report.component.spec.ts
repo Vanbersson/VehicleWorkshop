@@ -13,6 +13,7 @@ describe('Vehicle entry report', () => {
             {} as never,
             {} as never,
             {} as never,
+            {} as never,
             { filterVehicle: filter } as never,
             {} as never,
             { show: () => {}, hide: () => {} } as never,

@@ -8,7 +8,7 @@ import { of, Subject, throwError } from 'rxjs';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import VehicleMaintenanceComponent from './vehicle.maintenance.component';
 import { VehicleEntry } from '@/app/models/vehicle.entry';
-import { User } from '@/app/models/user';
+import { Salesperson } from '@/app/models/crm/salesperson';
 import { Driver } from '@/app/models/driver';
 import { VehicleModel } from '@/app/models/vehicle.model';
 import { StatusVehicleEnum } from '@/app/models/status.vehicle.enum';
@@ -16,7 +16,7 @@ import { StatusRoleFuncEnum } from '@/app/models/status-role-func-enum';
 import { StatusSuccessError } from '@/app/models/status-suc-err';
 import { YesNotEnum } from '@/app/models/yes.not.enum';
 import { VehicleEntryService } from '@/app/services/vehicle/vehicle.entry.service';
-import { UserService } from '@/app/services/user/user.service';
+import { SalespersonService } from '@/app/services/salesperson/salesperson.service';
 import { VehicleModelService } from '@/app/services/vehicle/vehicle.model.service';
 import { DriverService } from '@/app/services/driver/driver.service';
 import { ClientCompanyService } from '@/app/services/client/client.company.service';
@@ -31,22 +31,22 @@ registerLocaleData(localePt);
 describe('Vehicle maintenance', () => {
     let component: VehicleMaintenanceComponent;
     let vehicles: jasmine.SpyObj<VehicleEntryService>;
-    let users: jasmine.SpyObj<UserService>;
+    let users: jasmine.SpyObj<SalespersonService>;
     let messages: jasmine.SpyObj<MessageService>;
     let loading: jasmine.SpyObj<LoadingService>;
     let vehicle: VehicleEntry;
     const ok = (data: unknown) => new HttpResponse({ status: 200, body: { status: StatusSuccessError.succes, header: '', message: '', data } });
     beforeEach(() => {
         vehicles = jasmine.createSpyObj('Vehicles', ['entryFilterId', 'entryUpdate', 'saveImage', 'deleteImage', 'entryAddAuth', 'entryDeleteAuth1', 'entryDeleteAuth2', 'history']);
-        users = jasmine.createSpyObj('Users', ['filterRoleId']);
+        users = jasmine.createSpyObj('Users', ['listAll']);
         messages = jasmine.createSpyObj('Messages', ['add']);
         loading = jasmine.createSpyObj('Loading', ['show', 'hide']);
         const model = Object.assign(new VehicleModel(), { id: 3, description: 'Truck' });
-        const attendant = Object.assign(new User(), { id: 9, name: 'Maria' });
+        const attendant = Object.assign(new Salesperson(), { id: 9, name: 'Maria', status: 'Habilitado' });
         vehicle = Object.assign(new VehicleEntry(), {
             id: 42,
             modelId: 3,
-            attendantUserId: 9,
+            salespersonId: 9,
             entryDate: new Date(Date.now() - 60000),
             exitDate: null,
             exitDatePrevision: null,
@@ -58,13 +58,13 @@ describe('Vehicle maintenance', () => {
         });
         vehicles.entryFilterId.and.returnValue(of(ok(vehicle)) as never);
         vehicles.entryUpdate.and.returnValue(of(ok(vehicle)) as never);
-        users.filterRoleId.and.returnValue(of(ok([attendant])) as never);
+        users.listAll.and.returnValue(of([attendant]) as never);
         TestBed.configureTestingModule({
             providers: [
                 VehicleMaintenanceComponent,
                 { provide: VehiclePrintService, useValue: { print: () => Promise.resolve() } },
                 { provide: VehicleEntryService, useValue: vehicles },
-                { provide: UserService, useValue: users },
+                { provide: SalespersonService, useValue: users },
                 { provide: MessageService, useValue: messages },
                 { provide: LoadingService, useValue: loading },
                 { provide: VehicleModelService, useValue: { getAllEnabled: () => of([model]) } },
@@ -83,12 +83,12 @@ describe('Vehicle maintenance', () => {
         component = TestBed.inject(VehicleMaintenanceComponent);
     });
     it('loads the selected attendant before populating the form', async () => {
-        const response = new Subject<ReturnType<typeof ok>>();
-        users.filterRoleId.and.returnValue(response as never);
+        const response = new Subject<Salesperson[]>();
+        users.listAll.and.returnValue(response as never);
         const pending = component.init();
         expect(component.loading()).toBeTrue();
         expect(vehicles.entryFilterId).not.toHaveBeenCalled();
-        response.next(ok([Object.assign(new User(), { id: 9, name: 'Maria' })]));
+        response.next([Object.assign(new Salesperson(), { id: 9, name: 'Maria', status: 'Habilitado' })]);
         response.complete();
         await pending;
         expect(component.formVehicle.controls.attendant.value?.id).toBe(9);

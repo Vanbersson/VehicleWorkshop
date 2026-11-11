@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { Location } from '@angular/common';
-import { HttpResponse } from '@angular/common/http';
+import { HttpErrorResponse, HttpResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { of, Subject, throwError } from 'rxjs';
 import { MessageService } from 'primeng/api';
@@ -149,7 +149,7 @@ describe('VisitMaintenanceComponent registration flow', () => {
         component.openDateVisit();
         expect(component.formVisit.controls.dateVisit.value).toBe(selected);
     });
-    it('creates attendance only after confirmation and returns to the visit list', async () => {
+    it('creates attendance without a registered client after confirmation and returns to the visit list', async () => {
         fillOtherSelections();
         await component.goToStep(5);
         component.openDateVisit();
@@ -160,9 +160,61 @@ describe('VisitMaintenanceComponent registration flow', () => {
         await component.generateAttendance();
         expect(service.generateAttendance).toHaveBeenCalledWith(42);
         expect(TestBed.inject(Router).navigate).not.toHaveBeenCalled();
+        expect(component.generatedAttendanceId()).toBe(16);
         await component.onAttendancePromptHide();
-        expect(TestBed.inject(Router).navigate).toHaveBeenCalledWith(['/crm/visit']);
+        expect(TestBed.inject(Router).navigate).toHaveBeenCalledOnceWith(['/crm/visit']);
         expect(component.attendancePromptVisible).toBeFalse();
+    });
+    it('shows a useful error instead of silently ignoring a missing saved visit', async () => {
+        component.attendancePromptVisible = true;
+        await component.generateAttendance();
+        expect(component.attendanceError()).toContain('identificar a visita salva');
+        expect(component.attendancePromptVisible).toBeTrue();
+        expect(service.generateAttendance).not.toHaveBeenCalled();
+    });
+    it('shows the server validation message and keeps the prompt open for retry', async () => {
+        fillOtherSelections();
+        await component.goToStep(5);
+        await component.saveComplete();
+        await component.onCompletionDialogHide();
+        service.generateAttendance.and.returnValue(throwError(() => new HttpErrorResponse({ status: 400, error: { emessage: 'Conclua a visita antes de gerar o atendimento.' } })));
+        await component.generateAttendance();
+        expect(component.attendanceError()).toBe('Conclua a visita antes de gerar o atendimento.');
+        expect(component.attendancePromptVisible).toBeTrue();
+        expect(component.generatingAttendance()).toBeFalse();
+    });
+    it('retries returning to visits without generating the attendance again', async () => {
+        fillOtherSelections();
+        await component.goToStep(5);
+        await component.saveComplete();
+        await component.onCompletionDialogHide();
+        service.generateAttendance.and.returnValue(of({ id: 16 } as import('@/app/models/crm/customer.attendance').CustomerAttendance));
+        const navigate = TestBed.inject(Router).navigate as jasmine.Spy;
+        navigate.and.resolveTo(false);
+        await component.generateAttendance();
+        await component.onAttendancePromptHide();
+        expect(component.attendancePromptVisible).toBeTrue();
+        expect(component.attendanceError()).toContain('foi gerado');
+        navigate.and.resolveTo(true);
+        await component.generateAttendance();
+        await component.onAttendancePromptHide();
+        expect(service.generateAttendance).toHaveBeenCalledTimes(1);
+        expect(navigate).toHaveBeenCalledWith(['/crm/visit']);
+        expect(component.attendancePromptVisible).toBeFalse();
+    });
+    it('prevents duplicate requests while attendance generation is in progress', async () => {
+        fillOtherSelections();
+        await component.goToStep(5);
+        await component.saveComplete();
+        const response = new Subject<import('@/app/models/crm/customer.attendance').CustomerAttendance>();
+        service.generateAttendance.and.returnValue(response);
+        const generating = component.generateAttendance();
+        await component.generateAttendance();
+        expect(service.generateAttendance).toHaveBeenCalledTimes(1);
+        response.next({ id: 16 } as import('@/app/models/crm/customer.attendance').CustomerAttendance);
+        response.complete();
+        await generating;
+        expect(component.generatingAttendance()).toBeFalse();
     });
     it('keeps the completed visit and allows retrying when attendance generation fails', async () => {
         fillOtherSelections();
@@ -188,5 +240,30 @@ describe('VisitMaintenanceComponent registration flow', () => {
         await component.onAttendancePromptHide();
         await component.onAttendancePromptHide();
         expect(TestBed.inject(Router).navigate).toHaveBeenCalledOnceWith(['/crm/visit']);
+    });
+    it('releases the residual dialog scroll lock after returning to visits', async () => {
+        document.body.classList.add('p-overflow-hidden');
+        try {
+            await component.finishWithoutAttendance();
+            expect(document.body.classList.contains('p-overflow-hidden')).toBeTrue();
+            await component.onAttendancePromptHide();
+            expect(document.body.classList.contains('p-overflow-hidden')).toBeFalse();
+        } finally {
+            document.body.classList.remove('p-overflow-hidden');
+        }
+    });
+    it('preserves scroll blocking when another modal is active', async () => {
+        const modal = document.createElement('div');
+        modal.setAttribute('data-p-scrollblocker-active', 'true');
+        document.body.appendChild(modal);
+        document.body.classList.add('p-overflow-hidden');
+        try {
+            await component.finishWithoutAttendance();
+            await component.onAttendancePromptHide();
+            expect(document.body.classList.contains('p-overflow-hidden')).toBeTrue();
+        } finally {
+            modal.remove();
+            document.body.classList.remove('p-overflow-hidden');
+        }
     });
 });

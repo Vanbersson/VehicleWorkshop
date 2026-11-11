@@ -502,32 +502,6 @@ checklist20Desc varchar(50),
 PRIMARY KEY(id)
 );
 
-CREATE TABLE IF NOT EXISTS tb_budget(
-company_id int not null,
-resale_id int not null,
-id int not null AUTO_INCREMENT,
-status tinyint not null,
-date_generation datetime not null,
-date_validation datetime,
-date_authorization datetime,
-name_responsible varchar(100),
-payment_type_id int,
-payment_type_desc varchar(100),
-attendant_user_id int not null,
-attendant_user_name varchar(100),
-client_company_id int not null,
-client_company_name varchar(100),
-client_send_date datetime,
-client_approved_date datetime,
-information varchar(255),
-FOREIGN KEY(company_id) REFERENCES tb_company(id),
-FOREIGN KEY(resale_id) REFERENCES tb_resale(id),
-FOREIGN KEY(payment_type_id) REFERENCES tb_payment_type(id),
-FOREIGN KEY(attendant_user_id) REFERENCES tb_user(id),
-FOREIGN KEY(client_company_id) REFERENCES tb_client_company(id),
-primary key(id)
-);
-
 -- INICIO MENU CRM
 CREATE TABLE IF NOT EXISTS tb_salesperson_group(
 company_id int not null,
@@ -601,77 +575,44 @@ FOREIGN KEY(client_id) REFERENCES tb_client_company(id),
 primary key(id)
 );
 
-
-
-
-CREATE TABLE IF NOT EXISTS tb_crm_attendance_quote_item (
-id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
-quote_id INT NOT NULL,
-item_position INT NOT NULL,
-product_name VARCHAR(255) NOT NULL,
-quantity DECIMAL(12,3) NOT NULL,
-unit_price DECIMAL(15,2) NOT NULL,
-discount_type VARCHAR(16) NOT NULL,
-discount_value DECIMAL(15,2) NOT NULL,
-subtotal DECIMAL(19,2) NOT NULL,
-discount_amount DECIMAL(19,2) NOT NULL,
-total DECIMAL(19,2) NOT NULL,
-CONSTRAINT fk_quote_item_header FOREIGN KEY (quote_id) REFERENCES tb_crm_attendance_quote(id)
-);
-
 CREATE TABLE IF NOT EXISTS tb_crm_customer_attendance (
 company_id INT NOT NULL,
 resale_id INT NOT NULL,
 id INT NOT NULL AUTO_INCREMENT,
 visit_id INT NULL,
-client_id INT,
+client_id INT NULL,
 client_name VARCHAR(255) NOT NULL,
 salesperson_id INT NOT NULL,
 salesperson_name VARCHAR(255) NOT NULL,
 date_created DATETIME(6) NOT NULL,
-date_visit DATETIME(6),
+date_visit DATETIME(6) NULL,
 status VARCHAR(32) NOT NULL,
 expected_delivery_date DATE NULL,
-notes VARCHAR(2000),
-cancellation_reason VARCHAR(2000),
-cancelled_at DATETIME(6),
-cancelled_by_id INT,
-cancelled_by_name VARCHAR(255),
-documents_notes VARCHAR(2000),
-proposal_notes VARCHAR(2000),
-approval_requested_at DATETIME(6),
-completed_at DATETIME(6),
-version BIGINT,
-FOREIGN KEY(company_id) REFERENCES tb_company(id),
-FOREIGN KEY(resale_id) REFERENCES tb_resale(id),
-FOREIGN KEY(visit_id) REFERENCES  tb_salesperson_visit(id),
-FOREIGN KEY(client_id) REFERENCES tb_client_company(id),
-FOREIGN KEY(salesperson_id) REFERENCES tb_salesperson(id),
-FOREIGN KEY(cancelled_by_id) REFERENCES tb_user(id),
-PRIMARY KEY(id)
-);
+scheduled_delivery_date DATE NULL,
+pickup_date DATE NULL,
+notes VARCHAR(2000) NULL,
+cancellation_reason VARCHAR(2000) NULL,
+cancelled_at DATETIME(6) NULL,
+cancelled_by_id INT NULL,
+cancelled_by_name VARCHAR(255) NULL,
+documents_notes VARCHAR(2000) NULL,
+proposal_notes VARCHAR(2000) NULL,
+approval_requested_at DATETIME(6) NULL,
+completed_at DATETIME(6) NULL,
+version BIGINT NULL,
+PRIMARY KEY (id),
+CONSTRAINT uk_customer_attendance_visit UNIQUE (visit_id),
+FOREIGN KEY (company_id) REFERENCES tb_company(id),
+FOREIGN KEY (resale_id) REFERENCES tb_resale(id),
+FOREIGN KEY (visit_id) REFERENCES tb_salesperson_visit(id),
+FOREIGN KEY (client_id) REFERENCES tb_client_company(id),
+FOREIGN KEY (salesperson_id) REFERENCES tb_salesperson(id),
+FOREIGN KEY (cancelled_by_id) REFERENCES tb_user(id)
+) ENGINE=InnoDB;
 
-CREATE TABLE IF NOT EXISTS tb_crm_attendance_quote (
-company_id INT NOT NULL,
-resale_id INT NOT NULL,
-id INT NOT NULL AUTO_INCREMENT,
-attendance_id INT NOT NULL,
-date_created DATETIME(6) NOT NULL,
-date_updated DATETIME(6) NOT NULL,
-notes VARCHAR(2000),
-subtotal DECIMAL(19,2) NOT NULL,
-discount_total DECIMAL(19,2) NOT NULL,
-total DECIMAL(19,2) NOT NULL,
-version BIGINT,
-FOREIGN KEY(company_id) REFERENCES tb_company(id),
-FOREIGN KEY(resale_id) REFERENCES tb_resale(id),
-PRIMARY KEY(id),
-CONSTRAINT uk_attendance_quote UNIQUE (attendance_id),
-CONSTRAINT fk_quote_attendance FOREIGN KEY (attendance_id) REFERENCES tb_crm_customer_attendance(id)
-);
 
 CREATE TABLE IF NOT EXISTS tb_crm_attendance_document (
-id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+id INT NOT NULL AUTO_INCREMENT,
 attendance_id INT NOT NULL,
 stage VARCHAR(30) NOT NULL DEFAULT 'DOCUMENTS',
 receipt_amount DECIMAL(19,2) NULL,
@@ -685,37 +626,83 @@ content_type VARCHAR(100) NOT NULL,
 file_size BIGINT NOT NULL,
 created_at DATETIME(6) NOT NULL,
 file_path VARCHAR(1024) NOT NULL,
-share_token_hash VARCHAR(64) NULL UNIQUE,
+share_token_hash VARCHAR(64) NULL,
 share_expires_at DATETIME(6) NULL,
 proposal_approved_at DATETIME(6) NULL,
 order_approved_at DATETIME(6) NULL,
 signed_file_path VARCHAR(1024) NULL,
 signed_file_name VARCHAR(255) NULL,
 signed_uploaded_at DATETIME(6) NULL,
+PRIMARY KEY (id),
+UNIQUE KEY uk_attendance_document_share_token (share_token_hash),
 INDEX idx_attendance_document (attendance_id, created_at),
-CONSTRAINT fk_attendance_document FOREIGN KEY (attendance_id) REFERENCES tb_crm_customer_attendance(id)
-);
+CONSTRAINT fk_attendance_document
+FOREIGN KEY (attendance_id) REFERENCES tb_crm_customer_attendance(id)
+) ENGINE=InnoDB;
+
+
+CREATE TABLE IF NOT EXISTS tb_crm_attendance_quote (
+company_id INT NOT NULL,
+resale_id INT NOT NULL,
+id INT NOT NULL AUTO_INCREMENT,
+attendance_id INT NOT NULL,
+date_created DATETIME(6) NOT NULL,
+date_updated DATETIME(6) NOT NULL,
+notes VARCHAR(2000) NULL,
+subtotal DECIMAL(19,2) NOT NULL,
+discount_total DECIMAL(19,2) NOT NULL,
+total DECIMAL(19,2) NOT NULL,
+version BIGINT NULL,
+PRIMARY KEY (id),
+CONSTRAINT uk_attendance_quote UNIQUE (attendance_id),
+FOREIGN KEY (company_id) REFERENCES tb_company(id),
+FOREIGN KEY (resale_id) REFERENCES tb_resale(id),
+CONSTRAINT fk_quote_attendance
+FOREIGN KEY (attendance_id) REFERENCES tb_crm_customer_attendance(id)
+) ENGINE=InnoDB;
+
+
+CREATE TABLE IF NOT EXISTS tb_crm_attendance_quote_item (
+id INT NOT NULL AUTO_INCREMENT,
+quote_id INT NOT NULL,
+item_position INT NOT NULL,
+product_name VARCHAR(255) NOT NULL,
+quantity DECIMAL(12,3) NOT NULL,
+unit_price DECIMAL(15,2) NOT NULL,
+discount_type VARCHAR(16) NOT NULL,
+discount_value DECIMAL(15,2) NOT NULL,
+subtotal DECIMAL(19,2) NOT NULL,
+discount_amount DECIMAL(19,2) NOT NULL,
+total DECIMAL(19,2) NOT NULL,
+PRIMARY KEY (id),
+CONSTRAINT fk_quote_item_header
+FOREIGN KEY (quote_id) REFERENCES tb_crm_attendance_quote(id)
+) ENGINE=InnoDB;
+
 CREATE TABLE IF NOT EXISTS tb_crm_attendance_log (
- id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
- company_id INT NOT NULL,
- resale_id INT NOT NULL,
- attendance_id INT NOT NULL,
- stage VARCHAR(40) NOT NULL,
- action VARCHAR(50) NOT NULL,
- user_id INT NULL,
- user_name VARCHAR(255) NULL,
- client_id INT NULL,
- client_name VARCHAR(255) NULL,
- occurred_at DATETIME(6) NOT NULL,
- document_id INT NULL,
- file_name VARCHAR(255) NULL,
- previous_amount DECIMAL(19,2) NULL,
- new_amount DECIMAL(19,2) NULL,
- INDEX idx_attendance_log (attendance_id, occurred_at, id),
- CONSTRAINT fk_attendance_log FOREIGN KEY (attendance_id) REFERENCES tb_crm_customer_attendance(id)
-);
+id BIGINT NOT NULL AUTO_INCREMENT,
+company_id INT NOT NULL,
+resale_id INT NOT NULL,
+attendance_id INT NOT NULL,
+stage VARCHAR(40) NOT NULL,
+action VARCHAR(50) NOT NULL,
+user_id INT NULL,
+user_name VARCHAR(255) NULL,
+client_id INT NULL,
+client_name VARCHAR(255) NULL,
+occurred_at DATETIME(6) NOT NULL,
+document_id INT NULL,
+file_name VARCHAR(255) NULL,
+previous_amount DECIMAL(19,2) NULL,
+new_amount DECIMAL(19,2) NULL,
+PRIMARY KEY (id),
+INDEX idx_attendance_log (attendance_id, occurred_at, id),
+CONSTRAINT fk_attendance_log
+FOREIGN KEY (attendance_id) REFERENCES tb_crm_customer_attendance(id)
+) ENGINE=InnoDB;
 
 -- FIM MENU CRM
+-- INICIO CONCIERGE
 
 CREATE TABLE IF NOT EXISTS tb_vehicle_entry(
 company_id int not null,
@@ -723,8 +710,6 @@ resale_id int not null,
 id int not null AUTO_INCREMENT,
 status tinyint not null,
 step_entry tinyint not null,
-
-budget_id int,
 
 entry_user_id int not null,
 entry_user_name varchar(100) not null,
@@ -746,8 +731,8 @@ exit_photo3_url varchar(255),
 exit_photo4_url varchar(255),
 exit_information varchar(255),
 
-attendant_user_id int,
-attendant_user_name varchar(100),
+salesperson_id int,
+salesperson_name varchar(100),
 attendant_photo1_url varchar(255),
 attendant_photo2_url varchar(255),
 attendant_photo3_url varchar(255),
@@ -792,10 +777,9 @@ num_nfse varchar(20),
 checklist_id int,
 FOREIGN KEY(company_id) REFERENCES tb_company(id),
 FOREIGN KEY(resale_id) REFERENCES tb_resale(id),
-FOREIGN KEY(budget_id) REFERENCES tb_budget(id),
 FOREIGN KEY(entry_user_id) REFERENCES tb_user(id),
 FOREIGN KEY(exit_user_id) REFERENCES tb_user(id),
-FOREIGN KEY(attendant_user_id) REFERENCES tb_user(id),
+FOREIGN KEY(salesperson_id) REFERENCES tb_salesperson(id),
 FOREIGN KEY(auth1_exit_user_id) REFERENCES tb_user(id),
 FOREIGN KEY(auth2_exit_user_id) REFERENCES tb_user(id),
 FOREIGN KEY(model_id) REFERENCES tb_vehicle_model(id),
@@ -805,6 +789,74 @@ FOREIGN KEY(driver_exit_id) REFERENCES tb_driver(id),
 FOREIGN KEY(checklist_id) REFERENCES tb_vehicle_entry_checklist(id),
 PRIMARY KEY(id)
 );
+
+CREATE TABLE IF NOT EXISTS tb_concierge_budget(
+company_id int not null,
+resale_id int not null,
+id int not null AUTO_INCREMENT,
+status tinyint not null,
+vehicle_id int not null,
+date_validation datetime,
+date_authorization datetime,
+generation_user_id int not null,
+generation_user_name varchar(100) not null,
+generation_date datetime not null,
+payment_type_id int,
+payment_type_desc varchar(100),
+salesperson_user_id int not null,
+salesperson_user_name varchar(100) not null,
+client_company_id int not null,
+client_company_name varchar(100),
+information varchar(255),
+cancellation_reason varchar(1000),
+FOREIGN KEY(company_id) REFERENCES tb_company(id),
+FOREIGN KEY(resale_id) REFERENCES tb_resale(id),
+FOREIGN KEY(vehicle_id) REFERENCES tb_vehicle_entry(id),
+FOREIGN KEY(generation_user_id) REFERENCES tb_user(id),
+FOREIGN KEY(payment_type_id) REFERENCES tb_payment_type(id),
+FOREIGN KEY(salesperson_user_id) REFERENCES tb_salesperson(id),
+FOREIGN KEY(client_company_id) REFERENCES tb_client_company(id),
+primary key(id)
+);
+
+CREATE TABLE IF NOT EXISTS tb_concierge_budget_item(
+company_id int not null,
+resale_id int not null,
+id int not null AUTO_INCREMENT,
+budget_id int not null,
+type tinyint not null,
+description varchar(100) not null,
+quantity numeric(11,2) not null,
+hour_service numeric(11,2),
+price numeric(11,3),
+discount numeric(11,3),
+FOREIGN KEY(company_id) REFERENCES tb_company(id),
+FOREIGN KEY(resale_id) REFERENCES tb_resale(id),
+FOREIGN KEY(budget_id) REFERENCES tb_concierge_budget(id),
+primary key(id)
+);
+
+CREATE TABLE IF NOT EXISTS tb_concierge_budget_document (
+company_id INT NOT NULL,
+resale_id INT NOT NULL,
+id INT NOT NULL AUTO_INCREMENT,
+budget_id INT NOT NULL,
+file_name VARCHAR(255) NOT NULL,
+content_type VARCHAR(100) NOT NULL,
+file_size BIGINT NOT NULL,
+file_path VARCHAR(1024) NOT NULL,
+created_at DATETIME NOT NULL,
+share_token_hash VARCHAR(64) UNIQUE,
+share_expires_at DATETIME(6),
+approved_at DATETIME(6),
+PRIMARY KEY (id),
+UNIQUE KEY uk_concierge_budget_document (budget_id),
+FOREIGN KEY (company_id) REFERENCES tb_company(id),
+FOREIGN KEY (resale_id) REFERENCES tb_resale(id),
+FOREIGN KEY (budget_id) REFERENCES tb_concierge_budget(id)
+);
+
+-- FIM CONCIERGE
 
 CREATE TABLE IF NOT EXISTS tb_purchase_order(
 company_id int not null,
@@ -1077,42 +1129,6 @@ FOREIGN KEY(budget_id) REFERENCES tb_budget(id),
 primary key(id)
 );
 
-CREATE TABLE IF NOT EXISTS tb_budget_item(
-company_id int not null,
-resale_id int not null,
-id binary(16) unique,
-status tinyint not null,
-budget_id int not null,
-ordem int not null,
-part_id int not null,
-code varchar(20) not null,
-description varchar(100) not null,
-quantity float not null,
-discount float not null,
-price float not null,
-FOREIGN KEY(company_id) REFERENCES tb_company(id),
-FOREIGN KEY(resale_id) REFERENCES tb_resale(id),
-FOREIGN KEY(part_id) REFERENCES tb_part(id),
-FOREIGN KEY(budget_id) REFERENCES tb_budget(id),
-primary key(id)
-);
-
-CREATE TABLE IF NOT EXISTS tb_budget_service(
-company_id int not null,
-resale_id int not null,
-id binary(16) unique,
-budget_id int not null,
-status tinyint not null,
-ordem int not null,
-description varchar(100) not null,
-hour_service float not null,
-price float not null,
-discount float not null,
-FOREIGN KEY(company_id) REFERENCES tb_company(id),
-FOREIGN KEY(resale_id) REFERENCES tb_resale(id),
-FOREIGN KEY(budget_id) REFERENCES tb_budget(id),
-primary key(id)
-);
 
 CREATE TABLE IF NOT EXISTS tb_budget_token(
 company_id int not null,

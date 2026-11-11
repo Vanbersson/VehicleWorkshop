@@ -77,4 +77,11 @@ class AttendanceQuoteServiceTest {
   assertThrows(BusinessException.class, () -> service.save(new QuoteSaveDto(1, 0L, null, "", List.of(item("1", "1", QuoteDiscountType.FIXED, "0"))), "user"));
   verifyNoInteractions(quoteRepository);
  }
+
+ @Test void completedAttendanceQuoteIsReadOnly() {
+  var a=attendance(); a.setStatus(AttendanceStatus.COMPLETED); prepare(a);
+  assertThrows(BusinessException.class,()->service.save(new QuoteSaveDto(1,0L,null,"alterado",List.of(item("1","1",QuoteDiscountType.FIXED,"0"))),"user"));
+  verifyNoInteractions(quoteRepository);
+ }
+
 }

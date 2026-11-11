@@ -110,6 +110,7 @@ class CustomerAttendanceServiceTest {
     }
 
     @BeforeEach void prepareUser() {
+        lenient().when(repository.findForQuote(anyInt(), anyInt(), anyInt())).thenAnswer(call -> repository.findByCompanyIdAndResaleIdAndId(call.getArgument(0), call.getArgument(1), call.getArgument(2)).orElse(null));
         User user = new User(); user.setName("Operador"); user.setId(9); user.setCompanyId(1); user.setResaleId(2); user.setStatus(StatusEnableDisable.Habilitado);
         Salesperson salesperson = new Salesperson(); salesperson.setId(700); salesperson.setStatus(StatusEnableDisable.Habilitado);
         lenient().when(userRepository.loginEmail("user")).thenReturn(user);
@@ -117,7 +118,7 @@ class CustomerAttendanceServiceTest {
     }
 
     private CustomerAttendance attendance(int id, int salespersonId) {
-        CustomerAttendance a = new CustomerAttendance(); a.setId(id); a.setVisitId(42); a.setSalespersonId(salespersonId); a.setVersion(0L); return a;
+        CustomerAttendance a = new CustomerAttendance(); a.setId(id); a.setVisitId(42); a.setClientId(77); a.setSalespersonId(salespersonId); a.setVersion(0L); return a;
     }
 
     @Test void changesClientUsingScopedCanonicalDataWithoutUpdatingVisit() {
@@ -223,7 +224,7 @@ class CustomerAttendanceServiceTest {
     @Test void cancellationStoresReasonDateAndActorAndPreservesTheQuote() {
         CustomerAttendance a = attendance(1, 700); a.setCompanyId(1); a.setResaleId(2);
         when(repository.findByCompanyIdAndResaleIdAndId(1, 2, 1)).thenReturn(Optional.of(a));
-        when(repository.findForQuote(1, 2, 1)).thenReturn(a);
+        doReturn(a).when(repository).findForQuote(1, 2, 1);
         when(repository.saveAndFlush(a)).thenAnswer(call -> { a.setVersion(1L); return a; });
         AttendanceQuote q = new AttendanceQuote(); q.setTotal(new java.math.BigDecimal("180.00"));
         when(quoteRepository.findByCompanyIdAndResaleIdAndAttendanceId(1, 2, 1)).thenReturn(Optional.of(q));
@@ -240,7 +241,7 @@ class CustomerAttendanceServiceTest {
     @Test void cancellationRejectsStaleVersionsAndDoesNotOverwriteAPreviousCancellation() {
         CustomerAttendance a = attendance(1, 700); a.setCompanyId(1); a.setResaleId(2); a.setVersion(2L);
         when(repository.findByCompanyIdAndResaleIdAndId(1, 2, 1)).thenReturn(Optional.of(a));
-        when(repository.findForQuote(1, 2, 1)).thenReturn(a);
+        doReturn(a).when(repository).findForQuote(1, 2, 1);
         var request = new com.concierge.apiconcierge.dtos.crm.attendance.AttendanceCancelDto(1, 0L, "Novo motivo");
         assertThrows(BusinessException.class, () -> service.cancel(request, "user"));
         a.setStatus(AttendanceStatus.CANCELLED); a.setCancellationReason("Motivo original");
@@ -360,5 +361,36 @@ class CustomerAttendanceServiceTest {
     @Test void refusesLogsForAnotherSalesperson() {
         when(repository.findByCompanyIdAndResaleIdAndId(1,2,1)).thenReturn(Optional.of(attendance(1,701)));
         assertThrows(BusinessException.class,()->service.logs(1,"user"));verifyNoInteractions(logRepository);
+    }
+
+    @Test void completedAttendanceCannotBeUpdatedOrCancelled() {
+        CustomerAttendance a=attendance(1,700); a.setCompanyId(1); a.setResaleId(2); a.setStatus(AttendanceStatus.COMPLETED);
+        when(repository.findByCompanyIdAndResaleIdAndId(1,2,1)).thenReturn(Optional.of(a));
+        assertThrows(BusinessException.class, () -> service.update(new AttendanceUpdateDto(1,AttendanceStatus.QUOTATION,"alterado",0L),"user"));
+        assertThrows(BusinessException.class, () -> service.cancel(new com.concierge.apiconcierge.dtos.crm.attendance.AttendanceCancelDto(1,0L,"cancelar"),"user"));
+        verify(repository,never()).saveAndFlush(any());
+        assertEquals(AttendanceStatus.COMPLETED,a.getStatus());
+    }
+
+
+    @Test void directAttendanceRequiresARegisteredClient() {
+        assertThrows(BusinessException.class, () -> service.create(new com.concierge.apiconcierge.dtos.crm.attendance.AttendanceCreateDto(null,700,""),"user"));
+        assertThrows(BusinessException.class, () -> service.create(new com.concierge.apiconcierge.dtos.crm.attendance.AttendanceCreateDto(0,700,""),"user"));
+        verify(repository,never()).saveAndFlush(any());
+    }
+    @Test void visitAttendanceWithoutClientCannotSaveAnyStageUntilClientIsLinked() {
+        CustomerAttendance a=attendance(1,700); a.setCompanyId(1); a.setResaleId(2); a.setClientId(null);
+        when(repository.findByCompanyIdAndResaleIdAndId(1,2,1)).thenReturn(Optional.of(a));
+        for (AttendanceStatus status: AttendanceStatus.values()) {
+            if (status == AttendanceStatus.CANCELLED) continue;
+            assertThrows(BusinessException.class, () -> service.update(new AttendanceUpdateDto(1,status,"notas",0L),"user"));
+        }
+        verify(repository,never()).saveAndFlush(any());
+        var client=new com.concierge.apiconcierge.models.clientcompany.ClientCompany();client.setId(88);client.setName("Cliente cadastrado");client.setStatus(StatusEnableDisable.Habilitado);
+        when(clientRepository.filterId(1,2,88)).thenReturn(client);
+        when(repository.saveAndFlush(a)).thenReturn(a);
+        var result=service.update(new AttendanceUpdateDto(1,AttendanceStatus.COMMERCIAL_PROPOSAL,"",0L,"","",88),"user");
+        assertEquals(88,result.clientId());assertEquals("Cliente cadastrado",result.clientName());
+        assertEquals(42,a.getVisitId());
     }
 }

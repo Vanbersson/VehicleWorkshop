@@ -42,7 +42,7 @@ public class VehicleReportService implements IVehicleReportService {
         map.put("entryDate", vehicle.getEntryDate());
         map.put("exitUserName", vehicle.getExitUserName());
         map.put("exitDate", vehicle.getExitDate());
-        map.put("attendantUserName", vehicle.getAttendantUserName());
+        map.put("salespersonName", vehicle.getSalespersonName());
         map.put("modelDescription", vehicle.getModelDescription());
         map.put("clientCompanyName", vehicle.getClientCompanyName());
         map.put("vehiclePlate", vehicle.getVehiclePlate());

@@ -39,6 +39,10 @@ export class VehicleEntryService {
         return this.http.get<VehicleEntry[]>(environment.apiuUrl + '/vehicle/entry/' + this.companyResale + '/all', { headers: this.myHeaders() });
     }
 
+    listAllPlates(): Observable<VehicleEntry[]> {
+        return this.http.get<VehicleEntry[]>(`${environment.apiuUrl}/vehicle/entry/plates`, { headers: this.myHeaders() });
+    }
+
     entryFilterId(id: number): Observable<HttpResponse<MessageResponse>> {
         return this.http.get<MessageResponse>(environment.apiuUrl + '/vehicle/entry/' + this.companyResale + '/filter/id/' + id, { headers: this.myHeaders(), observe: 'response' });
     }

@@ -1,5 +1,5 @@
 <p-dialog
-    [header]="quoteId() ? 'Editar orçamento #' + quoteId() : 'Orçamento do atendimento'"
+    [header]="cancelled() ? 'Consultar orçamento' : quoteId() ? 'Editar orçamento #' + quoteId() : 'Orçamento do atendimento'"
     [visible]="visible"
     (visibleChange)="close($event)"
     [modal]="true"
@@ -27,7 +27,7 @@
         <p class="text-muted-color">Informe os produtos. O desconto em R$ é aplicado sobre o subtotal do item; o percentual é aplicado após multiplicar quantidade e preço.</p>
         <form [formGroup]="form">
             @if (cancelled()) {
-                <p class="text-muted-color" role="status">Atendimento cancelado. O orçamento está disponível apenas para consulta.</p>
+                <p class="text-muted-color" role="status">O orçamento deste atendimento está disponível apenas para consulta.</p>
             }
             <fieldset [disabled]="saving() || cancelled()" class="quote-fields">
                 <div formArrayName="items" class="quote-items">
@@ -100,6 +100,7 @@
             icon="pi pi-check"
             (onClick)="save()"
             [loading]="saving()"
-            [disabled]="loading() || !!loadError() || cancelled()"/>
+            [disabled]="loading() || !!loadError() || cancelled()"
+        />
     </ng-template>
 </p-dialog>

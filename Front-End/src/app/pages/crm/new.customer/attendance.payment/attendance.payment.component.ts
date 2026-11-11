@@ -6,7 +6,7 @@ import { lastValueFrom } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { AttendanceDocument } from '@/app/models/crm/attendance.document';
-import { AttendanceStatus, CustomerAttendance } from '@/app/models/crm/customer.attendance';
+import { AttendanceStatus, CustomerAttendance, isAttendanceReadOnly } from '@/app/models/crm/customer.attendance';
 import { CustomerAttendanceService } from '@/app/services/crm/customer.attendance.service';
 
 interface PendingReceipt {
@@ -22,6 +22,10 @@ interface PendingReceipt {
     styleUrl: './attendance.payment.component.scss'
 })
 export class AttendancePaymentComponent implements OnChanges, OnDestroy {
+    @Input() stage: 'PAYMENT' | 'INVOICING' = 'PAYMENT';
+    get invoicing(): boolean {
+        return this.stage === 'INVOICING';
+    }
     @Input() attendance: CustomerAttendance | null = null;
     readonly receipts = signal<AttendanceDocument[]>([]);
     readonly pending = signal<PendingReceipt[]>([]);
@@ -42,7 +46,7 @@ export class AttendancePaymentComponent implements OnChanges, OnDestroy {
         return quoteTotal == null ? null : Math.max(0, Math.round(quoteTotal * 100) - Math.round(this.total() * 100)) / 100;
     }
     get readOnly() {
-        return this.attendance?.status === AttendanceStatus.CANCELLED;
+        return isAttendanceReadOnly(this.attendance?.status);
     }
     get busy() {
         return this.loading() || this.uploading() || this.savingId() !== null || this.removingId() !== null;
@@ -50,7 +54,7 @@ export class AttendancePaymentComponent implements OnChanges, OnDestroy {
     constructor(private service: CustomerAttendanceService) {}
     ngOnChanges(changes: SimpleChanges): void {
         const change = changes['attendance'];
-        if (change && (change.firstChange || change.previousValue?.id !== change.currentValue?.id || change.previousValue?.status !== change.currentValue?.status)) {
+        if (changes['stage'] || (change && (change.firstChange || change.previousValue?.id !== change.currentValue?.id || change.previousValue?.status !== change.currentValue?.status))) {
             ++this.request;
             this.uploading.set(false);
             this.removingId.set(null);
@@ -80,9 +84,9 @@ export class AttendancePaymentComponent implements OnChanges, OnDestroy {
         }
         this.loading.set(true);
         try {
-            const list = await lastValueFrom(this.service.documents(id, 'PAYMENT'));
+            const list = await lastValueFrom(this.service.documents(id, this.stage));
             if (request !== this.request) return;
-            const receipts = list.filter((item) => item.stage === 'PAYMENT');
+            const receipts = list.filter((item) => item.stage === this.stage);
             this.receipts.set(receipts);
             this.amounts.set(Object.fromEntries(receipts.map((item) => [item.id, item.receiptAmount ?? null])));
         } catch (error) {
@@ -101,8 +105,8 @@ export class AttendancePaymentComponent implements OnChanges, OnDestroy {
         const allowed: Record<string, string[]> = { pdf: ['application/pdf'], jpg: ['image/jpeg'], jpeg: ['image/jpeg'], png: ['image/png'], webp: ['image/webp'] };
         for (const file of files) {
             const extension = file.name.split('.').pop()?.toLowerCase() ?? '';
-            if (!file.size || file.size > 5 * 1024 * 1024 || !allowed[extension] || (file.type && !allowed[extension].includes(file.type))) {
-                this.error.set('Arquivo inválido: ' + file.name + '. Envie PDF, JPG, PNG ou WebP de até 5 MB.');
+            if (!file.size || file.size > 5 * 1024 * 1024 || (this.invoicing && extension !== 'pdf') || !allowed[extension] || (file.type && !allowed[extension].includes(file.type))) {
+                this.error.set(this.invoicing ? 'Envie apenas PDF de at\u00e9 5 MB.' : 'Arquivo inválido: ' + file.name + '. Envie PDF, JPG, PNG ou WebP de até 5 MB.');
                 return;
             }
         }
@@ -133,13 +137,13 @@ export class AttendancePaymentComponent implements OnChanges, OnDestroy {
         try {
             for (const entry of files) {
                 if (request !== this.request || this.readOnly) return;
-                const result = await lastValueFrom(this.service.uploadPaymentReceipt(id, entry.file, entry.amount!));
+                const result = await lastValueFrom(this.invoicing ? this.service.uploadInvoicingDocument(id, entry.file, entry.amount!) : this.service.uploadPaymentReceipt(id, entry.file, entry.amount!));
                 if (request !== this.request) return;
                 this.storeReceipt(result);
                 this.pending.update((list) => list.filter((item) => item.id !== entry.id));
                 count++;
             }
-            this.success.set(count + ' comprovante(s) salvo(s).');
+            this.success.set(count + (this.invoicing ? ' documento(s) fiscal(is) salvo(s).' : ' comprovante(s) salvo(s).'));
         } catch (error) {
             if (request === this.request) this.error.set(this.message(error) + (count ? ' ' + count + ' comprovante(s) já foram salvos; envie apenas os restantes.' : ''));
         } finally {
@@ -155,10 +159,10 @@ export class AttendancePaymentComponent implements OnChanges, OnDestroy {
         this.error.set('');
         this.success.set('');
         try {
-            const result = await lastValueFrom(this.service.updatePaymentReceiptValue(id, item.id, amount));
+            const result = await lastValueFrom(this.invoicing ? this.service.updateInvoicingDocumentValue(id, item.id, amount) : this.service.updatePaymentReceiptValue(id, item.id, amount));
             if (request === this.request) {
                 this.storeReceipt(result);
-                this.success.set('Valor do comprovante atualizado.');
+                this.success.set(this.invoicing ? 'Valor da nota atualizado.' : 'Valor do comprovante atualizado.');
             }
         } catch (error) {
             if (request === this.request) this.error.set(this.message(error));
@@ -168,13 +172,14 @@ export class AttendancePaymentComponent implements OnChanges, OnDestroy {
     }
     async remove(item: AttendanceDocument): Promise<void> {
         const id = this.attendance?.id;
-        if (!id || this.readOnly || this.busy || item.stage !== 'PAYMENT') return;
+        if (!id || this.readOnly || this.busy || item.stage !== this.stage) return;
+        if (this.invoicing && !window.confirm(`Remover o documento fiscal "${item.fileName}" do faturamento?`)) return;
         const request = this.request;
         this.removingId.set(item.id);
         this.error.set('');
         this.success.set('');
         try {
-            await lastValueFrom(this.service.removePaymentReceipt(id, item.id));
+            await lastValueFrom(this.invoicing ? this.service.removeInvoicingDocument(id, item.id) : this.service.removePaymentReceipt(id, item.id));
             if (request !== this.request) return;
             this.receipts.update((list) => list.filter((entry) => entry.id !== item.id));
             this.amounts.update((values) => {
@@ -182,7 +187,7 @@ export class AttendancePaymentComponent implements OnChanges, OnDestroy {
                 delete updated[item.id];
                 return updated;
             });
-            this.success.set('Comprovante removido.');
+            this.success.set(this.invoicing ? 'Documento fiscal removido.' : 'Comprovante removido.');
         } catch (error) {
             if (request === this.request) this.error.set(this.message(error));
         } finally {

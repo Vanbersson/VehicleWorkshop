@@ -48,7 +48,6 @@
                             type="email"
                             pInputText
                             formControlName="email"
-                            placeholder="seuemail@empresa.com.br"
                             autocomplete="username"
                             autocapitalize="none"
                             spellcheck="false"
@@ -60,7 +59,7 @@
                     </div>
                     <div class="login-field">
                         <label for="login-password">Senha</label>
-                        <p-password inputId="login-password" [toggleMask]="true" [feedback]="false" formControlName="password" autocomplete="current-password" placeholder="Digite sua senha" [inputStyle]="{ 'min-height': '3.25rem' }" fluid />
+                        <p-password inputId="login-password" [toggleMask]="true" [feedback]="false" formControlName="password" autocomplete="current-password" [inputStyle]="{ 'min-height': '3.25rem' }" fluid />
                         @if (formLogin.controls.password.touched && formLogin.controls.password.invalid) {<small id="login-password-error" class="field-error">Informe sua senha com pelo menos 8 caracteres.</small>}
                     </div>
                     <p-button type="submit" label="Entrar no sistema" icon="pi pi-arrow-right" iconPos="right" [style]="{ 'min-height': '3.25rem', 'margin-top': '.5rem' }" fluid />

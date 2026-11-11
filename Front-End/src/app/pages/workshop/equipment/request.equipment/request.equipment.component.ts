@@ -39,7 +39,6 @@ import { ToolControlMaterialService } from '@/app/services/workshop/tool.control
 import { ToolControlMatMecService } from '@/app/services/workshop/tool.control/tool.control.matmec.service';
 import { ToolControlRequestService } from '@/app/services/workshop/tool.control/tool.control.request.service';
 import { ToolcontrolReportService } from '@/app/services/workshop/tool.control/tool.control.report.service';
-import { ToolControlReport } from '@/app/models/workshop/tool.control/tool.control.report';
 import { TypeCategoryEnum } from '@/app/models/workshop/type.category.enum';
 import { TypeMaterialEnum } from '@/app/models/workshop/type.material.enum';
 import { StatusTollControlRequestEnum } from '@/app/models/workshop/status.tool.control.request.enum';
@@ -185,7 +184,6 @@ export default class RequestEquipmentComponent implements OnInit {
     }
     private async init() {
         this.loading.set(true);
-        this.loadingService.show();
         try {
             const [categories, materials, mechanics, departments] = await Promise.all([this.listCategory(), this.listMaterialEnabled(), this.listMecEnabled(), this.listAllEnabledDepartment()]);
             this.listCat.set(categories);
@@ -195,7 +193,6 @@ export default class RequestEquipmentComponent implements OnInit {
             await this.filterMaterialMec();
         } finally {
             this.loading.set(false);
-            this.loadingService.hide();
         }
     }
     //Request

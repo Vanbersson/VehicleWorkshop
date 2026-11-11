@@ -255,13 +255,21 @@
 </p-dialog>
 
 <p-dialog header="Visita concluída" [modal]="true" [(visible)]="attendancePromptVisible" (onHide)="onAttendancePromptHide()" [closable]="false" [closeOnEscape]="false" [draggable]="false" [style]="{ width: '30rem', maxWidth: '95vw' }">
-    <p>Deseja gerar um atendimento para esta visita?</p>
-    <p class="text-muted-color text-sm">O atendimento será vinculado à visita concluída.</p>
+    <p>{{ generatedAttendanceId() ? 'Atendimento #' + generatedAttendanceId() + ' gerado com sucesso.' : 'Deseja gerar um atendimento para esta visita?' }}</p>
+    <p class="text-muted-color text-sm">{{ generatedAttendanceId() ? 'Retorne à lista de visitas para finalizar.' : 'O atendimento será vinculado à visita concluída. Em seguida, você retornará à lista de visitas.' }}</p>
     @if (attendanceError()) {
         <p class="text-red-600" role="alert">{{ attendanceError() }}</p>
     }
     <ng-template #footer>
-        <p-button label="Não, finalizar" severity="secondary" [outlined]="true" (onClick)="finishWithoutAttendance()" [disabled]="generatingAttendance()" />
-        <p-button label="Sim, gerar atendimento" icon="pi pi-plus" (onClick)="generateAttendance()" [loading]="generatingAttendance()" [disabled]="generatingAttendance()" />
+        @if (!generatedAttendanceId()) {
+            <p-button [label]="generatedAttendanceId() ? 'Voltar às visitas' : 'Não, finalizar'" severity="secondary" [outlined]="true" (onClick)="finishWithoutAttendance()" [disabled]="generatingAttendance()" />
+        }
+        <p-button
+            [label]="generatedAttendanceId() ? 'Voltar às visitas' : 'Sim, gerar atendimento'"
+            [icon]="generatedAttendanceId() ? 'pi pi-arrow-right' : 'pi pi-plus'"
+            (onClick)="generateAttendance()"
+            [loading]="generatingAttendance()"
+            [disabled]="generatingAttendance()"
+        />
     </ng-template>
 </p-dialog>

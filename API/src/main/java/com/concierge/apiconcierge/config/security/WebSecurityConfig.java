@@ -35,7 +35,7 @@ public class WebSecurityConfig {
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/**")
                         .allowedOrigins(corsAllowedOrigins)
-                        .allowedMethods("GET", "POST")
+                        .allowedMethods("GET", "POST", "PUT", "OPTIONS")
                         .allowCredentials(true)
                         .allowedHeaders("Authorization", "Content-Type");
             }
@@ -50,6 +50,8 @@ public class WebSecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers(HttpMethod.GET,"/public/concierge-budgets/{token}/data","/public/concierge-budgets/{token}/file").permitAll()
+                        .requestMatchers(HttpMethod.POST,"/public/concierge-budgets/{token}/verify","/public/concierge-budgets/{token}/confirm").permitAll()
                         .requestMatchers(HttpMethod.GET,"/public/proposals/{token}/data","/public/orders/{token}/data").permitAll()
                         .requestMatchers(HttpMethod.POST,"/public/proposals/{token}/verify","/public/orders/{token}/verify","/public/proposals/{token}/signed-upload","/public/orders/{token}/signed-upload","/public/proposals/{token}/confirm","/public/orders/{token}/confirm").permitAll()
                         .requestMatchers(HttpMethod.GET, "/public/orders/{token}", "/public/orders/{token}/file", "/public/orders/{token}/signed").permitAll()

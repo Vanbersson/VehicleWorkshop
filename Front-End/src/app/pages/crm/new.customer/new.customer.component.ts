@@ -16,7 +16,7 @@ import { PaginatorModule } from 'primeng/paginator';
 import { SkeletonModule } from 'primeng/skeleton';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
-import { ATTENDANCE_STAGES, AttendanceStatus, CustomerAttendance } from '@/app/models/crm/customer.attendance';
+import { ATTENDANCE_STAGES, AttendanceStatus, CustomerAttendance, isAttendanceReadOnly } from '@/app/models/crm/customer.attendance';
 
 import { CustomerAttendanceService } from '@/app/services/crm/customer.attendance.service';
 
@@ -58,6 +58,7 @@ export default class NewCustomerComponent implements OnInit {
     readonly stages = ATTENDANCE_STAGES;
 
     readonly CANCELLED = AttendanceStatus.CANCELLED;
+    readonly isAttendanceReadOnly = isAttendanceReadOnly;
 
     readonly cancelling = signal<CustomerAttendance | null>(null);
 
@@ -191,7 +192,7 @@ export default class NewCustomerComponent implements OnInit {
     }
 
     openCancellation(item: CustomerAttendance): void {
-        if (this.saving() || item.status === this.CANCELLED) return;
+        if (this.saving() || isAttendanceReadOnly(item.status)) return;
         this.cancelling.set(item);
         this.cancelForm.reset({ reason: '' });
         this.cancelError.set('');
@@ -200,7 +201,7 @@ export default class NewCustomerComponent implements OnInit {
 
     async cancel(): Promise<void> {
         const item = this.cancelling();
-        if (!item || this.saving() || item.status === this.CANCELLED) return;
+        if (!item || this.saving() || isAttendanceReadOnly(item.status)) return;
         this.cancelForm.markAllAsTouched();
         this.cancelError.set('');
         const reason = this.cancelForm.controls.reason.value.trim();

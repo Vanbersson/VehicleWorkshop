@@ -55,6 +55,10 @@ public class CustomerAttendance {
     private Date completedAt;
     @Column(name = "expected_delivery_date")
     private java.time.LocalDate expectedDeliveryDate;
+    @Column(name = "scheduled_delivery_date")
+    private java.time.LocalDate scheduledDeliveryDate;
+    @Column(name = "pickup_date")
+    private java.time.LocalDate pickupDate;
     @Version
     private Long version;
 }

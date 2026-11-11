@@ -6,6 +6,7 @@ import com.concierge.apiconcierge.dtos.vehicleEntry.AuthExitDto;
 import com.concierge.apiconcierge.dtos.vehicle.entry.VehicleEntryDto;
 import com.concierge.apiconcierge.dtos.vehicle.entry.VehicleExitDto;
 import com.concierge.apiconcierge.dtos.vehicleEntry.ImageUpdateDto;
+import com.concierge.apiconcierge.dtos.vehicleEntry.VehicleEntryResponsePlatesDto;
 import com.concierge.apiconcierge.models.message.MessageResponse;
 import com.concierge.apiconcierge.models.vehicle.checklist.VehicleEntryChecklist;
 import com.concierge.apiconcierge.models.vehicle.entry.VehicleEntry;
@@ -19,6 +20,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/vehicle/entry")
@@ -91,6 +94,12 @@ public class VehicleEntryController {
         } catch (Exception ex) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new MessageResponseDto(ex.getMessage()));
         }
+    }
+
+    @GetMapping("/plates")
+    public ResponseEntity<List<VehicleEntryResponsePlatesDto>> listAllPlates(HttpServletRequest request) {
+        String userEmail = this.getEmail(request);
+        return ResponseEntity.ok(this.service.listAllPlates(userEmail));
     }
 
     @GetMapping("/{companyId}/{resaleId}/filter/id/{id}")

@@ -64,11 +64,17 @@
                 <p class="attendance-error" role="alert">{{ detailError() }}</p>
                 <p-button label="Tentar novamente" icon="pi pi-refresh" (onClick)="loadDetail()" />
             } @else if (editing()) {
-                @if (readOnly()) {
+                @if (editing()?.status === CANCELLED) {
                     <div class="rounded-xl border border-red-200 dark:border-red-900 p-4 mb-5" role="status">
                         <strong>Atendimento cancelado — somente consulta</strong>
                         <p class="whitespace-pre-wrap break-words">{{ editing()?.cancellationReason || 'Motivo não informado' }}</p>
                         <small class="text-muted-color">{{ editing()?.cancelledAt | date: 'dd/MM/yyyy HH:mm' }}{{ editing()?.cancelledByName ? ' · ' + editing()?.cancelledByName : '' }}</small>
+                    </div>
+                }
+                @if (completed()) {
+                    <div class="rounded-xl border border-surface-200 dark:border-surface-700 p-4 mb-5" role="status">
+                        <strong>Atendimento concluído — somente consulta</strong>
+                        <p class="text-muted-color mb-0">Os dados, valores, documentos e orçamento não podem mais ser alterados.</p>
                     </div>
                 }
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 rounded-xl bg-surface-100 dark:bg-surface-800 p-4 mb-5">
@@ -85,10 +91,19 @@
                         ><p-tag [value]="stageFor(editing()!.status).label" [icon]="stageFor(editing()!.status).icon" [severity]="stageFor(editing()!.status).severity" [rounded]="true" />
                     </div>
                 </div>
+                @if (!readOnly() && !hasRegisteredClient()) {
+                    <div class="rounded-xl border border-orange-200 dark:border-orange-800 p-4 mb-5" role="status">
+                        <strong>Cliente cadastrado obrigatório</strong>
+                        <p class="mt-2 text-muted-color">Este atendimento foi gerado pela visita sem vínculo com um cliente cadastrado. Selecione o cliente para salvar as etapas.</p>
+                        @if (activeEditStep() !== 2) {
+                            <app-filterclient buttonLabel="Selecionar cliente cadastrado" [highlighted]="true" [isDisabled]="saving()" (outputClient)="selectAttendanceClient($event)" />
+                        }
+                    </div>
+                }
                 <p class="text-muted-color text-sm mb-5">
                     {{
                         readOnly()
-                            ? 'Selecione uma etapa para consultar as informações salvas. O atendimento cancelado não pode ser alterado.'
+                            ? 'Selecione uma etapa para consultar as informações salvas. Atendimentos concluídos ou cancelados não podem ser alterados.'
                             : 'Selecione uma etapa para consultar ou editar. Use Salvar etapa para atualizar o andamento do atendimento.'
                     }}
                 </p>
@@ -117,12 +132,13 @@
                             </p-step-list>
                             <p-step-panels>
                                 @for (flow of workflow; track flow.value; let index = $index) {
-                                    <p-step-panel [value]="index + 1"
-                                        ><ng-template #content>
+                                    <p-step-panel [value]="index + 1">
+                                        <ng-template #content>
                                             @if (activeEditStep() === index + 1) {
                                                 <ng-container [ngTemplateOutlet]="attendanceStepContent" />
-                                            }</ng-template
-                                    ></p-step-panel>
+                                            }
+                                        </ng-template>
+                                    </p-step-panel>
                                 }
                             </p-step-panels>
                         </p-stepper>
@@ -334,40 +350,268 @@
                                         <section class="proposal-card"><p-attendance-payment [attendance]="editing()" /></section>
                                     }
                                     @case (5) {
-                                        <h2 class="text-xl font-semibold mb-3">Faturamento</h2>
-                                        <p class="text-muted-color">Acompanhe o faturamento do pedido e registre os detalhes nas observações gerais.</p>
+                                        <section class="proposal-card"><p-attendance-payment [attendance]="editing()" stage="INVOICING" /></section>
                                     }
                                     @case (6) {
                                         <h2 class="text-xl font-semibold mb-3">Entrega</h2>
-                                        <p class="text-muted-color">Acompanhe a entrega do pedido e registre os detalhes nas observações gerais.</p>
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
+                                            <div>
+                                                <label for="scheduledDeliveryDate">Data de agendamento de entrega</label
+                                                ><p-datepicker
+                                                    inputId="scheduledDeliveryDate"
+                                                    formControlName="scheduledDeliveryDate"
+                                                    dateFormat="dd/mm/yy"
+                                                    placeholder="Selecione a data"
+                                                    [showIcon]="true"
+                                                    [showButtonBar]="true"
+                                                    [readonlyInput]="true"
+                                                    appendTo="body"
+                                                    fluid
+                                                />
+                                            </div>
+                                            <div>
+                                                <label for="pickupDate">Data de retirada do implemento</label
+                                                ><p-datepicker
+                                                    inputId="pickupDate"
+                                                    formControlName="pickupDate"
+                                                    dateFormat="dd/mm/yy"
+                                                    placeholder="Selecione a data"
+                                                    [showIcon]="true"
+                                                    [showButtonBar]="true"
+                                                    [readonlyInput]="true"
+                                                    appendTo="body"
+                                                    fluid
+                                                />
+                                            </div>
+                                        </div>
+                                        <section class="proposal-card"><p-attendance-documents [attendance]="editing()" stage="DELIVERY" /></section>
                                     }
                                     @case (7) {
-                                        <h2 class="text-xl font-semibold mb-3">Concluir atendimento</h2>
-                                        <p class="text-muted-color mb-5">{{ readOnly() ? 'Informações registradas antes do cancelamento.' : 'Confira as informações e salve para marcar o atendimento como concluído.' }}</p>
-                                        <dl class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            <div>
-                                                <dt class="text-muted-color">Total em orçamento</dt>
-                                                <dd class="m-0 font-semibold">{{ editing()?.quoteTotal != null ? (editing()?.quoteTotal | currency: 'BRL') : 'Sem orçamento' }}</dd>
+                                        <div class="attendance-summary">
+                                            <div class="summary-hero mb-5">
+                                                <div class="flex items-start gap-3 min-w-0">
+                                                    <span class="proposal-icon"><i class="pi pi-clipboard" aria-hidden="true"></i></span>
+                                                    <div class="min-w-0">
+                                                        <span class="eyebrow">CONFERÊNCIA FINAL · #{{ editing()?.id }}</span>
+                                                        <h2 class="text-2xl font-semibold mt-1 mb-2">Resumo do atendimento</h2>
+                                                        <p class="text-muted-color m-0">Confira os dados, o orçamento e as pendências antes de concluir.</p>
+                                                    </div>
+                                                </div>
+                                                <div class="flex flex-wrap items-center gap-3 min-w-0 max-w-full">
+                                                    <p-tag
+                                                        [value]="completed() ? 'Concluído' : readOnly() ? 'Cancelado' : loadingSummary() ? 'Conferindo valores' : canComplete() ? 'Pronto para concluir' : 'Revisão necessária'"
+                                                        [severity]="completed() ? 'success' : readOnly() ? 'danger' : loadingSummary() ? 'secondary' : canComplete() ? 'success' : 'warn'"
+                                                    />
+                                                    <p-button
+                                                        type="button"
+                                                        label="Atualizar resumo"
+                                                        styleClass="max-w-full whitespace-normal"
+                                                        icon="pi pi-refresh"
+                                                        severity="secondary"
+                                                        [outlined]="true"
+                                                        (onClick)="loadCompletionSummary()"
+                                                        [disabled]="loadingSummary() || saving()"
+                                                    />
+                                                </div>
                                             </div>
-                                            <div>
-                                                <dt class="text-muted-color">Data da conclusão</dt>
-                                                <dd class="m-0">{{ editing()?.completedAt ? (editing()?.completedAt | date: 'dd/MM/yyyy HH:mm') : readOnly() ? 'Não concluído' : 'Será registrada ao concluir' }}</dd>
+                                            <section class="proposal-card mb-5" aria-label="Informações do atendimento">
+                                                <div class="summary-people grid gap-6">
+                                                    <div class="flex items-start gap-3 min-w-0">
+                                                        <span class="proposal-icon"><i class="pi pi-building" aria-hidden="true"></i></span>
+                                                        <div class="min-w-0">
+                                                            <span class="text-sm text-muted-color">Cliente</span>
+                                                            <p class="text-lg font-semibold mt-1 mb-1 break-words">{{ selectedClientName() || editing()?.clientName || 'Não informado' }}</p>
+                                                            <span class="text-sm text-muted-color">Código {{ selectedClientId() ?? editing()?.clientId ?? 'Não informado' }}</span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="flex items-start gap-3 min-w-0">
+                                                        <span class="proposal-icon"><i class="pi pi-user" aria-hidden="true"></i></span>
+                                                        <div class="min-w-0">
+                                                            <span class="text-sm text-muted-color">Vendedor responsável</span>
+                                                            <p class="text-lg font-semibold mt-1 mb-1 break-words">{{ summarySalespersonName }}</p>
+                                                            @if (summarySalesperson?.cellphone) {
+                                                                <span class="text-sm text-muted-color">{{ summarySalesperson?.dddCellphone }} {{ summarySalesperson?.cellphone }}</span>
+                                                            }
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="flex flex-wrap gap-x-6 gap-y-2 text-sm text-muted-color border-t border-surface-200 dark:border-surface-700 mt-5 pt-4">
+                                                    <span>Abertura: {{ editing()?.dateCreated ? (editing()?.dateCreated | date: 'dd/MM/yyyy HH:mm') : 'Não informada' }}</span
+                                                    ><span>Conclusão: {{ editing()?.completedAt ? (editing()?.completedAt | date: 'dd/MM/yyyy HH:mm') : readOnly() ? 'Não concluído' : 'Aguardando conclusão' }}</span>
+                                                </div>
+                                            </section>
+                                            <section class="mb-5" aria-labelledby="summaryDatesTitle">
+                                                <h3 id="summaryDatesTitle" class="text-lg font-semibold mt-0 mb-3">Entrega e retirada</h3>
+                                                <dl class="summary-dates grid gap-3 m-0">
+                                                    <div class="summary-date">
+                                                        <dt class="flex items-center gap-2 text-sm text-muted-color"><i class="pi pi-calendar" aria-hidden="true"></i> Previsão de entrega</dt>
+                                                        <dd class="text-lg font-semibold m-0 mt-3">{{ form.controls.expectedDeliveryDate.value ? (form.controls.expectedDeliveryDate.value | date: 'dd/MM/yyyy') : 'Não informada' }}</dd>
+                                                    </div>
+                                                    <div class="summary-date">
+                                                        <dt class="flex items-center gap-2 text-sm text-muted-color"><i class="pi pi-calendar-clock" aria-hidden="true"></i> Data de agendamento de retirada</dt>
+                                                        <dd class="text-lg font-semibold m-0 mt-3">{{ form.controls.scheduledDeliveryDate.value ? (form.controls.scheduledDeliveryDate.value | date: 'dd/MM/yyyy') : 'Não informado' }}</dd>
+                                                    </div>
+                                                    <div class="summary-date">
+                                                        <dt class="flex items-center gap-2 text-sm text-muted-color"><i class="pi pi-truck" aria-hidden="true"></i> Retirada do implemento</dt>
+                                                        <dd class="text-lg font-semibold m-0 mt-3">{{ form.controls.pickupDate.value ? (form.controls.pickupDate.value | date: 'dd/MM/yyyy') : 'Não informada' }}</dd>
+                                                    </div>
+                                                </dl>
+                                            </section>
+                                            <section class="proposal-card mb-5" aria-labelledby="summaryQuoteTitle">
+                                                <div class="flex flex-wrap items-start justify-between gap-4 mb-5">
+                                                    <div>
+                                                        <h3 id="summaryQuoteTitle" class="text-lg font-semibold mt-0 mb-1">Orçamento</h3>
+                                                        <p class="text-sm text-muted-color m-0">Itens e valores do pedido</p>
+                                                    </div>
+                                                    <div class="min-w-0 max-w-full sm:text-right">
+                                                        <span class="text-sm text-muted-color">Total do pedido</span
+                                                        ><strong class="block text-2xl text-primary mt-1">{{ editing()?.quoteTotal != null ? (editing()?.quoteTotal | currency: 'BRL') : 'Sem orçamento' }}</strong>
+                                                    </div>
+                                                </div>
+                                                @if (loadingSummary()) {
+                                                    <p class="text-muted-color" role="status">Consultando itens do orçamento…</p>
+                                                } @else if (summaryQuoteError()) {
+                                                    <p class="text-red-600" role="alert">{{ summaryQuoteError() }} Use Atualizar resumo para tentar novamente.</p>
+                                                } @else if (summaryQuote()?.items?.length) {
+                                                    <ul class="summary-mobile-items list-none m-0 p-0 gap-3" aria-label="Itens do orçamento">
+                                                        @for (item of summaryQuote()?.items; track $index) {
+                                                            <li class="min-w-0 rounded-xl border border-surface-200 dark:border-surface-700 p-3">
+                                                                <strong class="block whitespace-pre-wrap break-words mb-3">{{ item.productName }}</strong>
+                                                                <dl class="grid grid-cols-1 gap-3 m-0">
+                                                                    <div class="flex flex-wrap justify-between gap-2">
+                                                                        <dt class="text-sm text-muted-color">Quantidade</dt>
+                                                                        <dd class="m-0 min-w-0">{{ item.quantity | number: '1.0-3' }}</dd>
+                                                                    </div>
+                                                                    <div class="flex flex-wrap justify-between gap-2">
+                                                                        <dt class="text-sm text-muted-color">Valor unitário</dt>
+                                                                        <dd class="m-0 min-w-0">{{ item.unitPrice | currency: 'BRL' }}</dd>
+                                                                    </div>
+                                                                    <div class="flex flex-wrap justify-between gap-2 border-t border-surface-200 dark:border-surface-700 pt-3">
+                                                                        <dt class="font-semibold">Total do item</dt>
+                                                                        <dd class="m-0 min-w-0 font-semibold text-primary">{{ quoteItemAmounts(item).total | currency: 'BRL' }}</dd>
+                                                                    </div>
+                                                                </dl>
+                                                            </li>
+                                                        }
+                                                    </ul>
+                                                    <div class="summary-desktop-items min-w-0 max-w-full overflow-x-auto">
+                                                        <table class="summary-table w-full border-collapse">
+                                                            <caption class="sr-only">
+                                                                Descrição, quantidade, valor unitário e total dos itens do orçamento
+                                                            </caption>
+                                                            <thead>
+                                                                <tr class="border-b border-surface-200 dark:border-surface-700">
+                                                                    <th scope="col" class="text-left p-3">Descrição</th>
+                                                                    <th scope="col" class="text-right p-3">Quantidade</th>
+                                                                    <th scope="col" class="text-right p-3">Valor unitário</th>
+                                                                    <th scope="col" class="text-right p-3">Total do item</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                @for (item of summaryQuote()?.items; track $index) {
+                                                                    <tr class="border-b border-surface-200 dark:border-surface-700">
+                                                                        <td class="p-3 whitespace-pre-wrap break-words">{{ item.productName }}</td>
+                                                                        <td class="p-3 text-right whitespace-nowrap">{{ item.quantity | number: '1.0-3' }}</td>
+                                                                        <td class="p-3 text-right whitespace-nowrap">{{ item.unitPrice | currency: 'BRL' }}</td>
+                                                                        <td class="p-3 text-right whitespace-nowrap font-semibold">{{ quoteItemAmounts(item).total | currency: 'BRL' }}</td>
+                                                                    </tr>
+                                                                }
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                } @else {
+                                                    <p class="text-muted-color m-0">Nenhum item de orçamento registrado neste atendimento.</p>
+                                                }
+                                                @if (!loadingSummary() && !summaryQuoteError()) {
+                                                    <dl class="rounded-xl bg-surface-50 dark:bg-surface-800 p-4 mt-4 mb-0">
+                                                        <dt class="text-muted-color">Observação do orçamento</dt>
+                                                        <dd class="m-0 whitespace-pre-wrap break-words">{{ summaryQuote()?.notes || 'Não informada' }}</dd>
+                                                    </dl>
+                                                }
+                                            </section>
+                                            <div class="flex flex-wrap items-center justify-between gap-3 mb-4 min-w-0">
+                                                <h3 class="text-lg font-semibold m-0">Conferência de valores</h3>
                                             </div>
-                                            <div class="md:col-span-2">
-                                                <dt class="text-muted-color">Proposta comercial</dt>
-                                                <dd class="m-0 whitespace-pre-wrap break-words">{{ form.controls.proposalNotes.value || 'Não informada' }}</dd>
-                                            </div>
-                                        </dl>
+                                            @if (loadingSummary()) {
+                                                <p class="text-muted-color" role="status">Consultando pagamento e faturamento…</p>
+                                            } @else {
+                                                <div class="summary-financial-grid grid gap-4" aria-live="polite">
+                                                    @for (summary of financialSummaries(); track summary.stage) {
+                                                        <section
+                                                            class="proposal-card summary-finance"
+                                                            [class.summary-attention]="summary.error || summary.remaining !== 0 || summary.excess > 0 || summary.missingValues.length > 0 || !summary.count"
+                                                            [attr.aria-label]="'Resumo de ' + summary.label"
+                                                        >
+                                                            <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+                                                                <div class="flex items-center gap-2">
+                                                                    <i class="pi text-primary" [class.pi-wallet]="summary.stage === 'PAYMENT'" [class.pi-receipt]="summary.stage === 'INVOICING'" aria-hidden="true"></i>
+                                                                    <h4 class="text-lg font-semibold m-0">{{ summary.label }}</h4>
+                                                                </div>
+                                                                <p-button
+                                                                    type="button"
+                                                                    styleClass="max-w-full whitespace-normal"
+                                                                    [label]="'Revisar ' + summary.label.toLowerCase()"
+                                                                    icon="pi pi-arrow-left"
+                                                                    severity="secondary"
+                                                                    [text]="true"
+                                                                    size="small"
+                                                                    (onClick)="selectEditStep(summary.step)"
+                                                                    [disabled]="saving()"
+                                                                />
+                                                            </div>
+                                                            @if (summary.error) {
+                                                                <p class="text-red-600 m-0" role="alert">{{ summary.error }} Atualize os valores para tentar novamente.</p>
+                                                            } @else {
+                                                                <dl class="grid grid-cols-1 sm:grid-cols-2 gap-4 m-0 rounded-xl bg-surface-50 dark:bg-surface-800 p-4">
+                                                                    <div>
+                                                                        <dt class="text-muted-color">{{ summary.stage === 'PAYMENT' ? 'Total informado em comprovantes' : 'Total informado em notas fiscais' }}</dt>
+                                                                        <dd class="m-0 mt-2 text-xl font-semibold">{{ summary.total | currency: 'BRL' }}</dd>
+                                                                    </div>
+                                                                    <div>
+                                                                        <dt class="text-muted-color">Valor que falta informar</dt>
+                                                                        <dd class="m-0 mt-2 text-xl font-semibold">{{ summary.remaining != null ? (summary.remaining | currency: 'BRL') : 'Sem orçamento para comparar' }}</dd>
+                                                                    </div>
+                                                                </dl>
+                                                                <p class="text-sm text-muted-color">{{ summary.count }} documento(s) registrado(s).</p>
+                                                                @if (!summary.count) {
+                                                                    <p class="text-orange-700 dark:text-orange-400">{{ summary.stage === 'PAYMENT' ? 'Nenhum comprovante de pagamento anexado.' : 'Nenhum documento fiscal anexado.' }}</p>
+                                                                }
+                                                                @if (summary.remaining != null && summary.remaining! > 0) {
+                                                                    <p class="text-orange-700 dark:text-orange-400 font-semibold">
+                                                                        Falta informar {{ summary.remaining | currency: 'BRL' }} em {{ summary.stage === 'PAYMENT' ? 'pagamentos' : 'faturamento' }}.
+                                                                    </p>
+                                                                }
+                                                                @if (summary.missingValues.length) {
+                                                                    <p class="text-orange-700 dark:text-orange-400 font-semibold">Informe ou corrija o valor dos documentos:</p>
+                                                                    <ul class="pl-5 break-words">
+                                                                        @for (fileName of summary.missingValues; track $index) {
+                                                                            <li>{{ fileName }}</li>
+                                                                        }
+                                                                    </ul>
+                                                                }
+                                                                @if (summary.excess > 0) {
+                                                                    <p class="text-orange-700 dark:text-orange-400">O total informado excede o pedido em {{ summary.excess | currency: 'BRL' }}.</p>
+                                                                }
+                                                                @if (summary.remaining === 0 && summary.excess === 0 && !summary.missingValues.length && summary.count > 0) {
+                                                                    <p class="text-green-700 dark:text-green-400 font-semibold"><i class="pi pi-check-circle" aria-hidden="true"></i> Valores informados correspondem ao total do pedido.</p>
+                                                                }
+                                                                @if (summary.remaining == null) {
+                                                                    <p class="text-orange-700 dark:text-orange-400">Informe o orçamento na etapa Pedido para calcular se há valor faltante.</p>
+                                                                }
+                                                            }
+                                                        </section>
+                                                    }
+                                                </div>
+                                            }
+                                        </div>
                                     }
                                 }
                             </div>
                         </ng-template>
-                        @if (activeEditStep() !== 3) {
-                            <div>
-                                <label for="attendanceNotes">Observações gerais do atendimento</label><textarea pTextarea id="attendanceNotes" formControlName="notes" rows="3" maxlength="2000" fluid></textarea
-                                ><small class="text-muted-color">{{ form.controls.notes.value.length }}/2000 caracteres</small>
-                            </div>
-                        }
+                        <div>
+                            <label for="attendanceNotes">Observações gerais do atendimento</label><textarea pTextarea id="attendanceNotes" formControlName="notes" rows="3" maxlength="2000" fluid></textarea
+                            ><small class="text-muted-color">{{ form.controls.notes.value.length }}/2000 caracteres</small>
+                        </div>
                         @if (saveError()) {
                             <p class="attendance-error" role="alert">{{ saveError() }}</p>
                         }
@@ -380,10 +624,17 @@
                     @if (activeEditStep() < workflow.length) {
                         <p-button label="Salvar e avançar" icon="pi pi-arrow-right" severity="secondary" [outlined]="true" (onClick)="save(false, activeEditStep() + 1)" [disabled]="saving()" />
                     }
-                    <p-button [label]="activeEditStep() === workflow.length ? 'Concluir atendimento' : 'Salvar etapa'" icon="pi pi-check" (onClick)="save(activeEditStep() === workflow.length)" [loading]="saving()" />
+                    <p-button
+                        [label]="activeEditStep() === workflow.length ? 'Concluir atendimento' : 'Salvar etapa'"
+                        icon="pi pi-check"
+                        (onClick)="saveCurrentStep()"
+                        [loading]="saving()"
+                        [disabled]="saving() || confirmingCompletion() || (activeEditStep() === workflow.length && !canComplete())"
+                    />
                 }
             </footer>
         }
     </section>
 </div>
 <p-attendance-quote [attendance]="budgetAttendance()" [(visible)]="budgetVisible" (saved)="budgetSaved($event)" />
+<p-confirmdialog key="completeAttendance" [style]="{ width: '32rem', maxWidth: 'calc(100vw - 2rem)' }" [draggable]="false" [dismissableMask]="false" defaultFocus="reject" appendTo="body" (onHide)="confirmingCompletion.set(false)" />

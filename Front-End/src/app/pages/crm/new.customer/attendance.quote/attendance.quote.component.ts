@@ -10,7 +10,7 @@ import { InputNumberModule } from 'primeng/inputnumber';
 import { SelectModule } from 'primeng/select';
 import { TextareaModule } from 'primeng/textarea';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
-import { AttendanceStatus, CustomerAttendance } from '@/app/models/crm/customer.attendance';
+import { AttendanceStatus, CustomerAttendance, isAttendanceReadOnly } from '@/app/models/crm/customer.attendance';
 import { AttendanceQuoteItem, calculateQuoteItem, QuoteAmounts, QuoteDiscountType } from '@/app/models/crm/attendance.quote';
 import { CustomerAttendanceService } from '@/app/services/crm/customer.attendance.service';
 
@@ -68,7 +68,7 @@ export class AttendanceQuoteComponent implements OnChanges {
         this.saveError.set('');
         this.submitted.set(false);
         this.currentAttendance = null;
-        this.cancelled.set(this.attendance.status === AttendanceStatus.CANCELLED);
+        this.cancelled.set(isAttendanceReadOnly(this.attendance.status));
         this.quoteId.set(null);
         this.quoteVersion = null;
         this.items.clear();
@@ -77,12 +77,14 @@ export class AttendanceQuoteComponent implements OnChanges {
             if (request !== this.request || !this.visible) return;
             if (response?.attendance?.id !== id) throw new Error('O servidor não retornou o atendimento solicitado.');
             this.currentAttendance = response.attendance;
-            this.cancelled.set(response.attendance.status === AttendanceStatus.CANCELLED);
+            this.cancelled.set(isAttendanceReadOnly(response.attendance.status));
             this.quoteId.set(response.quote?.id ?? null);
             this.quoteVersion = response.quote?.version ?? null;
             this.form.controls.notes.setValue(response.quote?.notes ?? '');
             for (const item of response.quote?.items ?? []) this.items.push(itemForm(item));
             if (!this.items.length) this.items.push(itemForm());
+            if (this.cancelled()) this.form.disable({ emitEvent: false });
+            else this.form.enable({ emitEvent: false });
             this.form.markAsPristine();
         } catch (error: unknown) {
             if (request === this.request) this.loadError.set(this.message(error, 'Não foi possível carregar o orçamento.'));

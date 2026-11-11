@@ -1,4 +1,4 @@
-export type AttendanceDocumentStage = 'PROPOSAL' | 'DOCUMENTS' | 'PAYMENT';
+export type AttendanceDocumentStage = 'PROPOSAL' | 'DOCUMENTS' | 'PAYMENT' | 'INVOICING' | 'DELIVERY';
 
 export interface AttendanceDocument {
     stage?: AttendanceDocumentStage;

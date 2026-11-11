@@ -1,0 +1,357 @@
+<section class="budget-page">
+    <header class="budget-heading flex flex-wrap items-start justify-between gap-4 mb-6">
+        <div class="budget-title">
+            <span class="budget-icon">
+                <i class="pi pi-clipboard" aria-hidden="true"></i>
+            </span>
+            <div>
+                <span class="budget-eyebrow"> PORTARIA / ORÇAMENTO / MANUTENÇÃO</span>
+                <h1 class="text-2xl font-semibold m-0">{{ editing() ? (readOnly ? 'Consultar orçamento #' : 'Editar orçamento #') + editing()!.id : 'Novo orçamento' }}</h1>
+                <p class="text-muted-color mt-2 mb-0">{{ readOnly ? 'Orçamento disponível apenas para consulta.' : editing() ? 'Revise os dados e os valores do orçamento.' : 'Selecione uma entrada de veículo para registrar o orçamento.' }}</p>
+            </div>
+        </div>
+        <div class="heading-actions flex flex-wrap gap-2">
+            @if (editId) {
+                <p-button styleClass="min-h-[44px]" type="button" label="Atualizar" icon="pi pi-refresh" severity="secondary" [outlined]="true" (onClick)="refreshBudget()" [loading]="loading()" [disabled]="loading() || saving()" />
+            }
+            <p-button styleClass="min-h-[44px]" label="Voltar aos orçamentos" icon="pi pi-arrow-left" severity="secondary" [outlined]="true" routerLink="/concierge/budget/list" [disabled]="saving()" />
+        </div>
+    </header>
+    @if (selectedVehicle(); as vehicle) {
+        <section class="flex flex-wrap items-center gap-5 rounded-2xl border border-primary-200 dark:border-primary-800 bg-primary-50 dark:bg-surface-900 p-5 mb-6" aria-label="Veículo selecionado para o orçamento" aria-live="polite">
+            <div class="rounded-xl border-2 border-primary-300 dark:border-primary-700 bg-surface-0 dark:bg-surface-950 px-5 py-3">
+                <span class="block text-xs font-semibold tracking-widest text-muted-color mb-1">PLACA</span>
+                <strong class="block font-mono text-3xl md:text-4xl font-bold tracking-widest text-primary-700 dark:text-primary-300">{{ vehicle.vehiclePlate ? (vehicle.vehiclePlate | uppercase) : 'Sem placa' }}</strong>
+            </div>
+            <div class="flex-1 min-w-0">
+                <span class="block text-sm text-muted-color mb-1">Modelo do veículo</span>
+                <strong class="block text-xl md:text-2xl font-semibold break-words">{{ vehicle.modelDescription || 'Modelo não informado' }}</strong>
+                <span class="block text-sm text-muted-color mt-2">Entrada #{{ vehicle.id }}</span>
+            </div>
+            <i class="pi pi-car text-3xl text-primary-500 hidden sm:block" aria-hidden="true"></i>
+        </section>
+    }
+    @if (loading()) {
+        <p role="status">Carregando dados do orçamento...</p>
+    }
+    @if (loadError()) {
+        <p role="alert" class="text-red-600">{{ loadError() }}</p>
+        <p-button styleClass="min-h-[44px]" label="Tentar novamente" icon="pi pi-refresh" (onClick)="loadOptions()" />
+    }
+    <form [formGroup]="form" (ngSubmit)="save()" class="budget-layout">
+        <div class="budget-main">
+            <section class="budget-panel bg-surface-0 dark:bg-surface-900 border border-surface rounded-2xl p-5" aria-labelledby="budgetDataTitle">
+                <div class="section-heading flex items-center gap-3 mb-5">
+                    <span class="section-icon flex items-center justify-center shrink-0 size-11 rounded-xl bg-emphasis text-primary"><i class="pi pi-car" aria-hidden="true"></i></span>
+                    <div>
+                        <h2 class="text-lg font-semibold m-0" id="budgetDataTitle">Dados do orçamento</h2>
+                        <p>Vincule o veículo e defina as condições comerciais.</p>
+                    </div>
+                    <span class="status-pill rounded-full px-3 py-1 text-xs font-semibold bg-emphasis text-muted-color">{{ editing() ? statuses[editing()!.status] : 'Em aberto' }}</span>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div class="md:col-span-2">
+                        <label for="budgetVehicle" class="block font-semibold mb-2">Entrada do veículo *</label
+                        ><p-select
+                            inputId="budgetVehicle"
+                            formControlName="vehicleId"
+                            [options]="vehicles()"
+                            optionLabel="label"
+                            optionValue="id"
+                            [filter]="true"
+                            filterBy="label"
+                            placeholder="Selecione o veículo"
+                            [showClear]="true"
+                            (onChange)="selectVehicle($event.value)"
+                            [loading]="loading()"
+                            fluid
+                        />
+                        @if (form.controls.vehicleId.touched && form.controls.vehicleId.invalid) {
+                            <small class="text-red-500">Selecione uma entrada de veículo.</small>
+                        }
+                    </div>
+                    <div>
+                        <span class="block font-semibold mb-2">Cliente / empresa</span>
+                        <strong class="block">{{ clientName() || (selectedVehicle() ? 'Cliente não informado na entrada' : 'Selecione uma entrada de veículo') }}</strong>
+                        <small class="text-muted-color">Preenchido automaticamente a partir da entrada. O vendedor deve estar cadastrado na entrada para salvar o orçamento.</small>
+                    </div>
+                    <div>
+                        <span class="block font-semibold mb-2">Vendedor *</span>
+                        <strong class="block">{{ attendantName() || (selectedVehicle() ? 'Não informado na entrada' : 'Selecione uma entrada de veículo') }}</strong>
+                        <small class="text-muted-color">Preenchido automaticamente a partir da entrada.</small>
+                    </div>
+                    <div>
+                        <label for="budgetValidity" class="block font-semibold mb-2">Validade</label
+                        ><p-datepicker inputId="budgetValidity" formControlName="dateValidation" dateFormat="dd/mm/yy" [showIcon]="true" [showClear]="true" appendTo="body" fluid />
+                    </div>
+                    <div>
+                        <label for="budgetPayment" class="block font-semibold mb-2">Forma de pagamento</label
+                        ><p-select inputId="budgetPayment" formControlName="paymentTypeId" [options]="payments()" optionLabel="description" optionValue="id" [showClear]="true" placeholder="Selecione (opcional)" fluid />
+                        @if (paymentWarning()) {
+                            <p class="text-sm text-orange-600" role="status">{{ paymentWarning() }}</p>
+                            <p-button styleClass="min-h-[44px]" type="button" label="Recarregar opções" icon="pi pi-refresh" severity="secondary" [text]="true" (onClick)="loadOptions()" [disabled]="loading() || saving()" />
+                        }
+                    </div>
+                    <div class="md:col-span-2">
+                        <label for="budgetInformation" class="block font-semibold mb-2">Observações</label><textarea pTextarea id="budgetInformation" formControlName="information" rows="4" maxlength="255" class="w-full"></textarea
+                        ><small class="text-muted-color">{{ form.controls.information.value.length }}/255 caracteres</small>
+                    </div>
+                </div>
+            </section>
+            <section class="budget-panel bg-surface-0 dark:bg-surface-900 border border-surface rounded-2xl p-5" aria-labelledby="budgetItemsTitle">
+                <div class="items-heading flex flex-wrap items-center justify-between gap-3">
+                    <h2 class="text-lg font-semibold m-0" id="budgetItemsTitle">Itens e serviços</h2>
+                    <div class="add-actions flex flex-wrap gap-2">
+                        <p-button type="button" label="Adicionar Peça" icon="pi pi-plus" [outlined]="true" (onClick)="addItem(0)" [disabled]="saving() || readOnly" />
+                        <p-button type="button" label="Adicionar serviço" icon="pi pi-plus" [outlined]="true" (onClick)="addItem(1)" [disabled]="saving() || readOnly" />
+                    </div>
+                </div>
+                <p class="text-muted-color text-sm">Itens: quantidade × preço − desconto. Serviços: horas × preço − desconto.</p>
+                <div class="items-table-wrap">
+                    <table class="items-table" role="table">
+                        <caption class="sr-only">
+                            Lista de itens e serviços do orçamento
+                        </caption>
+                        <thead class="items-head">
+                            <tr>
+                                <th scope="col">Tipo</th>
+                                <th scope="col">Descrição</th>
+                                <th scope="col">Qtd.</th>
+                                <th scope="col">Horas</th>
+                                <th scope="col">Preço (R$)</th>
+                                <th scope="col">Desconto (R$)</th>
+                                <th scope="col">Total</th>
+                                <th scope="col">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody formArrayName="items">
+                            @for (item of items.controls.slice().reverse(); track item; let displayIndex = $index) {
+                                @let i = items.length - displayIndex - 1;
+                                <tr class="item-row" [formGroupName]="i" role="row" [class.invalid-item]="item.touched && item.invalid">
+                                    <td class="item-kind" role="cell">
+                                        <span class="line-type inline-flex items-center gap-2 font-semibold text-primary">
+                                            <span class="text-muted-color">#{{ i + 1 }}</span>
+                                            <i class="pi" [class.pi-wrench]="item.controls.type.value === 1" [class.pi-box]="item.controls.type.value === 0" aria-hidden="true"></i>
+                                            {{ item.controls.type.value === 1 ? 'Serviço' : 'Peça' }}
+                                        </span>
+                                    </td>
+                                    <td class="item-description" role="cell">
+                                        <label class="sr-only item-field-label" [for]="'itemDescription' + i">
+                                            Descrição <span class="sr-only">da linha {{ i + 1 }}</span>
+                                        </label>
+                                        <input pInputText [id]="'itemDescription' + i" formControlName="description" maxlength="100" class="w-full text-[16px]" placeholder="Descrição" />
+                                        @if (item.touched && item.invalid) {
+                                            <small class="text-red-600 block mt-2" role="alert">Revise a linha {{ i + 1 }}: descrição, quantidade, horas, preço e desconto.</small>
+                                        }
+                                    </td>
+                                    <td role="cell" [class.inactive-field]="item.controls.type.value !== 0">
+                                        @if (item.controls.type.value === 0) {
+                                            <label class="sr-only item-field-label" [for]="'itemQuantity' + i">
+                                                Quantidade <span class="sr-only">da linha {{ i + 1 }}</span>
+                                            </label>
+                                            <p-inputnumber inputStyleClass="min-h-[44px] text-[16px]" [inputId]="'itemQuantity' + i" formControlName="quantity" locale="pt-BR" [min]="0.01" [max]="999999999.99" [maxFractionDigits]="2" fluid />
+                                        } @else {
+                                            <span class="text-muted-color" aria-label="Não se aplica">—</span>
+                                        }
+                                    </td>
+                                    <td role="cell" [class.inactive-field]="item.controls.type.value !== 1">
+                                        @if (item.controls.type.value === 1) {
+                                            <label class="sr-only item-field-label" [for]="'itemHours' + i">
+                                                Horas <span class="sr-only">da linha {{ i + 1 }}</span>
+                                            </label>
+                                            <p-inputnumber inputStyleClass="min-h-[44px] text-[16px]" [inputId]="'itemHours' + i" formControlName="hourService" locale="pt-BR" [min]="0.01" [max]="999999999.99" [maxFractionDigits]="2" fluid />
+                                        } @else {
+                                            <span class="text-muted-color" aria-label="Não se aplica">—</span>
+                                        }
+                                    </td>
+                                    <td role="cell">
+                                        <label class="sr-only item-field-label" [for]="'itemPrice' + i"
+                                            >{{ item.controls.type.value === 1 ? 'Valor/hora' : 'Valor unitário' }} <span class="sr-only">da linha {{ i + 1 }}</span></label
+                                        ><p-inputnumber
+                                            inputStyleClass="min-h-[44px] text-[16px]"
+                                            [inputId]="'itemPrice' + i"
+                                            formControlName="price"
+                                            mode="currency"
+                                            currency="BRL"
+                                            locale="pt-BR"
+                                            [min]="0"
+                                            [max]="99999999.999"
+                                            [minFractionDigits]="2"
+                                            [maxFractionDigits]="3"
+                                            fluid
+                                        />
+                                    </td>
+                                    <td>
+                                        <label class="sr-only item-field-label" [for]="'itemDiscount' + i"
+                                            >Desconto <span class="sr-only">da linha {{ i + 1 }}</span></label
+                                        >
+                                        <p-inputnumber
+                                            inputStyleClass="min-h-[44px] text-[16px]"
+                                            [inputId]="'itemDiscount' + i"
+                                            formControlName="discount"
+                                            mode="currency"
+                                            currency="BRL"
+                                            locale="pt-BR"
+                                            [min]="0"
+                                            [max]="99999999.999"
+                                            [minFractionDigits]="2"
+                                            [maxFractionDigits]="3"
+                                            fluid
+                                        />
+                                    </td>
+                                    <td class="item-total" role="cell">
+                                        <span class="item-total-label">Total da linha</span>
+                                        {{ item.valid || item.disabled ? (lineTotal(i) | currency: 'BRL' : 'symbol' : '1.2-3') : 'Revise os valores' }}
+                                    </td>
+                                    <td class="item-actions" role="cell">
+                                        @if (!readOnly) {
+                                            <p-button styleClass="min-h-[44px]" type="button" icon="pi pi-trash" severity="danger" [text]="true" [ariaLabel]="'Remover linha ' + (i + 1)" (onClick)="removeItem(i)" [disabled]="saving()" />
+                                        }
+                                    </td>
+                                </tr>
+                            } @empty {
+                                <tr>
+                                    <td colspan="8">
+                                        <div class="empty-items grid justify-items-center gap-3 p-6 border border-dashed border-surface rounded-xl text-muted-color text-center">
+                                            <i class="pi pi-shopping-bag" aria-hidden="true"></i><strong>Nenhum item ou serviço adicionado</strong><span>Use os botões acima para incluir as linhas do orçamento.</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+            <section class="budget-panel bg-surface-0 dark:bg-surface-900 border border-surface rounded-2xl p-5">
+                <p-concierge-budget-documents [budgetId]="editing()?.id ?? null" [revision]="editing()" (documentChanged)="documentChanged()" [readOnly]="readOnly" [disabled]="saving()" />
+            </section>
+            @if (missingVehicleData) {
+                <p role="alert" class="text-red-600">Cadastre o cliente na entrada do veículo selecionada.</p>
+            }
+            @if (!loading() && !loadError() && !vehicles().length) {
+                <p class="text-muted-color">Nenhum veículo disponível. Registre uma entrada antes de criar o orçamento.</p>
+            }
+        </div>
+        <aside class="budget-summary bg-surface-0 dark:bg-surface-900 border border-surface rounded-2xl p-5" aria-labelledby="budgetSummaryTitle">
+            <div class="summary-heading flex items-center gap-3 mb-5 text-primary">
+                <i class="pi pi-receipt" aria-hidden="true"></i>
+                <h2 class="text-lg font-semibold m-0" id="budgetSummaryTitle">Resumo do orçamento</h2>
+            </div>
+            @if (editing()?.cancellationReason) {
+                <div class="mb-4">
+                    <span class="block text-muted-color text-sm mb-2">Justificativa do cancelamento</span>
+                    <p class="m-0 whitespace-pre-wrap break-words">{{ editing()!.cancellationReason }}</p>
+                </div>
+            }
+            <dl>
+                <div>
+                    <dt>Aprovação do cliente</dt>
+                    <dd><p-tag [value]="hasApproval(editing()) ? 'Aprovado' : 'Não aprovado'" [severity]="hasApproval(editing()) ? 'success' : 'warn'" [icon]="hasApproval(editing()) ? 'pi pi-check-circle' : 'pi pi-clock'" /></dd>
+                    @if (editing()?.dateAuthorization) {
+                        <small class="text-muted-color block mt-2">Aprovado em {{ editing()!.dateAuthorization | date: 'dd/MM/yyyy HH:mm' }}</small>
+                    }
+                </div>
+                <div>
+                    <dt>Cliente</dt>
+                    <dd>{{ clientName() || '—' }}</dd>
+                </div>
+                <div>
+                    <dt>Validade</dt>
+                    <dd>{{ form.controls.dateValidation.value ? (form.controls.dateValidation.value | date: 'dd/MM/yyyy') : 'Não informada' }}</dd>
+                </div>
+            </dl>
+            <div class="summary-total">
+                <span>Total do orçamento</span><strong>{{ items.valid || items.disabled ? (total | currency: 'BRL' : 'symbol' : '1.2-3') : 'Revise os itens' }}</strong
+                ><small>Descontos das linhas já aplicados.</small>
+            </div>
+            @if (loadError()) {
+                <p class="text-red-600 text-sm" role="status">As entradas de veículos não foram carregadas. Use “Tentar novamente” para continuar.</p>
+            } @else if (missingVehicleData) {
+                <p class="text-red-600 text-sm" role="status">Cadastre o cliente na entrada do veículo selecionada.</p>
+            } @else if (!loading() && !vehicles().length) {
+                <p class="text-muted-color text-sm" role="status">Nenhuma entrada disponível para os vendedores que você pode atender. Verifique o vendedor da entrada e suas permissões.</p>
+            }
+            @if (error()) {
+                <p role="alert" class="text-red-600 text-sm">{{ error() }}</p>
+            }
+            @if (success()) {
+                <p role="status" class="text-green-600 text-sm">{{ success() }}</p>
+            }
+            @if (editing()?.status === 'Approved') {
+                <p class="text-sm text-muted-color">Ao salvar alterações ou remover o PDF, o orçamento será reaberto e precisará de nova aprovação.</p>
+            }
+            <div class="summary-save budget-actions">
+                @if (!readOnly) {
+                    <p-button
+                        type="button"
+                        [label]="editing() ? 'Salvar alterações' : 'Salvar orçamento'"
+                        icon="pi pi-save"
+                        styleClass="w-full min-h-[44px]"
+                        (onClick)="save()"
+                        [loading]="saving() && !completing() && !cancelling()"
+                        [disabled]="loading() || saving()"
+                    />
+                    @if (editing()) {
+                        <div>
+                            <p-button type="button" label="Concluir orçamento" icon="pi pi-check-circle" severity="success" styleClass="w-full min-h-[44px]" (onClick)="complete()" [loading]="completing()" [disabled]="!canComplete" />
+                            @if (editing()?.status !== 'Approved') {
+                                <p class="action-note text-muted-color text-xs leading-relaxed flex pt-4 mb-0 gap-1"><i class="pi pi-lock" aria-hidden="true"></i> Disponível após a aprovação do cliente.</p>
+                            } @else if (form.dirty) {
+                                <p class="action-note text-muted-color text-xs leading-relaxed mt-2 mb-0">Salve as alterações e solicite nova aprovação antes de concluir.</p>
+                            }
+                        </div>
+                        <div class="cancel-action">
+                            <p-button type="button" label="Cancelar orçamento" icon="pi pi-times" severity="danger" [text]="true" styleClass="w-full min-h-[44px]" (onClick)="openCancellation()" [disabled]="loading() || saving()" />
+                        </div>
+                    }
+                }
+            </div>
+            <p class="text-muted-color text-xs leading-relaxed flex pt-4 mb-0 gap-1">
+                <i class="pi pi-info-circle" aria-hidden="true"></i> {{ editing() ? 'Usuário e data de geração originais são preservados.' : 'O orçamento será criado em aberto. Usuário e data de geração são registrados automaticamente.' }}
+            </p>
+        </aside>
+    </form>
+</section>
+
+<p-dialog
+    header="Cancelar orçamento"
+    [visible]="!!cancelling()"
+    (visibleChange)="closeCancellation()"
+    [modal]="true"
+    [draggable]="false"
+    [closable]="!saving()"
+    [closeOnEscape]="!saving()"
+    [style]="{ width: '34rem', maxWidth: '95vw' }"
+    appendTo="body"
+>
+    <p class="text-muted-color mt-0">Informe por que o orçamento #{{ cancelling()?.id }} será cancelado. Ele ficará disponível apenas para consulta. Alterações não salvas serão descartadas.</p>
+    <form (submit)="$event.preventDefault(); confirmCancellation()">
+        <label for="budgetCancellationReason" class="block font-semibold mb-2">Justificativa *</label>
+        <textarea pTextarea id="budgetCancellationReason" [formControl]="cancellationReason" rows="5" maxlength="1000" class="w-full" [readOnly]="saving()" placeholder="Descreva o motivo do cancelamento"></textarea>
+        <small class="text-muted-color">{{ cancellationReason.value.length }}/1000 caracteres</small>
+        @if (cancellationReason.touched && cancellationReason.invalid) {
+            <p role="alert" class="text-red-600 text-sm">Informe uma justificativa de até 1000 caracteres. O texto não pode conter apenas espaços.</p>
+        }
+        @if (error()) {
+            <p role="alert" class="text-red-600 text-sm">{{ error() }}</p>
+        }
+        <div class="flex justify-end gap-2 mt-5">
+            <p-button styleClass="min-h-[44px]" type="button" label="Voltar" severity="secondary" [outlined]="true" (onClick)="closeCancellation()" [disabled]="saving()" /><p-button
+                type="submit"
+                label="Confirmar cancelamento"
+                icon="pi pi-times"
+                severity="danger"
+                [loading]="saving()"
+                [disabled]="saving()"
+            />
+        </div>
+    </form>
+</p-dialog>
+
+<p-dialog header="Atualizar orçamento" [visible]="refreshConfirmation()" (visibleChange)="refreshConfirmation.set($event)" [modal]="true" [draggable]="false" [style]="{ width: '30rem', maxWidth: '95vw' }" appendTo="body">
+    <p>Há alterações não salvas. Deseja descartá-las e carregar as informações mais recentes do orçamento?</p>
+    <div class="flex justify-end gap-2 mt-5">
+        <p-button styleClass="min-h-[44px]" type="button" label="Voltar" severity="secondary" [outlined]="true" (onClick)="refreshConfirmation.set(false)" />
+        <p-button styleClass="min-h-[44px]" type="button" label="Descartar e atualizar" icon="pi pi-refresh" (onClick)="refreshBudget(true)" />
+    </div>
+</p-dialog>

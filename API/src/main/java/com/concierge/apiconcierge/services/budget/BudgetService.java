@@ -27,6 +27,9 @@ public class BudgetService implements IBudgetService {
     private IBudgetRepository repository;
 
     @Autowired
+    private com.concierge.apiconcierge.repositories.salesperson.ISalespersonRepository salespeople;
+
+    @Autowired
     IBudgetTokenRepository repositoryToken;
 
     @Autowired
@@ -57,7 +60,8 @@ public class BudgetService implements IBudgetService {
                 budget.setStatus(StatusBudgetEnum.OpenBudget);
                 budget.setDateGeneration(new Date());
                 budget.setVehicleEntryId(vehicleEntry.getId());
-                budget.setIdUserAttendant(vehicleEntry.getAttendantUserId());
+                var salesperson = vehicleEntry.getSalespersonId() == null ? null : salespeople.findByCompanyIdAndResaleIdAndId(vehicleEntry.getCompanyId(), vehicleEntry.getResaleId(), vehicleEntry.getSalespersonId());
+                budget.setIdUserAttendant(salesperson == null ? null : salesperson.getUserId());
                 budget.setClientCompanyId(vehicleEntry.getClientCompanyId());
                 budget.setTypePayment("");
                 budget.setNameResponsible("");

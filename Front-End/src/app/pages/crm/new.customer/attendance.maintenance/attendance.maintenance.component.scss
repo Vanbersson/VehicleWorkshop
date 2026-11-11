@@ -137,6 +137,76 @@ label {
     font-size: clamp(1.5rem, 2.5vw, 2rem);
     overflow-wrap: anywhere;
 }
+.summary-hero {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    padding: 1.5rem;
+    border: 1px solid var(--p-content-border-color);
+    border-radius: 1rem;
+    background: var(--p-content-hover-background);
+}
+.attendance-summary {
+    container-type: inline-size;
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+.summary-people,
+.summary-financial-grid {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
+}
+.summary-dates {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+}
+.summary-mobile-items {
+    display: none;
+}
+@container (max-width: 40rem) {
+    .summary-desktop-items {
+        display: none;
+    }
+    .summary-mobile-items {
+        display: grid;
+    }
+    .summary-hero {
+        padding: 1rem;
+        gap: 1rem;
+    }
+    .summary-finance dl {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+.summary-date {
+    min-width: 0;
+    padding: 1.25rem;
+    border: 1px solid var(--p-content-border-color);
+    border-radius: 0.75rem;
+    border-top: 3px solid var(--p-primary-color);
+}
+.summary-table {
+    min-width: 36rem;
+    th {
+        background: var(--p-content-hover-background);
+        font-size: 0.8rem;
+        color: var(--p-text-muted-color);
+        white-space: nowrap;
+    }
+    tbody tr:hover {
+        background: var(--p-content-hover-background);
+    }
+    td:first-child {
+        max-width: 28rem;
+        overflow-wrap: anywhere;
+    }
+}
+.summary-finance {
+    border-top: 3px solid var(--p-green-500);
+    &.summary-attention {
+        border-top-color: var(--p-orange-500);
+    }
+}
 @media (max-width: 960px) {
     .proposal-layout {
         grid-template-columns: minmax(0, 1fr);

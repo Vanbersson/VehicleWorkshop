@@ -192,7 +192,7 @@ public class VehicleEntryValidation implements IVehicleEntryValidation {
             return response;
         }
         if (vehicle.getVehicleServiceOrder() == YesNot.yes) {
-            if (vehicle.getAttendantUserId() == null || vehicle.getAttendantUserId() == 0 || vehicle.getAttendantUserName().isBlank()) {
+            if (vehicle.getSalespersonId() == null || vehicle.getSalespersonId() == 0 || vehicle.getSalespersonName().isBlank()) {
                 response.setStatus(ConstantsMessage.ERROR);
                 response.setHeader("Consultor");
                 response.setMessage(ConstantsMessage.NOT_INFORMED);
@@ -408,7 +408,7 @@ public class VehicleEntryValidation implements IVehicleEntryValidation {
             return response;
         }
         if (vehicle.getVehicleServiceOrder() == YesNot.yes) {
-            if (vehicle.getAttendantUserId() == null || vehicle.getAttendantUserId() == 0 || vehicle.getAttendantUserName().isBlank()) {
+            if (vehicle.getSalespersonId() == null || vehicle.getSalespersonId() == 0 || vehicle.getSalespersonName().isBlank()) {
                 response.setStatus(ConstantsMessage.ERROR);
                 response.setHeader("Consultor");
                 response.setMessage(ConstantsMessage.NOT_INFORMED);

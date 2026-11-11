@@ -3,6 +3,7 @@ package com.concierge.apiconcierge.services.vehicle.entry;
 import com.concierge.apiconcierge.dtos.vehicleEntry.AuthExitDto;
 import com.concierge.apiconcierge.dtos.vehicle.entry.VehicleExitDto;
 import com.concierge.apiconcierge.dtos.vehicleEntry.ImageUpdateDto;
+import com.concierge.apiconcierge.dtos.vehicleEntry.VehicleEntryResponsePlatesDto;
 import com.concierge.apiconcierge.models.message.MessageResponse;
 import com.concierge.apiconcierge.models.vehicle.checklist.VehicleEntryChecklist;
 import com.concierge.apiconcierge.models.vehicle.entry.VehicleEntry;
@@ -25,6 +26,8 @@ public interface IVehicleEntryService {
     List<Map<String, Object>> listAllAuthorized(Integer companyId, Integer resaleId);
 
     List<Map<String, Object>> listAll(Integer companyId, Integer resaleId);
+
+    List<VehicleEntryResponsePlatesDto> listAllPlates(String userEmail);
 
     MessageResponse filterId(Integer companyId, Integer resaleId, Integer id);
 

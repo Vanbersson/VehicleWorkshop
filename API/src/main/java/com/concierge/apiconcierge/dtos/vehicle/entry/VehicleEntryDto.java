@@ -33,8 +33,8 @@ public record VehicleEntryDto(
         String exitPhoto4Url,
         String exitInformation,
 
-        Integer attendantUserId,
-        String attendantUserName,
+        Integer salespersonId,
+        String salespersonName,
         String attendantPhoto1Url,
         String attendantPhoto2Url,
         String attendantPhoto3Url,

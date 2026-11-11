@@ -1,6 +1,7 @@
 import { VISIT_REASONS, VISIT_PRODUCTS } from '@/app/models/crm/visit/visit.catalog';
-import { Component, OnInit, signal } from '@angular/core';
-import { CommonModule, DatePipe, Location } from '@angular/common';
+import { Component, OnInit, inject, signal } from '@angular/core';
+import { CommonModule, DatePipe, DOCUMENT, Location } from '@angular/common';
+import { unblockBodyScroll } from 'primeng/dom';
 import { Router, RouterModule } from '@angular/router';
 import { FormControl, FormGroup, ReactiveFormsModule, FormsModule, Validators } from '@angular/forms';
 
@@ -26,7 +27,7 @@ import { ContactTypeEnum } from '@/app/models/crm/visit/contact.type.enum';
 import { lastValueFrom } from 'rxjs';
 import { Salesperson } from '@/app/models/crm/salesperson';
 import { UserService } from '@/app/services/user/user.service';
-import { HttpResponse } from '@angular/common/http';
+import { HttpErrorResponse, HttpResponse } from '@angular/common/http';
 import { User } from '@/app/models/user';
 import { LoadingService } from '@/app/services/loading/loading.service';
 import { VisitService } from '@/app/services/crm/visit/visit.service';
@@ -69,12 +70,14 @@ interface IProductsInterest {
     providers: [MessageService]
 })
 export default class VisitMaintenanceComponent implements OnInit {
+    private readonly document = inject(DOCUMENT);
     private visit: Visit | null = null;
     private navigateAfterCompletion = false;
     private returnToVisitsAfterPrompt = false;
     attendancePromptVisible = false;
     readonly generatingAttendance = signal(false);
     readonly attendanceError = signal('');
+    readonly generatedAttendanceId = signal<number | null>(null);
     private previousContactType = ContactTypeEnum.IN_PERSON;
     saving = signal(false);
     initializing = signal(true);
@@ -342,20 +345,45 @@ export default class VisitMaintenanceComponent implements OnInit {
     async onAttendancePromptHide(): Promise<void> {
         if (!this.returnToVisitsAfterPrompt) return;
         this.returnToVisitsAfterPrompt = false;
-        await this.router.navigate(['/crm/visit']);
+        try {
+            if (!(await this.router.navigate(['/crm/visit']))) throw new Error('Não foi possível retornar à lista de visitas. Tente novamente.');
+            // A destroyed dialog can leave the body locked during overlapping leave animations.
+            if (!this.document.querySelector('[data-p-scrollblocker-active="true"]')) unblockBodyScroll();
+        } catch {
+            this.attendanceError.set(
+                this.generatedAttendanceId()
+                    ? `O atendimento #${this.generatedAttendanceId()} foi gerado, mas não foi possível retornar à lista de visitas. Clique em Voltar às visitas para tentar novamente.`
+                    : 'A visita foi concluída, mas não foi possível retornar à lista de visitas. Tente novamente.'
+            );
+            this.attendancePromptVisible = true;
+        }
     }
 
     async generateAttendance(): Promise<void> {
-        if (!this.visit?.id || this.generatingAttendance()) return;
+        if (this.generatingAttendance()) return;
+        const visitId = this.visit?.id;
+        if (!visitId) {
+            this.attendanceError.set('Não foi possível identificar a visita salva. Conclua o registro da visita antes de gerar o atendimento.');
+            return;
+        }
         this.generatingAttendance.set(true);
         this.attendanceError.set('');
         try {
-            const attendance = await lastValueFrom(this.visitService.generateAttendance(this.visit.id));
-            if (!attendance?.id) throw new Error('O servidor não confirmou a criação do atendimento.');
+            let attendanceId = this.generatedAttendanceId();
+            if (!attendanceId) {
+                const attendance = await lastValueFrom(this.visitService.generateAttendance(visitId));
+                if (!attendance?.id) throw new Error('O servidor não confirmou a criação do atendimento.');
+                attendanceId = attendance.id;
+                this.generatedAttendanceId.set(attendanceId);
+            }
             this.returnToVisitsAfterPrompt = true;
             this.attendancePromptVisible = false;
-        } catch {
-            this.attendanceError.set('A visita foi concluída, mas não foi possível gerar o atendimento. Tente novamente.');
+        } catch (error: unknown) {
+            this.attendancePromptVisible = true;
+            const fallback = this.generatedAttendanceId()
+                ? `O atendimento #${this.generatedAttendanceId()} foi gerado, mas não foi possível retornar à lista de visitas. Clique em Voltar às visitas para tentar novamente.`
+                : 'A visita foi concluída, mas não foi possível gerar o atendimento. Tente novamente.';
+            this.attendanceError.set(error instanceof HttpErrorResponse ? error.error?.emessage || error.error?.message || fallback : error instanceof Error ? error.message : fallback);
         } finally {
             this.generatingAttendance.set(false);
         }

@@ -33,7 +33,7 @@ import { TagModule } from 'primeng/tag';
 
 import { VehicleEntry } from '@/app/models/vehicle.entry';
 import { VehicleModel } from '@/app/models/vehicle.model';
-import { User } from '@/app/models/user';
+import { Salesperson } from '@/app/models/crm/salesperson';
 import { IColor } from '@/app/interfaces/i.color';
 import { YesNotEnum } from '@/app/models/yes.not.enum';
 import { VehicleEntryChecklist } from '@/app/models/vehicle.entry.checklist';
@@ -41,7 +41,7 @@ import { ClientCompany } from '@/app/models/client.company';
 import { Driver } from '@/app/models/driver';
 import { VehicleEntryService } from '@/app/services/vehicle/vehicle.entry.service';
 import { StorageService } from '@/app/services/storage/storage.service';
-import { UserService } from '@/app/services/user/user.service';
+import { SalespersonService } from '@/app/services/salesperson/salesperson.service';
 import { VehicleModelService } from '@/app/services/vehicle/vehicle.model.service';
 import { LoadingService } from '@/app/services/loading/loading.service';
 import { DriverService } from '@/app/services/driver/driver.service';
@@ -122,8 +122,8 @@ export default class VehicleMaintenanceComponent implements OnInit, DoCheck {
                 exitDatePrevision: values.exitDatePrevision ?? '',
                 vehicleKmEntry: values.kmEntry ?? '',
                 vehicleKmExit: values.kmExit ?? '',
-                attendantUserId: values.attendant?.id ?? null,
-                attendantUserName: values.attendant?.name ?? '',
+                salespersonId: values.attendant?.id ?? null,
+                salespersonName: values.attendant?.name ?? '',
                 vehicleNew: values.vehicleNew ?? this.vehicleEntry.vehicleNew,
                 vehicleServiceOrder: values.vehicleServiceOrder ?? this.vehicleEntry.vehicleServiceOrder,
                 numServiceOrder: values.numServiceOrder ?? '',
@@ -233,7 +233,7 @@ export default class VehicleMaintenanceComponent implements OnInit, DoCheck {
     public colors: IColor[] = [];
 
     modelVehicles = signal<VehicleModel[]>([]);
-    attendants = signal<User[]>([]);
+    attendants = signal<Salesperson[]>([]);
     photoVehicle1 = signal<string>('');
     isPhotoNew1: boolean = false;
     isPhotoDelete1: boolean = false;
@@ -270,7 +270,7 @@ export default class VehicleMaintenanceComponent implements OnInit, DoCheck {
         exitDatePrevision: new FormControl<Date | null>(null),
         nameUserExitAuth1: new FormControl<string>({ value: '', disabled: true }),
         nameUserExitAuth2: new FormControl<string>({ value: '', disabled: true }),
-        attendant: new FormControl<User | null>(null),
+        attendant: new FormControl<Salesperson | null>(null),
         vehicleNew: new FormControl<string>(YesNotEnum.NOT, Validators.required),
         vehicleServiceOrder: new FormControl<string>(YesNotEnum.YES, Validators.required),
         numServiceOrder: new FormControl<string | null>(null),
@@ -374,7 +374,7 @@ export default class VehicleMaintenanceComponent implements OnInit, DoCheck {
         private router: Router,
 
         private storageService: StorageService,
-        private userService: UserService,
+        private salespersonService: SalespersonService,
         private vehicleModelService: VehicleModelService,
         private confirmationService: ConfirmationService,
         private messageService: MessageService,
@@ -514,7 +514,7 @@ export default class VehicleMaintenanceComponent implements OnInit, DoCheck {
             modelVehicle: this.modelVehicles().find((m) => m.id == this.vehicleEntry.modelId),
             kmEntry: this.vehicleEntry.vehicleKmEntry == '' ? null : this.vehicleEntry.vehicleKmEntry,
             kmExit: this.vehicleEntry.vehicleKmExit == '' ? null : this.vehicleEntry.vehicleKmExit,
-            attendant: this.attendants().find((a) => a.id == this.vehicleEntry.attendantUserId),
+            attendant: this.attendants().find((a) => a.id == this.vehicleEntry.salespersonId),
             vehicleServiceOrder: this.vehicleEntry.vehicleServiceOrder,
             vehicleNew: this.vehicleEntry.vehicleNew,
             nameUserExitAuth1: this.vehicleEntry.auth1ExitUserName,
@@ -637,18 +637,8 @@ export default class VehicleMaintenanceComponent implements OnInit, DoCheck {
     }
 
     private async getAttendants() {
-        const result = await this.filterUserRoleId();
-        if (result.status !== 200 || result.body?.status !== StatusSuccessError.succes) throw new Error('attendants');
-        this.attendants.set(result.body.data);
-    }
-
-    private async filterUserRoleId(): Promise<HttpResponse<MessageResponse>> {
-        try {
-            return await lastValueFrom(this.userService.filterRoleId(2));
-        } catch (error: any) {
-            this.messageService.add({ severity: 'error', summary: 'Erro', detail: error?.error?.message ?? 'Não foi possível concluir a operação.', icon: 'pi pi-times' });
-            return error;
-        }
+        const salespeople = await lastValueFrom(this.salespersonService.listAll());
+        this.attendants.set(salespeople.filter((person) => person.status === 'Habilitado'));
     }
 
     private async getVehicleModel(): Promise<VehicleModel[]> {
@@ -693,8 +683,8 @@ export default class VehicleMaintenanceComponent implements OnInit, DoCheck {
         if (vehicle.vehicleNew == YesNotEnum.YES) {
             vehicle.vehiclePlate = 'NOVO';
         }
-        if (vehicle.attendantUserName == '') {
-            vehicle.attendantUserName = 'FALTA';
+        if (vehicle.salespersonName == '') {
+            vehicle.salespersonName = 'FALTA';
         }
         if (vehicle.clientCompanyName == '') {
             vehicle.clientCompanyName = 'FALTA';
@@ -1133,12 +1123,6 @@ export default class VehicleMaintenanceComponent implements OnInit, DoCheck {
         }
 
         if (this.vehicleEntry.budgetId != 0) {
-            /* PERMISSION - 152 */
-            /* VISUALIZAR ORÇAMENTO */
-            const permission = await this.searchPermission(152);
-            if (!permission) {
-                return;
-            }
             this.router.navigateByUrl('/oficina/manutencao-orcamento/' + this.vehicleEntry.id);
         } else {
             this.confirmationService.confirm({
@@ -1151,12 +1135,6 @@ export default class VehicleMaintenanceComponent implements OnInit, DoCheck {
                 acceptButtonStyleClass: 'p-button-outlined p-button-sm',
                 acceptLabel: 'Sim',
                 accept: async () => {
-                    /* PERMISSION - 150 */
-                    /* GERAR ORÇAMENTO */
-                    const permission = await this.searchPermission(150);
-                    if (!permission) {
-                        return;
-                    }
                     this.budget = { companyId: this.storageService.companyId, resaleId: this.storageService.resaleId, vehicleEntryId: this.vehicleEntry.id };
                     const budgetResult = await this.saveBudget(this.budget);
                     if (budgetResult.status == 201) {
@@ -1164,12 +1142,6 @@ export default class VehicleMaintenanceComponent implements OnInit, DoCheck {
                         this.messageService.add({ severity: 'info', summary: 'Orçamento - ' + budgetResult.body?.id, detail: 'Gerado com sucesso', life: 2000 });
 
                         setTimeout(async () => {
-                            /* PERMISSION - 152 */
-                            /* VISUALIZAR ORÇAMENTO */
-                            const permission = await this.searchPermission(152);
-                            if (!permission) {
-                                return;
-                            }
                             this.router.navigateByUrl('/oficina/manutencao-orcamento/' + this.vehicleEntry.id);
                         }, 2000);
                     }
@@ -1267,8 +1239,8 @@ export default class VehicleMaintenanceComponent implements OnInit, DoCheck {
         this.vehicleEntry.modelId = vehicleValue.modelVehicle?.id!;
         this.vehicleEntry.modelDescription = vehicleValue.modelVehicle?.description!;
         this.vehicleEntry.vehicleColor = vehicleValue.vehicleColor?.color ?? null;
-        this.vehicleEntry.attendantUserId = vehicleValue.attendant?.id ?? null;
-        this.vehicleEntry.attendantUserName = vehicleValue.attendant?.name ?? '';
+        this.vehicleEntry.salespersonId = vehicleValue.attendant?.id ?? null;
+        this.vehicleEntry.salespersonName = vehicleValue.attendant?.name ?? '';
         this.vehicleEntry.vehicleKmEntry = vehicleValue?.kmEntry ?? '';
         this.vehicleEntry.vehicleKmExit = vehicleValue?.kmExit ?? '';
 

@@ -41,7 +41,7 @@ export function buildVehiclePrintHtml(data: VehiclePrintData, resale: IResale, p
     html += section('Revenda', field('Nome', resale.name) + field('CNPJ', documentNumber(resale.cnpj)), 'resale-block');
     html += section(
         'Veículo',
-        field('Consultor', v.attendantUserName) +
+        field('Consultor', v.salespersonName) +
             field('Modelo', v.modelDescription) +
             field('Placa', v.vehicleNew === YesNotEnum.YES ? 'Sem placa' : v.vehiclePlate) +
             field('Cor', v.vehicleColor) +

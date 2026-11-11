@@ -1,5 +1,0 @@
-ALTER TABLE tb_crm_attendance_log
- MODIFY COLUMN user_id INT NULL,
- MODIFY COLUMN user_name VARCHAR(255) NULL,
- ADD COLUMN client_id INT NULL,
- ADD COLUMN client_name VARCHAR(255) NULL;

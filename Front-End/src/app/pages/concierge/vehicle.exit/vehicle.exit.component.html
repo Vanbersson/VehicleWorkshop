@@ -38,7 +38,7 @@
             [scrollable]="true"
             currentPageReportTemplate="{first}–{last} de {totalRecords} veículos"
             [showCurrentPageReport]="true"
-            [globalFilterFields]="['id', 'vehiclePlate', 'modelDescription', 'vehicleFleet', 'entryDate', 'clientCompanyName', 'attendantUserName']"
+            [globalFilterFields]="['id', 'vehiclePlate', 'modelDescription', 'vehicleFleet', 'entryDate', 'clientCompanyName', 'salespersonName']"
             [paginator]="true"
             [rows]="10"
             [rowsPerPageOptions]="[10, 25, 50]"
@@ -74,7 +74,7 @@
                     <th pSortableColumn="vehicleFleet">Frota<p-sortIcon field="vehicleFleet"></p-sortIcon></th>
                     <th pSortableColumn="entryDate">Entrada<p-sortIcon field="entryDate"></p-sortIcon></th>
                     <th pSortableColumn="clientCompanyName">Empresa<p-sortIcon field="clientCompanyName"></p-sortIcon></th>
-                    <th pSortableColumn="attendantUserName">Consultor<p-sortIcon field="attendantUserName"></p-sortIcon></th>
+                    <th pSortableColumn="salespersonName">Consultor<p-sortIcon field="salespersonName"></p-sortIcon></th>
                     <th pSortableColumn="auth1ExitUserName">1ª autorização<p-sortIcon field="auth1ExitUserName"></p-sortIcon></th>
                     <th pSortableColumn="auth2ExitUserName">2ª autorização<p-sortIcon field="auth2ExitUserName"></p-sortIcon></th>
                 </tr>
@@ -105,7 +105,7 @@
                         <span class="text-500">{{ vehicle.clientCompanyName | uppercase }}</span>
                     </td>
                     <td>
-                        <span class="text-500">{{ vehicle.attendantUserName | uppercase }}</span>
+                        <span class="text-500">{{ vehicle.salespersonName | uppercase }}</span>
                     </td>
                     <td>
                         <span class="text-500">{{ vehicle.auth1ExitUserName | uppercase }}</span>

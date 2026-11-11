@@ -149,8 +149,8 @@ export default class VehicleComponent implements OnInit {
         if (vehicle.vehicleNew == YesNotEnum.YES) {
             vehicle.vehiclePlate = 'Sem Placa';
         }
-        if (vehicle.attendantUserName == '') {
-            vehicle.attendantUserName = 'FALTA';
+        if (vehicle.salespersonName == '') {
+            vehicle.salespersonName = 'FALTA';
         }
         if (vehicle.clientCompanyName == '') {
             vehicle.clientCompanyName = 'FALTA';
@@ -160,7 +160,7 @@ export default class VehicleComponent implements OnInit {
         }
         return vehicle;
     }
-     getSeverityAuth(status: string): any {
+    getSeverityAuth(status: string): any {
         switch (status) {
             case this.notAuth:
                 return 'danger';
@@ -171,7 +171,7 @@ export default class VehicleComponent implements OnInit {
             case this.authorized:
                 return 'success';
         }
-    } 
+    }
 
     formatDateTime(date: Date): string {
         const datePipe = new DatePipe('en-US');

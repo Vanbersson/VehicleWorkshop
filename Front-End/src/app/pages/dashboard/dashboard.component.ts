@@ -39,8 +39,8 @@ export default class DashboardComponent implements OnInit {
         private primeng: PrimeNG,
         private loadingService: LoadingService,
         private dashboardService: DashboardService
-    ) { }
-    
+    ) {}
+
     async ngOnInit(): Promise<void> {
         this.primeng.setTranslation({
             startsWith: 'Inicia com',
@@ -194,7 +194,7 @@ export default class DashboardComponent implements OnInit {
     }
 
     selectClientCompanyEvent(clientCompany: ClientCompany) {
-        if(!clientCompany) return;
+        if (!clientCompany) return;
         this.clientCompany = clientCompany;
         this.clientName = this.clientCompany.name;
         //Search client
@@ -324,7 +324,7 @@ export default class DashboardComponent implements OnInit {
             return error;
         }
     }
-   
+
     private async countYesServiceFilterYearClient(year: number, clientId: number): Promise<HttpResponse<any[]>> {
         try {
             return await lastValueFrom(this.dashboardService.countYesServiceFilterYearClient(year, clientId));

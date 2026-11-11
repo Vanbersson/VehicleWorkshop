@@ -11,12 +11,135 @@ describe('Attendance documents', () => {
     const attendance: CustomerAttendance = { id: 42, visitId: 1, clientId: 2, clientName: 'Cliente', salespersonId: 3, salespersonName: 'Vendedor', dateCreated: '', dateVisit: null, status: AttendanceStatus.DOCUMENTS_PENDING, notes: '', version: 0 };
     const document: AttendanceDocument = { id: 7, fileName: 'contrato.pdf', contentType: 'application/pdf', size: 10, createdAt: '2026-10-31T12:00:00Z' };
     beforeEach(() => {
-        service = jasmine.createSpyObj<CustomerAttendanceService>('CustomerAttendanceService', ['documents', 'uploadDocument', 'downloadDocument', 'removeOrderDocument', 'removeProposalDocument', 'shareProposalDocument', 'shareOrderDocument']);
+        service = jasmine.createSpyObj<CustomerAttendanceService>('CustomerAttendanceService', [
+            'documents',
+            'uploadDocument',
+            'downloadDocument',
+            'removeOrderDocument',
+            'removeProposalDocument',
+            'removeInvoicingDocument',
+            'removeDeliveryDocument',
+            'updateInvoicingDocumentValue',
+            'shareProposalDocument',
+            'shareOrderDocument'
+        ]);
         service.documents.and.returnValue(of([document]));
         service.uploadDocument.and.returnValue(of(document));
         TestBed.configureTestingModule({ providers: [AttendanceDocumentsComponent, { provide: CustomerAttendanceService, useValue: service }] });
         component = TestBed.inject(AttendanceDocumentsComponent);
         component.attendance = attendance;
+    });
+    it('blocks document mutations after completion while allowing consultation', async () => {
+        component.attendance = { ...attendance, status: AttendanceStatus.COMPLETED };
+        expect(component.readOnly).toBeTrue();
+        await component.load();
+        expect(component.documents()).toEqual([document]);
+        await component.upload([new File(['%PDF-test'], 'doc.pdf', { type: 'application/pdf' })]);
+        await component.remove(document);
+        await component.share(document);
+        expect(service.uploadDocument).not.toHaveBeenCalled();
+        expect(service.removeOrderDocument).not.toHaveBeenCalled();
+        expect(service.shareOrderDocument).not.toHaveBeenCalled();
+    });
+    it('accepts a driver image in delivery and prevents a second attachment', async () => {
+        component.stage = 'DELIVERY';
+        const file = new File(['image'], 'motorista.png', { type: 'image/png' });
+        service.uploadDocument.and.returnValue(of({ ...document, stage: 'DELIVERY' }));
+        await component.upload([file]);
+        expect(service.uploadDocument).toHaveBeenCalledWith(42, file, 'DELIVERY');
+        await component.upload([file]);
+        expect(service.uploadDocument).toHaveBeenCalledTimes(1);
+        expect(component.error()).toContain('apenas um documento');
+    });
+    it('rejects unsupported driver files and never shares driver documents', async () => {
+        component.stage = 'DELIVERY';
+        await component.upload([new File(['text'], 'motorista.txt', { type: 'text/plain' })]);
+        expect(service.uploadDocument).not.toHaveBeenCalled();
+        await component.share({ ...document, stage: 'DELIVERY' });
+        expect(service.shareOrderDocument).not.toHaveBeenCalled();
+        expect(service.shareProposalDocument).not.toHaveBeenCalled();
+    });
+    it('removes the driver document through the delivery endpoint', async () => {
+        component.stage = 'DELIVERY';
+        const driverDocument: AttendanceDocument = { ...document, stage: 'DELIVERY' };
+        component.documents.set([driverDocument]);
+        spyOn(window, 'confirm').and.returnValue(true);
+        service.removeDeliveryDocument.and.returnValue(of(undefined));
+        await component.remove(driverDocument);
+        expect(service.removeDeliveryDocument).toHaveBeenCalledWith(42, document.id);
+        expect(service.removeOrderDocument).not.toHaveBeenCalled();
+        expect(component.documents()).toEqual([]);
+    });
+    it('loads and saves the value for each fiscal document', async () => {
+        component.stage = 'INVOICING';
+        const fiscal: AttendanceDocument = { ...document, stage: 'INVOICING', receiptAmount: 120.5 };
+        service.documents.and.returnValue(of([fiscal]));
+        await component.load();
+        expect(component.amounts()[fiscal.id]).toBe(120.5);
+        component.setAmount(fiscal.id, 250.75);
+        service.updateInvoicingDocumentValue.and.returnValue(of({ ...fiscal, receiptAmount: 250.75 }));
+        await component.saveAmount(fiscal);
+        expect(service.updateInvoicingDocumentValue).toHaveBeenCalledWith(42, fiscal.id, 250.75);
+        expect(component.documents()[0].receiptAmount).toBe(250.75);
+    });
+    it('rejects invalid note amounts and preserves the saved amount on API failure', async () => {
+        component.stage = 'INVOICING';
+        const fiscal: AttendanceDocument = { ...document, stage: 'INVOICING', receiptAmount: 100 };
+        component.documents.set([fiscal]);
+        for (const amount of [null, 0, -10, 1.234, Infinity]) {
+            component.setAmount(fiscal.id, amount);
+            await component.saveAmount(fiscal);
+        }
+        expect(service.updateInvoicingDocumentValue).not.toHaveBeenCalled();
+        component.setAmount(fiscal.id, 200);
+        service.updateInvoicingDocumentValue.and.returnValue(throwError(() => new Error('Falha')));
+        await component.saveAmount(fiscal);
+        expect(component.documents()[0].receiptAmount).toBe(100);
+        expect(component.amounts()[fiscal.id]).toBe(200);
+        expect(component.error()).toBe('Falha');
+    });
+    it('accepts multiple fiscal PDFs and keeps them separate from order documents', async () => {
+        component.stage = 'INVOICING';
+        service.documents.and.returnValue(
+            of([
+                { ...document, stage: 'DOCUMENTS' },
+                { ...document, id: 8, stage: 'INVOICING' }
+            ])
+        );
+        await component.load();
+        expect(service.documents).toHaveBeenCalledWith(42, 'INVOICING');
+        expect(component.documents().map((item) => item.id)).toEqual([8]);
+        const files = ['nota-1.pdf', 'nota-2.pdf'].map((name) => new File(['%PDF-test'], name, { type: 'application/pdf' }));
+        await component.upload(files);
+        expect(service.uploadDocument.calls.allArgs()).toEqual(files.map((file) => [42, file, 'INVOICING']));
+        expect(component.documents().length).toBe(3);
+    });
+    it('rejects non-PDF fiscal attachments before uploading', async () => {
+        component.stage = 'INVOICING';
+        await component.upload([new File(['image'], 'nota.png', { type: 'image/png' })]);
+        expect(service.uploadDocument).not.toHaveBeenCalled();
+        expect(component.error()).toContain('PDF');
+    });
+    it('removes fiscal documents through the invoicing endpoint after confirmation', async () => {
+        component.stage = 'INVOICING';
+        const fiscal: AttendanceDocument = { ...document, stage: 'INVOICING' };
+        component.documents.set([fiscal]);
+        spyOn(window, 'confirm').and.returnValue(true);
+        service.removeInvoicingDocument.and.returnValue(of(undefined));
+        await component.remove(fiscal);
+        expect(service.removeInvoicingDocument).toHaveBeenCalledWith(42, fiscal.id);
+        expect(service.removeOrderDocument).not.toHaveBeenCalled();
+        expect(component.documents()).toEqual([]);
+    });
+    it('keeps fiscal documents when removal fails', async () => {
+        component.stage = 'INVOICING';
+        const fiscal: AttendanceDocument = { ...document, stage: 'INVOICING' };
+        component.documents.set([fiscal]);
+        spyOn(window, 'confirm').and.returnValue(true);
+        service.removeInvoicingDocument.and.returnValue(throwError(() => new Error('Falha ao remover')));
+        await component.remove(fiscal);
+        expect(component.documents()).toEqual([fiscal]);
+        expect(component.error()).toContain('Falha ao remover');
     });
     it('loads documents saved for the selected attendance', async () => {
         await component.load();

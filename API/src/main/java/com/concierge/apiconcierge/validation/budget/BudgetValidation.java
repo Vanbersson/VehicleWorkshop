@@ -4,20 +4,16 @@ import com.concierge.apiconcierge.dtos.budget.BudgetNewDto;
 import com.concierge.apiconcierge.models.budget.Budget;
 import com.concierge.apiconcierge.models.budget.enums.StatusBudgetEnum;
 import com.concierge.apiconcierge.models.enums.YesNot;
-import com.concierge.apiconcierge.models.permission.PermissionUser;
 import com.concierge.apiconcierge.models.user.User;
 import com.concierge.apiconcierge.models.vehicle.entry.VehicleEntry;
 import com.concierge.apiconcierge.repositories.budget.IBudgetRepository;
-import com.concierge.apiconcierge.repositories.permission.IPermissionUserRepository;
 import com.concierge.apiconcierge.repositories.user.IUserRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.concierge.apiconcierge.util.ConstantsMessage;
-import com.concierge.apiconcierge.util.ConstantsPermission;
 
-import static com.concierge.apiconcierge.util.ConstantsMessage.ERROR_PERMISSION;
 
 @Service
 public class BudgetValidation implements IBudgetValidation {
@@ -28,8 +24,6 @@ public class BudgetValidation implements IBudgetValidation {
     @Autowired
     IUserRepository userRepository;
 
-    @Autowired
-    IPermissionUserRepository permissionUser;
 
     @Override
     public String save(BudgetNewDto budgetNewDto, String userLoginEmail) {
@@ -46,11 +40,6 @@ public class BudgetValidation implements IBudgetValidation {
         if (user == null)
             return ConstantsMessage.ERROR;
 
-        if (user.getId() != 1) {
-            PermissionUser permission = this.permissionUser.findPermissionId(budgetNewDto.companyId(), budgetNewDto.companyId(), user.getId(), ConstantsPermission.BUDGET_NEW);
-            if (permission == null)
-                return ConstantsMessage.ERROR_PERMISSION;
-        }
 
         return ConstantsMessage.SUCCESS;
     }
@@ -94,11 +83,8 @@ public class BudgetValidation implements IBudgetValidation {
             return ConstantsMessage.ERROR_CLIENTCOMPANY;
 
         User user = this.userRepository.filterEmail(budget.getCompanyId(), budget.getResaleId(), userLoginEmail);
-        if (user.getId() != 1) {
-            PermissionUser permission = this.permissionUser.findPermissionId(budget.getCompanyId(), budget.getResaleId(), user.getId(), ConstantsPermission.BUDGET_UPDATE);
-            if (permission == null)
-                return ConstantsMessage.ERROR_PERMISSION;
-        }
+        if (user == null)
+            return ConstantsMessage.ERROR;
 
         return ConstantsMessage.SUCCESS;
     }
@@ -190,13 +176,9 @@ public class BudgetValidation implements IBudgetValidation {
         if (vehicleId == null || vehicleId == 0)
             return ConstantsMessage.ERROR_VEHICLE_ID;
 
-        //Permission
         User user = this.userRepository.filterEmail(companyId, resaleId, userLoginEmail);
-        if (user.getId() != 1) {
-            PermissionUser permission = this.permissionUser.findPermissionId(companyId, resaleId, user.getId(), ConstantsPermission.BUDGET_SHOW);
-            if (permission == null)
-                return ERROR_PERMISSION;
-        }
+        if (user == null)
+            return ConstantsMessage.ERROR;
 
         return ConstantsMessage.SUCCESS;
     }
