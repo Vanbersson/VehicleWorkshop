@@ -21,6 +21,9 @@ import { StatusEnabDisabEnum } from '@/app/models/status-enab-disab-enum';
 import { StatusSuccessError } from '@/app/models/status-suc-err';
 import { VisitAgenda } from '@/app/models/crm/visit/visit.agenda';
 import { StatusVisitEnum } from '@/app/models/crm/visit/status.visit.enum';
+import { ISalespersonType } from '@/app/interfaces/salesperson/i.salesperson.type';
+import { YesNotEnum } from '@/app/models/yes.not.enum';
+import { SalespersonService } from '@/app/services/salesperson/salesperson.service';
 
 @Component({
     selector: 'app-visit-schedule',
@@ -70,7 +73,8 @@ export default class VisitScheduleComponent implements OnInit {
     constructor(
         private visitService: VisitService,
         private messageService: MessageService,
-        private location: Location
+        private location: Location,
+        private salespersonService: SalespersonService,
     ) {
         this.form.controls.date.valueChanges.pipe(takeUntilDestroyed()).subscribe((date) => this.selectDay(date));
         interval(60_000)
@@ -196,8 +200,9 @@ export default class VisitScheduleComponent implements OnInit {
         this.loadingSalespersons.set(true);
         this.salespersonError.set('');
         try {
-            const people = await lastValueFrom(this.visitService.agendaSalespersons());
-            this.salespersons.set(people.filter((person) => person.status === StatusEnabDisabEnum.ENABLED));
+            const types: ISalespersonType = { typeSalesPart: YesNotEnum.NOT, typeSalesService: YesNotEnum.NOT, typeSalesVehicle: YesNotEnum.YES };
+            const salespeople = await lastValueFrom(this.salespersonService.filterType(types));
+            this.salespersons.set(salespeople);
             if (!this.form.controls.salesperson.value && this.salespersons().length === 1) this.form.controls.salesperson.setValue(this.salespersons()[0]);
         } catch (error: unknown) {
             this.salespersonError.set(this.errorMessage(error, 'Não foi possível carregar os vendedores.'));

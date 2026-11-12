@@ -243,6 +243,7 @@
         <p-button label="Confirmar visita" icon="pi pi-check" (onClick)="saveComplete()" [loading]="saving()" />
     </ng-template>
 </p-dialog>
+
 <p-dialog header="Selecione o vendedor" [modal]="true" [(visible)]="visibleSalesperson" [style]="{ width: '28rem', maxWidth: '95vw' }">
     <form [formGroup]="formVisit">
         <p class="visit-intro text-muted-color">Escolha quem realizou o atendimento ao cliente.</p>

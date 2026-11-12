@@ -2,7 +2,7 @@ import { VehiclePrintService } from '@/app/services/vehicle/vehicle.print.servic
 import { TestBed } from '@angular/core/testing';
 import { HttpResponse } from '@angular/common/http';
 import { ActivatedRoute, Router } from '@angular/router';
-import { registerLocaleData } from '@angular/common';
+import { Location, registerLocaleData } from '@angular/common';
 import localePt from '@angular/common/locales/pt';
 import { of, Subject, throwError } from 'rxjs';
 import { ConfirmationService, MessageService } from 'primeng/api';
@@ -69,7 +69,8 @@ describe('Vehicle maintenance', () => {
                 { provide: LoadingService, useValue: loading },
                 { provide: VehicleModelService, useValue: { getAllEnabled: () => of([model]) } },
                 { provide: ActivatedRoute, useValue: { snapshot: { params: {} } } },
-                { provide: Router, useValue: { navigateByUrl() {} } },
+                { provide: Router, useValue: { url: '/concierge/vehicle/maintenance', navigateByUrl() {}, navigate() {} } },
+                { provide: Location, useValue: { getState: () => ({ vehicleEntry: vehicle }), replaceState() {} } },
                 { provide: DriverService, useValue: {} },
                 { provide: ClientCompanyService, useValue: {} },
                 { provide: BudgetService, useValue: {} },
@@ -81,6 +82,7 @@ describe('Vehicle maintenance', () => {
             ]
         });
         component = TestBed.inject(VehicleMaintenanceComponent);
+        component.vehicleEntry = vehicle;
     });
     it('loads the selected attendant before populating the form', async () => {
         const response = new Subject<Salesperson[]>();
@@ -241,7 +243,7 @@ describe('Vehicle maintenance', () => {
     it('asks before discarding unsaved changes while opening another attendance', async () => {
         await component.init();
         const router = TestBed.inject(Router);
-        const navigate = spyOn(router, 'navigateByUrl');
+        const navigate = spyOn(component, 'changerVehicle').and.resolveTo();
         const confirmation = TestBed.inject(ConfirmationService);
         confirmation.confirm = jasmine.createSpy('confirm');
         component.formVehicle.markAsDirty();
@@ -249,15 +251,15 @@ describe('Vehicle maintenance', () => {
         expect(navigate).not.toHaveBeenCalled();
         const config = (confirmation.confirm as jasmine.Spy).calls.mostRecent().args[0];
         config.accept();
-        expect(navigate).toHaveBeenCalledWith('/concierge/vehicle/maintenance/10');
+        expect(navigate).toHaveBeenCalledWith(10);
     });
     it('opens a previous attendance and keeps the current attendance non-navigable', async () => {
         await component.init();
-        const navigate = spyOn(TestBed.inject(Router), 'navigateByUrl');
+        const navigate = spyOn(component, 'changerVehicle').and.resolveTo();
         await component.openHistoryAttendance(vehicle);
         expect(navigate).not.toHaveBeenCalled();
         await component.openHistoryAttendance(Object.assign(new VehicleEntry(), { id: 10 }));
-        expect(navigate).toHaveBeenCalledWith('/concierge/vehicle/maintenance/10');
+        expect(navigate).toHaveBeenCalledWith(10);
     });
 
     it('prints current editable values and disabled fields without saving them', async () => {

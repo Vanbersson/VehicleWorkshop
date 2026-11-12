@@ -29,9 +29,11 @@ import { Salesperson } from '@/app/models/crm/salesperson';
 import { UserService } from '@/app/services/user/user.service';
 import { HttpErrorResponse, HttpResponse } from '@angular/common/http';
 import { User } from '@/app/models/user';
-import { LoadingService } from '@/app/services/loading/loading.service';
 import { VisitService } from '@/app/services/crm/visit/visit.service';
 import { StatusVisitEnum } from '@/app/models/crm/visit/status.visit.enum';
+import { ISalespersonType } from '@/app/interfaces/salesperson/i.salesperson.type';
+import { SalespersonService } from '@/app/services/salesperson/salesperson.service';
+import { YesNotEnum } from '@/app/models/yes.not.enum';
 
 interface IReazonVisit {
     id: number;
@@ -114,17 +116,20 @@ export default class VisitMaintenanceComponent implements OnInit {
     });
     reasonVisits = signal<IReazonVisit[]>([]);
     products = signal<IProductsInterest[]>([]);
+
     salespersons = signal<Salesperson[]>([]);
+
     salespersonImage = signal<string>('');
     visibleDateVisit: boolean = false;
 
     constructor(
         private router: Router,
         private visitService: VisitService,
+        private salespersonService: SalespersonService,
         private userService: UserService,
         private messageService: MessageService,
         private location: Location
-    ) {}
+    ) { }
 
     ngOnInit(): void {
         const state = this.location.getState() as { visit?: Visit };
@@ -136,9 +141,8 @@ export default class VisitMaintenanceComponent implements OnInit {
     }
 
     private async init(): Promise<void> {
-        //  this.loadingService.show();
         try {
-            this.salespersons.set(await this.loadAuthorizedSalespersons());
+            await this.getSalespersons();
             if (this.visit) {
                 const v = this.visit;
                 this.previousContactType = v.contactType;
@@ -403,13 +407,10 @@ export default class VisitMaintenanceComponent implements OnInit {
         return datePipe.transform(date, "yyyy-MM-dd'T'HH:mm:ss.SSS") + timezone;
     }
 
-    private async loadAuthorizedSalespersons(): Promise<Salesperson[]> {
-        try {
-            return await lastValueFrom(this.visitService.registerSalespersons());
-        } catch (error: any) {
-            this.messageService.add({ severity: 'error', summary: 'Erro', detail: error?.error?.emessage ?? 'Não foi possível carregar os dados. Tente novamente.', icon: 'pi pi-times' });
-            return [];
-        }
+    private async getSalespersons() {
+        const types: ISalespersonType = { typeSalesPart: YesNotEnum.NOT, typeSalesService: YesNotEnum.NOT, typeSalesVehicle: YesNotEnum.YES };
+        const salespeople = await lastValueFrom(this.salespersonService.filterType(types));
+        this.salespersons.set(salespeople);
     }
 
     private async getUser(): Promise<HttpResponse<User>> {

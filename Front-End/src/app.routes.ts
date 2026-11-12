@@ -19,7 +19,7 @@ export const appRoutes: Routes = [
                 children: [
                     { path: 'vehicle/entry', title: 'Entrada de veículos', loadComponent: () => import('./app/pages/concierge/vehicle.entry/vehicle.entry.component') },
                     { path: 'vehicle/list', title: 'Veículos', loadComponent: () => import('./app/pages/concierge/vehicle/vehicle.component') },
-                    { path: 'vehicle/maintenance/:id', title: 'Manuteção veículo', loadComponent: () => import('./app/pages/concierge/vehicle.maintenance/vehicle.maintenance.component') },
+                    { path: 'vehicle/maintenance', title: 'Manuteção veículo', loadComponent: () => import('./app/pages/concierge/vehicle.maintenance/vehicle.maintenance.component') },
                     { path: 'vehicle/exit', title: 'Saída de veículos', loadComponent: () => import('./app/pages/concierge/vehicle.exit/vehicle.exit.component') },
                     { path: 'driver', title: 'Cadastro de Motorista', loadComponent: () => import('./app/pages/concierge/driver/driver.component') },
                     { path: 'budget/list', title: 'Orçamentos', loadComponent: () => import('./app/pages/concierge/concierge.budget/concierge.budget.component') },

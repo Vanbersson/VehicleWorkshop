@@ -717,7 +717,7 @@
                                     </div>
                                     <div class="flex items-center gap-2">
                                         <span class="text-sm text-muted-color">Selecionar proprietário</span>
-                                        <app-filterclient [isDisabled]="vehicleExit || saving() || authorizing()" [highlighted]="true" (outputClient)="selectClientCompany.set($event)" />
+                                        <app-filterclient [isDisabled]="vehicleExit || saving() || authorizing()" [highlighted]="true" (outputClient)="selectedClient($event)" />
                                     </div>
                                 </div>
                                 <div class="flex items-center gap-3 rounded-lg bg-surface-50 dark:bg-surface-900 border border-surface p-4 mb-5">
@@ -758,7 +758,7 @@
                                     </div>
                                     <div class="flex items-center flex-wrap gap-3">
                                         <span class="text-sm text-muted-color">Selecionar motorista</span>
-                                        <app-filterdriver [isDisabled]="vehicleExit || saving() || authorizing()" [highlighted]="true" (outputDriver)="selectDriverEntry.set($event)" />
+                                        <app-filterdriver [isDisabled]="vehicleExit || saving() || authorizing()" [highlighted]="true" (outputDriver)="selectedDriverEntry($event)" />
                                     </div>
                                 </div>
                                 <div class="grid grid-cols-1 sm:grid-cols-12 gap-4 mb-5">
@@ -822,7 +822,8 @@
                                     </div>
                                     <div class="flex items-center flex-wrap gap-3">
                                         <span class="text-sm text-muted-color">Selecionar motorista</span>
-                                        <app-filterdriver [isDisabled]="vehicleExit || saving() || authorizing()" [highlighted]="true" (outputDriver)="selectDriverExit.set($event)" /><p-button
+                                        <app-filterdriver [isDisabled]="vehicleExit || saving() || authorizing()" [highlighted]="true" (outputDriver)="selectedDriverExit($event)" />
+                                        <p-button
                                             type="button"
                                             icon="pi pi-trash"
                                             label="Remover vínculo"
@@ -907,6 +908,7 @@
         </footer>
     }
 </div>
+
 <p-confirmDialog [style]="{ width: '28rem', maxWidth: '95vw' }" />
 
 <p-dialog [(visible)]="visibleVehiclePlateTogether" [modal]="true" [draggable]="false" [style]="{ width: '80rem', maxWidth: '96vw' }" [breakpoints]="{ '640px': '96vw' }">
@@ -1020,9 +1022,10 @@
                             [ariaLabel]="'Ver atendimento do veículo ' + vehicle.vehiclePlate"
                             (onClick)="changerVehicle(vehicle.id)"
                         />
-                    </td></tr></ng-template
-            ><ng-template #emptymessage
-                ><tr>
+                    </td></tr
+            ></ng-template>
+            <ng-template #emptymessage>
+                <tr>
                     <td colspan="10">
                         <div class="flex flex-col items-center text-center gap-3 py-8 px-4">
                             <span class="maintenance-icon"><i class="pi pi-search" aria-hidden="true"></i></span>
@@ -1030,24 +1033,26 @@
                             <p class="text-sm text-muted-color m-0">Experimente outro termo ou limpe os filtros para consultar os veículos vinculados.</p>
                         </div>
                     </td>
-                </tr></ng-template
-            ></p-table
-        >
+                </tr>
+            </ng-template>
+        </p-table>
     </section>
-    <ng-template #footer><p-button type="button" label="Fechar" icon="pi pi-times" severity="secondary" [text]="true" (onClick)="visibleVehiclePlateTogether = false" /></ng-template
-></p-dialog>
+    <ng-template #footer>
+        <p-button type="button" label="Fechar" icon="pi pi-times" severity="secondary" [text]="true" (onClick)="visibleVehiclePlateTogether = false" />
+    </ng-template>
+</p-dialog>
 
-<p-dialog [(visible)]="timelineVisible" [modal]="true" [draggable]="false" [style]="{ width: '58rem', maxWidth: '96vw' }" (onHide)="closeHistory()"
-    ><ng-template #header
-        ><div class="maintenance-title">
+<p-dialog [(visible)]="timelineVisible" [modal]="true" [draggable]="false" [style]="{ width: '58rem', maxWidth: '96vw' }" (onHide)="closeHistory()">
+    <ng-template #header>
+        <div class="maintenance-title">
             <span class="maintenance-icon"><i class="pi pi-history" aria-hidden="true"></i></span>
             <div>
                 <span class="maintenance-eyebrow">HISTÓRICO DO VEÍCULO</span>
                 <h2 class="text-lg font-semibold m-0 mt-1">Linha do tempo</h2>
                 <p class="text-sm text-muted-color m-0 mt-1">Passagens pela placa na empresa e revenda deste atendimento.</p>
             </div>
-        </div></ng-template
-    >
+        </div>
+    </ng-template>
     @if (historyLimited()) {
         <div class="readonly-note"><i class="pi pi-info-circle" aria-hidden="true"></i>Sem placa válida, não é possível identificar outras passagens com segurança. Exibindo somente este atendimento.</div>
     }
@@ -1109,19 +1114,22 @@
                             <dd class="m-0">{{ passage.vehicleKmEntry || '—' }} / {{ passage.vehicleKmExit || '—' }}</dd>
                         </div>
                     </dl>
-                    <p-timeline [value]="historyEvents(passage)" class="vehicle-history-events"
-                        ><ng-template #marker let-event
-                            ><span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-primary text-primary-contrast"><i class="pi" [ngClass]="event.icon" aria-hidden="true"></i></span></ng-template
-                        ><ng-template #content let-event
-                            ><div class="pb-5 pl-2">
+                    <p-timeline [value]="historyEvents(passage)" class="vehicle-history-events">
+                        <ng-template #marker let-event>
+                            <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-primary text-primary-contrast">
+                                <i class="pi" [ngClass]="event.icon" aria-hidden="true"></i>
+                            </span>
+                        </ng-template>
+                        <ng-template #content let-event>
+                            <div class="pb-5 pl-2">
                                 <h4 class="text-sm font-semibold m-0">{{ event.label }}</h4>
                                 <p class="text-xs text-muted-color mt-1 mb-1">{{ (event.date | date: 'dd/MM/yyyy HH:mm') || 'Data não informada' }} · {{ event.user || 'Responsável não informado' }}</p>
                                 @if (event.notes) {
                                     <p class="text-sm m-0 whitespace-pre-wrap wrap-anywhere">{{ event.notes }}</p>
                                 }
-                            </div></ng-template
-                        ></p-timeline
-                    >
+                            </div>
+                        </ng-template>
+                    </p-timeline>
                     @if (passage.attendantInformation) {
                         <div class="border-t border-surface pt-3 mb-3">
                             <h4 class="text-sm font-semibold mt-0 mb-1">Observações do consultor</h4>
@@ -1140,5 +1148,7 @@
             }
         </div>
     }
-    <ng-template #footer><p-button type="button" label="Fechar" severity="secondary" [text]="true" (onClick)="closeHistory()" /></ng-template
-></p-dialog>
+    <ng-template #footer>
+        <p-button type="button" label="Fechar" severity="secondary" [text]="true" (onClick)="closeHistory()" />
+    </ng-template>
+</p-dialog>

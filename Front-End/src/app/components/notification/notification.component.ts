@@ -127,9 +127,12 @@ export class NotificationComponent implements OnInit {
         if (!permission) {
             return;
         }
-        // this.overlayPanel.hide();
-        this.router.navigateByUrl(`concierge/vehicle/maintenance/${id}`);
+        const result = await this.getVehicleEntry(Number.parseInt(id));
+        if (result.status === 200 && result.body?.status === StatusSuccessError.succes && result.body.data?.id != null) {
+            await this.router.navigate(['/concierge/vehicle/maintenance'], { state: { vehicleEntry: result.body.data }, onSameUrlNavigation: 'reload' });
+        }
     }
+
     private async searchPermission(permission: number): Promise<boolean> {
         try {
             const result = await lastValueFrom(this.permissionUserService.filterPermission(this.storageService.companyId, this.storageService.resaleId, this.storageService.id, permission));

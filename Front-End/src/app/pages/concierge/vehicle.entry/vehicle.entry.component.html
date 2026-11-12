@@ -65,8 +65,7 @@
                             buttonLabel="{{ formClientCompany.controls.clientCompanyName.value ? 'Alterar proprietário' : 'Selecionar proprietário' }}"
                             [highlighted]="true"
                             [isDisabled]="saving() || adding()"
-                            (outputClient)="selectClientCompany.set($event)"
-                        />
+                            (outputClient)="selectedClient($event)"/>
                     </section>
                     <div class="flex items-center gap-3 mb-5 p-3 rounded-lg bg-surface-50 dark:bg-surface-900">
                         <p-checkbox inputId="entry-client-not" [binary]="true" formControlName="clientCompanyNot" (onChange)="validationClientCompany()" /><label for="entry-client-not" class="text-sm">Empresa sem cadastro</label>
@@ -102,8 +101,7 @@
                             buttonLabel="{{ formDriver.controls.driverEntryName.value ? 'Alterar motorista' : 'Selecionar motorista' }}"
                             [highlighted]="true"
                             [isDisabled]="saving() || adding()"
-                            (outputDriver)="selectDriver.set($event)"
-                        />
+                            (outputDriver)="selectedDriver($event)"/>
                     </section>
                     <div class="fields-grid">
                         <div class="field"><label for="entry-driver-code">Código</label><p-inputNumber inputId="entry-driver-code" [useGrouping]="false" formControlName="driverEntryId" fluid /></div>

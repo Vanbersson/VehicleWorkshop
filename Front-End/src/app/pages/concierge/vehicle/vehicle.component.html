@@ -2,7 +2,9 @@
     <p-toast />
     <header class="vehicles-header">
         <div class="vehicles-title">
-            <span class="vehicles-icon"><i class="pi pi-car" aria-hidden="true"></i></span>
+            <span class="vehicles-icon">
+                <i class="pi pi-car" aria-hidden="true"></i>
+            </span>
             <div>
                 <span class="vehicles-eyebrow">PORTARIA · VEÍCULOS</span>
                 <h1>Entrada de veículos</h1>
@@ -128,33 +130,9 @@
                     </th>
                     <th style="min-width: 5rem">
                         Liberação
-                        <!-- <div class="flex items-center justify-between">
-                            Liberação
-                            <p-columnFilter field="authExitStatus" matchMode="equals" display="menu">
-                                <ng-template #filter let-value let-filter="filterCallback">
-                                    <p-select [ngModel]="value" optionLabel="label" optionValue="value" [options]="statusLiberacao()" (onChange)="filter($event.value)" placeholder="Selecione" class="w-full">
-                                        <ng-template let-option #item>
-                                            <div class="flex flex-row items-center gap-2">
-                                                <i
-                                                    class="pi"
-                                                    [ngClass]="{
-                                                        'pi-times-circle text-red-500': option.value == notAuth,
-                                                        'pi-check-circle text-green-500': option.value == firstAuth,
-                                                        'pi-thumbs-up-fill text-green-600': option.value == authorized
-                                                    }"
-                                                >
-                                                </i>
-                                                <p-tag [value]="option.label" [severity]="getSeverityAuth(option.value)"></p-tag>
-                                            </div>
-                                        </ng-template>
-                                    </p-select>
-                                </ng-template>
-                            </p-columnFilter>
-                        </div> -->
                     </th>
                     <th>Ações</th>
                     <th style="min-width: 5rem">
-                        <!-- <div class="flex items-center justify-between">Liberar</div> -->
                     </th>
                 </tr>
             </ng-template>
@@ -201,15 +179,15 @@
                         <p-tag [value]="authorizationLabel(vehicle.authExitStatus)" [severity]="getSeverityAuth(vehicle.authExitStatus)" [rounded]="true" />
                     </td>
                     <td>
-                        <p-button type="button" icon="pi pi-pencil" label="Editar" [ariaLabel]="'Editar veículo ' + vehicle.vehiclePlate" [text]="true" size="small" severity="secondary" (onClick)="editVeiculo(vehicle.id)"></p-button>
+                        <p-button type="button" icon="pi pi-pencil" label="Editar" [ariaLabel]="'Editar veículo ' + vehicle.vehiclePlate" [text]="true" size="small" severity="secondary" (onClick)="edit(vehicle.id)"></p-button>
                     </td>
                     <td>
                         <p-button type="button" label="Liberar" icon="pi pi-car" [ariaLabel]="'Liberar veículo ' + vehicle.vehiclePlate" [text]="true" size="small" severity="success" (onClick)="authExit(vehicle)"></p-button>
                     </td>
                 </tr>
             </ng-template>
-            <ng-template #emptymessage
-                ><tr>
+            <ng-template #emptymessage>
+                <tr>
                     <td colspan="12">
                         <div class="list-empty">
                             <span class="vehicles-icon"><i class="pi" [ngClass]="loadError() ? 'pi-exclamation-circle' : 'pi-car'" aria-hidden="true"></i></span>
@@ -219,8 +197,8 @@
                             </p>
                         </div>
                     </td>
-                </tr></ng-template
-            ></p-table
-        >
+                </tr>
+            </ng-template>
+        </p-table>
     </section>
 </div>

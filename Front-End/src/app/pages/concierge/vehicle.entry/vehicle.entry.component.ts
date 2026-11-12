@@ -52,6 +52,7 @@ import { ModuleConciergeService } from '@/app/services/module/module.concierge.s
 import { ModuleConciergeVehicleChecklist } from '@/app/models/module.concierge.vehicle.checklist';
 import { PermissionUserService } from '@/app/services/permission/permission.user.service';
 import { LoadingService } from '@/app/services/loading/loading.service';
+import { ISalespersonType } from '@/app/interfaces/salesperson/i.salesperson.type';
 
 interface IUpdateImage {
     vehicleId?: number;
@@ -96,7 +97,7 @@ interface IUpdateImage {
     templateUrl: './vehicle.entry.component.html',
     styleUrl: './vehicle.entry.component.scss'
 })
-export default class VehicleEntryComponent implements OnInit, DoCheck {
+export default class VehicleEntryComponent implements OnInit {
     readonly loading = signal(false);
     readonly loadError = signal('');
     readonly adding = signal(false);
@@ -106,8 +107,6 @@ export default class VehicleEntryComponent implements OnInit, DoCheck {
     private vehiclePlateTogether: string = '';
     activeStepper: number = 1;
     private upperCasePipe = new UpperCasePipe();
-    //ClientCompany
-    selectClientCompany = signal<ClientCompany>(new ClientCompany());
     clientCompany!: ClientCompany;
     formClientCompany = new FormGroup({
         clientCompanyNot: new FormControl<boolean>(false, { nonNullable: true }),
@@ -193,7 +192,7 @@ export default class VehicleEntryComponent implements OnInit, DoCheck {
         private messageService: MessageService,
         private photoService: PhotoService,
         private modService: ModuleConciergeService
-    ) {}
+    ) { }
 
     ngOnInit(): void {
         this.colors = [{ color: 'Branco' }, { color: 'Preto' }, { color: 'Azul' }, { color: 'Verde' }, { color: 'Cinza' }, { color: 'Vermelho' }, { color: 'Amarelo' }, { color: 'Rosa' }, { color: 'Roxo' }, { color: 'Outro' }];
@@ -202,35 +201,29 @@ export default class VehicleEntryComponent implements OnInit, DoCheck {
         this.loadOptions();
     }
 
-    ngDoCheck(): void {
-        if (this.saving() || this.adding()) return;
-        //Client
-        if (this.selectClientCompany().id != null) {
-            this.clientCompany = this.selectClientCompany();
-            this.formClientCompany.patchValue({
-                clientCompanyNot: false,
-                clientCompanyId: this.selectClientCompany().id,
-                clientCompanyName: this.selectClientCompany().name,
-                clientCompanyCnpj: this.selectClientCompany().cnpj,
-                clientCompanyCpf: this.selectClientCompany().cpf,
-                clientCompanyRg: this.selectClientCompany().rg == '' ? null : this.selectClientCompany().rg
-            });
-            this.selectClientCompany.set(new ClientCompany());
-        }
-        //Driver
-        if (this.selectDriver().id != null) {
-            this.formDriver.patchValue({
-                driverEntryId: this.selectDriver().id,
-                driverEntryName: this.selectDriver().name,
-                driverEntryCpf: this.selectDriver().cpf,
-                driverEntryRg: this.selectDriver().rg
-            });
-            this.driver = this.selectDriver();
-            this.driverEntryPhoto = this.selectDriver().photoDriverUrl;
-            this.driverEntryPhotoDoc1 = this.selectDriver().photoDoc1Url;
-            this.driverEntryPhotoDoc2 = this.selectDriver().photoDoc2Url;
-            this.selectDriver.set(new Driver());
-        }
+    selectedClient(client: ClientCompany) {
+        this.clientCompany = client;
+        this.formClientCompany.patchValue({
+            clientCompanyNot: false,
+            clientCompanyId: client.id,
+            clientCompanyName: client.name,
+            clientCompanyCnpj: client.cnpj,
+            clientCompanyCpf: client.cpf,
+            clientCompanyRg: client.rg == '' ? null : client.rg
+        });
+    }
+
+    selectedDriver(driver: Driver) {
+        this.driver = driver;
+        this.formDriver.patchValue({
+            driverEntryId: driver.id,
+            driverEntryName: driver.name,
+            driverEntryCpf: driver.cpf,
+            driverEntryRg: driver.rg
+        });
+        this.driverEntryPhoto = driver.photoDriverUrl;
+        this.driverEntryPhotoDoc1 = driver.photoDoc1Url;
+        this.driverEntryPhotoDoc2 = driver.photoDoc2Url;
     }
 
     //ClientCompany
@@ -321,8 +314,9 @@ export default class VehicleEntryComponent implements OnInit, DoCheck {
         }
     }
     private async getAttendants() {
-        const salespeople = await lastValueFrom(this.salespersonService.listAll());
-        this.attendants.set(salespeople.filter((person) => person.status === 'Habilitado'));
+        const types: ISalespersonType = { typeSalesPart: YesNotEnum.YES, typeSalesService: YesNotEnum.YES, typeSalesVehicle: YesNotEnum.NOT };
+        const salespeople = await lastValueFrom(this.salespersonService.filterType(types));
+        this.attendants.set(salespeople);
     }
     private async getChecklist() {
         const result = await this.filterModeluChecklist();

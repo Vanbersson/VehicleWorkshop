@@ -37,6 +37,9 @@ import { Salesperson } from '@/app/models/crm/salesperson';
 
 import { DestroyRef, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { ISalespersonType } from '@/app/interfaces/salesperson/i.salesperson.type';
+import { YesNotEnum } from '@/app/models/yes.not.enum';
+import { SalespersonService } from '@/app/services/salesperson/salesperson.service';
 @Component({
     selector: 'p-attendance-maintenance',
     standalone: true,
@@ -401,6 +404,7 @@ export default class AttendanceMaintenanceComponent implements OnInit {
 
     constructor(
         private service: CustomerAttendanceService,
+        private salespersonService: SalespersonService,
         private route: ActivatedRoute,
         private router: Router,
         private messages: MessageService,
@@ -431,6 +435,7 @@ export default class AttendanceMaintenanceComponent implements OnInit {
             } else this.detailError.set('Código de atendimento inválido.');
         });
     }
+
     async loadSalespersons(): Promise<void> {
         if (this.saving() || this.loadingSalespersons()) return;
         this.createForm.reset();
@@ -439,9 +444,11 @@ export default class AttendanceMaintenanceComponent implements OnInit {
         this.salespersons.set([]);
         this.loadingSalespersons.set(true);
         try {
-            const people = await lastValueFrom(this.service.creationSalespersons());
 
-            this.salespersons.set(people.filter((person) => person.status === StatusEnabDisabEnum.ENABLED));
+            const types: ISalespersonType = { typeSalesPart: YesNotEnum.NOT, typeSalesService: YesNotEnum.NOT, typeSalesVehicle: YesNotEnum.YES };
+            const salespeople = await lastValueFrom(this.salespersonService.filterType(types));
+            this.salespersons.set(salespeople);
+
             if (this.salespersons().length === 1) this.createForm.controls.salespersonId.setValue(this.salespersons()[0].id);
         } catch (error: unknown) {
             const message = this.errorMessage(error, 'Falha ao carregar vendedores. Tente novamente.');

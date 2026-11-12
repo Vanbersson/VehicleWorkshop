@@ -28,9 +28,7 @@ import { StatusRoleFuncEnum } from '@/app/models/status-role-func-enum';
 import { StatusSuccessError } from '@/app/models/status-suc-err';
 
 import { User } from '@/app/models/user';
-import { UserService } from '@/app/services/user/user.service';
 import { VehicleModel } from '@/app/models/vehicle.model';
-import { VehicleModelService } from '@/app/services/vehicle/vehicle.model.service';
 import { MessageResponse } from '@/app/models/message-response';
 import { VehicleEntryAuth } from '@/app/models/vehicle.entry.auth';
 import { PermissionUserService } from '@/app/services/permission/permission.user.service';
@@ -71,9 +69,8 @@ export default class VehicleComponent implements OnInit {
         private vehicleService: VehicleEntryService,
         private storageService: StorageService,
         private router: Router,
-        private messageService: MessageService,
-        private loadingService: LoadingService
-    ) {}
+        private messageService: MessageService
+    ) { }
 
     ngOnInit(): void {
         this.primeng.setTranslation({
@@ -198,9 +195,9 @@ export default class VehicleComponent implements OnInit {
         if (vehicle.authExitStatus != StatusVehicleAuthEnum.AUTH) {
             this.auth = new VehicleEntryAuth();
             this.auth.vehicleId = vehicle.id;
-            this.loadingService.show();
+            this.loadingVehicles.set(true);
             const result = await this.addAuthExit(this.auth);
-            this.loadingService.hide();
+            this.loadingVehicles.set(false);
             if (result.status == 200 && result.body?.status == StatusSuccessError.succes) {
                 if (vehicle.authExitStatus == this.notAuth) {
                     vehicle.authExitStatus = this.firstAuth;
@@ -232,18 +229,15 @@ export default class VehicleComponent implements OnInit {
         }
     }
 
-    async editVeiculo(id: number) {
-        if (StatusRoleFuncEnum.USER == this.storageService.roleFunc) {
-            /* PERMISSION - 100 */
-            /* EDITAR ENTRADA DO VEÍCULO */
-            const permission = await this.searchPermission(100);
-            if (!permission) {
-                return;
-            }
-            this.router.navigateByUrl('concierge/vehicle/maintenance/' + id);
-        } else {
-            this.router.navigateByUrl('concierge/vehicle/maintenance/' + id);
+    async edit(id: number): Promise<void> {
+        if (this.storageService.roleFunc === StatusRoleFuncEnum.USER && !(await this.searchPermission(100))) return;
+        const result = await this.getVehicleEntry(id);
+        if (!result) return;
+        if (result.status === 200 && result.body?.status === StatusSuccessError.succes && result.body.data?.id === id) {
+            await this.router.navigate(['/concierge/vehicle/maintenance'], { state: { vehicleEntry: result.body.data } });
+            return;
         }
+        this.messageService.add({ severity: 'error', summary: result.body?.header || 'Veículo', detail: result.body?.message || 'Veículo não encontrado.' });
     }
     private async searchPermission(permission: number): Promise<boolean> {
         try {
@@ -257,6 +251,15 @@ export default class VehicleComponent implements OnInit {
         } catch (error: any) {
             this.messageService.add({ severity: 'error', summary: 'Erro', detail: error.error.message, icon: 'pi pi-times' });
             return false;
+        }
+    }
+
+    private async getVehicleEntry(id: number): Promise<HttpResponse<MessageResponse> | null> {
+        try {
+            return await lastValueFrom(this.vehicleService.entryFilterId(id));
+        } catch (error: any) {
+            this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Veículo não encontrado', icon: 'pi pi-times' });
+            return null;
         }
     }
 }
