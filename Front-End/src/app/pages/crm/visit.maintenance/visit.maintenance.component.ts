@@ -33,6 +33,10 @@ import { VisitService } from '@/app/services/crm/visit/visit.service';
 import { StatusVisitEnum } from '@/app/models/crm/visit/status.visit.enum';
 import { ISalespersonType } from '@/app/interfaces/salesperson/i.salesperson.type';
 import { SalespersonService } from '@/app/services/salesperson/salesperson.service';
+import { PermissionUserService } from '@/app/services/permission/permission.user.service';
+import { StorageService } from '@/app/services/storage/storage.service';
+import { StatusRoleFuncEnum } from '@/app/models/status-role-func-enum';
+import { StatusSuccessError } from '@/app/models/status-suc-err';
 import { YesNotEnum } from '@/app/models/yes.not.enum';
 
 interface IReazonVisit {
@@ -118,6 +122,8 @@ export default class VisitMaintenanceComponent implements OnInit {
     products = signal<IProductsInterest[]>([]);
 
     salespersons = signal<Salesperson[]>([]);
+    readonly canRegisterForAll = signal(false);
+    private salespersonAccessLoaded = false;
 
     salespersonImage = signal<string>('');
     visibleDateVisit: boolean = false;
@@ -128,8 +134,10 @@ export default class VisitMaintenanceComponent implements OnInit {
         private salespersonService: SalespersonService,
         private userService: UserService,
         private messageService: MessageService,
+        private permissionUserService: PermissionUserService,
+        private storageService: StorageService,
         private location: Location
-    ) { }
+    ) {}
 
     ngOnInit(): void {
         const state = this.location.getState() as { visit?: Visit };
@@ -147,6 +155,7 @@ export default class VisitMaintenanceComponent implements OnInit {
                 const v = this.visit;
                 this.previousContactType = v.contactType;
                 const salesperson = this.salespersons().find((p) => p.id === v.salespersonId) ?? null;
+                if (!this.canRegisterForAll() && (!salesperson || salesperson.userId !== this.storageService.id)) throw new Error('Sem permissão para registrar a visita de outro vendedor.');
                 const date = v.dateVisit ? new Date(v.dateVisit) : new Date();
                 this.formVisit.patchValue({
                     clientNotExists: v.clientId == null,
@@ -177,6 +186,9 @@ export default class VisitMaintenanceComponent implements OnInit {
                     this.salespersonImage.set(salesperson.photoUrl);
                 }
             }
+        } catch (error: unknown) {
+            this.stepError.set(error instanceof Error ? error.message : 'Não foi possível carregar os vendedores. Tente novamente.');
+            this.messageService.add({ severity: 'error', summary: 'Registro de visita', detail: this.stepError() });
         } finally {
             this.initializing.set(false);
             // this.loadingService.hide();
@@ -276,6 +288,13 @@ export default class VisitMaintenanceComponent implements OnInit {
 
     private async persist(complete = false): Promise<boolean> {
         if (this.saving() || this.initializing()) return false;
+        const selected = this.formVisit.controls.salesperson.value;
+        const allowed = this.salespersons().find((person) => person.id === selected?.id);
+        if (!this.salespersonAccessLoaded || !allowed || (!this.canRegisterForAll() && (allowed.userId !== this.storageService.id || (this.visit != null && this.visit.salespersonId !== allowed.id)))) {
+            this.stepError.set('Selecione um vendedor autorizado para registrar esta visita.');
+            this.messageService.add({ severity: 'warn', summary: 'Registro de visita', detail: this.stepError() });
+            return false;
+        }
         this.saving.set(true);
         this.saveStatus.set('Salvando…');
         const v = this.formVisit.getRawValue();
@@ -407,10 +426,25 @@ export default class VisitMaintenanceComponent implements OnInit {
         return datePipe.transform(date, "yyyy-MM-dd'T'HH:mm:ss.SSS") + timezone;
     }
 
-    private async getSalespersons() {
+    private async getSalespersons(): Promise<void> {
+        this.salespersonAccessLoaded = false;
+        this.canRegisterForAll.set(false);
+        this.salespersons.set([]);
+        let canRegisterForAll = this.storageService.roleFunc === StatusRoleFuncEnum.ADMIN;
+        if (!canRegisterForAll) {
+            const permission = await lastValueFrom(this.permissionUserService.filterPermission(this.storageService.companyId, this.storageService.resaleId, this.storageService.id, 404));
+            canRegisterForAll = permission.status === 200 && permission.body?.status === StatusSuccessError.succes;
+        }
         const types: ISalespersonType = { typeSalesPart: YesNotEnum.NOT, typeSalesService: YesNotEnum.NOT, typeSalesVehicle: YesNotEnum.YES };
         const salespeople = await lastValueFrom(this.salespersonService.filterType(types));
-        this.salespersons.set(salespeople);
+        this.canRegisterForAll.set(canRegisterForAll);
+        this.salespersons.set(canRegisterForAll ? salespeople : salespeople.filter((person) => person.userId === this.storageService.id));
+        this.salespersonAccessLoaded = true;
+        if (!canRegisterForAll) {
+            const ownSalesperson = this.salespersons()[0] ?? null;
+            this.formVisit.controls.salesperson.setValue(ownSalesperson);
+            this.salespersonImage.set(ownSalesperson?.photoUrl ?? '');
+        }
     }
 
     private async getUser(): Promise<HttpResponse<User>> {

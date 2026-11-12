@@ -23,6 +23,9 @@ import { VisitAgenda } from '@/app/models/crm/visit/visit.agenda';
 import { StatusVisitEnum } from '@/app/models/crm/visit/status.visit.enum';
 import { ISalespersonType } from '@/app/interfaces/salesperson/i.salesperson.type';
 import { YesNotEnum } from '@/app/models/yes.not.enum';
+import { PermissionUserService } from '@/app/services/permission/permission.user.service';
+import { StorageService } from '@/app/services/storage/storage.service';
+import { StatusRoleFuncEnum } from '@/app/models/status-role-func-enum';
 import { SalespersonService } from '@/app/services/salesperson/salesperson.service';
 
 @Component({
@@ -48,6 +51,8 @@ export default class VisitScheduleComponent implements OnInit {
             .sort((a, b) => new Date(a.dateVisit).getTime() - new Date(b.dateVisit).getTime())
     );
     salespersons = signal<Salesperson[]>([]);
+    readonly canScheduleForAll = signal(false);
+    private salespersonAccessLoaded = false;
     loading = signal(false);
     loadingSalespersons = signal(false);
     saving = signal(false);
@@ -75,6 +80,8 @@ export default class VisitScheduleComponent implements OnInit {
         private messageService: MessageService,
         private location: Location,
         private salespersonService: SalespersonService,
+        private permissionUserService: PermissionUserService,
+        private storageService: StorageService
     ) {
         this.form.controls.date.valueChanges.pipe(takeUntilDestroyed()).subscribe((date) => this.selectDay(date));
         interval(60_000)
@@ -107,6 +114,7 @@ export default class VisitScheduleComponent implements OnInit {
             if (!date || Number.isNaN(date.getTime())) throw new Error('O agendamento não possui uma data válida.');
             const client = Object.assign(new ClientCompany(), { id: visit.clientId, name: visit.clientName, cnpj: visit.clientCNPJ, cpf: visit.clientCPF });
             const salesperson = this.salespersons().find((person) => person.id === visit.salespersonId) ?? null;
+            if (!this.canScheduleForAll() && (!salesperson || salesperson.userId !== this.storageService.id)) throw new Error('Sem permissão para alterar o agendamento de outro vendedor.');
             this.editingId.set(id);
             this.selectedDay.set(date);
             this.form.reset({ date, time: new Date(date), client, salesperson, information: visit.agendaInfo ?? '' }, { emitEvent: false });
@@ -124,7 +132,7 @@ export default class VisitScheduleComponent implements OnInit {
     cancelEditing(): void {
         if (this.saving() || this.openingId() !== null) return;
         this.editingId.set(null);
-        this.form.reset({ date: this.selectedDay(), time: null, client: null, salesperson: null, information: '' }, { emitEvent: false });
+        this.form.reset({ date: this.selectedDay(), time: null, client: null, salesperson: this.salespersons().length === 1 ? this.salespersons()[0] : null, information: '' }, { emitEvent: false });
         this.submitted.set(false);
         this.saveError.set('');
     }
@@ -199,10 +207,23 @@ export default class VisitScheduleComponent implements OnInit {
         if (this.loadingSalespersons()) return;
         this.loadingSalespersons.set(true);
         this.salespersonError.set('');
+        this.salespersonAccessLoaded = false;
+        this.canScheduleForAll.set(false);
+        this.salespersons.set([]);
         try {
+            let canScheduleForAll = this.storageService.roleFunc === StatusRoleFuncEnum.ADMIN;
+            if (!canScheduleForAll) {
+                const permission = await lastValueFrom(this.permissionUserService.filterPermission(this.storageService.companyId, this.storageService.resaleId, this.storageService.id, 403));
+                canScheduleForAll = permission.status === 200 && permission.body?.status === StatusSuccessError.succes;
+            }
             const types: ISalespersonType = { typeSalesPart: YesNotEnum.NOT, typeSalesService: YesNotEnum.NOT, typeSalesVehicle: YesNotEnum.YES };
             const salespeople = await lastValueFrom(this.salespersonService.filterType(types));
-            this.salespersons.set(salespeople);
+            this.canScheduleForAll.set(canScheduleForAll);
+            this.salespersons.set(canScheduleForAll ? salespeople : salespeople.filter((person) => person.userId === this.storageService.id));
+            this.salespersonAccessLoaded = true;
+           
+            if (!this.salespersons().some((person) => person.id === this.form.controls.salesperson.value?.id)) this.form.controls.salesperson.setValue(null);
+            
             if (!this.form.controls.salesperson.value && this.salespersons().length === 1) this.form.controls.salesperson.setValue(this.salespersons()[0]);
         } catch (error: unknown) {
             this.salespersonError.set(this.errorMessage(error, 'Não foi possível carregar os vendedores.'));
@@ -218,6 +239,11 @@ export default class VisitScheduleComponent implements OnInit {
         this.form.markAllAsTouched();
         const { date, time, client, salesperson, information } = this.form.getRawValue();
         if (this.form.invalid || !client?.id || !salesperson?.id) return;
+        const allowedSalesperson = this.salespersons().find((person) => person.id === salesperson.id);
+        if (!this.salespersonAccessLoaded || !allowedSalesperson || (!this.canScheduleForAll() && allowedSalesperson.userId !== this.storageService.id)) {
+            this.saveError.set('Selecione um vendedor autorizado para este agendamento.');
+            return;
+        }
         if (!(date instanceof Date) || Number.isNaN(date.getTime()) || !(time instanceof Date) || Number.isNaN(time.getTime())) {
             this.saveError.set('Informe uma data e um horário válidos.');
             return;
