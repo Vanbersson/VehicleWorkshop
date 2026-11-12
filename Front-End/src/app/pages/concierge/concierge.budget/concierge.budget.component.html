@@ -45,7 +45,9 @@
         </div>
     </div>
     @if (error()) {
-        <p class="feedback failure" role="alert"><i class="pi pi-exclamation-circle" aria-hidden="true"></i> {{ error() }}</p>
+        <p class="feedback failure" role="alert">
+            <i class="pi pi-exclamation-circle" aria-hidden="true"></i> {{ error() }}
+        </p>
     }
 
     <section class="table-panel" aria-label="Lista de orçamentos">
@@ -61,8 +63,7 @@
             [tableStyle]="{ 'min-width': '68rem' }"
             [showCurrentPageReport]="true"
             currentPageReportTemplate="{first} a {last} de {totalRecords} orçamentos"
-            dataKey="id"
-        >
+            dataKey="id">
             <ng-template #caption>
                 <div class="table-toolbar">
                     <div>
@@ -98,7 +99,10 @@
                 <tr>
                     <td>
                         <a class="budget-number" routerLink="/concierge/budget/maintenance" [queryParams]="{ id: item.id }">#{{ item.id }} {{ (item.vehiclePlate | uppercase) || 'Sem placa informada' }}</a>
-                        <small class="cell-detail"> <i class="pi pi-car" aria-hidden="true"></i> Entrada #{{ item.vehicleId }} </small>
+                        <small class="cell-detail"> 
+                            <i class="pi pi-car" aria-hidden="true"></i> 
+                            Entrada #{{ item.vehicleId }} 
+                        </small>
                     </td>
                     <td>
                         <strong class="client-name">{{ item.clientCompanyName }}</strong

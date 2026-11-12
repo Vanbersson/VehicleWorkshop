@@ -4,7 +4,7 @@
     .vehicles-page {
         display: flex;
         flex-direction: column;
-        
+
     }
 
     .vehicles-header,
@@ -31,6 +31,19 @@
 
     .header-actions {
         flex-wrap: wrap;
+    }
+
+    .vehicle-plate {
+        font-weight: 750;
+        font-size: 1rem;
+        cursor: pointer;
+    }
+
+    .vehicle-plate:hover {
+        border: none;
+        outline: none;
+        box-shadow: none;
+        color: var(--p-primary-color);
     }
 
     .vehicles-icon {

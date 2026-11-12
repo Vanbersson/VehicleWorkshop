@@ -188,8 +188,14 @@ h2 {
 
 .budget-number {
     font-weight: 750;
-    color: var(--p-primary-color);
     font-size: 1rem;
+}
+
+.budget-number:hover {
+    border: none;
+    outline: none;
+    box-shadow: none;
+    color: var(--p-primary-color);
 }
 
 .client-name {

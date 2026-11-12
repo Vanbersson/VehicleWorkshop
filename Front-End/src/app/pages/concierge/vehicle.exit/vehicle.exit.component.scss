@@ -1,34 +1,232 @@
 :host {
     display: block;
-    .vehicles-page { max-width: 95rem; margin: 0 auto; }
-    .vehicles-header, .list-heading, .list-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
-    .vehicles-header { margin-bottom: 1.75rem; }
-    .vehicles-title, .header-actions, .list-filters { display: flex; align-items: center; gap: .85rem; }
-    .header-actions { flex-wrap: wrap; }
-    .vehicles-icon { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; width: 3.25rem; height: 3.25rem; border-radius: 1rem; color: var(--p-primary-color); background: color-mix(in srgb, var(--p-primary-color) 10%, transparent); font-size: 1.25rem; }
-    .vehicles-eyebrow { color: var(--text-color-secondary); font-size: .65rem; font-weight: 700; letter-spacing: .1em; }
-    h1 { font-size: clamp(1.5rem, 2.5vw, 2rem); font-weight: 700; margin: .25rem 0 .4rem; letter-spacing: -.035em; }
-    h2 { font-size: 1.2rem; font-weight: 650; margin: .4rem 0 0; }
-    .vehicles-header p { margin: 0; line-height: 1.6; }
-    .vehicles-panel { min-width: 0; padding: 1.5rem; border: 1px solid var(--surface-border); border-radius: 1.25rem; background: var(--surface-card); }
-    .list-heading { margin-bottom: 1.25rem; }
-    .record-count { display: inline-block; font-size: .75rem; padding: .25rem .6rem; margin-left: .4rem; border-radius: 2rem; color: var(--p-primary-color); background: var(--surface-ground); vertical-align: middle; }
-    .list-toolbar { padding: .25rem 0; }
-    .vehicle-search { flex: 1; min-width: 15rem; max-width: 30rem; }
-    .status-filter { width: 13rem; }
-    .vehicle-code { font-variant-numeric: tabular-nums; color: var(--text-color-secondary); font-size: .85rem; }
-    .vehicle-name { display: block; font-weight: 600; min-width: 12rem; max-width: 24rem; overflow-wrap: anywhere; }
-    .list-empty { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 3rem 1rem; }
-    .list-empty h3 { font-size: 1.15rem; margin: 1rem 0 0; }
-    .list-empty p { margin: .6rem 0 1.25rem; max-width: 30rem; line-height: 1.6; }
-    .list-error { display: flex; align-items: center; gap: .75rem; padding: 1rem; border-radius: .75rem; color: var(--p-red-600); border: 1px solid currentColor; margin-bottom: 1rem; }
-    @media (max-width: 720px) { .list-toolbar { align-items: stretch; flex-direction: column; } .vehicle-search { max-width: none; min-width: 0; } .list-filters { justify-content: space-between; flex-wrap: wrap; } .status-filter { flex: 1; min-width: 10rem; } }
-    @media (max-width: 540px) { .vehicles-panel { padding: 1rem; } .vehicles-title > .vehicles-icon { display: none; } .header-actions { width: 100%; } }
+
+    .vehicles-page {
+        max-width: 95rem;
+        margin: 0 auto;
+    }
+
+    .vehicles-header,
+    .list-heading,
+    .list-toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .vehicles-header {
+        margin-bottom: 1.75rem;
+    }
+
+    .vehicles-title,
+    .header-actions,
+    .list-filters {
+        display: flex;
+        align-items: center;
+        gap: .85rem;
+    }
+
+    .header-actions {
+        flex-wrap: wrap;
+    }
+
+    .vehicles-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        width: 3.25rem;
+        height: 3.25rem;
+        border-radius: 1rem;
+        color: var(--p-primary-color);
+        background: color-mix(in srgb, var(--p-primary-color) 10%, transparent);
+        font-size: 1.25rem;
+    }
+
+    .vehicles-eyebrow {
+        color: var(--text-color-secondary);
+        font-size: .65rem;
+        font-weight: 700;
+        letter-spacing: .1em;
+    }
+
+    h1 {
+        font-size: clamp(1.5rem, 2.5vw, 2rem);
+        font-weight: 700;
+        margin: .25rem 0 .4rem;
+        letter-spacing: -.035em;
+    }
+
+    h2 {
+        font-size: 1.2rem;
+        font-weight: 650;
+        margin: .4rem 0 0;
+    }
+
+    .vehicles-header p {
+        margin: 0;
+        line-height: 1.6;
+    }
+
+    .vehicles-panel {
+        min-width: 0;
+        padding: 1.5rem;
+        border: 1px solid var(--surface-border);
+        border-radius: 1.25rem;
+        background: var(--surface-card);
+    }
+
+    .list-heading {
+        margin-bottom: 1.25rem;
+    }
+
+    .record-count {
+        display: inline-block;
+        font-size: .75rem;
+        padding: .25rem .6rem;
+        margin-left: .4rem;
+        border-radius: 2rem;
+        color: var(--p-primary-color);
+        background: var(--surface-ground);
+        vertical-align: middle;
+    }
+
+    .list-toolbar {
+        padding: .25rem 0;
+    }
+
+    .vehicle-search {
+        flex: 1;
+        min-width: 15rem;
+        max-width: 30rem;
+    }
+
+    .status-filter {
+        width: 13rem;
+    }
+
+    .vehicle-code {
+        font-variant-numeric: tabular-nums;
+        color: var(--text-color-secondary);
+        font-size: .85rem;
+    }
+
+    .vehicle-name {
+        display: block;
+        font-weight: 600;
+        min-width: 12rem;
+        max-width: 24rem;
+        overflow-wrap: anywhere;
+    }
+
+    .list-empty {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        padding: 3rem 1rem;
+    }
+
+    .list-empty h3 {
+        font-size: 1.15rem;
+        margin: 1rem 0 0;
+    }
+
+    .list-empty p {
+        margin: .6rem 0 1.25rem;
+        max-width: 30rem;
+        line-height: 1.6;
+    }
+
+    .list-error {
+        display: flex;
+        align-items: center;
+        gap: .75rem;
+        padding: 1rem;
+        border-radius: .75rem;
+        color: var(--p-red-600);
+        border: 1px solid currentColor;
+        margin-bottom: 1rem;
+    }
+
+    @media (max-width: 720px) {
+        .list-toolbar {
+            align-items: stretch;
+            flex-direction: column;
+        }
+
+        .vehicle-search {
+            max-width: none;
+            min-width: 0;
+        }
+
+        .list-filters {
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
+
+        .status-filter {
+            flex: 1;
+            min-width: 10rem;
+        }
+    }
+
+    @media (max-width: 540px) {
+        .vehicles-panel {
+            padding: 1rem;
+        }
+
+        .vehicles-title>.vehicles-icon {
+            display: none;
+        }
+
+        .header-actions {
+            width: 100%;
+        }
+    }
 }
 
-.vehicle-plate { font-weight: 700; white-space: nowrap; letter-spacing: .04em; }
-.selection-toolbar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .75rem; margin-top: 1rem; padding: .75rem 1rem; border-radius: .75rem; background: var(--surface-ground); color: var(--p-primary-color); font-size: .85rem; font-weight: 600; }
+.vehicle-plate {
+    font-weight: 750;
+    font-size: 1rem;
+}
 
-.exit-confirm { width:100%; min-width:0; }
-.exit-photo { display:flex; flex-direction:column; align-items:center; padding:.65rem .25rem; border:1px solid var(--surface-border); border-radius:.75rem; background:var(--surface-ground); }
-.exit-photo-preview { display:flex; align-items:center; justify-content:center; height:80px; margin:.6rem 0 .25rem; }
+.selection-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: .75rem;
+    margin-top: 1rem;
+    padding: .75rem 1rem;
+    border-radius: .75rem;
+    background: var(--surface-ground);
+    color: var(--p-primary-color);
+    font-size: .85rem;
+    font-weight: 600;
+}
+
+.exit-confirm {
+    width: 100%;
+    min-width: 0;
+}
+
+.exit-photo {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: .65rem .25rem;
+    border: 1px solid var(--surface-border);
+    border-radius: .75rem;
+    background: var(--surface-ground);
+}
+
+.exit-photo-preview {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 80px;
+    margin: .6rem 0 .25rem;
+}

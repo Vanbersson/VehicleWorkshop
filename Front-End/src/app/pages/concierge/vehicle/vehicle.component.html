@@ -42,8 +42,7 @@
             [rows]="10"
             [rowsPerPageOptions]="[10, 25, 50]"
             [showCurrentPageReport]="true"
-            [tableStyle]="{ 'min-width': '90rem' }"
-        >
+            [tableStyle]="{ 'min-width': '90rem' }">
             <ng-template #caption>
                 <div class="list-toolbar">
                     <p-iconfield iconPosition="left" class="vehicle-search">
@@ -63,8 +62,8 @@
                             [showClear]="true"
                             appendTo="body"
                             class="status-filter"
-                            (onChange)="tableFilter1.filter(selectedAuthorization, 'authExitStatus', 'equals')"
-                        /><p-button label="Limpar filtros" icon="pi pi-filter-slash" severity="secondary" [text]="true" (onClick)="clearTable(tableFilter1, searchInput)" />
+                            (onChange)="tableFilter1.filter(selectedAuthorization, 'authExitStatus', 'equals')"/>
+                        <p-button label="Limpar filtros" icon="pi pi-filter-slash" severity="secondary" [text]="true" (onClick)="clearTable(tableFilter1, searchInput)" />
                     </div>
                 </div>
                 @if (selectedItems.length) {
@@ -143,11 +142,7 @@
                         <span class="vehicle-code">#{{ vehicle.id }}</span>
                     </td>
                     <td>
-                        @if (vehicle.vehicleNew == 'yes') {
-                            <p-tag value="SEM PLACA" severity="info"></p-tag>
-                        } @else {
-                            <span class="vehicle-plate">{{ vehicle.vehiclePlate | uppercase }}</span>
-                        }
+                       <a class="vehicle-plate" (click)="edit(vehicle.id)">{{ (vehicle.vehiclePlate | uppercase) || 'Sem placa' }}</a>
                     </td>
                     <td>
                         <span class="text-500">{{ vehicle.modelDescription | uppercase }}</span>
