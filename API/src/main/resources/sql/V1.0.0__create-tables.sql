@@ -26,6 +26,7 @@ CREATE TABLE IF NOT EXISTS tb_brand(
 id int not null AUTO_INCREMENT,
 status tinyint not null,
 name varchar(100) not null,
+logo_url VARCHAR(255) NULL,
 PRIMARY KEY(id)
 );
 
@@ -70,6 +71,7 @@ status tinyint not null,
 name varchar(255) not null,
 fantasia varchar(255),
 logo_url varchar(255),
+brand_id INT NULL,
 cnpj varchar(14) unique not null,
 ie varchar(30),
 im varchar(20),
@@ -84,6 +86,7 @@ address varchar(100) not null,
 address_number varchar(10) not null,
 address_complement varchar(100),
 FOREIGN KEY(company_id) REFERENCES tb_company(id),
+CONSTRAINT fk_resale_brand FOREIGN KEY (brand_id) REFERENCES tb_brand(id),
 PRIMARY KEY(id)
 );
 

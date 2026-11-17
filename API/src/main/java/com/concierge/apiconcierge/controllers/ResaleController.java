@@ -6,6 +6,8 @@ import com.concierge.apiconcierge.models.companies.Company;
 import com.concierge.apiconcierge.models.resales.Resale;
 import com.concierge.apiconcierge.repositories.CompanyRepository;
 import com.concierge.apiconcierge.repositories.ResaleRepository;
+import com.concierge.apiconcierge.repositories.brand.IBrandRepository;
+import com.concierge.apiconcierge.models.enums.StatusEnableDisable;
 import jakarta.validation.Valid;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,6 +28,15 @@ public class ResaleController {
     @Autowired
     private CompanyRepository companyRepository;
 
+    @Autowired
+    private IBrandRepository brandRepository;
+
+    private boolean validBrand(Integer brandId, Integer previousBrandId) {
+        if (brandId == null) return true;
+        if (brandId <= 0) return false;
+        return brandRepository.findById(brandId).filter(brand -> brand.getStatus() == StatusEnableDisable.Habilitado || java.util.Objects.equals(brandId, previousBrandId)).isPresent();
+    }
+
     @PostMapping("/save")
     public ResponseEntity<Object> saveResale(@RequestBody @Valid ResaleDto data) {
 
@@ -37,6 +48,7 @@ public class ResaleController {
         //Validation
         if (resale0 != null) return ResponseEntity.status(HttpStatus.CONFLICT).body("Resale already exists.");
 
+        if (!validBrand(data.brandId(), null)) return ResponseEntity.badRequest().body(java.util.Map.of("message", "Selecione uma marca habilitada."));
         Resale resale = new Resale();
         BeanUtils.copyProperties(data, resale);
 
@@ -53,6 +65,8 @@ public class ResaleController {
         if (duplicate != null && !java.util.Objects.equals(duplicate.getId(), data.id())) return ResponseEntity.status(HttpStatus.CONFLICT).body("Resale already exists.");
 
         if (resale == null) return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+
+        if (!validBrand(data.brandId(), resale.getBrandId())) return ResponseEntity.badRequest().body(java.util.Map.of("message", "Selecione uma marca habilitada."));
 
         BeanUtils.copyProperties(data, resale);
 

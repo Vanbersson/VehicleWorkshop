@@ -78,13 +78,17 @@
                         <span class="brand-code">#{{ brand.id }}</span>
                     </td>
                     <td>
-                        <span class="brand-name">{{ brand.name | uppercase }}</span>
+                        <div class="flex items-center gap-3">
+                            @if (brand.logoUrl) {
+                                <img [src]="logoImageUrl(brand.logoUrl)" [alt]="'Logo da marca ' + brand.name" class="w-12 h-10 object-contain rounded bg-white p-1" />
+                            }
+                            <span class="brand-name">{{ brand.name | uppercase }}</span>
+                        </div>
                     </td>
                     <td><p-tag [value]="brand.status" [severity]="brand.status === enabled ? 'success' : 'secondary'" [icon]="brand.status === enabled ? 'pi pi-check-circle' : 'pi pi-minus-circle'" [rounded]="true" /></td>
                     <td class="text-right">
                         <p-button icon="pi pi-pencil" label="Editar" severity="secondary" [text]="true" size="small" [ariaLabel]="'Editar marca ' + brand.name" (onClick)="edit(brand)" />
-                        </td>
-                        </tr
+                    </td></tr
             ></ng-template>
             <ng-template #emptymessage
                 ><tr>
@@ -111,7 +115,16 @@
     </section>
 </div>
 
-<p-dialog [header]="isNewBrand ? 'Nova marca' : 'Editar marca'" [(visible)]="dialogVisible" [modal]="true" [draggable]="false" [style]="{ width: '32rem', maxWidth: '96vw' }" [breakpoints]="{ '640px': '96vw' }">
+<p-dialog
+    [header]="isNewBrand ? 'Nova marca' : 'Editar marca'"
+    [(visible)]="dialogVisible"
+    [closable]="!saving() && !readingLogo()"
+    [closeOnEscape]="!saving() && !readingLogo()"
+    [modal]="true"
+    [draggable]="false"
+    [style]="{ width: '32rem', maxWidth: '96vw' }"
+    [breakpoints]="{ '640px': '96vw' }"
+>
     <form id="brand-form" [formGroup]="formBrand" (ngSubmit)="save()">
         <div class="dialog-intro">
             <i class="pi pi-tag" aria-hidden="true"></i>
@@ -120,6 +133,28 @@
                 <p>Informe o nome e o status do cadastro.</p>
             </div>
         </div>
+        <section class="rounded-xl border border-surface p-4 mb-4" aria-labelledby="brandLogoTitle">
+            <h3 id="brandLogoTitle" class="mt-0 mb-3">Logo da marca</h3>
+            <div class="flex flex-wrap items-center gap-3">
+                <div class="w-48 h-24 rounded-lg border border-surface bg-white flex items-center justify-center p-2">
+                    @if (logoPreview()) {
+                        <img [src]="logoPreview()" alt="Prévia da logo da marca" class="max-w-full max-h-full object-contain" />
+                    } @else {
+                        <span class="text-sm text-surface-500">Sem logo</span>
+                    }
+                </div>
+                <input #brandLogoInput type="file" accept="image/png,image/jpeg" hidden (change)="selectLogo($event)" />
+                <div class="flex flex-wrap gap-2">
+                    <p-button type="button" [label]="logoPreview() ? 'Substituir logo' : 'Adicionar logo'" icon="pi pi-image" [outlined]="true" [loading]="readingLogo()" [disabled]="saving() || readingLogo()" (onClick)="brandLogoInput.click()" />
+                    <p-button type="button" label="Remover logo" icon="pi pi-trash" severity="danger" [text]="true" [disabled]="!logoPreview() || saving() || readingLogo()" (onClick)="removeLogo()" />
+                </div>
+            </div>
+            <p class="text-sm text-muted-color mb-1">PNG ou JPEG, até 5 MB e 4096 × 2048 pixels.</p>
+            <p class="text-sm text-muted-color m-0">A logo será atualizada ao salvar a marca.</p>
+            @if (logoError()) {
+                <p class="field-error" role="alert">{{ logoError() }}</p>
+            }
+        </section>
         <div class="field">
             <label for="brand-name">Nome da marca *</label>
             <input
@@ -127,6 +162,7 @@
                 id="brand-name"
                 formControlName="name"
                 maxlength="100"
+                [readonly]="saving()"
                 placeholder="Digite o nome da marca"
                 [attr.aria-invalid]="formBrand.controls.name.touched && formBrand.controls.name.invalid"
                 aria-describedby="brand-name-hint brand-name-error"
@@ -136,7 +172,7 @@
                 <small id="brand-name-error" class="field-error">Informe um nome com até 100 caracteres.</small>
             }
         </div>
-        <fieldset class="choice-box">
+        <fieldset class="choice-box" [disabled]="saving()">
             <legend>Status do cadastro</legend>
             <div class="choices">
                 <div>
@@ -147,6 +183,18 @@
                 </div>
             </div>
         </fieldset>
+        @if (saveError()) {
+            <p class="field-error" role="alert">{{ saveError() }}</p>
+        }
     </form>
-    <ng-template #footer><p-button type="button" label="Fechar" severity="secondary" [text]="true" (onClick)="hideDialog()" /><button pButton type="submit" form="brand-form" label="Salvar marca" icon="pi pi-check"></button></ng-template>
+    <ng-template #footer
+        ><p-button type="button" label="Fechar" severity="secondary" [text]="true" [disabled]="saving() || readingLogo()" (onClick)="hideDialog()" /><button
+            pButton
+            type="submit"
+            form="brand-form"
+            label="Salvar marca"
+            icon="pi pi-check"
+            [disabled]="saving() || readingLogo()"
+        ></button
+    ></ng-template>
 </p-dialog>

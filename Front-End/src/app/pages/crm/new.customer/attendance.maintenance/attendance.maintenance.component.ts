@@ -1,3 +1,4 @@
+import { ManualOrderComponent } from '@/app/pages/crm/new.customer/manual.order/manual.order.component';
 import { AttendanceLogsComponent } from '@/app/pages/crm/new.customer/attendance.logs/attendance.logs.component';
 import { AttendancePaymentComponent } from '@/app/pages/crm/new.customer/attendance.payment/attendance.payment.component';
 import { parseAttendanceDate, serializeAttendanceDate } from '@/app/models/crm/attendance.date';
@@ -44,6 +45,7 @@ import { SalespersonService } from '@/app/services/salesperson/salesperson.servi
     selector: 'p-attendance-maintenance',
     standalone: true,
     imports: [
+        ManualOrderComponent,
         AttendanceLogsComponent,
         InputTextModule,
         CommonModule,
@@ -444,7 +446,6 @@ export default class AttendanceMaintenanceComponent implements OnInit {
         this.salespersons.set([]);
         this.loadingSalespersons.set(true);
         try {
-
             const types: ISalespersonType = { typeSalesPart: YesNotEnum.NOT, typeSalesService: YesNotEnum.NOT, typeSalesVehicle: YesNotEnum.YES };
             const salespeople = await lastValueFrom(this.salespersonService.filterType(types));
             this.salespersons.set(salespeople);

@@ -22,6 +22,14 @@ export class CompanyService {
     saveResale(data: ResaleSave): Observable<IResale> {
         return this.http.post<IResale>(`${environment.apiuUrl}/resale/${data.id ? 'update' : 'save'}`, data, { headers: this.headers() });
     }
+    saveResaleLogo(companyId: number, resaleId: number, file: File): Observable<IResale> {
+        const data = new FormData();
+        data.append('file', file);
+        return this.http.post<IResale>(`${environment.apiuUrl}/resale/${companyId}/${resaleId}/logo`, data, { headers: this.headers() });
+    }
+    removeResaleLogo(companyId: number, resaleId: number): Observable<IResale> {
+        return this.http.post<IResale>(`${environment.apiuUrl}/resale/${companyId}/${resaleId}/logo/delete`, {}, { headers: this.headers() });
+    }
     private headers(): HttpHeaders {
         return new HttpHeaders({ Authorization: `Bearer ${this.storage.token}` });
     }

@@ -32,6 +32,9 @@ public class Resale  {
     @Column(name = "logo_url")
     private String logoUrl;
 
+    @Column(name = "brand_id")
+    private Integer brandId;
+
     private String cnpj;
 
     @Column(name = "ie", length = 30)

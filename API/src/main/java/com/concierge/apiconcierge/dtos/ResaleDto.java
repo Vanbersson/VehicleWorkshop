@@ -20,6 +20,7 @@ public record ResaleDto(
         @NotBlank String address,
         @NotBlank String addressNumber,
         String addressComplement,
-        @jakarta.validation.constraints.Size(max = 30) String ie
+        @jakarta.validation.constraints.Size(max = 30) String ie,
+        @jakarta.validation.constraints.Positive Integer brandId
 ) {
 }

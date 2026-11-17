@@ -20,4 +20,7 @@ public class Brand {
     private StatusEnableDisable status;
 
     private String name;
+
+    @Column(name = "logo_url", length = 255)
+    private String logoUrl;
 }

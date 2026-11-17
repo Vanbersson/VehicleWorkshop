@@ -1,0 +1,99 @@
+<p-button label="Pedido manual" icon="pi pi-file-edit" severity="secondary" [outlined]="true" (onClick)="open()" />
+
+<p-dialog header="Pedido manual" [(visible)]="visible" [modal]="true" [draggable]="false" [style]="{ width: '76rem', maxWidth: '96vw' }" [breakpoints]="{ '768px': '96vw' }">
+    <p class="text-muted-color mt-0">Preencha os dados para imprimir o pedido e suas condições contratuais. Os dados ficam apenas nesta tela e são descartados ao sair do atendimento.</p>
+    @if (loadingData()) {
+        <p role="status"><i class="pi pi-spin pi-spinner" aria-hidden="true"></i> Carregando cliente e orçamento...</p>
+    }
+    @if (loadError()) {
+        <div class="mb-4" role="alert">
+            <p class="text-orange-700">{{ loadError() }} Você pode preencher os campos manualmente ou tentar novamente.</p>
+            <p-button label="Carregar dados novamente" [text]="true" (onClick)="loadDefaults()" />
+        </div>
+    }
+
+    <div [formGroup]="form" id="manualOrderForm">
+        @for (section of sections; track section.title) {
+            <fieldset class="border border-surface rounded-xl p-4 mb-4" [disabled]="loadingData()">
+                <legend class="font-semibold px-2">{{ section.title }}</legend>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    @for (field of section.fields; track field.key) {
+                        <div [class.md:col-span-2]="field.key === 'notes'">
+                            <label class="block text-sm font-medium mb-2" [for]="'manual-' + field.key">{{ field.label }}{{ form.controls[field.key].hasValidator(requiredValidator) ? ' *' : '' }}</label>
+                            @if (field.multiple) {
+                                <p-multiselect [inputId]="'manual-' + field.key" [options]="field.options ?? []" [formControl]="supportControls[field.key]" placeholder="Selecione os suportes" appendTo="body" fluid />
+                            } @else if (field.options) {
+                                <p-select [inputId]="'manual-' + field.key" [options]="field.options" [formControlName]="field.key" [showClear]="true" placeholder="Selecione" appendTo="body" fluid />
+                            } @else if (field.numeric) {
+                                <p-inputnumber [inputId]="'manual-' + field.key" [formControlName]="field.key" [min]="0" [maxFractionDigits]="field.key === 'quantity' ? 3 : field.key.toLowerCase().includes('quantity') ? 0 : 2" locale="pt-BR" fluid />
+                            } @else if (field.key === 'notes') {
+                                <textarea pTextarea [id]="'manual-' + field.key" [formControlName]="field.key" rows="3" class="w-full"> </textarea>
+                            } @else {
+                                <input
+                                    pInputText
+                                    [id]="'manual-' + field.key"
+                                    [formControlName]="field.key"
+                                    [style.border-color]="form.controls[field.key].hasValidator(requiredValidator) ? '#dc2626' : null"
+                                    [attr.aria-required]="form.controls[field.key].hasValidator(requiredValidator)"
+                                    class="w-full"
+                                />
+                            }
+                            @if (form.controls[field.key].touched && form.controls[field.key].invalid) {
+                                <small class="text-red-600">
+                                    {{ field.numeric ? 'Informe um valor maior ou igual a zero.' : 'Campo obrigatório.' }}
+                                </small>
+                            }
+                        </div>
+                    }
+                </div>
+            </fieldset>
+             @if (section.title === 'Valores do produto' && additionalProducts.length) {
+                <fieldset class="border border-surface rounded-xl p-4 mb-4" [disabled]="loadingData()">
+                    <legend class="font-semibold px-2">Demais itens do orçamento</legend>
+                    @for (item of additionalProducts.controls; track item; let index = $index) {
+                        <div [formGroup]="item" class="grid grid-cols-1 md:grid-cols-4 gap-3 mb-4">
+                            <div>
+                                <label class="block text-sm mb-2" [for]="'manual-extra-product-' + index">Produto {{ index + 2 }} *</label
+                                ><input pInputText [id]="'manual-extra-product-' + index" formControlName="product" style="border-color: #dc2626" aria-required="true" class="w-full" />
+                            </div>
+                            <div>
+                                <label class="block text-sm mb-2" [for]="'manual-extra-quantity-' + index">Quantidade*</label>
+                                <p-inputnumber [inputId]="'manual-extra-quantity-' + index" formControlName="quantity" [inputStyle]="{ borderColor: '#dc2626' }" [min]="0.001" [maxFractionDigits]="3" locale="pt-BR" fluid />
+                            </div>
+                            <div>
+                                <label class="block text-sm mb-2" [for]="'manual-extra-price-' + index">Valor unitário (R$)*</label>
+                                <p-inputnumber [inputId]="'manual-extra-price-' + index" formControlName="unitPrice" [inputStyle]="{ borderColor: '#dc2626' }" [min]="0" [maxFractionDigits]="2" locale="pt-BR" fluid />
+                            </div>
+                            <div>
+                                <label class="block text-sm mb-2" [for]="'manual-extra-discount-' + index">Desconto total (R$)*</label>
+                                <p-inputnumber [inputId]="'manual-extra-discount-' + index" formControlName="discount" [inputStyle]="{ borderColor: '#dc2626' }" [min]="0" [maxFractionDigits]="2" locale="pt-BR" fluid />
+                            </div>
+                            @if (item.touched && item.invalid) {
+                                <small class="text-red-600 md:col-span-4">Preencha o produto e os valores válidos deste item.</small>
+                            }
+                        </div>
+                    }
+                </fieldset>
+            } 
+        }
+    </div>
+    <ng-template #footer>
+        <div class="w-full">
+            @if (printError()) {
+                <p class="text-red-600 text-left" role="alert">{{ printError() }}</p>
+            }
+            <div class="flex flex-wrap items-center justify-between gap-4">
+                <div class="text-left text-sm">
+                    Produto: <strong>{{ totals.product | currency: 'BRL' }}</strong> · Pneus: <strong>{{ totals.tires | currency: 'BRL' }}</strong> <br />Total do pedido:
+                    <strong>
+                        {{ totals.total | currency: 'BRL' }}
+                    </strong>
+                </div>
+                <div class="flex gap-2">
+                    <p-button label="Fechar" severity="secondary" [text]="true" (onClick)="visible = false" />
+                    <p-manual-order-print #printer [printing]="printing()" [disabled]="loadingData()" (printRequested)="print(printer)" (printError)="printError.set($event)" />
+                </div>
+            </div>
+        </div>
+    </ng-template>
+</p-dialog>

@@ -7,6 +7,7 @@ export interface IResale {
     name: string;
     fantasia?: string;
     logoUrl?: string;
+    brandId?: number | null;
     cnpj: string;
     ie?: string;
     im?: string;

@@ -24,7 +24,7 @@ public class BrandService implements IBrandService {
             MessageResponse response = this.validation.save(b);
             if (ConstantsMessage.SUCCESS.equals(response.getStatus())) {
                 b.setId(null);
-                this.repository.save(b);
+                response.setData(this.repository.save(b));
             }
             return response;
         } catch (Exception e) {
@@ -37,7 +37,10 @@ public class BrandService implements IBrandService {
         try {
             MessageResponse response = this.validation.update(b,userEmail);
             if (ConstantsMessage.SUCCESS.equals(response.getStatus())) {
-                this.repository.save(b);
+                Brand existing = this.repository.findById(b.getId()).orElseThrow(() -> new IllegalArgumentException("Marca não encontrada."));
+                existing.setName(b.getName());
+                existing.setStatus(b.getStatus());
+                response.setData(this.repository.save(existing));
             }
             return response;
         } catch (Exception e) {

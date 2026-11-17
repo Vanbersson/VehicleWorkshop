@@ -2,7 +2,8 @@ import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormGroup, FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { lastValueFrom } from 'rxjs';
-import { HttpResponse } from '@angular/common/http';
+import { environment } from '@/environments/environment';
+import { HttpErrorResponse } from '@angular/common/http';
 
 import { MessageService } from 'primeng/api';
 import { InputTextModule } from 'primeng/inputtext';
@@ -20,7 +21,6 @@ import { StatusEnabDisabEnum } from '@/app/models/status-enab-disab-enum';
 import { Brand } from '@/app/models/brand';
 import { StatusSuccessError } from '@/app/models/status-suc-err';
 import { BrandService } from '@/app/services/brand/brand.service';
-import { MessageResponse } from '@/app/models/message-response';
 import { LoadingService } from '@/app/services/loading/loading.service';
 import { TagModule } from 'primeng/tag';
 
@@ -52,6 +52,13 @@ export default class BrandComponent implements OnInit {
         { label: 'Desabilitada', value: StatusEnabDisabEnum.DISABLED }
     ];
     dialogVisible: boolean = false;
+    readonly saving = signal(false);
+    readonly readingLogo = signal(false);
+    readonly logoPreview = signal('');
+    readonly logoError = signal('');
+    readonly saveError = signal('');
+    private logoFile: File | null = null;
+    private logoRemoved = false;
 
     constructor(
         private loading: LoadingService,
@@ -81,6 +88,7 @@ export default class BrandComponent implements OnInit {
         this.selectedStatus = null;
     }
     showNewBrand() {
+        if (this.saving() || this.readingLogo()) return;
         this.isNewBrand = true;
         this.brand = new Brand();
         this.cleanForm();
@@ -90,17 +98,24 @@ export default class BrandComponent implements OnInit {
         this.dialogVisible = true;
     }
     hideDialog() {
+        if (this.saving() || this.readingLogo()) return;
         this.dialogVisible = false;
     }
     cleanForm() {
+        this.logoFile = null;
+        this.logoRemoved = false;
+        this.logoError.set('');
+        this.saveError.set('');
+        this.logoPreview.set(this.logoImageUrl(this.brand?.logoUrl));
         this.formBrand.reset({
             name: '',
             status: this.enabled
         });
     }
     edit(b: Brand) {
+        if (this.saving() || this.readingLogo()) return;
         this.isNewBrand = false;
-        this.brand = b;
+        this.brand = { ...b };
         this.cleanForm();
         this.showDialog();
 
@@ -109,78 +124,93 @@ export default class BrandComponent implements OnInit {
             status: this.brand.status
         });
     }
-    save() {
+    async save(): Promise<void> {
+        if (this.saving() || this.readingLogo()) return;
         this.formBrand.markAllAsTouched();
-        if (this.isNewBrand) {
-            this.saveNewBrand();
-        } else {
-            this.saveUpdateBrand();
-        }
-    }
-
-    private async saveNewBrand() {
-        const { value, valid } = this.formBrand;
-        if (!valid) {
+        this.saveError.set('');
+        const { name, status } = this.formBrand.getRawValue();
+        if (this.formBrand.invalid || !name?.trim() || !status) {
+            this.saveError.set('Informe o nome e o status da marca.');
             return;
         }
-        this.brand.name = value.name!;
-        this.brand.status = value.status!;
-
-        this.loading.show();
-        const result = await this.saveNew(this.brand);
-        this.loading.hide();
-        if (result.status == 201 && result.body?.status == StatusSuccessError.succes) {
-            this.messageService.add({ severity: 'success', summary: result.body.header, detail: result.body.message, icon: 'pi pi-check' });
-            this.hideDialog();
-            void this.loadBrands();
-        }
-        if (result.status == 201 && result.body?.status == StatusSuccessError.error) {
-            this.messageService.add({ severity: 'info', summary: result.body.header, detail: result.body.message, icon: 'pi pi-info-circle' });
-        }
-        if (result.status == 401) {
-            this.messageService.add({ severity: 'error', summary: 'Erro', detail: result.body?.message });
-        }
-    }
-    private async saveUpdateBrand() {
-        const { value, valid } = this.formBrand;
-        if (!valid) {
+        if (!this.isNewBrand && !this.brand.id) {
+            this.saveError.set('Atualize a lista e reabra a marca salva para enviar a logo.');
             return;
         }
-        this.brand.name = value.name!;
-        this.brand.status = value.status!;
-
+        this.saving.set(true);
         this.loading.show();
-        const result = await this.saveUpdate(this.brand);
-        this.loading.hide();
-        if (result.status == 200 && result.body?.status == StatusSuccessError.succes) {
-            this.messageService.add({ severity: 'success', summary: result.body.header, detail: result.body.message, icon: 'pi pi-check' });
-            this.hideDialog();
-            void this.loadBrands();
-        }
-        if (result.status == 200 && result.body?.status == StatusSuccessError.error) {
-            this.messageService.add({ severity: 'info', summary: result.body.header, detail: result.body.message, icon: 'pi pi-info-circle' });
-            this.hideDialog();
-            void this.loadBrands();
-        }
-        if (result.status == 401) {
-            this.messageService.add({ severity: 'error', summary: 'Erro', detail: result.body?.message });
+        let registrationSaved = false;
+        try {
+            const data: Brand = { ...this.brand, name: name.trim(), status };
+            const result = await lastValueFrom(this.isNewBrand ? this.brandService.save(data) : this.brandService.update(data));
+            if (result.body?.status !== StatusSuccessError.succes) throw new Error(result.body?.message || 'Não foi possível salvar a marca.');
+            registrationSaved = true;
+            this.isNewBrand = false;
+            const saved: Brand | null = result.body.data;
+            if (!saved?.id) throw new Error('Atualize a lista e reabra a marca salva para enviar a logo.');
+            this.brand = { ...saved };
+            if (this.logoFile) this.brand = await lastValueFrom(this.brandService.saveLogo(saved.id, this.logoFile));
+            else if (this.logoRemoved) this.brand = await lastValueFrom(this.brandService.removeLogo(saved.id));
+            this.logoFile = null;
+            this.logoRemoved = false;
+            this.dialogVisible = false;
+            this.messageService.add({ severity: 'success', summary: 'Marca', detail: 'Cadastro salvo com sucesso.' });
+            await this.loadBrands();
+        } catch (error: unknown) {
+            const message = error instanceof HttpErrorResponse ? error.error?.emessage || error.error?.message || 'Não foi possível salvar a logo. Tente novamente.' : error instanceof Error ? error.message : 'Não foi possível salvar a marca.';
+            this.saveError.set((registrationSaved ? 'Os dados da marca foram salvos. ' : '') + message);
+        } finally {
+            this.loading.hide();
+            this.saving.set(false);
         }
     }
-
-    private async saveNew(b: Brand): Promise<HttpResponse<MessageResponse>> {
+    logoImageUrl(value: string | null | undefined): string {
+        if (!value) return '';
         try {
-            return await lastValueFrom(this.brandService.save(b));
-        } catch (error: any) {
-            this.messageService.add({ severity: 'error', summary: 'Erro', detail: error.message, icon: 'pi pi-times' });
-            return error;
+            const url = new URL(value.replace(/^\/+/, ''), environment.apiuUrl.replace(/\/+$/, '') + '/');
+            return ['http:', 'https:'].includes(url.protocol) ? url.href : '';
+        } catch {
+            return '';
         }
     }
-    private async saveUpdate(b: Brand): Promise<HttpResponse<MessageResponse>> {
-        try {
-            return await lastValueFrom(this.brandService.update(b));
-        } catch (error: any) {
-            this.messageService.add({ severity: 'error', summary: 'Erro', detail: error.message, icon: 'pi pi-times' });
-            return error;
+    async selectLogo(event: Event): Promise<void> {
+        const input = event.target as HTMLInputElement;
+        const file = input.files?.[0];
+        input.value = '';
+        if (!file || this.saving() || this.readingLogo()) return;
+        this.logoError.set('');
+        if (!['image/png', 'image/jpeg'].includes(file.type) || file.size === 0 || file.size > 5 * 1024 * 1024) {
+            this.logoError.set('Selecione uma imagem PNG ou JPEG de até 5 MB.');
+            return;
         }
+        this.readingLogo.set(true);
+        const preview = URL.createObjectURL(file);
+        try {
+            const image = new Image();
+            image.src = preview;
+            await image.decode();
+            if (image.naturalWidth > 4096 || image.naturalHeight > 2048) throw new Error('A logo deve ter no máximo 4096 × 2048 pixels.');
+            const dataUrl = await new Promise<string>((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(String(reader.result));
+                reader.onerror = () => reject(new Error('Não foi possível ler a imagem.'));
+                reader.readAsDataURL(file);
+            });
+            this.logoFile = file;
+            this.logoRemoved = false;
+            this.logoPreview.set(dataUrl);
+        } catch (error: unknown) {
+            this.logoError.set(error instanceof Error ? error.message : 'A imagem selecionada não é válida.');
+        } finally {
+            URL.revokeObjectURL(preview);
+            this.readingLogo.set(false);
+        }
+    }
+    removeLogo(): void {
+        if (this.saving() || this.readingLogo()) return;
+        this.logoFile = null;
+        this.logoRemoved = true;
+        this.logoPreview.set('');
+        this.logoError.set('');
     }
 }
