@@ -39,7 +39,7 @@ export default class DashboardComponent implements OnInit {
         private primeng: PrimeNG,
         private loadingService: LoadingService,
         private dashboardService: DashboardService
-    ) {}
+    ) { }
 
     async ngOnInit(): Promise<void> {
         this.primeng.setTranslation({
@@ -246,7 +246,9 @@ export default class DashboardComponent implements OnInit {
             }
             //Update graphic
             this.clientData2 = { ...this.clientData2 };
-            if ([responseVehicle, responseClientData1, responseClientData2, resultClientData1, resultClientData2].some((result) => result.status !== 200)) this.loadError.set('Alguns indicadores não puderam ser carregados. Tente atualizar o painel.');
+            if ([responseVehicle, responseClientData1, responseClientData2, resultClientData1, resultClientData2].some((result) => result.status !== 200)) {
+                this.loadError.set('Alguns indicadores não puderam ser carregados. Tente atualizar o painel.');
+            }
         } finally {
             this.loadingDashboard.set(false);
         }

@@ -1,6 +1,6 @@
 import { ClientCompany } from '@/app/models/client.company';
 import { AttendanceQuote, calculateQuoteItem } from '@/app/models/crm/attendance.quote';
-import { ManualOrderProduct, ManualOrderValues } from '@/app/pages/crm/new.customer/manual.order.print/manual.order.print';
+import { ManualOrderProduct, ManualOrderValues } from '@/app/pages/crm/new.customer/manual.order.print.component/manual.order.print';
 
 export function manualOrderClientValues(client: ClientCompany): ManualOrderValues {
     return {

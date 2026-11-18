@@ -1,1 +1,244 @@
-﻿:host { display: none; }
+﻿:host {
+    display: none;
+}
+@page {
+    size: A4;
+    margin: 12mm;
+}
+* {
+    box-sizing: border-box;
+}
+body {
+    margin: 0;
+    background: #fff;
+    color: #202833;
+    font:
+        10px/1.45 Arial,
+        sans-serif;
+}
+.purchase {
+    width: 100%;
+}
+header {
+    display: flex;
+    align-items: stretch;
+    border-bottom: 3px solid #26384b;
+    padding-bottom: 16px;
+    margin-bottom: 20px;
+    break-inside: avoid;
+}
+.issuer {
+    flex: 1;
+    min-width: 0;
+    padding-right: 20px;
+    overflow-wrap: anywhere;
+}
+.logos {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    margin-bottom: 14px;
+}
+.logos img {
+    display: block;
+    width: 110px;
+    max-width: 45%;
+    height: 48px;
+    object-fit: contain;
+    object-position: left center;
+}
+.issuer h1 {
+    font-size: 15px;
+    line-height: 1.3;
+    margin: 0 0 8px;
+    text-transform: uppercase;
+}
+.issuer p {
+    margin: 3px 0;
+    font-size: 9px;
+    color: #48515c;
+}
+.order {
+    width: 176px;
+    flex-shrink: 0;
+    border-left: 1px solid #cbd1d8;
+    padding: 4px 0 4px 18px;
+}
+.order h2 {
+    font-size: 10px;
+    margin: 0;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+.order strong {
+    display: block;
+    font-size: 27px;
+    line-height: 1.2;
+    margin: 8px 0 14px;
+}
+.order dl {
+    margin: 0;
+    display: grid;
+    gap: 7px;
+}
+.order dt {
+    font-size: 8px;
+    text-transform: uppercase;
+    color: #59636e;
+}
+.order dd {
+    margin: 1px 0 0;
+    font-size: 10px;
+    font-weight: bold;
+}
+.section-title {
+    margin: 20px 0 0;
+    padding: 7px 9px;
+    background: #eef1f4;
+    border-bottom: 1px solid #cbd1d8;
+    font-size: 10px;
+    letter-spacing: 0.7px;
+    text-transform: uppercase;
+    break-after: avoid;
+}
+.fields {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    border-left: 1px solid #d8dde3;
+}
+.field {
+    padding: 9px;
+    border-right: 1px solid #d8dde3;
+    border-bottom: 1px solid #d8dde3;
+    overflow-wrap: anywhere;
+    break-inside: avoid;
+}
+.field span {
+    display: block;
+    font-size: 8px;
+    text-transform: uppercase;
+    color: #59636e;
+    margin-bottom: 4px;
+}
+.field b {
+    font-size: 10px;
+    font-weight: 600;
+}
+.wide {
+    grid-column: span 2;
+}
+table {
+    border-collapse: collapse;
+    width: 100%;
+    table-layout: fixed;
+}
+caption {
+    text-align: left;
+    padding: 18px 0 8px;
+    font-size: 10px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.7px;
+}
+caption span {
+    float: right;
+    font-size: 9px;
+    color: #59636e;
+    font-weight: normal;
+    text-transform: none;
+    letter-spacing: 0;
+}
+thead {
+    display: table-header-group;
+}
+th {
+    background: #eef1f4;
+    text-align: left;
+    font-size: 8px;
+    color: #344354;
+    border-top: 1px solid #cbd1d8;
+}
+td,
+th {
+    padding: 8px 5px;
+    border-bottom: 1px solid #d8dde3;
+    overflow-wrap: anywhere;
+    vertical-align: top;
+}
+tbody tr:nth-child(even) {
+    background: #f8f9fa;
+}
+tr {
+    break-inside: avoid;
+}
+.number {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+tbody td:last-child {
+    font-weight: bold;
+}
+.totals {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 12px;
+    break-inside: avoid;
+}
+.totals div {
+    min-width: 125px;
+    padding: 10px 12px;
+    border-bottom: 2px solid #cbd1d8;
+    text-align: right;
+}
+.totals span {
+    display: block;
+    font-size: 8px;
+    text-transform: uppercase;
+    color: #59636e;
+    margin-bottom: 5px;
+}
+.totals b {
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+}
+.totals .grand {
+    background: #eef1f4;
+    border-color: #26384b;
+}
+.grand b {
+    font-size: 15px;
+}
+.notes {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    padding: 10px 9px;
+    border-bottom: 1px solid #d8dde3;
+    min-height: 48px;
+}
+.signatures {
+    display: flex;
+    gap: 26px;
+    padding: 48px 8px 12px;
+    text-align: center;
+    break-inside: avoid;
+}
+.signatures div {
+    flex: 1;
+    min-width: 0;
+    border-top: 1px solid #89939e;
+    padding-top: 7px;
+    overflow-wrap: anywhere;
+}
+.signatures small {
+    display: block;
+    margin-top: 4px;
+    font-size: 8px;
+    text-transform: uppercase;
+    color: #59636e;
+}
+
+.buyer-email {
+    display: block;
+    margin-top: 3px;
+    font-size: 9px;
+}

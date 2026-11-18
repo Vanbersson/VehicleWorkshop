@@ -1,1 +1,104 @@
-﻿<!-- Documento gerado isoladamente para impressão. -->
+﻿@if (document(); as data) {
+    <main #printDocument class="purchase">
+        <header>
+            <div class="issuer">
+                @if (data.resaleLogo || data.brandLogo) {
+                    <div class="logos">
+                        @if (data.resaleLogo) {
+                            <img [src]="data.resaleLogo" [alt]="'Logo da revenda ' + data.resale.name" />
+                        }
+                        @if (data.brandLogo) {
+                            <img [src]="data.brandLogo" [alt]="'Logo da marca ' + data.brandName" />
+                        }
+                    </div>
+                }
+                <h1>{{ display(data.resale.name) }}</h1>
+                <p><b>CNPJ:</b> {{ data.cnpj }} &nbsp; <b>Inscrição estadual:</b> {{ display(data.resale.ie) }}</p>
+                <p><b>Endereço:</b> {{ data.issuerAddress }}</p>
+                <p><b>Telefone:</b> {{ data.issuerPhone }}</p>
+                <p><b>Email:</b> {{ display(data.buyerEmail) }}</p>
+            </div>
+            <div class="order">
+                <h2>PEDIDO DE COMPRA</h2>
+                <strong>Nº {{ data.order.id ?? '—' }}</strong>
+                <dl>
+                    <div>
+                        <dt>Emissão</dt>
+                        <dd>{{ data.generationDate }}</dd>
+                    </div>
+                    <div>
+                        <dt>Tipo de compra</dt>
+                        <dd>{{ data.order.type }}</dd>
+                    </div>
+                </dl>
+            </div>
+        </header>
+        <h3 class="section-title">Fornecedor e condições de compra</h3>
+        <div class="fields">
+            @for (field of data.fields; track field.label) {
+                <div class="field" [class.wide]="field.wide">
+                    <span>{{ field.label }}</span
+                    ><b>{{ field.value }}</b>
+                </div>
+            }
+        </div>
+        <table>
+            <caption>
+                Itens do pedido
+                <span>{{ data.items.length }} {{ data.items.length === 1 ? 'item' : 'itens' }}</span>
+            </caption>
+            <colgroup>
+                <col style="width: 12%" />
+                <col style="width: 34%" />
+                <col style="width: 9%" />
+                <col style="width: 15%" />
+                <col style="width: 14%" />
+                <col style="width: 16%" />
+            </colgroup>
+            <thead>
+                <tr>
+                    <th>Código</th>
+                    <th>Descrição dos itens</th>
+                    <th class="number">Qtd.</th>
+                    <th class="number">Valor unitário</th>
+                    <th class="number">Desconto</th>
+                    <th class="number">Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                @for (item of data.items; track $index) {
+                    <tr>
+                        <td>{{ item.code }}</td>
+                        <td>{{ item.description }}</td>
+                        <td class="number">{{ item.quantity }}</td>
+                        <td class="number">{{ item.price }}</td>
+                        <td class="number">{{ item.discount }}</td>
+                        <td class="number">{{ item.total }}</td>
+                    </tr>
+                } @empty {
+                    <tr>
+                        <td colspan="6">Nenhum item informado.</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+        <div class="totals">
+            <div>
+                <span>Total bruto</span><b>{{ data.gross }}</b>
+            </div>
+            <div>
+                <span>Descontos</span><b>{{ data.discount }}</b>
+            </div>
+            <div class="grand">
+                <span>Total do pedido</span><b>{{ data.total }}</b>
+            </div>
+        </div>
+        <h3 class="section-title">Observações</h3>
+        <div class="notes">{{ data.information }}</div>
+        <div class="signatures">
+            <div>{{ data.buyer }}<small>Comprador</small></div>
+            <div><small>Responsável</small></div>
+            <div><small>Solicitante</small></div>
+        </div>
+    </main>
+}

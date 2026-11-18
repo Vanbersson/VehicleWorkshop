@@ -1,7 +1,7 @@
 import { ClientCompany } from '@/app/models/client.company';
 import { AttendanceQuote } from '@/app/models/crm/attendance.quote';
 import { manualOrderClientValues, manualOrderQuoteProducts } from './manual.order.prefill';
-import { manualOrderTotals } from '@/app/pages/crm/new.customer/manual.order.print/manual.order.print';
+import { manualOrderTotals } from '@/app/pages/crm/new.customer/manual.order.print.component/manual.order.print';
 
 describe('Manual order defaults', () => {
     it('fills the full client address, contacts and documents with individual-client fallbacks', () => {

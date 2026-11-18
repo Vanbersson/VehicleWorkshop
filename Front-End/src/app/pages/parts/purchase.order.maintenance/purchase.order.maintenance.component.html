@@ -451,7 +451,7 @@
         </div>
     </form>
     <ng-template #footer><p-button type="button" label="Concluir preenchimento" icon="pi pi-check" (onClick)="hideDialogNF()" /></ng-template></p-dialog
-><p-confirmDialog [style]="{ width: '28rem', maxWidth: '95vw' }" /><app-printPurchase #printComponent /><p-dialog
+><p-confirmDialog [style]="{ width: '28rem', maxWidth: '95vw' }" /><p-print-purchase #printComponent /><p-dialog
     header="Adicionar material de consumo"
     [(visible)]="visibleConsumo"
     [modal]="true"

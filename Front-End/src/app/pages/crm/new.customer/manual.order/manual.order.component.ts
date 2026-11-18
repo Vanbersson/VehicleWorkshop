@@ -13,7 +13,7 @@ import { ManualOrderBranding, manualOrderLogoUrl } from './manual.order.branding
 import { ClientCompany } from '@/app/models/client.company';
 import { StatusSuccessError } from '@/app/models/status-suc-err';
 import { manualOrderClientValues, manualOrderQuoteProducts } from './manual.order.prefill';
-import { ManualOrderPrintComponent } from '@/app/pages/crm/new.customer/manual.order.print/manual.order.print.component';
+import { ManualOrderPrintComponent } from '@/app/pages/crm/new.customer/manual.order.print.component/manual.order.print.component';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
@@ -21,7 +21,7 @@ import { InputNumberModule } from 'primeng/inputnumber';
 import { SelectModule } from 'primeng/select';
 import { TextareaModule } from 'primeng/textarea';
 import { MANUAL_ORDER_SECTIONS } from './manual.order.fields';
-import { manualOrderTotals, ManualOrderProduct, ManualOrderValues } from '@/app/pages/crm/new.customer/manual.order.print/manual.order.print';
+import { manualOrderTotals, ManualOrderProduct, ManualOrderValues } from '@/app/pages/crm/new.customer/manual.order.print.component/manual.order.print';
 
 @Component({
     selector: 'p-manual-order',
