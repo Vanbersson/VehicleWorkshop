@@ -7,12 +7,10 @@ import { Loading } from './app/components/loading/loading';
     standalone: true,
     imports: [RouterModule, Loading],
     template: `
-    <app-loading/>
-    <router-outlet></router-outlet>
+        <app-loading />
+        <router-outlet></router-outlet>
     `
 })
 export class AppComponent {
-
-    constructor() {
-    }
+    constructor() {}
 }

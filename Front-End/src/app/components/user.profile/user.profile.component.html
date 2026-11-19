@@ -1,86 +1,159 @@
-﻿<p-toast />
-<p-dialog [(visible)]="visible" [modal]="true" [style]="{ width: '48rem', maxWidth: 'calc(100vw - 2rem)' }" [draggable]="false" [dismissableMask]="false">
+<p-toast />
+<p-dialog
+    [(visible)]="visible"
+    [modal]="true"
+    [style]="{ width: '58rem', maxWidth: 'calc(100vw - 2rem)' }"
+    [draggable]="false"
+    [dismissableMask]="false"
+    [closable]="!savingPassword()"
+    [closeOnEscape]="!savingPassword()"
+    (onHide)="closePasswordForm()"
+>
     <ng-template #header>
-        <div class="profile-heading">
-            <span class="profile-icon"><i class="pi pi-user" aria-hidden="true"></i></span>
-            <div>
-                <span class="profile-eyebrow">MINHA CONTA</span>
-                <h2>Meu perfil</h2>
-                <p>Gerencie seus dados pessoais e sua foto.</p>
-            </div>
-        </div>
+        <h2 class="profile-title">Meu perfil</h2>
     </ng-template>
-    <form id="user-profile-form" [formGroup]="userForm" (ngSubmit)="save()" class="profile-form">
-        <section class="profile-summary" aria-label="Foto e identificação">
-            @if (userPhotoUrl()) {
-                <p-image [src]="userPhotoUrl()" alt="Foto do usuário" [preview]="true" [imageStyle]="{ width: '88px', height: '88px', borderRadius: '50%', objectFit: 'cover' }" />
-            } @else {
-                <span class="profile-avatar"><i class="pi pi-user" aria-hidden="true"></i></span>
-            }
-            <div class="profile-identity">
-                <h3>{{ userForm.controls.name.value || 'Seu perfil' }}</h3>
-                <p>{{ userForm.controls.roleDesc.value || 'Usuário' }}</p>
-                <div class="photo-actions">
-                    <p-button type="button" [label]="userPhotoUrl() ? 'Alterar foto' : 'Adicionar foto'" icon="pi pi-camera" size="small" [outlined]="true" (onClick)="selectPhoto()" />
-                    @if (userPhotoUrl()) {
-                        <p-button type="button" label="Remover" icon="pi pi-trash" size="small" severity="danger" [text]="true" (onClick)="deletePhoto()" />
+    <div class="profile-layout">
+        <aside class="profile-sidebar" aria-label="Resumo da conta">
+            <section class="profile-summary" aria-label="Foto e identificação">
+                @if (userPhotoUrl()) {
+                    <p-image [src]="userPhotoUrl()" alt="Foto do usuário" [preview]="true" [imageStyle]="{ width: '76px', height: '76px', borderRadius: '50%', objectFit: 'cover' }" />
+                } @else {
+                    <span class="profile-avatar"><i class="pi pi-user" aria-hidden="true"></i></span>
+                }
+                <div class="profile-identity">
+                    <h3>{{ userForm.controls.name.value || 'Seu perfil' }}</h3>
+
+                    <div class="photo-actions">
+                        <p-button type="button" [label]="userPhotoUrl() ? 'Alterar foto' : 'Adicionar foto'" icon="pi pi-camera" size="small" [outlined]="true" (onClick)="selectPhoto()" />
+                        @if (userPhotoUrl()) {
+                            <p-button type="button" label="Remover" icon="pi pi-trash" size="small" severity="danger" [text]="true" (onClick)="deletePhoto()" />
+                        }
+                    </div>
+                </div>
+            </section>
+            <section class="account-section" aria-labelledby="profile-access-title">
+                <div class="section-heading">
+                    <i class="pi pi-shield" aria-hidden="true"></i>
+                    <h3 id="profile-access-title">Acesso</h3>
+                </div>
+                <dl class="account-details">
+                    <div>
+                        <dt>E-mail</dt>
+                        <dd>{{ userForm.controls.email.value || 'Não informado' }}</dd>
+                    </div>
+                    <div>
+                        <dt>Cargo</dt>
+                        <dd>{{ userForm.controls.roleDesc.value || 'Não informado' }}</dd>
+                    </div>
+                    <div>
+                        <dt>Situação da conta</dt>
+                        <dd>
+                            <span class="status-badge" [class.is-enabled]="userForm.controls.status.value === enabled">
+                                <i class="pi" [class.pi-check-circle]="userForm.controls.status.value === enabled" [class.pi-ban]="userForm.controls.status.value !== enabled" aria-hidden="true"></i>
+                                {{ userForm.controls.status.value === enabled ? 'Ativada' : 'Desativada' }}
+                            </span>
+                        </dd>
+                    </div>
+                </dl>
+            </section>
+        </aside>
+        <div class="profile-content">
+            <form id="user-profile-form" [formGroup]="userForm" (ngSubmit)="save()" class="profile-section" aria-labelledby="profile-personal-title">
+                <div class="section-heading">
+                    <i class="pi pi-id-card" aria-hidden="true"></i>
+                    <div>
+                        <h3 id="profile-personal-title">Dados pessoais</h3>
+                    </div>
+                </div>
+                <div class="profile-grid">
+                    <div class="profile-field full">
+                        <label for="profile-name">Nome completo <span aria-hidden="true">*</span></label
+                        ><input
+                            pInputText
+                            id="profile-name"
+                            formControlName="name"
+                            autocomplete="name"
+                            [invalid]="userForm.controls.name.invalid && userForm.controls.name.touched"
+                            aria-required="true"
+                            [attr.aria-describedby]="userForm.controls.name.invalid && userForm.controls.name.touched ? 'profile-name-error' : null"
+                        />
+                        @if (userForm.controls.name.invalid && userForm.controls.name.touched) {
+                            <small id="profile-name-error" class="field-error">Informe seu nome.</small>
+                        }
+                    </div>
+                    <div class="profile-field">
+                        <label for="profile-nickname">Apelido</label>
+                        <input pInputText id="profile-nickname" formControlName="nickname" autocomplete="nickname" maxlength="255" />
+                    </div>
+                    <div class="profile-field">
+                        <label for="profile-cpf">CPF</label>
+                        <p-inputMask inputId="profile-cpf" mask="999.999.999-99" [unmask]="true" formControlName="cpf" fluid />
+                    </div>
+                    <div class="profile-field">
+                        <label for="profile-birth-date">Data de nascimento</label>
+                        <input pInputText id="profile-birth-date" type="date" formControlName="birthDate" autocomplete="bday" />
+                    </div>
+                    <div class="profile-field">
+                        <label for="profile-cellphone">Celular</label><p-inputMask inputId="profile-cellphone" mask="(99) 9 9999-9999" [unmask]="true" formControlName="cellphone" placeholder="(00) 0 0000-0000" [fluid]="true" />
+                    </div>
+                </div>
+            </form>
+            <section class="profile-section password-section" aria-labelledby="profile-password-title">
+                <div class="section-heading password-heading">
+                    <div class="heading-label">
+                        <i class="pi pi-lock" aria-hidden="true"></i>
+                        <h3 id="profile-password-title">Senha</h3>
+                    </div>
+                    @if (!showPasswordForm) {
+                        <p-button type="button" label="Alterar senha" icon="pi pi-key" size="small" [outlined]="true" (onClick)="showPasswordForm = true" />
                     }
                 </div>
-            </div>
-        </section>
-        <section class="profile-section" aria-labelledby="profile-personal-title">
-            <div class="section-heading">
-                <i class="pi pi-id-card" aria-hidden="true"></i>
-                <div>
-                    <h3 id="profile-personal-title">Dados pessoais</h3>
-                    <p>Mantenha seu nome e telefone atualizados.</p>
-                </div>
-            </div>
-            <div class="profile-grid">
-                <div class="profile-field full">
-                    <label for="profile-name">Nome completo <span aria-hidden="true">*</span></label
-                    ><input
-                        pInputText
-                        id="profile-name"
-                        formControlName="name"
-                        autocomplete="name"
-                        [invalid]="userForm.controls.name.invalid && userForm.controls.name.touched"
-                        aria-required="true"
-                        [attr.aria-describedby]="userForm.controls.name.invalid && userForm.controls.name.touched ? 'profile-name-error' : null"
-                    />
-                    @if (userForm.controls.name.invalid && userForm.controls.name.touched) {
-                        <small id="profile-name-error" class="field-error">Informe seu nome.</small>
-                    }
-                </div>
-                <div class="profile-field"><label for="profile-email">E-mail</label><input pInputText id="profile-email" formControlName="email" /><small>O e-mail é definido pelo administrador.</small></div>
-                <div class="profile-field">
-                    <label for="profile-cellphone">Celular</label><p-inputMask inputId="profile-cellphone" mask="(99) 9 9999-9999" [unmask]="true" formControlName="cellphone" placeholder="(00) 0 0000-0000" [fluid]="true" />
-                </div>
-            </div>
-        </section>
-        <section class="profile-section" aria-labelledby="profile-access-title">
-            <div class="section-heading">
-                <i class="pi pi-shield" aria-hidden="true"></i>
-                <div>
-                    <h3 id="profile-access-title">Informações de acesso</h3>
-                    <p>Dados gerenciados pelo administrador.</p>
-                </div>
-            </div>
-            <div class="profile-grid">
-                <div class="profile-field"><label for="profile-role">Cargo</label><input pInputText id="profile-role" formControlName="roleDesc" /></div>
-                <div class="profile-field"><label for="profile-discount">Limite de desconto</label><p-inputNumber inputId="profile-discount" suffix="%" formControlName="limitDiscount" [fluid]="true" /></div>
-            </div>
-            <div class="profile-status">
-                <span>Situação da conta</span
-                ><span class="status-badge" [class.is-enabled]="userForm.controls.status.value === enabled"
-                    ><i class="pi" [class.pi-check-circle]="userForm.controls.status.value === enabled" [class.pi-ban]="userForm.controls.status.value !== enabled" aria-hidden="true"></i
-                    >{{ userForm.controls.status.value === enabled ? 'Ativada' : 'Desativada' }}</span
-                >
-            </div>
-        </section>
-    </form>
+                @if (showPasswordForm) {
+                    <form [formGroup]="passwordForm" (ngSubmit)="changePassword()">
+                        <fieldset class="profile-grid" [disabled]="savingPassword()">
+                            <div class="profile-field full">
+                                <label for="profile-current-password">Senha atual</label>
+                               <p-password inputId="profile-current-password" [toggleMask]="true" [feedback]="false" formControlName="currentPassword" autocomplete="current-password" fluid />
+                                @if (passwordForm.controls.currentPassword.touched && passwordForm.controls.currentPassword.invalid) {
+                                    <small class="field-error">Informe a senha atual.</small>
+                                }
+                            </div>
+                            <div class="profile-field">
+                                <label for="profile-new-password">Nova senha</label>
+                                <p-password inputId="profile-new-password" [toggleMask]="true" [feedback]="false" formControlName="newPassword" autocomplete="current-password" fluid />
+                                @if (passwordForm.controls.newPassword.touched && passwordForm.controls.newPassword.invalid) {
+                                    <small class="field-error">Informe pelo menos 8 caracteres.</small>
+                                }
+                            </div>
+                            <div class="profile-field">
+                                <label for="profile-password-confirmation">Confirme a nova senha</label>
+                                 <p-password inputId="profile-password-confirmation" [toggleMask]="true" [feedback]="false" formControlName="confirmation" autocomplete="current-password" fluid />
+                                @if (passwordForm.controls.confirmation.touched && (passwordForm.controls.confirmation.invalid || passwordForm.controls.confirmation.value !== passwordForm.controls.newPassword.value)) {
+                                    <small class="field-error">Repita a nova senha.</small>
+                                }
+                            </div>
+                        </fieldset>
+                        @if (passwordError()) {
+                            <p class="field-error mt-3" role="alert">{{ passwordError() }}</p>
+                        }
+                        <div class="profile-footer mt-3">
+                            <p-button type="button" label="Cancelar" severity="secondary" [text]="true" [disabled]="savingPassword()" (onClick)="closePasswordForm()" />
+                            <p-button type="submit" label="Salvar nova senha" [loading]="savingPassword()" />
+                        </div>
+                    </form>
+                }
+            </section>
+        </div>
+    </div>
     <ng-template #footer
         ><div class="profile-footer">
-            <p-button type="button" label="Fechar" severity="secondary" [text]="true" (onClick)="visible = false" /><button pButton type="submit" form="user-profile-form" icon="pi pi-check" label="Salvar alterações"></button></div
+            <p-button type="button" label="Fechar" severity="secondary" [text]="true" [disabled]="savingPassword()" (onClick)="visible = false" /><button
+                pButton
+                type="submit"
+                form="user-profile-form"
+                icon="pi pi-check"
+                label="Salvar alterações"
+                [disabled]="savingPassword()"
+            ></button></div
     ></ng-template>
 </p-dialog>

@@ -19,12 +19,6 @@ public record SalespersonUpdateDto(
         Integer id,
         @NotBlank(message = "Nome é obrigatório")
         String name,
-        @NotBlank(message = "CPF é obrigatório")
-        String cpf,
-        @NotBlank(message = "DDD Celular é obrigatório")
-        String dddCellphone,
-        @NotBlank(message = "Celular é obrigatório")
-        String cellphone,
         @NotNull(message = "Desconto é obrigatório")
         BigDecimal limitDiscount,
         @NotNull(message = "Tipo é obrigatório")
@@ -35,6 +29,5 @@ public record SalespersonUpdateDto(
         @NotNull(message = "Usuário é obrigatório")
         Integer userId,
         @NotBlank(message = "Grupo é obrigatório")
-        String groupIds,
-        String photoUrl) {
+        String groupIds) {
 }

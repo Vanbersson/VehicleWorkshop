@@ -49,12 +49,24 @@ export class UserProfileComponent {
 
     userForm = new FormGroup({
         name: new FormControl<string>('', Validators.required),
+        nickname: new FormControl<string>(''),
+        cpf: new FormControl<string>(''),
+        birthDate: new FormControl<string>(''),
         email: new FormControl<string>({ value: '', disabled: true }, Validators.required),
         cellphone: new FormControl<string>(''),
-        limitDiscount: new FormControl<number>({ value: 0, disabled: true }, Validators.required),
+
         roleDesc: new FormControl<string>({ value: '', disabled: true }, Validators.required),
         status: new FormControl<string>({ value: this.disabled, disabled: true }, Validators.required)
     });
+
+    passwordForm = new FormGroup({
+        currentPassword: new FormControl('', { nonNullable: true, validators: Validators.required }),
+        newPassword: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.minLength(8)] }),
+        confirmation: new FormControl('', { nonNullable: true, validators: Validators.required })
+    });
+    showPasswordForm = false;
+    savingPassword = signal(false);
+    passwordError = signal('');
 
     constructor(
         private loadingService: LoadingService,
@@ -79,13 +91,16 @@ export class UserProfileComponent {
         this.userForm.markAsUntouched();
         this.userForm.patchValue({
             name: this.user.name,
+            nickname: this.user.nickname ?? '',
+            cpf: this.user.cpf ?? '',
+            birthDate: this.user.birthDate ?? '',
             email: this.user.email,
             cellphone: this.user.cellphone,
-            limitDiscount: this.user.limitDiscount,
             roleDesc: this.user.roleDesc,
             status: this.user.status
         });
         this.userPhotoUrl.set(this.user.photoUrl);
+        this.closePasswordForm();
 
         this.showDialog();
     }
@@ -121,6 +136,9 @@ export class UserProfileComponent {
         this.loadingService.show();
         this.user.photoUrl = await this.photo();
         this.user.name = value.name!;
+        this.user.nickname = value.nickname?.trim() ?? '';
+        this.user.cpf = value.cpf ?? '';
+        this.user.birthDate = value.birthDate || null;
         this.user.cellphone = value.cellphone!;
 
         const resultUpdate = await this.updateUser(this.user);
@@ -129,6 +147,40 @@ export class UserProfileComponent {
             this.messageService.add({ severity: 'success', summary: resultUpdate.body.header, detail: resultUpdate.body.message, icon: 'pi pi-check' });
             //Atualiza os dados local
             this.updateStaroge(resultUpdate.body.data);
+        } else {
+            this.messageService.add({ severity: 'error', summary: 'Perfil', detail: resultUpdate.body?.message || 'Não foi possível salvar o perfil.' });
+        }
+    }
+
+    closePasswordForm() {
+        this.showPasswordForm = false;
+        this.passwordForm.reset();
+        this.passwordError.set('');
+    }
+
+    async changePassword() {
+        if (this.savingPassword()) return;
+
+        this.passwordError.set('');
+        this.passwordForm.markAllAsTouched();
+        if (this.passwordForm.invalid) return;
+
+        const { currentPassword, newPassword, confirmation } = this.passwordForm.getRawValue();
+        if (newPassword !== confirmation) return;
+
+        this.savingPassword.set(true);
+        try {
+            const { body } = await lastValueFrom(this.userService.changeOwnPassword(currentPassword, newPassword));
+            if (body?.status !== StatusSuccessError.succes) {
+                this.passwordError.set(body?.message || 'Não foi possível alterar a senha.');
+                return;
+            }
+            this.closePasswordForm();
+            this.messageService.add({ severity: 'success', summary: 'Senha', detail: 'Senha alterada com sucesso.' });
+        } catch {
+            this.passwordError.set('Não foi possível alterar a senha. Tente novamente.');
+        } finally {
+            this.savingPassword.set(false);
         }
     }
 

@@ -125,7 +125,6 @@ export default class VisitMaintenanceComponent implements OnInit {
     readonly canRegisterForAll = signal(false);
     private salespersonAccessLoaded = false;
 
-    salespersonImage = signal<string>('');
     visibleDateVisit: boolean = false;
 
     constructor(
@@ -177,13 +176,11 @@ export default class VisitMaintenanceComponent implements OnInit {
                     timeVisit: Number.isNaN(date.getTime()) ? new Date() : date
                 });
                 if (v.clientId != null) this.selectClient.set(Object.assign(new ClientCompany(), { id: v.clientId, name: v.clientName, cnpj: v.clientCNPJ, cpf: v.clientCPF }));
-                this.salespersonImage.set(salesperson?.photoUrl ?? '');
             } else {
                 const result = await this.getUser();
                 const salesperson = this.salespersons().find((p) => p.userId === result.body?.id);
                 if (salesperson) {
                     this.formVisit.controls.salesperson.setValue(salesperson);
-                    this.salespersonImage.set(salesperson.photoUrl);
                 }
             }
         } catch (error: unknown) {
@@ -279,10 +276,8 @@ export default class VisitMaintenanceComponent implements OnInit {
         if (event.value) {
             const p: Salesperson = event.value;
             this.formVisit.get('salesperson')?.setValue(p);
-            this.salespersonImage.set(p.photoUrl);
         } else {
             this.formVisit.get('salesperson')?.setValue(null);
-            this.salespersonImage.set('');
         }
     }
 
@@ -443,7 +438,6 @@ export default class VisitMaintenanceComponent implements OnInit {
         if (!canRegisterForAll) {
             const ownSalesperson = this.salespersons()[0] ?? null;
             this.formVisit.controls.salesperson.setValue(ownSalesperson);
-            this.salespersonImage.set(ownSalesperson?.photoUrl ?? '');
         }
     }
 

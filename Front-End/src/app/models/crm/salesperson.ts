@@ -9,9 +9,6 @@ export class Salesperson {
     id: number | null = null;
     status: StatusEnabDisabEnum = StatusEnabDisabEnum.DISABLED;
     name: string = '';
-    cpf: string = '';
-    dddCellphone: string = '';
-    cellphone: string = '';
     limitDiscount: number = 0;
     typeSales: SalespersonTypeEnum = SalespersonTypeEnum.INTERNAL;
     typeSalesPart: YesNotEnum = YesNotEnum.NOT;
@@ -19,5 +16,4 @@ export class Salesperson {
     typeSalesVehicle: YesNotEnum = YesNotEnum.NOT;
     userId: number | null = null;
     groupIds: string = '';
-    photoUrl: string = '';
 }

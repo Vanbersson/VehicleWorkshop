@@ -61,6 +61,14 @@ public class UserController {
         }
     }
 
+    @PostMapping("/me/password")
+    public ResponseEntity<MessageResponse> changeOwnPassword(
+            @RequestParam("currentPassword") String currentPassword,
+            @RequestParam("newPassword") String newPassword,
+            HttpServletRequest request) {
+        return ResponseEntity.ok(this.service.changeOwnPassword(this.getEmail(request), currentPassword, newPassword));
+    }
+
     @GetMapping
     public ResponseEntity<UserResponseDto> getUser(HttpServletRequest request) {
         String emailUser = this.getEmail(request);

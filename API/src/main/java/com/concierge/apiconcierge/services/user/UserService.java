@@ -72,7 +72,7 @@ public class UserService implements IUserService {
                 user.setPassword(userResult.getPassword());
 
                 User result = this.repository.save(user);
-                response.setData(this.loadUser(result));
+                response.setData(this.loadUserDetails(result));
                 return response;
             } else {
                 return response;
@@ -102,6 +102,31 @@ public class UserService implements IUserService {
     }
 
     @Override
+    public MessageResponse changeOwnPassword(String email, String currentPassword, String newPassword) {
+        MessageResponse response = new MessageResponse();
+        response.setHeader("Senha");
+        response.setStatus(ConstantsMessage.ERROR);
+
+        if (newPassword.length() < 8 || newPassword.getBytes(java.nio.charset.StandardCharsets.UTF_8).length > 72) {
+            response.setMessage("A nova senha deve ter pelo menos 8 caracteres e ocupar até 72 bytes.");
+            return response;
+        }
+
+        User user = this.repository.loginEmail(email);
+        var encoder = this.security.passwordEncoder();
+        if (user == null || user.getStatus() != StatusEnableDisable.Habilitado || !encoder.matches(currentPassword, user.getPassword())) {
+            response.setMessage("Não foi possível confirmar a senha atual.");
+            return response;
+        }
+
+        user.setPassword(encoder.encode(newPassword));
+        this.repository.save(user);
+        response.setStatus(ConstantsMessage.SUCCESS);
+        response.setMessage("Senha alterada com sucesso.");
+        return response;
+    }
+
+    @Override
     public UserResponseDto getUser(String emailUser) {
         User userResult = this.repository.loginEmail(emailUser);
         if (userResult.getStatus() == StatusEnableDisable.Desabilitado) {
@@ -112,9 +137,11 @@ public class UserService implements IUserService {
                 userResult.getResaleId(),
                 userResult.getId(),
                 userResult.getName(),
+                userResult.getNickname(),
+                userResult.getCpf(),
+                userResult.getBirthDate(),
                 userResult.getEmail(),
                 userResult.getCellphone(),
-                userResult.getLimitDiscount(),
                 userResult.getRoleId(),
                 userResult.getRoleDesc(),
                 userResult.getRoleFunc()
@@ -189,7 +216,7 @@ public class UserService implements IUserService {
                     response.setMessage("Usuário não encontrado.");
                     return response;
                 }
-                response.setData(this.loadUser(user));
+                response.setData(this.loadUserDetails(user));
             }
             return response;
         } catch (Exception ex) {
@@ -229,7 +256,7 @@ public class UserService implements IUserService {
                     response.setMessage("Usuário não encontrado.");
                     return response;
                 }
-                response.setData(this.loadUser(user));
+                response.setData(this.loadUserDetails(user));
             }
             return response;
         } catch (Exception ex) {
@@ -308,6 +335,14 @@ public class UserService implements IUserService {
         }
     }
 
+    private Map<String, Object> loadUserDetails(User user) {
+        Map<String, Object> map = this.loadUser(user);
+        map.put("nickname", user.getNickname());
+        map.put("cpf", user.getCpf());
+        map.put("birthDate", user.getBirthDate());
+        return map;
+    }
+
     private Map<String, Object> loadUser(User user) {
         Map<String, Object> map = new HashMap<>();
         map.put("companyId", user.getCompanyId());
@@ -317,7 +352,6 @@ public class UserService implements IUserService {
         map.put("status", user.getStatus());
         map.put("email", user.getEmail());
         map.put("cellphone", user.getCellphone());
-        map.put("limitDiscount", user.getLimitDiscount());
         map.put("roleId", user.getRoleId());
         map.put("roleDesc", user.getRoleDesc());
         map.put("roleFunc", user.getRoleFunc());

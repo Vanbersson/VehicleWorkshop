@@ -71,7 +71,7 @@ export class AttendanceProposalPrintService {
                 ${field('Endereço', address(resale))}${field('Telefone', phone(resale.phone))}${field('Celular', phone(resale.cellphone))}${field('E-mail', resale.email)}
             </dl></section>
             <section><h2>Vendedor</h2><dl>
-                ${field('Nome', salesperson.name || attendance.salespersonName)}${field('Código', salesperson.id)}${field('Celular', phone(salesperson.cellphone, salesperson.dddCellphone))}
+                ${field('Nome', salesperson.name || attendance.salespersonName)}${field('Código', salesperson.id)}
             </dl></section>
             <section><h2>Cliente</h2><dl>
                 ${field('Nome / Razão social', client?.name || attendance.clientName)}${client?.fantasia ? field('Apelido / Nome fantasia', client.fantasia) : ''}

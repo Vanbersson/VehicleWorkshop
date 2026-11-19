@@ -29,13 +29,6 @@ public class Salesperson {
 
     private String name;
 
-    private String cpf;
-
-    @Column(name = "ddd_cellphone")
-    private String dddCellphone;
-
-    private String cellphone;
-
     @Column(name = "limit_discount")
     private BigDecimal limitDiscount;
 
@@ -56,7 +49,4 @@ public class Salesperson {
 
     @Column(name = "group_ids")
     private String groupIds;
-
-    @Column(name = "photo_url")
-    private String photoUrl;
 }

@@ -28,12 +28,6 @@ public class SalespersonValidation implements ISalespersonValidation {
             response.setMessage(ConstantsMessage.NOT_INFORMED);
             return response;
         }
-        if (p.getCpf().isBlank()) {
-            response.setStatus(ConstantsMessage.ERROR);
-            response.setHeader("CPF");
-            response.setMessage(ConstantsMessage.NOT_INFORMED);
-            return response;
-        }
         response.setStatus(ConstantsMessage.SUCCESS);
         response.setHeader("Vendedor");
         response.setMessage("Cadastrado com sucesso.");

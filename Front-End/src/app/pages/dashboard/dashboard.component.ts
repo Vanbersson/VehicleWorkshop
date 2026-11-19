@@ -1,4 +1,4 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { lastValueFrom } from 'rxjs';
@@ -6,23 +6,27 @@ import { HttpResponse } from '@angular/common/http';
 //PrimeNg
 import { ChartModule } from 'primeng/chart';
 import { ButtonModule } from 'primeng/button';
+import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
 
 import { ClientCompany } from '@/app/models/client.company';
 import { LoadingService } from '@/app/services/loading/loading.service';
 import { FilterClientComponent } from '@/app/components/filter.client/filter.client.component';
 import { DashboardService } from '@/app/services/dashboard/dashboard.service';
+import { AuthService } from '@/app/services/login/auth.service';
 import { PrimeNG } from 'primeng/config';
 
 @Component({
     selector: 'app-dashboard',
     standalone: true,
-    imports: [CommonModule, ChartModule, FormsModule, ButtonModule, InputTextModule, FilterClientComponent],
+    imports: [CommonModule, ChartModule, FormsModule, ButtonModule, DialogModule, InputTextModule, FilterClientComponent],
     templateUrl: './dashboard.component.html',
     styleUrl: './dashboard.component.scss',
     providers: []
 })
 export default class DashboardComponent implements OnInit {
+    readonly birthdayName = inject(AuthService).takeBirthdayGreeting();
+    readonly birthdayVisible = signal(Boolean(this.birthdayName));
     countVehicle = signal<Array<number>>([]);
     clientCompany!: ClientCompany;
     clientName!: string;
@@ -39,7 +43,7 @@ export default class DashboardComponent implements OnInit {
         private primeng: PrimeNG,
         private loadingService: LoadingService,
         private dashboardService: DashboardService
-    ) { }
+    ) {}
 
     async ngOnInit(): Promise<void> {
         this.primeng.setTranslation({

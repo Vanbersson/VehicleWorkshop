@@ -163,21 +163,45 @@
                 <p>Informações de identificação e contato. Campos com * são obrigatórios.</p>
             </div>
             <div class="grid grid-cols-12 gap-4">
-                <div class="field col-span-12 sm:col-span-3"><label for="user-id">Código</label><p-inputNumber inputId="user-id" formControlName="id" [useGrouping]="false" placeholder="Automático" fluid /></div>
-                <div class="field col-span-12 sm:col-span-9">
-                    <label for="user-name">Nome completo *</label><input pInputText id="user-name" formControlName="name" autocomplete="name" placeholder="Nome do usuário" />
+                <div class="field col-span-12 sm:col-span-2">
+                    <label for="user-id">Código</label>
+                    <p-inputNumber inputId="user-id" formControlName="id" [useGrouping]="false" placeholder="Automático" fluid />
+                </div>
+                <div class="field col-span-12 sm:col-span-10">
+                    <label for="user-name">Nome completo *</label>
+                    <input pInputText id="user-name" formControlName="name" autocomplete="name" />
                     @if (formUser.controls.name.touched && formUser.controls.name.invalid) {
                         <small class="field-error">Informe o nome do usuário.</small>
                     }
                 </div>
+                <div class="field col-span-12 sm:col-span-3">
+                    <label for="user-nickname">Apelido</label>
+                    <input pInputText id="user-nickname" formControlName="nickname" autocomplete="nickname" maxlength="255" />
+                </div>
                 <div class="field col-span-12 sm:col-span-6">
-                    <label for="user-email">E-mail *</label><input pInputText id="user-email" type="email" formControlName="email" autocomplete="email" placeholder="nome@empresa.com.br" />
+                    <label for="user-email">E-mail *</label><input pInputText id="user-email" type="email" formControlName="email" autocomplete="email" />
                     @if (formUser.controls.email.touched && formUser.controls.email.invalid) {
                         <small class="field-error">Informe um e-mail válido.</small>
                     }
                 </div>
-                <div class="field col-span-12 sm:col-span-6">
-                    <label for="user-cellphone">Celular</label><p-inputMask inputId="user-cellphone" mask="(99) 9 9999-9999" formControlName="cellphone" [unmask]="true" placeholder="(00) 9 0000-0000" fluid />
+                <div class="field col-span-12 sm:col-span-3">
+                    <label for="user-cellphone">Celular</label>
+                    <p-inputMask inputId="user-cellphone" mask="(99) 9 9999-9999" formControlName="cellphone" [unmask]="true" fluid />
+                </div>
+                <div class="field col-span-12 sm:col-span-4">
+                    <label for="user-cpf">CPF</label>
+                    <p-inputMask inputId="user-cpf" mask="999.999.999-99" formControlName="cpf" [unmask]="true" fluid />
+                </div>
+                <div class="field col-span-12 sm:col-span-4">
+                    <label for="user-birth-date">Data de nascimento</label>
+                    <input pInputText id="user-birth-date" type="date" formControlName="birthDate" autocomplete="bday" />
+                </div>
+                <div class="field col-span-12 sm:col-span-4">
+                    <label for="user-role">Cargo *</label>
+                    <p-select inputId="user-role" [options]="roles" optionLabel="description" [filter]="true" filterBy="description" placeholder="Selecione o cargo" formControlName="roleDesc" appendTo="body" fluid />
+                    @if (formUser.controls.roleDesc.touched && formUser.controls.roleDesc.invalid) {
+                        <small class="field-error">Selecione o cargo.</small>
+                    }
                 </div>
             </div>
         </section>
@@ -185,17 +209,9 @@
         <section class="form-section" aria-labelledby="user-access">
             <div class="section-heading">
                 <h2 id="user-access">Acesso e configuração</h2>
-                <p>Defina o cargo, o perfil e a situação do usuário.</p>
+                <p>Defina o perfil e a situação do usuário.</p>
             </div>
             <div class="grid grid-cols-12 gap-4">
-                <div class="field col-span-12 sm:col-span-8">
-                    <label for="user-role">Cargo *</label
-                    ><p-select inputId="user-role" [options]="roles" optionLabel="description" [filter]="true" filterBy="description" placeholder="Selecione o cargo" formControlName="roleDesc" appendTo="body" fluid />
-                    @if (formUser.controls.roleDesc.touched && formUser.controls.roleDesc.invalid) {
-                        <small class="field-error">Selecione o cargo.</small>
-                    }
-                </div>
-                <div class="field col-span-12 sm:col-span-4"><label for="user-discount">Limite de desconto</label><p-inputNumber inputId="user-discount" suffix="%" formControlName="limitDiscount" fluid /></div>
                 <fieldset class="choice-box col-span-12 sm:col-span-6">
                     <legend>Perfil de acesso *</legend>
                     <div class="choices">

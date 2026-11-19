@@ -15,10 +15,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/salesperson")
@@ -65,15 +63,6 @@ public class SalespersonController {
     public ResponseEntity<List<Salesperson>> filterType(@RequestBody SalespersonTypeDto data, HttpServletRequest request) {
         String emailUser = this.getEmail(request);
         List<Salesperson> response = this.service.filterType(data,emailUser);
-        return ResponseEntity.status(HttpStatus.OK).body(response);
-    }
-
-    @PostMapping("/save/image")
-    public ResponseEntity<Map<String, String>> saveImage(@RequestParam("file") MultipartFile file,
-                                                         @RequestParam("local") String local,
-                                                         HttpServletRequest request) {
-        String emailUser = this.getEmail(request);
-        Map<String, String> response = this.service.saveImage(file, local, emailUser);
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 

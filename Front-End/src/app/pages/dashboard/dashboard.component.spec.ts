@@ -1,14 +1,15 @@
 import { TestBed } from '@angular/core/testing';
-import { HttpResponse } from '@angular/common/http';
+import { HttpResponse, provideHttpClient } from '@angular/common/http';
 import { of, throwError } from 'rxjs';
 import { PrimeNG } from 'primeng/config';
 import DashboardComponent from './dashboard.component';
 import { DashboardService } from '@/app/services/dashboard/dashboard.service';
 import { LoadingService } from '@/app/services/loading/loading.service';
 import { ClientCompany } from '@/app/models/client.company';
+import { User } from '@/app/models/user';
+import { AuthService } from '@/app/services/login/auth.service';
 
 describe('Dashboard indicators and filters', () => {
-    let component: DashboardComponent;
     let service: jasmine.SpyObj<DashboardService>;
     beforeEach(() => {
         service = jasmine.createSpyObj<DashboardService>('DashboardService', ['countVehiclePenAuth', 'countVehicleFilterYear', 'countYesServiceFilterYear', 'countVehicleFilterYearClient', 'countYesServiceFilterYearClient']);
@@ -17,10 +18,22 @@ describe('Dashboard indicators and filters', () => {
         service.countYesServiceFilterYear.and.returnValue(of(new HttpResponse({ status: 200, body: [1, 2] })));
         service.countVehicleFilterYearClient.and.returnValue(of(new HttpResponse({ status: 200, body: [7, 8] })));
         service.countYesServiceFilterYearClient.and.returnValue(of(new HttpResponse({ status: 200, body: [4, 1] })));
-        TestBed.configureTestingModule({ providers: [DashboardComponent, { provide: DashboardService, useValue: service }, { provide: PrimeNG, useValue: { setTranslation() {} } }, { provide: LoadingService, useValue: { show() {}, hide() {} } }] });
-        component = TestBed.inject(DashboardComponent);
+        TestBed.configureTestingModule({
+            providers: [provideHttpClient(), DashboardComponent, { provide: DashboardService, useValue: service }, { provide: PrimeNG, useValue: { setTranslation() {} } }, { provide: LoadingService, useValue: { show() {}, hide() {} } }]
+        });
+    });
+    it('opens the pending birthday greeting once, independently of router timing', () => {
+        const auth = TestBed.inject(AuthService);
+        auth.prepareBirthdayGreeting(Object.assign(new User(), { name: 'Maria', birthdayToday: true }));
+
+        const component = TestBed.inject(DashboardComponent);
+        expect(component.birthdayName).toBe('Maria');
+        expect(component.birthdayVisible()).toBeTrue();
+        expect(auth.takeBirthdayGreeting()).toBeUndefined();
     });
     it('shows annual totals from actual chart data and preserves the vehicle counters', async () => {
+        const component = TestBed.inject(DashboardComponent);
+        expect(component.birthdayVisible()).toBeFalse();
         await component.ngOnInit();
         expect(component.countVehicle()).toEqual([9, 2]);
         expect(component.annualTotal(component.clientData1)).toBe(5);
@@ -30,6 +43,7 @@ describe('Dashboard indicators and filters', () => {
         expect(component.loadingDashboard()).toBeFalse();
     });
     it('refreshes the selected customer and restores all customers when clearing the filter', async () => {
+        const component = TestBed.inject(DashboardComponent);
         await component.ngOnInit();
         component.clientCompany = Object.assign(new ClientCompany(), { id: 7, name: 'Cliente' });
         component.clientName = 'Cliente';
@@ -45,6 +59,7 @@ describe('Dashboard indicators and filters', () => {
         expect(component.annualTotal(component.clientData1)).toBe(5);
     });
     it('reports partial loading failures and allows another refresh', async () => {
+        const component = TestBed.inject(DashboardComponent);
         await component.ngOnInit();
         service.countVehicleFilterYear.and.returnValue(throwError(() => new Error('Offline')));
         await component.refreshDashboard();

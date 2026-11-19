@@ -7,7 +7,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import java.io.Serializable;
+import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
 
@@ -32,16 +32,23 @@ public class User implements UserDetails {
 
     private StatusEnableDisable status;
 
+    @Column(length = 100)
     private String name;
+
+    @Column(length = 100)
+    private String nickname;
+
+    @Column(length = 11)
+    private String cpf;
+
+    @Column(name = "birth_date")
+    private LocalDate birthDate;
 
     private String password;
 
     private String email;
 
     private String cellphone;
-
-    @Column(name = "limit_discount")
-    private Integer limitDiscount;
 
     @Column(name = "photo_url")
     private String photoUrl;

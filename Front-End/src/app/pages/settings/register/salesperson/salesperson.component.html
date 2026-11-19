@@ -83,8 +83,8 @@
                     <td><p-tag [value]="person.status" [severity]="person.status === enabled ? 'success' : 'secondary'" [icon]="person.status === enabled ? 'pi pi-check-circle' : 'pi pi-minus-circle'" [rounded]="true" /></td>
                     <td class="text-right">
                         <p-button icon="pi pi-pencil" label="Editar" severity="secondary" [text]="true" size="small" [ariaLabel]="'Editar vendedor ' + person.name" (onClick)="edit(person.id)" />
-                    </td>
-                </tr></ng-template>
+                    </td></tr
+            ></ng-template>
             <ng-template #emptymessage
                 ><tr>
                     <td colspan="4">
@@ -113,20 +113,6 @@
 <p-dialog [header]="formPerson.controls.id.value ? 'Editar vendedor' : 'Novo vendedor'" [(visible)]="visible" [modal]="true" [draggable]="false" [style]="{ width: '64rem', maxWidth: '96vw' }" [breakpoints]="{ '640px': '96vw' }">
     <form id="salesperson-form" [formGroup]="formPerson" (ngSubmit)="save()">
         <div class="grid grid-cols-12 gap-4">
-            <div class="col-span-12 photo-panel">
-                <div class="photo-preview">
-                    @if (photoPerson()) {
-                        <img [src]="photoPerson()" alt="Foto do vendedor" />
-                    } @else {
-                        <i class="pi pi-user" aria-hidden="true"></i>
-                    }
-                </div>
-                <div>
-                    <h2>Foto do vendedor</h2>
-                    <p>Adicione uma imagem para identificar o profissional.</p>
-                    <p-button type="button" icon="pi pi-camera" label="Selecionar imagem" severity="secondary" [outlined]="true" size="small" (onClick)="onSelectFile()" />
-                </div>
-            </div>
             <div class="col-span-12 section-heading">
                 <h2>Configuração comercial</h2>
                 <p>Defina o status, a atuação e os tipos de venda.</p>
@@ -207,22 +193,6 @@
                     fluid
                 />
                 <small class="block text-sm text-red-500" *ngIf="formPerson.get('user')?.invalid && formPerson.get('user')?.touched">Campo obrigatório</small>
-            </div>
-            <div class="col-span-12 sm:col-span-6">
-                <label for="salesperson-cpf">CPF *</label>
-                <p-inputMask mask="999.999.999-99" [unmask]="true" inputId="salesperson-cpf" formControlName="cpf" fluid />
-                <small class="block text-sm text-red-500" *ngIf="formPerson.get('cpf')?.invalid && formPerson.get('cpf')?.touched">Campo obrigatório</small>
-            </div>
-            <div class="col-span-4 sm:col-span-2">
-                <label for="salesperson-ddd">DDD *</label>
-                <p-inputMask mask="99" [unmask]="true" inputId="salesperson-ddd" formControlName="dddCellphone" fluid />
-            </div>
-            <div class="col-span-8 sm:col-span-4">
-                <label for="salesperson-cellphone">Celular *</label>
-                <p-inputMask mask="9 9999-9999" [unmask]="true" inputId="salesperson-cellphone" formControlName="cellphone" fluid />
-                <small class="block text-sm text-red-500" *ngIf="(formPerson.get('cellphone')?.invalid && formPerson.get('cellphone')?.touched) || (formPerson.get('dddCellphone')?.invalid && formPerson.get('dddCellphone')?.touched)"
-                    >Campo obrigatório</small
-                >
             </div>
             <div class="col-span-12 sm:col-span-6">
                 <label for="salesperson-discount">Desconto máximo *</label>

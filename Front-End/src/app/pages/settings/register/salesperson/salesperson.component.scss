@@ -188,44 +188,6 @@
     gap: .85rem;
 }
 
-.photo-panel {
-    display: flex;
-    align-items: center;
-    gap: 1.25rem;
-    border-radius: .85rem;
-    padding: 1.25rem;
-    background: var(--surface-ground);
-}
-
-.photo-panel p {
-    margin-bottom: .85rem;
-    font-size: .85rem;
-}
-
-.photo-preview {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 6rem;
-    height: 6rem;
-    border-radius: 1rem;
-    overflow: hidden;
-    flex-shrink: 0;
-    background: var(--surface-card);
-    border: 1px solid var(--surface-border);
-}
-
-.photo-preview img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.photo-preview i {
-    font-size: 2rem;
-    color: var(--text-color-secondary);
-}
-
 .section-heading {
     padding-top: 1rem;
     border-top: 1px solid var(--surface-border);
@@ -277,13 +239,4 @@ form label,
         width: 100%;
     }
 
-    .photo-panel {
-        gap: .85rem;
-        padding: 1rem;
-    }
-
-    .photo-preview {
-        width: 4rem;
-        height: 4rem;
-    }
 }

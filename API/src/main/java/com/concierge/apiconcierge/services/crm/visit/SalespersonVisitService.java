@@ -329,7 +329,7 @@ public class SalespersonVisitService implements ISalespersonVisitService {
         return salespersonRepository.findByCompanyIdAndResaleId(user.getCompanyId(), user.getResaleId()).stream()
                 .filter(person -> person.getStatus() == StatusEnableDisable.Habilitado)
                 .filter(person -> own == null || Objects.equals(own, person.getId()))
-                .map(person -> new com.concierge.apiconcierge.dtos.crm.visit.VisitSalespersonOptionDto(person.getId(), person.getStatus(), person.getName(), person.getUserId(), person.getPhotoUrl()))
+                .map(person -> new com.concierge.apiconcierge.dtos.crm.visit.VisitSalespersonOptionDto(person.getId(), person.getStatus(), person.getName(), person.getUserId()))
                 .toList();
     }
 }

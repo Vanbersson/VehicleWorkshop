@@ -13,6 +13,8 @@ public interface IUserService {
 
     MessageResponse updatePass(Integer companyId, Integer resaleId, Integer id, String pass);
 
+    MessageResponse changeOwnPassword(String email, String currentPassword, String newPassword);
+
     UserResponseDto getUser(String emailUser);
 
     MessageResponse listAll(Integer companyId, Integer resaleId);

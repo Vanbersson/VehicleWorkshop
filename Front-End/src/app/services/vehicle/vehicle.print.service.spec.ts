@@ -9,6 +9,7 @@ import { YesNotEnum } from '@/app/models/yes.not.enum';
 import { StatusEnabDisabEnum } from '@/app/models/status-enab-disab-enum';
 import { StatusVehicleAuthEnum } from '@/app/models/status.vehicle.auth.enum';
 import { CompanyService } from '@/app/services/company.service';
+import { BrandService } from '@/app/services/brand/brand.service';
 import { VehicleEntryService } from './vehicle.entry.service';
 
 describe('Vehicle print report', () => {
@@ -19,13 +20,13 @@ describe('Vehicle print report', () => {
         name: 'Resale',
         cnpj: '12345678000190',
         email: 'omit-resale-email',
-        phone: 'omit-phone',
+        phone: '1133334444',
         cellphone: '',
         zipCode: '12345678',
         state: 'SP',
         city: 'City',
         neighborhood: 'Area',
-        address: 'omit-resale-address',
+        address: 'Rua da Revenda',
         addressNumber: '10',
         addressComplement: ''
     };
@@ -59,11 +60,25 @@ describe('Vehicle print report', () => {
     it('includes precisely the requested identification, fiscal and authorization fields', () => {
         const html = buildVehiclePrintHtml(data, resale, []);
         for (const value of ['Resale', '12.345.678/0001-90', 'Consultant', 'Truck', 'ABC1234', 'Blue', 'Fleet1', 'OS42', 'NFE1', 'NFSE2', 'Owner', 'Driver in', 'Driver out', '>3</dd>', '>4</dd>', '>5</dd>']) expect(html).toContain(value);
-        expect((html.match(/<dt>/g) || []).length).toBe(18);
+        expect((html.match(/<dt>/g) || []).length).toBe(16);
+    });
+    it('groups the resale name, contact details and both logos in the header', () => {
+        const image = 'data:image/png;base64,YQ==';
+        const html = buildVehiclePrintHtml(data, resale, [], { resaleLogo: image, brandLogo: image, brandName: 'Marca vinculada' });
+        const header = html.slice(0, html.indexOf('</header>'));
+        expect(header).toContain('<div class="record-details">');
+        expect(header).toContain('<h1>Dados do veículo</h1>');
+        expect(header).toContain('class="record-number">Nº 42');
+        for (const value of ['resale-name">Resale', 'Rua da Revenda, 10', 'City / SP', 'CEP 12345-678', 'Telefone (11) 3333-4444', 'Logo da revenda Resale', 'Logo da marca Marca vinculada']) {
+            expect(header).toContain(value);
+        }
+    });
+    it('uses the resale mobile number when the landline is unavailable', () => {
+        expect(buildVehiclePrintHtml(data, { ...resale, phone: '', cellphone: '11987654321' }, [])).toContain('Telefone (11) 98765-4321');
     });
     it('excludes portaria, history, checklist, dates, mileage, contact and driver documents', () => {
         const html = buildVehiclePrintHtml(data, resale, []);
-        for (const value of ['omit-', 'Histórico', 'Checklist', 'Portaria', 'Quilometragem', 'Observações', 'Nascimento', 'Validade', 'Emitido em', 'Atendimento #', 'Telefone', 'E-mail', 'CPF', 'CNH']) expect(html).not.toContain(value);
+        for (const value of ['omit-', 'Histórico', 'Checklist', 'Portaria', 'Quilometragem', 'Observações', 'Nascimento', 'Validade', 'Emitido em', 'Atendimento #', 'E-mail', 'CPF', 'CNH']) expect(html).not.toContain(value);
     });
     it('reports exit authorization only after the final authorization', () => {
         for (const value of [StatusVehicleAuthEnum.NOT, StatusVehicleAuthEnum.FIST]) {
@@ -113,20 +128,37 @@ describe('Vehicle print report', () => {
         let service: VehiclePrintService;
         let printer: jasmine.Spy;
         let companies: jasmine.SpyObj<CompanyService>;
+        let brands: jasmine.SpyObj<BrandService>;
         let vehicles: jasmine.SpyObj<VehicleEntryService>;
         beforeEach(() => {
             printer = jasmine.createSpy('printer');
             companies = jasmine.createSpyObj('Companies', ['resales']);
+            brands = jasmine.createSpyObj('Brands', ['listAll']);
             vehicles = jasmine.createSpyObj('Vehicles', ['history']);
             companies.resales.and.returnValue(of([resale]));
             TestBed.configureTestingModule({
                 providers: [
                     { provide: VEHICLE_PRINTER, useValue: printer },
                     { provide: CompanyService, useValue: companies },
+                    { provide: BrandService, useValue: brands },
                     { provide: VehicleEntryService, useValue: vehicles }
                 ]
             });
             service = TestBed.inject(VehiclePrintService);
+        });
+        it('embeds the resale logo and the logo of its linked brand', async () => {
+            companies.resales.and.returnValue(of([{ ...resale, logoUrl: '/images/resale.png', brandId: 7 }]));
+            brands.listAll.and.returnValue(of([{ id: 7, name: 'Marca vinculada', status: StatusEnabDisabEnum.ENABLED, logoUrl: '/images/brand.png' }]));
+            const load = spyOn<any>(service, 'loadPhoto').and.resolveTo('data:image/png;base64,YQ==');
+            printer.and.callFake((options) => options.onLoadingEnd?.());
+
+            await service.print(data, () => {});
+
+            expect(load).toHaveBeenCalledWith(jasmine.stringMatching(/\/images\/resale\.png$/));
+            expect(load).toHaveBeenCalledWith(jasmine.stringMatching(/\/images\/brand\.png$/));
+            const html = printer.calls.mostRecent().args[0].printable;
+            expect(html).toContain('alt="Logo da revenda Resale"');
+            expect(html).toContain('alt="Logo da marca Marca vinculada"');
         });
         it('completes after printing or cancellation without requiring a window focus event', async () => {
             printer.and.callFake((options) => options.onLoadingEnd?.());

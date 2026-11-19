@@ -49,13 +49,6 @@ export class StorageService {
     return localStorage.getItem("cellphone")!;
   }
 
-  set limitDiscount(limitDiscount: string) {
-    localStorage.setItem('limitDiscount', limitDiscount);
-  }
-  get limitDiscount(): number {
-    return Number.parseInt(localStorage.getItem("limitDiscount")!);
-  }
-
   set photo(photo: string) {
     localStorage.setItem('photo', photo);
   }

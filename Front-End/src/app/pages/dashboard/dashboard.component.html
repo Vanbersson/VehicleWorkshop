@@ -1,3 +1,14 @@
+@if (birthdayName; as name) {
+    <p-dialog header="Feliz aniversário!" [modal]="true" [visible]="birthdayVisible()" (visibleChange)="birthdayVisible.set($event)" [draggable]="false" [resizable]="false" [style]="{ width: '30rem', maxWidth: 'calc(100vw - 2rem)' }">
+        <img src="assets/images/birthday-celebration.jpg" alt="Bolo de aniversário com velas e balões azuis e dourados" width="900" height="600" class="block h-auto w-full rounded-xl" />
+        <p class="mb-1 mt-5 text-center text-xl font-semibold">Parabéns, {{ name }}!</p>
+        <p class="m-0 text-center text-muted-color">Que seu dia seja especial e que este novo ano traga muitas alegrias.</p>
+        <ng-template #footer>
+            <p-button label="Fechar" (onClick)="birthdayVisible.set(false)" />
+        </ng-template>
+    </p-dialog>
+}
+
 <div class="dashboard-page">
     <header class="dashboard-header">
         <div class="dashboard-title">

@@ -1,5 +1,5 @@
 import { HttpResponse } from '@angular/common/http';
-import { Component } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { lastValueFrom } from 'rxjs';
 import { Router } from '@angular/router';
@@ -11,11 +11,10 @@ import { ButtonModule } from 'primeng/button';
 import { MessageService, TreeNode } from 'primeng/api';
 
 import { IAuth } from '@/app/interfaces/i.auth';
-import { AuthService } from '@/app/services/login/auth.service';
+import { AuthService, LoginUser } from '@/app/services/login/auth.service';
 import { MenuUserService } from '@/app/services/menu/menu-user.service';
 import { User } from '@/app/models/user';
 import { StorageService } from '@/app/services/storage/storage.service';
-import { LoadingService } from '@/app/services/loading/loading.service';
 
 @Component({
     selector: 'app-login',
@@ -26,14 +25,15 @@ import { LoadingService } from '@/app/services/loading/loading.service';
     providers: [MessageService]
 })
 export default class Login {
-    private user: User = new User();
+    private user: LoginUser = new User();
+    readonly loading = signal(false);
+    readonly isLogin = signal(false);
     formLogin = new FormGroup({
         email: new FormControl<string>('', Validators.required),
         password: new FormControl<string>('', [Validators.required, Validators.minLength(8)])
     });
 
     constructor(
-        private loading: LoadingService,
         private messageService: MessageService,
         private storageService: StorageService,
         private authService: AuthService,
@@ -48,10 +48,11 @@ export default class Login {
             return;
         }
         const login: IAuth = { email: value.email!, password: value.password! };
-        this.loading.show();
+        this.loading.set(true);
         const result = await this.loginService(login);
-        this.loading.hide();
+        this.loading.set(false);
         if (result.status == 200) {
+            this.isLogin.set(true);
             this.user = result.body!;
             this.messageService.add({ severity: 'success', summary: 'Login', detail: `Bem-Vindo ${this.user.name}`, icon: 'pi pi-check' });
             this.storageService.companyId = this.user.companyId!.toString();
@@ -63,7 +64,6 @@ export default class Login {
             this.storageService.cellphone = this.user.cellphone;
             this.storageService.roleDesc = this.user.roleDesc;
             this.storageService.roleFunc = this.user.roleFunc;
-            this.storageService.limitDiscount = this.user.limitDiscount.toString();
             this.storageService.token = this.user.token;
             const resultMenus = await this.menusUser(this.user.companyId!, this.user.resaleId!, this.user.id!);
             var keys = '';
@@ -72,13 +72,12 @@ export default class Login {
                 keys += element.key + ',';
             }
             this.storageService.menus = keys;
-            setTimeout(() => {
-                this.router.navigateByUrl('/');
-            }, 1000);
+            this.authService.prepareBirthdayGreeting(this.user);
+            this.router.navigateByUrl('/');
         }
     }
 
-    private async loginService(login: IAuth): Promise<HttpResponse<User>> {
+    private async loginService(login: IAuth): Promise<HttpResponse<LoginUser>> {
         try {
             return await lastValueFrom(this.authService.login(login));
         } catch (error: any) {

@@ -12,6 +12,8 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.MonthDay;
+import java.time.ZoneId;
 import java.util.*;
 
 @RestController
@@ -40,11 +42,13 @@ public class AutheticationController {
             map.put("status", user.getStatus());
             map.put("id", user.getId());
             map.put("name", user.getName());
+            var birthDate = user.getBirthDate();
+            var today = MonthDay.now(ZoneId.of("America/Sao_Paulo"));
+            map.put("birthdayToday", birthDate != null && MonthDay.from(birthDate).equals(today));
             map.put("email", user.getEmail());
             map.put("roleDesc", user.getRoleDesc());
             map.put("roleFunc", user.getRoleFunc());
             map.put("cellphone", user.getCellphone());
-            map.put("limitDiscount", user.getLimitDiscount());
             map.put("token", token);
             map.put("photoUrl", user.getPhotoUrl());
             return ResponseEntity.status(HttpStatus.OK).body(map);

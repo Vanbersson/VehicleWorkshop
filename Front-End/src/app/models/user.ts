@@ -1,5 +1,5 @@
-import { StatusEnabDisabEnum } from "./status-enab-disab-enum";
-import { StatusRoleFuncEnum } from "./status-role-func-enum";
+import { StatusEnabDisabEnum } from './status-enab-disab-enum';
+import { StatusRoleFuncEnum } from './status-role-func-enum';
 
 export class User {
     companyId: number | null = null;
@@ -7,10 +7,12 @@ export class User {
     id: number | null = null;
     status: StatusEnabDisabEnum = StatusEnabDisabEnum.DISABLED;
     name: string = '';
+    nickname: string = '';
+    cpf: string = '';
+    birthDate: string | null = null;
     password: string = '';
     email: string = '';
     cellphone: string = '';
-    limitDiscount: number = 0;
     photoUrl: string = '';
     roleId: number | null = null;
     roleDesc: string = '';

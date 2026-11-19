@@ -107,11 +107,13 @@ export default class UserComponent implements OnInit {
         id: new FormControl<number | null>(null),
         status: new FormControl<StatusEnabDisabEnum>({ value: StatusEnabDisabEnum.DISABLED, disabled: false }),
         name: new FormControl<string>('', Validators.required),
+        nickname: new FormControl<string>(''),
+        cpf: new FormControl<string>(''),
+        birthDate: new FormControl<string>(''),
         email: new FormControl<string>('', [Validators.email, Validators.required]),
         cellphone: new FormControl<string>(''),
         roleDesc: new FormControl<UserRole | null>(null, Validators.required),
         roleFunc: new FormControl<StatusRoleFuncEnum>(StatusRoleFuncEnum.USER, Validators.required),
-        limitDiscount: new FormControl<number>(0),
         password: new FormControl<string>(''),
         passwordValid: new FormControl<string>('')
     });
@@ -463,9 +465,11 @@ export default class UserComponent implements OnInit {
         this.formUser.patchValue({
             id: user.id,
             name: user.name,
+            nickname: user.nickname ?? '',
+            cpf: user.cpf ?? '',
+            birthDate: user.birthDate ?? '',
             email: user.email,
             cellphone: user.cellphone,
-            limitDiscount: user.limitDiscount,
             roleDesc: roleSelect,
             roleFunc: user.roleFunc,
             status: user.status
@@ -488,9 +492,11 @@ export default class UserComponent implements OnInit {
         this.formUser.patchValue({
             id: null,
             name: '',
+            nickname: '',
+            cpf: '',
+            birthDate: '',
             email: '',
             cellphone: '',
-            limitDiscount: 0,
             roleDesc: null,
             roleFunc: StatusRoleFuncEnum.USER,
             status: StatusEnabDisabEnum.ENABLED,
@@ -543,9 +549,11 @@ export default class UserComponent implements OnInit {
         userNew.companyId = this.storageService.companyId;
         userNew.resaleId = this.storageService.resaleId;
         userNew.name = value.name!;
+        userNew.nickname = value.nickname?.trim() ?? '';
+        userNew.cpf = value.cpf ?? '';
+        userNew.birthDate = value.birthDate || null;
         userNew.email = value.email!;
         userNew.cellphone = value.cellphone ?? '';
-        userNew.limitDiscount = value.limitDiscount ?? 0;
         userNew.password = value.password!;
         userNew.roleId = value.roleDesc!.id;
         userNew.roleDesc = value.roleDesc!.description;
@@ -593,9 +601,11 @@ export default class UserComponent implements OnInit {
         }
 
         this.userSelect.name = value.name!;
+        this.userSelect.nickname = value.nickname?.trim() ?? '';
+        this.userSelect.cpf = value.cpf ?? '';
+        this.userSelect.birthDate = value.birthDate || null;
         this.userSelect.email = value.email!;
         this.userSelect.cellphone = value.cellphone!;
-        this.userSelect.limitDiscount = value.limitDiscount!;
         this.userSelect.password = '';
         this.userSelect.roleId = value.roleDesc!.id;
         this.userSelect.roleDesc = value.roleDesc!.description;

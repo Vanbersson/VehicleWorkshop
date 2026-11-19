@@ -57,7 +57,7 @@ describe('Commercial proposal printing', () => {
         salespersons = jasmine.createSpyObj<SalespersonService>('SalespersonService', ['filterId']);
         clients = jasmine.createSpyObj<ClientCompanyService>('ClientCompanyService', ['filterId']);
         companies.resales.and.returnValue(of([{ ...resale, id: 99, name: 'Outra revenda' }, resale]));
-        salespersons.filterId.and.returnValue(of(new HttpResponse({ body: Object.assign(new Salesperson(), { id: 7, name: 'Maria Vendedora', dddCellphone: '11', cellphone: '988887777' }) })));
+        salespersons.filterId.and.returnValue(of(new HttpResponse({ body: Object.assign(new Salesperson(), { id: 7, name: 'Maria Vendedora' }) })));
         clients.filterId.and.returnValue(
             of(
                 new HttpResponse({
@@ -104,7 +104,6 @@ describe('Commercial proposal printing', () => {
             'Rua da Revenda, 10',
             'revenda@example.com',
             'Maria Vendedora',
-            '(11) 98888-7777',
             'Cliente cadastrado',
             '98.765.432/0001-10',
             'Rua do Cliente, 20',
